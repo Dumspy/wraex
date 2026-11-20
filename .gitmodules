@@ -1,0 +1,8 @@
+[submodule "ref/apt"]
+	path = ref/apt
+	url = https://github.com/SnosMe/awakened-poe-trade
+	shallow = true
+[submodule "ref/ee2"]
+	path = ref/ee2
+	url = https://github.com/Kvan7/Exiled-Exchange-2
+	shallow = true

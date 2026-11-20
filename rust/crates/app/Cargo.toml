@@ -1,0 +1,23 @@
+[package]
+name = "wraex-app"
+description = "The Wraex desktop app: Rune UI on top of the core crates"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "wraex"
+path = "src/main.rs"
+
+[dependencies]
+rune = { workspace = true, default-features = true }
+wraex-core = { workspace = true }
+wraex-game = { workspace = true }
+wraex-platform = { workspace = true }
+wraex-poe1 = { workspace = true }
+wraex-poe2 = { workspace = true }
+
+[lints]
+workspace = true

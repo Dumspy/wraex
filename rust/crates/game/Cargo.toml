@@ -1,0 +1,15 @@
+[package]
+name = "wraex-game"
+description = "The seam each supported Path of Exile game implements"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+wraex-core = { workspace = true }
+thiserror = { workspace = true }
+
+[lints]
+workspace = true

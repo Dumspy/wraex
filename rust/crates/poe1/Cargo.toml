@@ -1,0 +1,15 @@
+[package]
+name = "wraex-poe1"
+description = "Path of Exile 1 parser and data, following ref/apt"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+wraex-core = { workspace = true }
+wraex-game = { workspace = true }
+
+[lints]
+workspace = true

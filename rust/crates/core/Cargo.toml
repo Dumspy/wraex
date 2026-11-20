@@ -1,0 +1,14 @@
+[package]
+name = "wraex-core"
+description = "Game-agnostic types and logic shared by the PoE1 and PoE2 front ends"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,0 +1,40 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+license = "MIT"
+repository = "https://github.com/Dumspy/wraex"
+
+[workspace.dependencies]
+wraex-core = { path = "crates/core" }
+wraex-game = { path = "crates/game" }
+wraex-poe1 = { path = "crates/poe1" }
+wraex-poe2 = { path = "crates/poe2" }
+wraex-platform = { path = "crates/platform" }
+
+# Rune is pre-release: pin a rev of `dev`, which is never rewritten. Bump on purpose.
+rune = { git = "https://github.com/anomalyco/rune", rev = "209e119c27724f0f6449d519c1e314103bb19047" }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tracing = "0.1"
+
+# Cargo doesn't inherit patches from a dependency. Rune vendors these six crates at
+# the rev above and needs them patched, or the build fails (`parley_engine` has no
+# `line-dictionaries` feature upstream) and the Windows/Wayland fixes are missing.
+# When bumping Rune, use the new rev for both the dependency and every patch.
+[patch.crates-io]
+winit = { git = "https://github.com/anomalyco/rune", rev = "209e119c27724f0f6449d519c1e314103bb19047" }
+sctk-adwaita = { git = "https://github.com/anomalyco/rune", rev = "209e119c27724f0f6449d519c1e314103bb19047" }
+parley_engine = { git = "https://github.com/anomalyco/rune", rev = "209e119c27724f0f6449d519c1e314103bb19047" }
+wgpu-hal = { git = "https://github.com/anomalyco/rune", rev = "209e119c27724f0f6449d519c1e314103bb19047" }
+accesskit_windows = { git = "https://github.com/anomalyco/rune", rev = "209e119c27724f0f6449d519c1e314103bb19047" }
+accesskit_macos = { git = "https://github.com/anomalyco/rune", rev = "209e119c27724f0f6449d519c1e314103bb19047" }
+
+[workspace.lints.rust]
+missing_debug_implementations = "warn"
