@@ -5,27 +5,62 @@ on:
     branches: [development, main]
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   fmt:
     name: fmt
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: rust
     steps:
-      - uses: actions/checkout@v4
-      # ref/ holds the TypeScript reference code; cargo does not need it.
-      - run: rustup show
-      - run: rustup component add rustfmt
+      - uses: actions/checkout@v6
+      # Installs the channel, components and targets from rust-toolchain.toml.
+      - run: rustup toolchain install
       - run: cargo fmt --all --check
+
+  pin:
+    name: rune pin
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - run: rustup toolchain install
+      # `rune` and every vendor patch must share one rev: cargo does not inherit
+      # patches, and a stale patch rev still builds when the vendored crate's
+      # version did not change.
+      - name: Rune revs agree
+        run: |
+          revs=$(grep -oE 'rev = "[0-9a-f]{40}"' rust/Cargo.toml | sort -u | wc -l)
+          if [ "$revs" -ne 1 ]; then
+            echo "rust/Cargo.toml has $revs different Rune revs"
+            exit 1
+          fi
+      - name: No unused patches
+        run: |
+          if grep -q 'patch.unused' rust/Cargo.lock; then
+            echo "rust/Cargo.lock has unused patches: bump the patch revs with rune"
+            exit 1
+          fi
+      # Fails when Cargo.toml changed without Cargo.lock.
+      - name: Lockfile is current
+        run: cargo metadata --locked --format-version 1 > /dev/null
+        working-directory: rust
 
   test:
     name: test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -34,7 +69,7 @@ jobs:
       run:
         working-directory: rust
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Linux build dependencies
         if: runner.os == 'Linux'
@@ -42,16 +77,23 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libxkbcommon-dev libwayland-dev pkg-config
 
-      # Installs the channel and components from rust-toolchain.toml.
-      - run: rustup show
-      - run: rustup component add clippy
+      - run: rustup toolchain install
 
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: rust
+          save-if: ${{ github.ref == 'refs/heads/development' }}
 
-      - run: cargo clippy --workspace --all-targets -- -D warnings
-      - run: cargo test --workspace
+      - run: cargo clippy --locked --workspace --all-targets -- -D warnings
+      - run: cargo test --locked --workspace
+
+      # Rune's headless renderer is the only CI check that the UI actually draws.
+      - name: Headless UI smoke
+        if: runner.os == 'macOS'
+        run: cargo run --locked -p wraex-app -- --snap "$RUNNER_TEMP/wraex.png"
+      - name: Headless UI snapshot exists
+        if: runner.os == 'macOS'
+        run: test -s "$RUNNER_TEMP/wraex.png"
 
   # Phase 1 adds a fixture job: regenerate fixtures from the pinned TypeScript
-  # references and fail on any diff. Phase 5 adds headless UI snapshots.
+  # references and fail on any diff.

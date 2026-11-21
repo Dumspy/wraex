@@ -26,7 +26,7 @@ rust/                    Cargo workspace (all Rust code)
 ref/apt/                 git submodule: SnosMe/awakened-poe-trade (PoE1 reference)
 ref/ee2/                 git submodule: Kvan7/Exiled-Exchange-2 (PoE2 reference)
 tools/golden/            fixture harness that runs the TypeScript reference code
-fixtures/                golden fixtures: <case>.{input.txt,parsed.json,query.json}
+fixtures/<game>/<case>/  golden fixtures: input.txt, options.json, parsed.json, presets.json, trade/
 ```
 
 The TypeScript apps are never merged into this repo. They are pinned checkouts that
@@ -34,14 +34,15 @@ produce reference output; the Rust port matches that output exactly.
 
 ## Developing
 
-Everything (Rust 1.99.1, Node 22, Python, `cargo-xwin`) comes from Nix/devenv:
+Everything (Rust 1.99.1, Node 24, Python, `cargo-xwin`) comes from Nix/devenv:
 
 ```sh
 devenv shell                 # dev shell
-devenv tasks run check:all   # fmt + clippy + tests
+devenv tasks run check:all   # fmt + clippy + tests + Rune pin check
 ```
 
 Without devenv, any Rust 1.99.1 toolchain works for the crates in `rust/`.
+The Node version matters for the reference apps: EE2's CI uses Node 24.
 
 ```sh
 cargo run --manifest-path rust/Cargo.toml -p wraex-app      # or: cd rust && cargo run -p wraex-app
@@ -55,8 +56,10 @@ git clone --recurse-submodules <url>
 git submodule update --init --depth 1
 ```
 
-`devenv tasks run ref:update` moves both references to their latest commits, which
-is how upstream drift shows up: regenerate the fixtures and diff them.
+`devenv tasks run ref:apt:latest` moves the PoE1 reference to upstream master;
+`EE2_TAG=v0.16.3 devenv tasks run ref:ee2:release` moves the PoE2 reference to a
+release tag. Either way, bumping a reference is how drift shows up: regenerate the
+fixtures and diff them.
 
 ## Porting rules
 
@@ -71,8 +74,9 @@ is how upstream drift shows up: regenerate the fixtures and diff them.
 
 ## License
 
-MIT, see [LICENSE](LICENSE). The copyright notice of Awakened PoE Trade (and thus
-Exiled Exchange 2, which shares it) is kept as the license requires.
+MIT, see [LICENSE](LICENSE). The copyright notice of Awakened PoE Trade is kept as
+the license requires, and Exiled Exchange 2 (Kvan7 and contributors) is credited as
+the PoE2 source this port derives from.
 
 Game data, item text and the trade site belong to Grinding Gear Games; GGG's API
 terms (rate limits, User-Agent) apply to anything Wraex sends.

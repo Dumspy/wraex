@@ -22,19 +22,18 @@ Scope decisions (2026-11-18):
 `Kvan7/Exiled-Exchange-2` is a GitHub fork of upstream for Path of Exile 2 (MIT,
 same copyright line, ~1.2k stars, v0.16.3 on 2026-09-06). ~39.7k lines TS/Vue.
 
-- **It has a test suite**: vitest, 23 spec files, 529 test cases, ~7k lines in
-  `renderer/specs/`. Run on 2026-11-18 (master @ v0.16.3, Node 22 via Nix):
-  **501 passed, 26 failed, 2 skipped**. Failures are in augment, magic-name,
-  modifiersParsers, dataLoader and pseudo-filter specs; most are stat lookups
-  returning `undefined` (`calc.stat` / `.matchers`) and missing zh-Hant item
-  names, which looks like test data out of date with the data files (not yet
-  confirmed). Its `package-lock.json` is out of sync, so `npm ci` fails and
-  `npm install` is needed. Covers the
+- **It has a test suite**: vitest, 23 test files, 529 test cases, ~7k lines in
+  `renderer/specs/`. Run on 2026-11-21 (master @ v0.16.3, Node 24 via Nix, its own
+  CI steps: `npm ci` then `npm run make-index-files`): **527 passed, 2 skipped, 0
+  failed**. The earlier 501/26/2 result was the harness's fault, not EE2's: the
+  `*.index.bin` files are generated, not committed, and without them the fetch mock
+  returns 404s and stat lookups come back `undefined`. `npm ci` works; the lockfile
+  is in sync. Covers the
   parser (integration with ~28 raw clipboard items in `specs/Parser/items.ts`,
   modifiers, stat translation, maps, gems, magic names), filter creation, pseudo
   stats, trade request building, client log parsing, prices, trade API.
   Tests load real data via `init("en")` + `specs/vitest.setup.ts`.
-- Its parser has diverged a lot from upstream (`Parser.ts` 2269 vs 1319 lines,
+- Its parser has diverged a lot from upstream (`Parser.ts` 2269 vs 1342 lines,
   extra `augment-builder.ts`, `calc-base.ts`, `utils.ts`), so its tests are for
   PoE2 items and won't run against PoE1 code as-is.
 - It has its own data pipeline (`dataParser/`, Python) instead of relying on
@@ -48,8 +47,8 @@ Use for us:
   template for our Phase 1 fixtures; its item texts seed the PoE2 corpus.
 - If the Rust port targets PoE2 (or both games), EE2's suite is a ready-made
   first set of checks: port the tests to Rust alongside the golden fixtures.
-- EE2's suite is the PoE2 reference. Its 26 failures get recorded as known
-  failures (not copied into Rust as expected behaviour) until we understand them.
+- EE2's suite is the PoE2 reference and passes at the pinned revision, so it can be
+  ported to Rust as-is alongside the golden fixtures.
 
 ## Guiding rules
 
@@ -70,7 +69,8 @@ Use for us:
   merges stay simple and the TS stays runnable for producing fixtures.
 - Reference code as git submodules (or subtrees): `ref/apt` (upstream) and
   `ref/ee2` (Exiled Exchange 2), so fixtures can be regenerated from both.
-- `devenv.nix`: Rust toolchain, Node 22, Python (EE2's `dataParser`), `cargo-xwin`.
+- `devenv.nix`: Rust toolchain, Node 24 (EE2's CI version), Python with the
+  `dataParser` dependencies, `cargo-xwin` (with the Windows target and LLVM tools).
 - Crates:
   - `core`: game-agnostic types and logic: item model, stat/filter model, trade
     API client (rate limits, User-Agent, leagues), trade query building, prices
@@ -96,14 +96,16 @@ texts from EE2's `specs/Parser/items.ts` and port its vitest assertions too.
   maps, currency, divination cards, cluster jewels, heist items, sanctum items,
   logbooks; plus every supported language (en, ru, ko, cmn-Hant). Sources: own
   play, GitHub issues, community dumps.
-- **Node harness** (`tools/golden/`): loads the data files the way
-  `renderer/src/assets/data/index.ts` does (replace `fetch` with fs), runs:
-  1. `parseClipboard(text)` → `ParsedItem` JSON
-  2. `createFilters` / `createPresets` (`price-check/filters/`) → default filters, then
-     `createTradeRequest` (`trade/pathofexile-trade.ts`, and `trade/pathofexile-bulk.ts`
-     for bulk items) → trade API request JSON
+- **Node harness** (`tools/golden/`, see its README for the contract): runs under
+  vitest/vite-node with the reference repo's config and mocks, runs:
+  1. `init(lang)` → `parseClipboard(text)` → `ParsedItem` JSON
+  2. `createPresets` (`web/price-check/filters/create-presets.ts`) →
+     `{ presets, active }`, then per preset `createTradeRequest` on the preset's
+     `filters` + `stats` (`web/price-check/trade/pathofexile-trade.ts`, and
+     `pathofexile-bulk.ts` for bulk items) → trade API request JSON
   3. map-check / item-check derived data
-  Writes `fixtures/<case>.{input.txt,parsed.json,query.json}`.
+  Writes `fixtures/<game>/<case>/{input.txt,options.json,parsed.json,presets.json,trade/<id>.json}`.
+  The `CreateOptions` used are recorded per case; they differ between the games.
 - Normalize JSON (key order, floats) so Rust and TS output compare as text.
 - Script: `golden regen` (TS) and `golden check` (Rust) → diff report.
 
@@ -115,10 +117,10 @@ A throwaway Rune app proving everything that `electron-overlay-window` and
 | Need | Upstream | Rust plan |
 |---|---|---|
 | Overlay over the game window | `electron-overlay-window` | Rune `WindowOptions::overlay` + raw window handle; our own Win32 code to find the PoE window, follow move/resize/focus (`SetWinEventHook`), hide when the game loses focus |
-| Click-through on/off (clickable when a widget is open) | `OverlayController` | `WindowHandle` click-through toggle |
+| Click-through on/off (clickable when a widget is open) | `OverlayController` (`main/src/windowing/OverlayWindow.ts`) | `WindowHandle` click-through toggle |
 | System-wide hotkeys while PoE is focused | `uiohook-napi`, `globalShortcut` | `rdev` or a low-level keyboard hook, or `global-hotkey` |
 | Send Ctrl+C / Ctrl+Alt+C to copy item, type in chat, stash search | uiohook key taps | `enigo` or `SendInput` |
-| Read the clipboard + restore it afterwards | `HostClipboard.ts` | `arboard` or Rune `Tx::copy` (read side to verify) |
+| Read the clipboard + restore it afterwards | `main/src/shortcuts/HostClipboard.ts` | `arboard` or Rune `Tx::copy` (read side to verify) |
 | Scroll wheel actions (stash tab scrolling) | uiohook wheel | low-level mouse hook |
 
 **Exit criteria**: on Windows with PoE (or a dummy fullscreen-windowed app), the
@@ -210,20 +212,24 @@ only small hand-maintained overrides. Not part of the first milestone.
 
 ## Appendix: verified paths at the pinned revisions
 
-Checked 2026-11-20 against `ref/apt` @ `2498730` (master) and `ref/ee2` @ `cca3066`
+Checked 2026-11-21 against `ref/apt` @ `2498730` (master) and `ref/ee2` @ `cca3066`
 (v0.16.3). Everything below `renderer/src/` that the phases above call
 `price-check/...` or `trade/...` actually sits under `renderer/src/web/`:
 
 | What | `ref/apt` (PoE1) | `ref/ee2` (PoE2) |
 |---|---|---|
-| Clipboard entry point | `renderer/src/parser/Parser.ts:95` `parseClipboard` | `renderer/src/parser/Parser.ts` |
+| Clipboard entry point | `renderer/src/parser/Parser.ts:95` `parseClipboard` | `renderer/src/parser/Parser.ts:189` |
 | Parser modules | `renderer/src/parser/{modifiers,stat-translations,advanced-mod-desc,calc-q20,magic-name}.ts` | same names, plus `augment-builder.ts`, `calc-base.ts`, `utils.ts` |
-| Data loading | `renderer/src/assets/data/index.ts` | `renderer/src/assets/data/index.ts` |
-| Default filters | `renderer/src/web/price-check/filters/create-item-filters.ts` `createFilters` | same |
-| Presets | `renderer/src/web/price-check/filters/create-presets.ts` `createPresets` | same |
-| Trade query | `renderer/src/web/price-check/trade/pathofexile-trade.ts:270` + `pathofexile-bulk.ts:119` (`createTradeRequest`) | same layout |
-| Electron main | `main/src/{proxy,server}.ts`, `main/src/host-files/`, `main/src/shortcuts/`, `main/src/windowing/` | `main/` + `ipc/` |
-| Tests | only `main/build/apprun-patch.test.mjs` | `renderer/specs/**/*.test.ts` + `specs/vitest.setup.ts` |
+| Data loading | `renderer/src/assets/data/index.ts:192` `init` | `renderer/src/assets/data/index.ts:286` `init` |
+| Index generation | `renderer/src/assets/make-index-files.mjs` via `vite-plugin-make-indexes.ts` (no npm script) | `npm run make-index-files` |
+| Default filters | `.../filters/create-item-filters.ts:23` `createFilters` | `.../create-item-filters.ts:40` |
+| Stat filters | `.../filters/create-stat-filters.ts:140` `initUiModFilters` | `.../create-stat-filters.ts` |
+| Presets | `.../filters/create-presets.ts:14` `createPresets` → `{presets, active}` | same shape |
+| Trade query | `.../trade/pathofexile-trade.ts:270` + `pathofexile-bulk.ts:119` (`createTradeRequest`) | `.../pathofexile-trade.ts:567` + `pathofexile-bulk.ts:139` |
+| Electron main | `main/src/{proxy,server}.ts`, `main/src/shortcuts/`, `main/src/windowing/`, `main/src/vision/` | `main/` + `ipc/` |
+| Tests | only `main/build/apprun-patch.test.mjs` | 23 `renderer/specs/**/*.test.ts` + `specs/vitest.setup.ts` |
 
 EE2's spec files use `*.test.ts` (not `*.spec.ts`) and load the real data through
-`init("en")` in `renderer/specs/vitest.setup.ts`.
+`init("en")` in `renderer/specs/vitest.setup.ts`. Both apps need their generated
+`*.index.bin` files before the data loads; EE2's CI runs `npm ci` then
+`npm run make-index-files` on Node 24 (527 passed, 2 skipped at this revision).

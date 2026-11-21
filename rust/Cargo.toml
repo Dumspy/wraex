@@ -22,7 +22,6 @@ rune = { git = "https://github.com/anomalyco/rune", rev = "209e119c27724f0f6449d
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
-tracing = "0.1"
 
 # Cargo doesn't inherit patches from a dependency. Rune vendors these six crates at
 # the rev above and needs them patched, or the build fails (`parley_engine` has no

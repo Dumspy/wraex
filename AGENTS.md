@@ -13,8 +13,10 @@ the phases and why they are ordered the way they are.
   diff is empty, not when the code "looks right".
 - **Keep Rune pinned.** `rust/Cargo.toml` holds the `rune` rev, and the same rev in
   the `[patch.crates-io]` table for the six crates Rune vendors. Bump all of them
-  together in a dedicated commit and re-run the UI checks when you do; a mismatch
-  does not compile.
+  together in a dedicated commit and re-run the UI checks when you do. A stale
+  patch rev can still compile when the vendored crate's version did not change, so
+  `devenv tasks run check:rune-pin` and CI check that the revs match and that
+  `Cargo.lock` has no unused patches.
 - **Static game data stays** as shipped by upstream/EE2 for now. Access it through
   the data layer so it can be swapped later.
 - Do not send PRs or issues to Exiled Exchange 2: its `AI_POLICY.md` forbids
@@ -27,9 +29,10 @@ the phases and why they are ordered the way they are.
 ## Commands
 
 ```sh
-devenv shell                       # Rust 1.99.1, Node 22, Python, cargo-xwin
-devenv tasks run check:all         # fmt + clippy + cargo test
-devenv tasks run ref:update        # move ref/apt and ref/ee2 to upstream HEAD
+devenv shell                       # Rust 1.99.1, Node 24, Python, cargo-xwin
+devenv tasks run check:all         # fmt + clippy + cargo test + Rune pin check
+devenv tasks run ref:apt:latest    # move the PoE1 reference to upstream master
+EE2_TAG=v0.16.3 devenv tasks run ref:ee2:release   # move the PoE2 reference to a tag
 
 cd rust
 cargo test --workspace
@@ -40,11 +43,14 @@ cargo run -p wraex-app -- --snap /tmp/wraex.png
 Reference tests (only when touching the fixture harness):
 
 ```sh
-cd ref/ee2/renderer && npm install && npx vitest run   # 501 pass / 26 fail at v0.16.3
+cd ref/ee2/renderer
+npm ci && npm run make-index-files && npx vitest run   # 527 pass / 2 skip at v0.16.3
 ```
 
-`npm ci` fails on that revision: its lockfile is out of sync. The 26 failures are
-known and documented in PLAN.md; do not turn them into expected Rust behaviour.
+The index files are generated, not committed; without `make-index-files` the suite
+reports dozens of bogus failures. Use `npm ci` (never `npm install`, which rewrites
+the reference's lockfile), and Node 24, matching EE2's own CI. PoE1 has no tests
+beyond `main/build/apprun-patch.test.mjs`, and no npm script for its indexes.
 
 ## Layout
 
@@ -53,10 +59,15 @@ known and documented in PLAN.md; do not turn them into expected Rust behaviour.
 - `rust/crates/poe1`, `rust/crates/poe2` — per-game parsers, data and filters.
 - `rust/crates/platform` — window tracking, overlay, hotkeys, clipboard, logs.
 - `rust/crates/app` — the Rune UI shell.
-- `tools/golden` — Node harness that loads the TS code and writes `fixtures/`.
+- `tools/golden` — the fixture harness contract (phase 1); fixtures live in
+  `fixtures/<game>/<case>/`.
+
+Item names and serialisation follow upstream's `ParsedItem` (`rawText`, `"Rare"`).
+Add fields only with the module that produces them; do not guess at the shape.
 
 ## Checks the agent can run itself
 
 - `cargo fmt` / `cargo clippy -D warnings` / `cargo test`.
-- Fixture diff: `node tools/golden/regen.mjs` then `git diff fixtures/` (phase 1+).
+- Rune pin: `devenv tasks run check:rune-pin`.
+- Fixture diff: `npm run regen` in `tools/golden` then `git diff fixtures/` (phase 1+).
 - UI: render headless with `--snap` and inspect the PNG and element tree (phase 5).

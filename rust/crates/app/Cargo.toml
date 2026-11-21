@@ -12,7 +12,7 @@ name = "wraex"
 path = "src/main.rs"
 
 [dependencies]
-rune = { workspace = true, default-features = true }
+rune = { workspace = true }
 wraex-core = { workspace = true }
 wraex-game = { workspace = true }
 wraex-platform = { workspace = true }

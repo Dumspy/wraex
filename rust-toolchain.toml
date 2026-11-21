@@ -1,4 +1,6 @@
-# Matches the toolchain Rune pins on its `dev` branch.
+# Matches the toolchain Rune pins on its `dev` branch. The Windows target is for
+# `cargo xwin build` (cargo-xwin) checks from macOS/Linux.
 [toolchain]
 channel = "1.99.1"
 components = ["clippy", "rustfmt", "rust-analyzer", "rust-src"]
+targets = ["x86_64-pc-windows-msvc"]

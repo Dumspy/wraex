@@ -4,8 +4,9 @@ Copyright (c) 2020 Alexander Drozdov (Awakened PoE Trade, https://github.com/Sno
 Copyright (c) 2026 Felix Berger and Wraex contributors
 
 Wraex is a Rust port of Awakened PoE Trade (MIT) and of Exiled Exchange 2
-(https://github.com/Kvan7/Exiled-Exchange-2, MIT, same copyright holder). Their
-copyright notice is kept above as the MIT license requires.
+(https://github.com/Kvan7/Exiled-Exchange-2, MIT, by Kvan7 and contributors,
+carrying the same copyright line). Their notices are kept above as the MIT
+license requires.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

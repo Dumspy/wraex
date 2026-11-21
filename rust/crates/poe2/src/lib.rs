@@ -1,9 +1,8 @@
 //! Path of Exile 2: parser, data loading and game-specific filters.
 //!
-//! Ported from `ref/ee2` (Exiled Exchange 2). EE2's vitest suite under
-//! `ref/ee2/renderer/specs/` seeds the PoE2 fixtures; note that 26 of its 529 tests
-//! fail at the pinned revision, so those are recorded as known failures rather than
-//! treated as expected behaviour.
+//! Ported from `ref/ee2` (Exiled Exchange 2). Its vitest suite under
+//! `ref/ee2/renderer/specs/` passes at the pinned revision (527 passed, 2 skipped,
+//! after `npm run make-index-files`) and seeds the PoE2 fixtures.
 
 use wraex_core::{GameId, Item};
 use wraex_game::{Game, ParseError};
