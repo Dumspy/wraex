@@ -178,9 +178,10 @@ The `Game` trait gets associated types (`type Item: Serialize`, later filters an
 presets) instead of the shared `core::Item`; the app selects a game through an enum
 over the two implementations, so the trait need not be object-safe.
 
-Corpus gap: every fixture is `en`. PoE1 ships `ru`, `ko`, `cmn-Hant`; PoE2 adds
-`ja`, `de`, `es`, `pt`, `fr` (`th` is UI text only). The data layer loads them all, but parser
-behaviour in other languages is unverified until real item texts arrive.
+Languages: English only for now (decided 2026-11-22). Every fixture is `en`;
+non-English clients are not a goal of this milestone. The data layer still loads
+every language the references ship (PoE1 `ru`, `ko`, `cmn-Hant`; PoE2 also `ja`,
+`de`, `es`, `pt`, `fr`; `th` is UI text only), so they stay possible later.
 
 In order, each step done when its fixtures pass (for each game):
 
@@ -191,7 +192,11 @@ In order, each step done when its fixtures pass (for each game):
    `check:fixtures` and CI). Deferred to the modules that need them: PoE2
    `TRADE_ITEM_BY_REF` (needs `meta.ts`), `item-drop.json`, `patrons.json`.
 2. `parser/modifiers.ts`, `stat-translations.ts`, `advanced-mod-desc.ts`
-3. `parser/Parser.ts` (`parseClipboard`), `calc-q20.ts`, `magic-name.ts`
+3. `parser/Parser.ts` (`parseClipboard`), `calc-q20.ts`, `magic-name.ts`.
+   **PoE1 done** (`poe1::parser`, with `core::js` and `core::js_regex` for
+   JavaScript number and regex semantics): `parsed.json` matches for all 32
+   PoE1 cases. Steps 2 and 3 are checked together, since the fixtures record
+   whole items. English only (see Languages above).
 4. `price-check/filters` (incl. `pseudo`) → default filter generation
 5. `price-check/trade` → trade API request building (and bulk exchange)
 6. Map-check and item-check logic

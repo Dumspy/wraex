@@ -111,7 +111,6 @@ pub fn diff(expected: &Value, actual: &Value) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use wraex_core::Item;
 
     fn all_json_files(dir: &Path, out: &mut Vec<PathBuf>) {
         for entry in fs::read_dir(dir).unwrap() {
@@ -152,8 +151,7 @@ mod tests {
                     assert!(case.presets.is_none(), "{}: presets after a parse error", case.slug);
                     continue;
                 }
-                let item: Item = serde_json::from_value(case.parsed.clone()).unwrap();
-                assert_eq!(item.raw_text, case.input, "{}: rawText", case.slug);
+                assert_eq!(case.parsed["rawText"].as_str(), Some(case.input.as_str()), "{}: rawText", case.slug);
                 let presets = case.presets.as_ref().expect("presets.json");
                 let ids: Vec<&str> =
                     presets["presets"].as_array().unwrap().iter().map(|p| p["id"].as_str().unwrap()).collect();

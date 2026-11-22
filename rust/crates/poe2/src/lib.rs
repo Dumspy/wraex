@@ -6,13 +6,17 @@
 
 pub mod data;
 
-use wraex_core::{GameId, Item};
+use wraex_core::GameId;
 use wraex_game::{Game, ParseError};
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Poe2;
 
 impl Game for Poe2 {
+    type Data = data::Data;
+    /// Until the parser is ported.
+    type Item = ();
+
     fn id(&self) -> GameId {
         GameId::Poe2
     }
@@ -21,7 +25,7 @@ impl Game for Poe2 {
         "Path of Exile 2"
     }
 
-    fn parse_clipboard(&self, _text: &str) -> Result<Item, ParseError> {
+    fn parse_clipboard(&self, _data: &data::Data, _text: &str) -> Result<(), ParseError> {
         Err(ParseError::NotPorted { game: GameId::Poe2 })
     }
 }

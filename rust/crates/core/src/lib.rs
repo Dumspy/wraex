@@ -6,11 +6,13 @@
 //! `PLAN.md`, phase 3).
 
 pub mod data;
-pub mod item;
+pub mod js;
+pub mod js_regex;
+pub mod rarity;
 
 use serde::{Deserialize, Serialize};
 
-pub use item::{Item, Rarity};
+pub use rarity::Rarity;
 
 /// Which Path of Exile game an item, data set or game window belongs to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -9,20 +9,13 @@
 use indexmap::IndexMap;
 
 use super::DataError;
-
-/// A JavaScript regular expression literal, kept as written. Compiling it needs
-/// JavaScript semantics (`\d` is ASCII-only, ` ` escapes), which is the
-/// parser's job.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct JsRegex {
-    pub source: String,
-    pub flags: String,
-}
+use crate::js_regex::Regex;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ClientString {
     Text(String),
-    Regex(JsRegex),
+    /// Compiled with JavaScript semantics ([`crate::js_regex`]).
+    Regex(Regex),
     List(Vec<String>),
 }
 
@@ -98,7 +91,7 @@ impl ClientStrings {
         }
     }
 
-    pub fn regex(&self, key: &str) -> Option<&JsRegex> {
+    pub fn regex(&self, key: &str) -> Option<&Regex> {
         match self.entries.get(key)? {
             ClientString::Regex(r) => Some(r),
             _ => None,
@@ -224,7 +217,7 @@ impl Cursor<'_> {
 
     /// A regex literal `/source/flags`: ends at the first `/` that is neither
     /// escaped nor inside a `[...]` class.
-    fn regex(&mut self) -> Result<JsRegex, String> {
+    fn regex(&mut self) -> Result<Regex, String> {
         self.bump();
         let mut source = String::new();
         let mut in_class = false;
@@ -256,7 +249,7 @@ impl Cursor<'_> {
             return Err(format!("unknown regex flag `{bad}`"));
         }
         self.rest = &self.rest[flags_len..];
-        Ok(JsRegex { source, flags })
+        Regex::new(&source, &flags)
     }
 }
 
@@ -286,8 +279,12 @@ export default {
         assert_eq!(strings.text("RARITY_NORMAL"), Some("Normal"));
         assert_eq!(strings.text("QUOTED"), Some("It's \"fine\"\u{a0}\\"));
         assert_eq!(strings.text("DOUBLE"), Some("a'b"));
-        assert_eq!(strings.regex("MAP_TIER"), Some(&JsRegex { source: r" \(Tier (\d+)\)$".into(), flags: "".into() }));
-        assert_eq!(strings.regex("CLASS"), Some(&JsRegex { source: r"^[/\]]+ x$".into(), flags: "gi".into() }));
+        let tier = strings.regex("MAP_TIER").unwrap();
+        assert_eq!((tier.source(), tier.flags()), (r" \(Tier (\d+)\)$", ""));
+        assert_eq!(tier.captures("Map (Tier 16)").unwrap().get(1), Some("16"));
+        let class = strings.regex("CLASS").unwrap();
+        assert_eq!((class.source(), class.flags()), (r"^[/\]]+ x$", "gi"));
+        assert!(class.is_match("/] X"));
         assert_eq!(strings.list("SHAPER_MODS").unwrap(), ["of Shaping", "The Shaper's"]);
         assert_eq!(strings.list("EMPTY").unwrap().len(), 0);
         assert_eq!(strings.text("MAP_TIER"), None);
@@ -304,6 +301,7 @@ export default {
             "export default {\n  A: 'x',\n",
             "const x = 1\nexport default {\n}\n",
             "export default {\n  A: /x/z,\n}\n",
+            "export default {\n  A: /\\p{L}/,\n}\n",
         ] {
             assert!(ClientStrings::parse("bad", bad).is_err(), "accepted {bad:?}");
         }

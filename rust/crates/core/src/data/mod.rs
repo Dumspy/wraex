@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 
 use thiserror::Error;
 
-pub use client_strings::{ClientString, ClientStrings, JsRegex};
+pub use client_strings::{ClientString, ClientStrings};
 pub use ndjson::{HashIndex, ItemTable, Ndjson, StatKeys, StatTable, js_string};
 
 /// `fnv1a(text, { size: 32 })` from `@sindresorhus/fnv1a`: FNV-1a over the UTF-8

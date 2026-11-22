@@ -376,6 +376,22 @@ impl Data {
         &self.lang
     }
 
+    /// `CLIENT_STRINGS[key]` as text. Every language defines the same keys as
+    /// English (tested), so a missing key is a bug in the caller.
+    pub fn s(&self, key: &str) -> &str {
+        self.client_strings.text(key).unwrap_or_else(|| panic!("client string {key} is not text"))
+    }
+
+    /// `CLIENT_STRINGS[key]` as a regex.
+    pub fn re(&self, key: &str) -> &wraex_core::js_regex::Regex {
+        self.client_strings.regex(key).unwrap_or_else(|| panic!("client string {key} is not a regex"))
+    }
+
+    /// `CLIENT_STRINGS[key]` as a list.
+    pub fn list(&self, key: &str) -> &[String] {
+        self.client_strings.list(key).unwrap_or_else(|| panic!("client string {key} is not a list"))
+    }
+
     pub fn items(&self) -> &ItemTable {
         &self.items
     }
@@ -473,11 +489,11 @@ impl Data {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use std::sync::OnceLock;
 
-    fn en() -> &'static Data {
+    pub(crate) fn en() -> &'static Data {
         static EN: OnceLock<Data> = OnceLock::new();
         EN.get_or_init(|| Data::load(&reference_source(), "en").unwrap())
     }
@@ -489,6 +505,20 @@ mod tests {
             assert_eq!(data.client_strings_ref.text("RARITY_RARE"), Some("Rare"));
             assert!(data.client_strings.text("RARITY_RARE").is_some(), "{lang}");
             assert!(data.client_strings.regex("MAP_TIER").is_some(), "{lang}");
+        }
+    }
+
+    /// [`Data::s`] and friends rely on this.
+    #[test]
+    fn every_language_has_the_english_client_string_keys() {
+        let kind = |c: &wraex_core::data::ClientString| std::mem::discriminant(c);
+        let en = en();
+        for lang in LANGUAGES {
+            let data = Data::load(&reference_source(), lang).unwrap();
+            for (key, value) in en.client_strings.iter() {
+                let other = data.client_strings.get(key).unwrap_or_else(|| panic!("{lang}: no {key}"));
+                assert_eq!(kind(other), kind(value), "{lang}: {key}");
+            }
         }
     }
 
