@@ -5,6 +5,7 @@
 //! one module at a time, each ported module backed by golden fixtures (see
 //! `PLAN.md`, phase 3).
 
+pub mod data;
 pub mod item;
 
 use serde::{Deserialize, Serialize};

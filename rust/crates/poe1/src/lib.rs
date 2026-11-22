@@ -1,7 +1,9 @@
 //! Path of Exile 1: parser, data loading and game-specific filters.
 //!
-//! Ported from `ref/apt` (Awakened PoE Trade). Nothing is ported yet; the parser
-//! lands with phase 3, after the golden fixtures exist (phase 1).
+//! Ported from `ref/apt` (Awakened PoE Trade). Ported so far: the data layer
+//! ([`data`]). The parser is next (PLAN.md, phase 3).
+
+pub mod data;
 
 use wraex_core::{GameId, Item};
 use wraex_game::{Game, ParseError};

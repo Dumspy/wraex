@@ -10,6 +10,9 @@ repository.workspace = true
 [dependencies]
 wraex-core = { workspace = true }
 wraex-game = { workspace = true }
+indexmap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 
 [lints]
 workspace = true

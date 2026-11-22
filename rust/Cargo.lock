@@ -1307,6 +1307,8 @@ checksum = "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855"
 dependencies = [
  "equivalent",
  "hashbrown 0.17.1",
+ "serde",
+ "serde_core",
 ]
 
 [[package]]
@@ -4225,8 +4227,10 @@ dependencies = [
 name = "wraex-core"
 version = "0.1.0"
 dependencies = [
+ "indexmap",
  "serde",
  "serde_json",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -4253,6 +4257,9 @@ version = "0.1.0"
 name = "wraex-poe1"
 version = "0.1.0"
 dependencies = [
+ "indexmap",
+ "serde",
+ "serde_json",
  "wraex-core",
  "wraex-game",
 ]
@@ -4261,6 +4268,9 @@ dependencies = [
 name = "wraex-poe2"
 version = "0.1.0"
 dependencies = [
+ "indexmap",
+ "serde",
+ "serde_json",
  "wraex-core",
  "wraex-game",
 ]

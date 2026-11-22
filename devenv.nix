@@ -80,6 +80,8 @@ in
     "check:fixtures" = {
       after = [ "golden:regen" ];
       exec = ''
+        # The Rust data indexes against the `*.index.bin` files golden:prepare built.
+        ${cargo} test -p wraex-poe1 -p wraex-poe2 -- --ignored
         cd ${root}
         # Against the index, so staged fixtures count as expected.
         if ! git diff --quiet -- fixtures || [ -n "$(git ls-files --others --exclude-standard -- fixtures)" ]; then

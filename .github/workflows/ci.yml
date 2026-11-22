@@ -69,7 +69,16 @@ jobs:
       run:
         working-directory: rust
     steps:
+      # The references have no .gitattributes; keep their data files byte for byte
+      # as shipped instead of converting them to CRLF.
+      - name: No CRLF conversion
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf false
+        working-directory: ${{ github.workspace }}
       - uses: actions/checkout@v6
+        with:
+          # The game data the poe1/poe2 crates load lives in the references.
+          submodules: true
 
       - name: Linux build dependencies
         if: runner.os == 'Linux'
@@ -120,6 +129,12 @@ jobs:
         working-directory: tools/golden
       - run: npm run regen
         working-directory: tools/golden
+      # The Rust data layer builds its indexes in memory; check they hold the same
+      # rows as the `*.index.bin` files prepare-refs just generated.
+      - run: rustup toolchain install
+      - name: Rust indexes match the generated index files
+        run: cargo test --locked -p wraex-poe1 -p wraex-poe2 -- --ignored
+        working-directory: rust
       - name: Fixtures match the references
         run: |
           git status --short -- fixtures

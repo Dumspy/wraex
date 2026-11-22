@@ -184,7 +184,12 @@ behaviour in other languages is unverified until real item texts arrive.
 
 In order, each step done when its fixtures pass (for each game):
 
-1. `apt-data`: items/stats ndjson + index loading, per language
+1. `apt-data`: items/stats ndjson + index loading, per language. **Done**
+   (`core::data`, `poe1::data`, `poe2::data`): every language loads, every
+   ndjson line round-trips through the typed schema, and the in-memory indexes
+   hold the same rows as the generated `*.index.bin` (`--ignored` tests, run by
+   `check:fixtures` and CI). Deferred to the modules that need them: PoE2
+   `TRADE_ITEM_BY_REF` (needs `meta.ts`), `item-drop.json`, `patrons.json`.
 2. `parser/modifiers.ts`, `stat-translations.ts`, `advanced-mod-desc.ts`
 3. `parser/Parser.ts` (`parseClipboard`), `calc-q20.ts`, `magic-name.ts`
 4. `price-check/filters` (incl. `pseudo`) → default filter generation

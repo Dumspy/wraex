@@ -25,6 +25,9 @@ serde = { version = "1", features = ["derive"] }
 # neighbouring double, so fixture values (JavaScript numbers) would not round-trip.
 serde_json = { version = "1", features = ["float_roundtrip"] }
 thiserror = "2"
+# Insertion-ordered maps: JavaScript objects iterate in insertion order, and the
+# ported logic walks data maps (`trade.ids`, ...) in that order.
+indexmap = { version = "2", features = ["serde"] }
 
 # Cargo doesn't inherit patches from a dependency. Rune vendors these six crates at
 # the rev above and needs them patched, or the build fails (`parley_engine` has no
