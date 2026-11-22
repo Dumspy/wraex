@@ -1,0 +1,174 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "itemLevel": {
+          "disabled": false,
+          "value": 50
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "notCatalysed": {
+          "disabled": false
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Leather Belt",
+          "baseTypeTrade": "Leather Belt"
+        },
+        "searchRelaxed": {
+          "category": "Belt",
+          "disabled": true
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 40,
+              "min": 25
+            },
+            "default": {
+              "max": 33,
+              "min": 31
+            },
+            "dp": false,
+            "goodness": 0.4666666666666667,
+            "isNegated": false,
+            "min": 31,
+            "value": 32
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 40,
+                "min": 25,
+                "value": 32
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Life"
+                  ],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 40,
+                      "min": 25,
+                      "unscalable": false,
+                      "value": 32
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "# to maximum Life"
+                        }
+                      ],
+                      "ref": "+# to maximum Life",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_3299347043"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3299347043"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3299347043"
+                          ],
+                          "implicit": [
+                            "implicit.stat_3299347043"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to maximum Life"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 40,
+                  "min": 25,
+                  "unscalable": false,
+                  "value": 32
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Life"
+                    }
+                  ],
+                  "ref": "+# to maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3299347043"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3299347043"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3299347043"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3299347043"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Life"
+                }
+              }
+            }
+          ],
+          "statRef": "+# to maximum Life",
+          "tag": "implicit",
+          "text": "# to maximum Life",
+          "tradeId": [
+            "implicit.stat_3299347043"
+          ]
+        }
+      ]
+    }
+  ]
+}

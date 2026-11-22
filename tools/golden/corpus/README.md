@@ -13,6 +13,12 @@ this list current when adding cases, so it is clear which ones are real copies.
 - `real-*`: real in-game copies (advanced format, Ctrl+Alt+C), from the
   maintainer's own play: fractured and eldritch-implicit rares, a Foulborn unique
   and a six-socket unique.
+- `adv-*`: hand-written in the advanced format, aimed at parser branches the
+  real copies miss: magic names, legacy rolls (volatile, reflecting), negated
+  rolls, catalyst quality, veiled and synthesised mods, enchant and scourge
+  lines, stat groups, weapons, "cannot use" items, split and twice corrupted.
+  Not real copies; the stat text is real, the combinations may not be.
+- `error-*`: texts the parser rejects (`item.parse_error`, `item.unknown`).
 - Everything else: hand-written in the in-game clipboard format (Ctrl+C, not the
   advanced Ctrl+Alt+C), checked only in that the reference parses each one with no
   unknown modifiers. They exercise the pipeline per item class (currency, cards,

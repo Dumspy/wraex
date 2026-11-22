@@ -1,0 +1,60 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            },
+            "split": {
+              "option": "false"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "rarity": {
+              "option": "magic"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "explicit.stat_983749596",
+              "value": {
+                "min": 7
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_474294393",
+              "value": {
+                "min": 10
+              }
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Viridian Jewel"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

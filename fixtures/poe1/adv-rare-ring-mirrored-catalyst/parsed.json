@@ -1,0 +1,902 @@
+{
+  "baseType": "Diamond Ring",
+  "category": "Ring",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Ring"
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvUmluZ3MvRGlhbW9uZFJpbmciLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MX1d/d07e3dfbb6/DiamondRing.png",
+    "name": "Diamond Ring",
+    "namespace": "ITEM",
+    "refName": "Diamond Ring"
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Ring"
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvUmluZ3MvRGlhbW9uZFJpbmciLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MX1d/d07e3dfbb6/DiamondRing.png",
+      "name": "Diamond Ring",
+      "namespace": "ITEM",
+      "refName": "Diamond Ring"
+    }
+  ],
+  "isMirrored": true,
+  "isUnidentified": false,
+  "itemLevel": 85,
+  "name": "Doom Band",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "pseudo"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 20,
+            "min": 20,
+            "unscalable": true,
+            "value": 20
+          },
+          "stat": {
+            "better": 1,
+            "jewelleryQuality": {
+              "catalyst": "Fertile Catalyst"
+            },
+            "matchers": [
+              {
+                "string": "Quality (Life and Mana Modifiers): #%"
+              }
+            ],
+            "ref": "Quality (Life and Mana Modifiers): +#%",
+            "trade": {
+              "ids": {
+                "pseudo": [
+                  "pseudo.pseudo_jewellery_resource_quality"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Quality (Life and Mana Modifiers): #%"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [
+          "Damage",
+          "Critical"
+        ],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 30,
+            "min": 20,
+            "unscalable": false,
+            "value": 25
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% increased Global Critical Strike Chance"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Global Critical Strike Chance"
+              }
+            ],
+            "ref": "#% increased Global Critical Strike Chance",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_587431675"
+                ],
+                "explicit": [
+                  "explicit.stat_587431675"
+                ],
+                "fractured": [
+                  "fractured.stat_587431675"
+                ],
+                "implicit": [
+                  "implicit.stat_587431675"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Global Critical Strike Chance"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Rotund",
+        "rollIncr": 20,
+        "tags": [
+          "Life"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 89,
+            "min": 80,
+            "unscalable": false,
+            "value": 82
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to maximum Life"
+              }
+            ],
+            "ref": "+# to maximum Life",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3299347043"
+                ],
+                "explicit": [
+                  "explicit.stat_3299347043"
+                ],
+                "fractured": [
+                  "fractured.stat_3299347043"
+                ],
+                "implicit": [
+                  "implicit.stat_3299347043"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to maximum Life"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of the Rainbow",
+        "tags": [
+          "Elemental",
+          "Fire",
+          "Cold",
+          "Lightning",
+          "Resistance"
+        ],
+        "tier": 3,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 14,
+            "min": 12,
+            "unscalable": false,
+            "value": 14
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% to all Elemental Resistances"
+              }
+            ],
+            "ref": "+#% to all Elemental Resistances",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_2901986750"
+                ],
+                "explicit": [
+                  "explicit.stat_2901986750"
+                ],
+                "fractured": [
+                  "fractured.stat_2901986750"
+                ],
+                "implicit": [
+                  "implicit.stat_2901986750"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% to all Elemental Resistances"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Tzteosh",
+        "tags": [
+          "Elemental",
+          "Fire",
+          "Resistance"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "generation": "reflecting",
+            "max": 52,
+            "min": 46,
+            "unscalable": false,
+            "value": 52
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% to Fire Resistance"
+              }
+            ],
+            "ref": "+#% to Fire Resistance",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3372524247"
+                ],
+                "explicit": [
+                  "explicit.stat_3372524247"
+                ],
+                "fractured": [
+                  "fractured.stat_3372524247"
+                ],
+                "implicit": [
+                  "implicit.stat_3372524247"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% to Fire Resistance"
+          }
+        }
+      ]
+    }
+  ],
+  "quality": 20,
+  "rarity": "Rare",
+  "rawText": "Item Class: Rings\nRarity: Rare\nDoom Band\nDiamond Ring\n--------\nQuality (Life and Mana Modifiers): +20% (augmented)\n--------\nRequirements:\nLevel: 56\n--------\nItem Level: 85\n--------\n{ Implicit Modifier — Damage, Critical }\n25(20-30)% increased Global Critical Strike Chance\n--------\n{ Prefix Modifier \"Rotund\" (Tier: 1) — Life  — 20% Increased }\n+82(80-89) to maximum Life\n{ Suffix Modifier \"of the Rainbow\" (Tier: 3) — Elemental, Fire, Cold, Lightning, Resistance }\n+14(12-14)% to all Elemental Resistances\n{ Suffix Modifier \"of Tzteosh\" (Tier: 1) — Elemental, Fire, Resistance }\n+52(46-48)% to Fire Resistance\n--------\nMirrored\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 20,
+            "min": 20,
+            "value": 20
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "pseudo"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 20,
+                  "min": 20,
+                  "unscalable": true,
+                  "value": 20
+                },
+                "stat": {
+                  "better": 1,
+                  "jewelleryQuality": {
+                    "catalyst": "Fertile Catalyst"
+                  },
+                  "matchers": [
+                    {
+                      "string": "Quality (Life and Mana Modifiers): #%"
+                    }
+                  ],
+                  "ref": "Quality (Life and Mana Modifiers): +#%",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.pseudo_jewellery_resource_quality"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Quality (Life and Mana Modifiers): #%"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 20,
+              "min": 20,
+              "unscalable": true,
+              "value": 20
+            },
+            "stat": {
+              "better": 1,
+              "jewelleryQuality": {
+                "catalyst": "Fertile Catalyst"
+              },
+              "matchers": [
+                {
+                  "string": "Quality (Life and Mana Modifiers): #%"
+                }
+              ],
+              "ref": "Quality (Life and Mana Modifiers): +#%",
+              "trade": {
+                "ids": {
+                  "pseudo": [
+                    "pseudo.pseudo_jewellery_resource_quality"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Quality (Life and Mana Modifiers): #%"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "jewelleryQuality": {
+          "catalyst": "Fertile Catalyst"
+        },
+        "matchers": [
+          {
+            "string": "Quality (Life and Mana Modifiers): #%"
+          }
+        ],
+        "ref": "Quality (Life and Mana Modifiers): +#%",
+        "trade": {
+          "ids": {
+            "pseudo": [
+              "pseudo.pseudo_jewellery_resource_quality"
+            ]
+          }
+        }
+      },
+      "type": "pseudo"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 30,
+            "min": 20,
+            "value": 25
+          },
+          "modifier": {
+            "info": {
+              "tags": [
+                "Damage",
+                "Critical"
+              ],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 20,
+                  "unscalable": false,
+                  "value": 25
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Global Critical Strike Chance"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Global Critical Strike Chance"
+                    }
+                  ],
+                  "ref": "#% increased Global Critical Strike Chance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_587431675"
+                      ],
+                      "explicit": [
+                        "explicit.stat_587431675"
+                      ],
+                      "fractured": [
+                        "fractured.stat_587431675"
+                      ],
+                      "implicit": [
+                        "implicit.stat_587431675"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Global Critical Strike Chance"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 30,
+              "min": 20,
+              "unscalable": false,
+              "value": 25
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% increased Global Critical Strike Chance"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Global Critical Strike Chance"
+                }
+              ],
+              "ref": "#% increased Global Critical Strike Chance",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_587431675"
+                  ],
+                  "explicit": [
+                    "explicit.stat_587431675"
+                  ],
+                  "fractured": [
+                    "fractured.stat_587431675"
+                  ],
+                  "implicit": [
+                    "implicit.stat_587431675"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Global Critical Strike Chance"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% increased Global Critical Strike Chance"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Global Critical Strike Chance"
+          }
+        ],
+        "ref": "#% increased Global Critical Strike Chance",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_587431675"
+            ],
+            "explicit": [
+              "explicit.stat_587431675"
+            ],
+            "fractured": [
+              "fractured.stat_587431675"
+            ],
+            "implicit": [
+              "implicit.stat_587431675"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 106,
+            "min": 96,
+            "value": 98
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Rotund",
+              "rollIncr": 20,
+              "tags": [
+                "Life"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 89,
+                  "min": 80,
+                  "unscalable": false,
+                  "value": 82
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Life"
+                    }
+                  ],
+                  "ref": "+# to maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3299347043"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3299347043"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3299347043"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3299347043"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Life"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 89,
+              "min": 80,
+              "unscalable": false,
+              "value": 82
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to maximum Life"
+                }
+              ],
+              "ref": "+# to maximum Life",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3299347043"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3299347043"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3299347043"
+                  ],
+                  "implicit": [
+                    "implicit.stat_3299347043"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to maximum Life"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# to maximum Life"
+          }
+        ],
+        "ref": "+# to maximum Life",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_3299347043"
+            ],
+            "explicit": [
+              "explicit.stat_3299347043"
+            ],
+            "fractured": [
+              "fractured.stat_3299347043"
+            ],
+            "implicit": [
+              "implicit.stat_3299347043"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 14,
+            "min": 12,
+            "value": 14
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of the Rainbow",
+              "tags": [
+                "Elemental",
+                "Fire",
+                "Cold",
+                "Lightning",
+                "Resistance"
+              ],
+              "tier": 3,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 14,
+                  "min": 12,
+                  "unscalable": false,
+                  "value": 14
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% to all Elemental Resistances"
+                    }
+                  ],
+                  "ref": "+#% to all Elemental Resistances",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_2901986750"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2901986750"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2901986750"
+                      ],
+                      "implicit": [
+                        "implicit.stat_2901986750"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to all Elemental Resistances"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 14,
+              "min": 12,
+              "unscalable": false,
+              "value": 14
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% to all Elemental Resistances"
+                }
+              ],
+              "ref": "+#% to all Elemental Resistances",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_2901986750"
+                  ],
+                  "explicit": [
+                    "explicit.stat_2901986750"
+                  ],
+                  "fractured": [
+                    "fractured.stat_2901986750"
+                  ],
+                  "implicit": [
+                    "implicit.stat_2901986750"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% to all Elemental Resistances"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% to all Elemental Resistances"
+          }
+        ],
+        "ref": "+#% to all Elemental Resistances",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_2901986750"
+            ],
+            "explicit": [
+              "explicit.stat_2901986750"
+            ],
+            "fractured": [
+              "fractured.stat_2901986750"
+            ],
+            "implicit": [
+              "implicit.stat_2901986750"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 52,
+            "min": 46,
+            "value": 52
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Tzteosh",
+              "tags": [
+                "Elemental",
+                "Fire",
+                "Resistance"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "generation": "reflecting",
+                  "max": 52,
+                  "min": 46,
+                  "unscalable": false,
+                  "value": 52
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% to Fire Resistance"
+                    }
+                  ],
+                  "ref": "+#% to Fire Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3372524247"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3372524247"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3372524247"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3372524247"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Fire Resistance"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "generation": "reflecting",
+              "max": 52,
+              "min": 46,
+              "unscalable": false,
+              "value": 52
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% to Fire Resistance"
+                }
+              ],
+              "ref": "+#% to Fire Resistance",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3372524247"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3372524247"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3372524247"
+                  ],
+                  "implicit": [
+                    "implicit.stat_3372524247"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% to Fire Resistance"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% to Fire Resistance"
+          }
+        ],
+        "ref": "+#% to Fire Resistance",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_3372524247"
+            ],
+            "explicit": [
+              "explicit.stat_3372524247"
+            ],
+            "fractured": [
+              "fractured.stat_3372524247"
+            ],
+            "implicit": [
+              "implicit.stat_3372524247"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": []
+}

@@ -1,0 +1,586 @@
+{
+  "baseType": "Two-Stone Ring",
+  "category": "Ring",
+  "dustEquivalent": 4516,
+  "influences": [],
+  "info": {
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvUmluZ3MvQmVyZWtzR3JpcCIsInciOjEsImgiOjEsInNjYWxlIjoxfV0/7abb06d839/BereksGrip.png",
+    "name": "Berek's Grip",
+    "namespace": "UNIQUE",
+    "refName": "Berek's Grip",
+    "unique": {
+      "base": "Two-Stone Ring",
+      "disenchantValue": 2.19
+    }
+  },
+  "infoVariants": [
+    {
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvUmluZ3MvQmVyZWtzR3JpcCIsInciOjEsImgiOjEsInNjYWxlIjoxfV0/7abb06d839/BereksGrip.png",
+      "name": "Berek's Grip",
+      "namespace": "UNIQUE",
+      "refName": "Berek's Grip",
+      "unique": {
+        "base": "Two-Stone Ring",
+        "disenchantValue": 2.19
+      }
+    }
+  ],
+  "isCorrupted": {},
+  "isUnidentified": false,
+  "itemLevel": 75,
+  "name": "Berek's Grip",
+  "newMods": [
+    {
+      "info": {
+        "mechanic": "corrupted",
+        "tags": [
+          "Damage",
+          "Critical"
+        ],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 12,
+            "min": 10,
+            "unscalable": false,
+            "value": 11
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% increased Global Critical Strike Chance"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Global Critical Strike Chance"
+              }
+            ],
+            "ref": "#% increased Global Critical Strike Chance",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_587431675"
+                ],
+                "explicit": [
+                  "explicit.stat_587431675"
+                ],
+                "fractured": [
+                  "fractured.stat_587431675"
+                ],
+                "implicit": [
+                  "implicit.stat_587431675"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Global Critical Strike Chance"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [
+          "Elemental",
+          "Cold",
+          "Lightning",
+          "Resistance"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "generation": "volatile",
+            "max": 28,
+            "min": 20,
+            "unscalable": false,
+            "value": 28
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% to Cold and Lightning Resistances"
+              }
+            ],
+            "ref": "+#% to Cold and Lightning Resistances",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_4277795662"
+                ],
+                "explicit": [
+                  "explicit.stat_4277795662"
+                ],
+                "fractured": [
+                  "fractured.stat_4277795662"
+                ],
+                "implicit": [
+                  "implicit.stat_4277795662"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% to Cold and Lightning Resistances"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [
+          "Life"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 50,
+            "min": 40,
+            "unscalable": false,
+            "value": 45
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to maximum Life"
+              }
+            ],
+            "ref": "+# to maximum Life",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3299347043"
+                ],
+                "explicit": [
+                  "explicit.stat_3299347043"
+                ],
+                "fractured": [
+                  "fractured.stat_3299347043"
+                ],
+                "implicit": [
+                  "implicit.stat_3299347043"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to maximum Life"
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Unique",
+  "rawText": "Item Class: Rings\nRarity: Unique\nBerek's Grip\nTwo-Stone Ring\n--------\nRequirements:\nLevel: 41\n--------\nItem Level: 75\n--------\n{ Corruption Implicit Modifier — Damage, Critical }\n11(10-12)% increased Global Critical Strike Chance\n--------\n{ Unique Modifier — Elemental, Cold, Lightning, Resistance }\n+28(20-25)% to Cold and Lightning Resistances\n{ Unique Modifier — Life }\n+45(40-50) to maximum Life\n--------\nCorrupted\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 12,
+            "min": 10,
+            "value": 11
+          },
+          "modifier": {
+            "info": {
+              "mechanic": "corrupted",
+              "tags": [
+                "Damage",
+                "Critical"
+              ],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 12,
+                  "min": 10,
+                  "unscalable": false,
+                  "value": 11
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Global Critical Strike Chance"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Global Critical Strike Chance"
+                    }
+                  ],
+                  "ref": "#% increased Global Critical Strike Chance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_587431675"
+                      ],
+                      "explicit": [
+                        "explicit.stat_587431675"
+                      ],
+                      "fractured": [
+                        "fractured.stat_587431675"
+                      ],
+                      "implicit": [
+                        "implicit.stat_587431675"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Global Critical Strike Chance"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 12,
+              "min": 10,
+              "unscalable": false,
+              "value": 11
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% increased Global Critical Strike Chance"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Global Critical Strike Chance"
+                }
+              ],
+              "ref": "#% increased Global Critical Strike Chance",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_587431675"
+                  ],
+                  "explicit": [
+                    "explicit.stat_587431675"
+                  ],
+                  "fractured": [
+                    "fractured.stat_587431675"
+                  ],
+                  "implicit": [
+                    "implicit.stat_587431675"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Global Critical Strike Chance"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% increased Global Critical Strike Chance"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Global Critical Strike Chance"
+          }
+        ],
+        "ref": "#% increased Global Critical Strike Chance",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_587431675"
+            ],
+            "explicit": [
+              "explicit.stat_587431675"
+            ],
+            "fractured": [
+              "fractured.stat_587431675"
+            ],
+            "implicit": [
+              "implicit.stat_587431675"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 28,
+            "min": 20,
+            "value": 28
+          },
+          "modifier": {
+            "info": {
+              "tags": [
+                "Elemental",
+                "Cold",
+                "Lightning",
+                "Resistance"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "generation": "volatile",
+                  "max": 28,
+                  "min": 20,
+                  "unscalable": false,
+                  "value": 28
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% to Cold and Lightning Resistances"
+                    }
+                  ],
+                  "ref": "+#% to Cold and Lightning Resistances",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4277795662"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4277795662"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4277795662"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4277795662"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Cold and Lightning Resistances"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "generation": "volatile",
+              "max": 28,
+              "min": 20,
+              "unscalable": false,
+              "value": 28
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% to Cold and Lightning Resistances"
+                }
+              ],
+              "ref": "+#% to Cold and Lightning Resistances",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_4277795662"
+                  ],
+                  "explicit": [
+                    "explicit.stat_4277795662"
+                  ],
+                  "fractured": [
+                    "fractured.stat_4277795662"
+                  ],
+                  "implicit": [
+                    "implicit.stat_4277795662"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% to Cold and Lightning Resistances"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% to Cold and Lightning Resistances"
+          }
+        ],
+        "ref": "+#% to Cold and Lightning Resistances",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_4277795662"
+            ],
+            "explicit": [
+              "explicit.stat_4277795662"
+            ],
+            "fractured": [
+              "fractured.stat_4277795662"
+            ],
+            "implicit": [
+              "implicit.stat_4277795662"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 50,
+            "min": 40,
+            "value": 45
+          },
+          "modifier": {
+            "info": {
+              "tags": [
+                "Life"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 50,
+                  "min": 40,
+                  "unscalable": false,
+                  "value": 45
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Life"
+                    }
+                  ],
+                  "ref": "+# to maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3299347043"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3299347043"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3299347043"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3299347043"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Life"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 50,
+              "min": 40,
+              "unscalable": false,
+              "value": 45
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to maximum Life"
+                }
+              ],
+              "ref": "+# to maximum Life",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3299347043"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3299347043"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3299347043"
+                  ],
+                  "implicit": [
+                    "implicit.stat_3299347043"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to maximum Life"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# to maximum Life"
+          }
+        ],
+        "ref": "+# to maximum Life",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_3299347043"
+            ],
+            "explicit": [
+              "explicit.stat_3299347043"
+            ],
+            "fractured": [
+              "fractured.stat_3299347043"
+            ],
+            "implicit": [
+              "implicit.stat_3299347043"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "uniqueBase": {
+    "craftable": {
+      "category": "Ring"
+    },
+    "disc": {
+      "hasImplicit": {
+        "ref": "+#% to Fire and Lightning Resistances"
+      }
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvUmluZ3MvVG9wYXpSdWJ5IiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/8878077651/TopazRuby.png",
+    "name": "Two-Stone Ring",
+    "namespace": "ITEM",
+    "refName": "Two-Stone Ring"
+  },
+  "unknownModifiers": []
+}

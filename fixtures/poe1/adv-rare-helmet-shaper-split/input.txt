@@ -1,0 +1,26 @@
+Item Class: Helmets
+Rarity: Rare
+Gale Crest
+Hubris Circlet
+--------
+Quality: +20% (augmented)
+Energy Shield: 220 (augmented)
+--------
+Requirements:
+Level: 69
+Int: 154
+--------
+Sockets: B-B-B-G 
+--------
+Item Level: 86
+--------
+{ Prefix Modifier "Fecund" (Tier: 1) — Life }
++95(90-99) to maximum Life
+{ Suffix Modifier "of Shaping" (Tier: 1) — Defences, Energy Shield }
+5(4-6)% increased maximum Energy Shield
+{ Fractured Suffix Modifier "of the Ice" (Tier: 3) — Elemental, Cold, Resistance }
++38(36-41)% to Cold Resistance
+--------
+Split
+--------
+Shaper Item

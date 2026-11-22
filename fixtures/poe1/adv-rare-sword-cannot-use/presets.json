@@ -1,0 +1,641 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "itemLevel": {
+          "disabled": true,
+          "value": 84
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Jewelled Foil",
+          "baseTypeTrade": "Jewelled Foil"
+        },
+        "searchRelaxed": {
+          "category": "One-Handed Sword",
+          "disabled": false
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 242,
+              "min": 217
+            },
+            "default": {
+              "max": 242,
+              "min": 217
+            },
+            "dp": false,
+            "goodness": 0.38246468412000806,
+            "isNegated": false,
+            "min": 217,
+            "value": 226
+          },
+          "sources": [],
+          "statRef": "Total DPS: #",
+          "tag": "property",
+          "text": "Total DPS: #",
+          "tradeId": [
+            "item.total_dps"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_ele_dps",
+          "roll": {
+            "bounds": {
+              "max": 69,
+              "min": 55
+            },
+            "default": {
+              "max": 69,
+              "min": 56
+            },
+            "dp": false,
+            "goodness": 0.5082327113062571,
+            "isNegated": false,
+            "min": 56,
+            "value": 62
+          },
+          "sources": [],
+          "statRef": "Elemental DPS: #",
+          "tag": "property",
+          "text": "Elemental DPS: #",
+          "tradeId": [
+            "item.elemental_dps"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 174,
+              "min": 161
+            },
+            "default": {
+              "max": 174,
+              "min": 161
+            },
+            "dp": false,
+            "goodness": 0.24542829643888325,
+            "isNegated": false,
+            "min": 161,
+            "value": 164
+          },
+          "sources": [],
+          "statRef": "Physical DPS: #",
+          "tag": "property",
+          "text": "Physical DPS: #",
+          "tradeId": [
+            "item.physical_dps"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 1.61,
+              "min": 1.57
+            },
+            "default": {
+              "max": 1.61,
+              "min": 1.57
+            },
+            "dp": true,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 1.57,
+            "value": 1.6
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 0.17142857142857143,
+                "min": 0.14285714285714288,
+                "value": 0.17142857142857143
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Craft",
+                  "rank": 2,
+                  "tags": [
+                    "Attack",
+                    "Speed"
+                  ],
+                  "type": "crafted"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 12,
+                      "min": 10,
+                      "unscalable": false,
+                      "value": 12
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased Attack Speed"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Attack Speed"
+                        }
+                      ],
+                      "ref": "#% increased Attack Speed",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_210067635"
+                          ],
+                          "enchant": [
+                            "enchant.stat_210067635"
+                          ],
+                          "explicit": [
+                            "explicit.stat_210067635"
+                          ],
+                          "fractured": [
+                            "fractured.stat_210067635"
+                          ],
+                          "implicit": [
+                            "implicit.stat_210067635"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Attack Speed"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 12,
+                  "min": 10,
+                  "unscalable": false,
+                  "value": 12
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Attack Speed"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Attack Speed"
+                    }
+                  ],
+                  "ref": "#% increased Attack Speed",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_210067635"
+                      ],
+                      "enchant": [
+                        "enchant.stat_210067635"
+                      ],
+                      "explicit": [
+                        "explicit.stat_210067635"
+                      ],
+                      "fractured": [
+                        "fractured.stat_210067635"
+                      ],
+                      "implicit": [
+                        "implicit.stat_210067635"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Attack Speed"
+                }
+              }
+            }
+          ],
+          "statRef": "Attacks per Second: #",
+          "tag": "property",
+          "text": "Attacks per Second: #",
+          "tradeId": [
+            "item.aps"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 5.5,
+              "min": 5.5
+            },
+            "dp": true,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 5.5,
+            "value": 5.5
+          },
+          "sources": [],
+          "statRef": "Critical Strike Chance: #%",
+          "tag": "property",
+          "text": "Critical Strike Chance: #%",
+          "tradeId": [
+            "item.crit"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 25,
+              "min": 25
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 25,
+            "value": 25
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 25,
+                "min": 25,
+                "value": 25
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Damage",
+                    "Critical"
+                  ],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 25,
+                      "min": 25,
+                      "unscalable": false,
+                      "value": 25
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% to Global Critical Strike Multiplier"
+                        }
+                      ],
+                      "ref": "+#% to Global Critical Strike Multiplier",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_3556824919"
+                          ],
+                          "enchant": [
+                            "enchant.stat_3556824919"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3556824919"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3556824919"
+                          ],
+                          "implicit": [
+                            "implicit.stat_3556824919"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Global Critical Strike Multiplier"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 25,
+                  "min": 25,
+                  "unscalable": false,
+                  "value": 25
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% to Global Critical Strike Multiplier"
+                    }
+                  ],
+                  "ref": "+#% to Global Critical Strike Multiplier",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3556824919"
+                      ],
+                      "enchant": [
+                        "enchant.stat_3556824919"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3556824919"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3556824919"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3556824919"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Global Critical Strike Multiplier"
+                }
+              }
+            }
+          ],
+          "statRef": "+#% Global Critical Strike Multiplier",
+          "tag": "pseudo",
+          "text": "+#% Global Critical Strike Multiplier ",
+          "tradeId": [
+            "pseudo.pseudo_global_critical_strike_multiplier"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 20,
+              "min": 16
+            },
+            "default": {
+              "max": 20,
+              "min": 18
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 18,
+            "value": 20
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 20,
+                "min": 16,
+                "value": 20
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Venom",
+                  "tags": [
+                    "Damage",
+                    "Chaos",
+                    "Ailment"
+                  ],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 20,
+                      "min": 16,
+                      "unscalable": false,
+                      "value": 20
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% chance to Poison on Hit"
+                        },
+                        {
+                          "string": "Always Poison on Hit",
+                          "value": 100
+                        }
+                      ],
+                      "ref": "#% chance to Poison on Hit",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_3885634897"
+                          ],
+                          "enchant": [
+                            "enchant.stat_3885634897"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3885634897"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3885634897"
+                          ],
+                          "implicit": [
+                            "implicit.stat_3885634897"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% chance to Poison on Hit"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 20,
+                  "min": 16,
+                  "unscalable": false,
+                  "value": 20
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% chance to Poison on Hit"
+                    },
+                    {
+                      "string": "Always Poison on Hit",
+                      "value": 100
+                    }
+                  ],
+                  "ref": "#% chance to Poison on Hit",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3885634897"
+                      ],
+                      "enchant": [
+                        "enchant.stat_3885634897"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3885634897"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3885634897"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3885634897"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% chance to Poison on Hit"
+                }
+              }
+            }
+          ],
+          "statRef": "#% chance to Poison on Hit",
+          "tag": "explicit",
+          "text": "#% chance to Poison on Hit",
+          "tradeId": [
+            "explicit.stat_3885634897"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 20,
+              "min": 20
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 20,
+            "value": 20
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 20,
+                "min": 20,
+                "value": 20
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 20,
+                      "min": 20,
+                      "unscalable": false,
+                      "value": 20
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Cast Level 20 Fire Burst on Hit",
+                          "value": 20
+                        }
+                      ],
+                      "ref": "Cast Level 20 Fire Burst on Hit",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_1621470436"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1621470436"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Cast Level 20 Fire Burst on Hit",
+                      "value": 20
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 20,
+                  "min": 20,
+                  "unscalable": false,
+                  "value": 20
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Cast Level 20 Fire Burst on Hit",
+                      "value": 20
+                    }
+                  ],
+                  "ref": "Cast Level 20 Fire Burst on Hit",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1621470436"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1621470436"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Cast Level 20 Fire Burst on Hit",
+                  "value": 20
+                }
+              }
+            }
+          ],
+          "statRef": "Cast Level 20 Fire Burst on Hit",
+          "tag": "explicit",
+          "text": "Cast Level 20 Fire Burst on Hit",
+          "tradeId": [
+            "explicit.stat_1621470436"
+          ]
+        }
+      ]
+    }
+  ]
+}

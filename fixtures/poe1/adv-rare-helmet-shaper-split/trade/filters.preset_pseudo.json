@@ -1,0 +1,89 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "armour_filters": {
+          "filters": {
+            "es": {
+              "min": 198
+            }
+          }
+        },
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "category": {
+              "option": "armour.helmet"
+            },
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_elemental_resistance",
+              "value": {
+                "min": 36
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_cold_resistance",
+              "value": {
+                "min": 36
+              }
+            },
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_life",
+              "value": {
+                "min": 90
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_increased_energy_shield",
+              "value": {
+                "min": 4
+              }
+            },
+            {
+              "disabled": true,
+              "id": "fractured.stat_4220027924",
+              "value": {
+                "min": 36
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_has_shaper_influence",
+              "value": {}
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      }
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

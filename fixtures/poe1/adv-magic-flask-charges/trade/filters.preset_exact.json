@@ -1,0 +1,81 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            },
+            "split": {
+              "option": "false"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "explicit.stat_700317374",
+              "value": {
+                "min": -66
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_182714578",
+              "value": {
+                "min": 8
+              }
+            }
+          ],
+          "type": "and"
+        },
+        {
+          "disabled": false,
+          "filters": [
+            {
+              "disabled": false,
+              "id": "explicit.stat_2503377690",
+              "value": {
+                "min": 100
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_1526933524",
+              "value": {}
+            }
+          ],
+          "type": "count",
+          "value": {
+            "min": 1
+          }
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Divine Life Flask"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

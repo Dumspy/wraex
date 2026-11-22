@@ -1,0 +1,23 @@
+Item Class: Rings
+Rarity: Rare
+Doom Band
+Diamond Ring
+--------
+Quality (Life and Mana Modifiers): +20% (augmented)
+--------
+Requirements:
+Level: 56
+--------
+Item Level: 85
+--------
+{ Implicit Modifier — Damage, Critical }
+25(20-30)% increased Global Critical Strike Chance
+--------
+{ Prefix Modifier "Rotund" (Tier: 1) — Life  — 20% Increased }
++82(80-89) to maximum Life
+{ Suffix Modifier "of the Rainbow" (Tier: 3) — Elemental, Fire, Cold, Lightning, Resistance }
++14(12-14)% to all Elemental Resistances
+{ Suffix Modifier "of Tzteosh" (Tier: 1) — Elemental, Fire, Resistance }
++52(46-48)% to Fire Resistance
+--------
+Mirrored

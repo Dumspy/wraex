@@ -1,0 +1,12 @@
+Item Class: Jewels
+Rarity: Magic
+Vivid Viridian Jewel of the Rainbow
+--------
+Item Level: 83
+--------
+{ Prefix Modifier "Vivid" (Tier: 1) — Life }
+7(5-7)% increased maximum Life
+{ Suffix Modifier "of the Rainbow" — Mana }
+10(8-10)% reduced Mana Cost of Skills
+--------
+Place into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.

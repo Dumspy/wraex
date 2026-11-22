@@ -1,0 +1,39 @@
+Item Class: One Hand Swords
+Rarity: Rare
+You cannot use this item. Its stats will be ignored
+--------
+Havoc Bite
+Jewelled Foil
+--------
+One Hand Sword
+Physical Damage: 61-110 (augmented)
+Elemental Damage: 10-20 (augmented), 3-45 (augmented)
+Critical Strike Chance: 5.50%
+Attacks per Second: 1.60
+Weapon Range: 1.1 metres
+--------
+Requirements:
+Level: 68
+Dex: 212
+--------
+Sockets: R-G-B 
+--------
+Item Level: 84
+--------
+Allocates Ruthless (enchant)
+--------
+{ Implicit Modifier — Damage, Critical }
++25% to Global Critical Strike Multiplier
+--------
+{ Prefix Modifier "Tyrannical" (Tier: 2) — Damage, Physical, Attack }
+155(155-169)% increased Physical Damage
+{ Prefix Modifier "Smoldering" (Tier: 6) — Damage, Elemental, Fire, Attack }
+Adds 10(9-12) to 20(19-22) Fire Damage
+{ Prefix Modifier "Shocking" (Tier: 4) — Damage, Elemental, Lightning, Attack }
+Adds 3(2-5) to 45(41-47) Lightning Damage
+{ Suffix Modifier "of Venom" (Tier: 1) — Damage, Chaos, Ailment }
+20(16-20)% chance to Poison on Hit
+{ Master Crafted Suffix Modifier "of Craft" (Rank: 2) — Attack, Speed }
+12(10-12)% increased Attack Speed
+{ Unique Modifier }
+Cast Level 20 Fire Burst on Hit

@@ -1,0 +1,61 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "ilvl": {
+              "min": 82
+            },
+            "mirrored": {
+              "option": "false"
+            },
+            "quality": {
+              "max": 0
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "implicit.stat_1379411836",
+              "value": {
+                "min": 11
+              }
+            },
+            {
+              "disabled": false,
+              "id": "veiled.mod_65000",
+              "value": {}
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Onyx Amulet"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

@@ -1,0 +1,594 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "itemLevel": {
+          "disabled": false,
+          "value": 82
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "notCatalysed": {
+          "disabled": false
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Onyx Amulet",
+          "baseTypeTrade": "Onyx Amulet"
+        },
+        "searchRelaxed": {
+          "category": "Amulet",
+          "disabled": false
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        },
+        "veiled": {
+          "disabled": false,
+          "statRefs": [
+            "Veiled"
+          ]
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 41,
+              "min": 36
+            },
+            "default": {
+              "max": 41,
+              "min": 36
+            },
+            "dp": false,
+            "goodness": 0.8,
+            "isNegated": false,
+            "min": 36,
+            "value": 40
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 41,
+                "min": 36,
+                "value": 40
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Lightning",
+                  "tags": [
+                    "Elemental",
+                    "Lightning",
+                    "Resistance"
+                  ],
+                  "tier": 2,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 41,
+                      "min": 36,
+                      "unscalable": false,
+                      "value": 40
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% to Lightning Resistance"
+                        }
+                      ],
+                      "ref": "+#% to Lightning Resistance",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1671376347"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1671376347"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1671376347"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1671376347"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Lightning Resistance"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 41,
+                  "min": 36,
+                  "unscalable": false,
+                  "value": 40
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% to Lightning Resistance"
+                    }
+                  ],
+                  "ref": "+#% to Lightning Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1671376347"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1671376347"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1671376347"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1671376347"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Lightning Resistance"
+                }
+              }
+            }
+          ],
+          "statRef": "+#% total Elemental Resistance",
+          "tag": "pseudo",
+          "text": "+#% total Elemental Resistance ",
+          "tradeId": [
+            "pseudo.pseudo_total_elemental_resistance"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_ele_res",
+          "roll": {
+            "bounds": {
+              "max": 41,
+              "min": 36
+            },
+            "default": {
+              "max": 41,
+              "min": 36
+            },
+            "dp": false,
+            "goodness": 0.8,
+            "isNegated": false,
+            "min": 36,
+            "value": 40
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 41,
+                "min": 36,
+                "value": 40
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Lightning",
+                  "tags": [
+                    "Elemental",
+                    "Lightning",
+                    "Resistance"
+                  ],
+                  "tier": 2,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 41,
+                      "min": 36,
+                      "unscalable": false,
+                      "value": 40
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% to Lightning Resistance"
+                        }
+                      ],
+                      "ref": "+#% to Lightning Resistance",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1671376347"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1671376347"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1671376347"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1671376347"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Lightning Resistance"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 41,
+                  "min": 36,
+                  "unscalable": false,
+                  "value": 40
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% to Lightning Resistance"
+                    }
+                  ],
+                  "ref": "+#% to Lightning Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1671376347"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1671376347"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1671376347"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1671376347"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Lightning Resistance"
+                }
+              }
+            }
+          ],
+          "statRef": "+#% total to Lightning Resistance",
+          "tag": "pseudo",
+          "text": "+#% total to Lightning Resistance ",
+          "tradeId": [
+            "pseudo.pseudo_total_lightning_resistance"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 16,
+              "min": 10
+            },
+            "default": {
+              "max": 14,
+              "min": 10
+            },
+            "dp": false,
+            "goodness": 0.3333333333333333,
+            "isNegated": false,
+            "min": 10,
+            "value": 12
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 16,
+                "min": 10,
+                "value": 12
+              },
+              "modifier": {
+                "info": {
+                  "mechanic": "synthesised",
+                  "tags": [
+                    "Attribute"
+                  ],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 16,
+                      "min": 10,
+                      "unscalable": false,
+                      "value": 12
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "# to all Attributes"
+                        }
+                      ],
+                      "ref": "+# to all Attributes",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1379411836"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1379411836"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1379411836"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1379411836"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to all Attributes"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 16,
+                  "min": 10,
+                  "unscalable": false,
+                  "value": 12
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to all Attributes"
+                    }
+                  ],
+                  "ref": "+# to all Attributes",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1379411836"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1379411836"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1379411836"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1379411836"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to all Attributes"
+                }
+              }
+            }
+          ],
+          "statRef": "+# total to all Attributes",
+          "tag": "pseudo",
+          "text": "+# total to all Attributes ",
+          "tradeId": [
+            "pseudo.pseudo_total_all_attributes"
+          ]
+        }
+      ]
+    },
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "itemLevel": {
+          "disabled": false,
+          "value": 82
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "notCatalysed": {
+          "disabled": false
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Onyx Amulet",
+          "baseTypeTrade": "Onyx Amulet"
+        },
+        "searchRelaxed": {
+          "category": "Amulet",
+          "disabled": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        },
+        "veiled": {
+          "disabled": false,
+          "statRefs": [
+            "Veiled"
+          ]
+        }
+      },
+      "id": "filters.preset_base_item",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 16,
+              "min": 10
+            },
+            "default": {
+              "max": 13,
+              "min": 11
+            },
+            "dp": false,
+            "goodness": 0.3333333333333333,
+            "isNegated": false,
+            "min": 11,
+            "value": 12
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 16,
+                "min": 10,
+                "value": 12
+              },
+              "modifier": {
+                "info": {
+                  "mechanic": "synthesised",
+                  "tags": [
+                    "Attribute"
+                  ],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 16,
+                      "min": 10,
+                      "unscalable": false,
+                      "value": 12
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "# to all Attributes"
+                        }
+                      ],
+                      "ref": "+# to all Attributes",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1379411836"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1379411836"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1379411836"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1379411836"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to all Attributes"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 16,
+                  "min": 10,
+                  "unscalable": false,
+                  "value": 12
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to all Attributes"
+                    }
+                  ],
+                  "ref": "+# to all Attributes",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1379411836"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1379411836"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1379411836"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1379411836"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to all Attributes"
+                }
+              }
+            }
+          ],
+          "statRef": "+# to all Attributes",
+          "tag": "synthesised",
+          "text": "# to all Attributes",
+          "tradeId": [
+            "implicit.stat_1379411836"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,491 @@
+{
+  "baseType": "Onyx Amulet",
+  "category": "Amulet",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Amulet"
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQW11bGV0cy9BbXVsZXQ3IiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/58942b1ab3/Amulet7.png",
+    "name": "Onyx Amulet",
+    "namespace": "ITEM",
+    "refName": "Onyx Amulet"
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Amulet"
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQW11bGV0cy9BbXVsZXQ3IiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/58942b1ab3/Amulet7.png",
+      "name": "Onyx Amulet",
+      "namespace": "ITEM",
+      "refName": "Onyx Amulet"
+    }
+  ],
+  "isSynthesised": true,
+  "isUnidentified": false,
+  "isVeiled": true,
+  "itemLevel": 82,
+  "name": "Grim Beads",
+  "newMods": [
+    {
+      "info": {
+        "mechanic": "synthesised",
+        "tags": [
+          "Attribute"
+        ],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 16,
+            "min": 10,
+            "unscalable": false,
+            "value": 12
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to all Attributes"
+              }
+            ],
+            "ref": "+# to all Attributes",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_1379411836"
+                ],
+                "explicit": [
+                  "explicit.stat_1379411836"
+                ],
+                "fractured": [
+                  "fractured.stat_1379411836"
+                ],
+                "implicit": [
+                  "implicit.stat_1379411836"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to all Attributes"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Veiled",
+        "tags": [],
+        "type": "veiled"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Veiled"
+              }
+            ],
+            "ref": "Veiled",
+            "trade": {
+              "ids": {
+                "veiled": [
+                  "veiled.mod_65000"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Veiled"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of the Lightning",
+        "tags": [
+          "Elemental",
+          "Lightning",
+          "Resistance"
+        ],
+        "tier": 2,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 41,
+            "min": 36,
+            "unscalable": false,
+            "value": 40
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% to Lightning Resistance"
+              }
+            ],
+            "ref": "+#% to Lightning Resistance",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_1671376347"
+                ],
+                "explicit": [
+                  "explicit.stat_1671376347"
+                ],
+                "fractured": [
+                  "fractured.stat_1671376347"
+                ],
+                "implicit": [
+                  "implicit.stat_1671376347"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% to Lightning Resistance"
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Rare",
+  "rawText": "Item Class: Amulets\nRarity: Rare\nGrim Beads\nSynthesised Onyx Amulet\n--------\nRequirements:\nLevel: 40\n--------\nItem Level: 82\n--------\n{ Implicit Modifier — Attribute }\n+12(10-16) to all Attributes\n--------\n{ Prefix Modifier \"Veiled\" }\nVeiled Prefix\n{ Suffix Modifier \"of the Lightning\" (Tier: 2) — Elemental, Lightning, Resistance }\n+40(36-41)% to Lightning Resistance\n--------\nSynthesised Item\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 16,
+            "min": 10,
+            "value": 12
+          },
+          "modifier": {
+            "info": {
+              "mechanic": "synthesised",
+              "tags": [
+                "Attribute"
+              ],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 16,
+                  "min": 10,
+                  "unscalable": false,
+                  "value": 12
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to all Attributes"
+                    }
+                  ],
+                  "ref": "+# to all Attributes",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1379411836"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1379411836"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1379411836"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1379411836"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to all Attributes"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 16,
+              "min": 10,
+              "unscalable": false,
+              "value": 12
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to all Attributes"
+                }
+              ],
+              "ref": "+# to all Attributes",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_1379411836"
+                  ],
+                  "explicit": [
+                    "explicit.stat_1379411836"
+                  ],
+                  "fractured": [
+                    "fractured.stat_1379411836"
+                  ],
+                  "implicit": [
+                    "implicit.stat_1379411836"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to all Attributes"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# to all Attributes"
+          }
+        ],
+        "ref": "+# to all Attributes",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_1379411836"
+            ],
+            "explicit": [
+              "explicit.stat_1379411836"
+            ],
+            "fractured": [
+              "fractured.stat_1379411836"
+            ],
+            "implicit": [
+              "implicit.stat_1379411836"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Veiled",
+              "tags": [],
+              "type": "veiled"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Veiled"
+                    }
+                  ],
+                  "ref": "Veiled",
+                  "trade": {
+                    "ids": {
+                      "veiled": [
+                        "veiled.mod_65000"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Veiled"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Veiled"
+                }
+              ],
+              "ref": "Veiled",
+              "trade": {
+                "ids": {
+                  "veiled": [
+                    "veiled.mod_65000"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Veiled"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Veiled"
+          }
+        ],
+        "ref": "Veiled",
+        "trade": {
+          "ids": {
+            "veiled": [
+              "veiled.mod_65000"
+            ]
+          }
+        }
+      },
+      "type": "veiled"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 41,
+            "min": 36,
+            "value": 40
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of the Lightning",
+              "tags": [
+                "Elemental",
+                "Lightning",
+                "Resistance"
+              ],
+              "tier": 2,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 41,
+                  "min": 36,
+                  "unscalable": false,
+                  "value": 40
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% to Lightning Resistance"
+                    }
+                  ],
+                  "ref": "+#% to Lightning Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1671376347"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1671376347"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1671376347"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1671376347"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Lightning Resistance"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 41,
+              "min": 36,
+              "unscalable": false,
+              "value": 40
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% to Lightning Resistance"
+                }
+              ],
+              "ref": "+#% to Lightning Resistance",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_1671376347"
+                  ],
+                  "explicit": [
+                    "explicit.stat_1671376347"
+                  ],
+                  "fractured": [
+                    "fractured.stat_1671376347"
+                  ],
+                  "implicit": [
+                    "implicit.stat_1671376347"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% to Lightning Resistance"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% to Lightning Resistance"
+          }
+        ],
+        "ref": "+#% to Lightning Resistance",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_1671376347"
+            ],
+            "explicit": [
+              "explicit.stat_1671376347"
+            ],
+            "fractured": [
+              "fractured.stat_1671376347"
+            ],
+            "implicit": [
+              "implicit.stat_1671376347"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": []
+}

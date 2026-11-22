@@ -1,0 +1,30 @@
+Item Class: Boots
+Rarity: Rare
+Gloom Track
+Two-Toned Boots
+--------
+Armour: 120
+Energy Shield: 24
+--------
+Requirements:
+Level: 70
+--------
+Item Level: 84
+--------
+Adds 14 to 18 Fire Damage if you've Killed Recently (enchant)
+--------
++20% to Fire Resistance (scourge)
+--------
+{ Implicit Modifier — Elemental, Fire, Cold, Resistance }
++12(8-12)% to Fire and Cold Resistances
+--------
+{ Prefix Modifier "Fecund" (Tier: 2) — Life }
++80(80-89) to maximum Life
+{ Suffix Modifier "of Vulnerability" — Curse }
+Curse Enemies with Vulnerability on Hit
+{ Suffix Modifier "of the Wall" — Block }
++5% Chance to Block Spell Damage
+{ Suffix Modifier "of Nonsense" — Nonsense }
+This line matches no stat at all
+--------
+Twice Corrupted

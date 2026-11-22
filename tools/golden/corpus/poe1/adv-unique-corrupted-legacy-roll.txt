@@ -1,0 +1,19 @@
+Item Class: Rings
+Rarity: Unique
+Berek's Grip
+Two-Stone Ring
+--------
+Requirements:
+Level: 41
+--------
+Item Level: 75
+--------
+{ Corruption Implicit Modifier — Damage, Critical }
+11(10-12)% increased Global Critical Strike Chance
+--------
+{ Unique Modifier — Elemental, Cold, Lightning, Resistance }
++28(20-25)% to Cold and Lightning Resistances
+{ Unique Modifier — Life }
++45(40-50) to maximum Life
+--------
+Corrupted

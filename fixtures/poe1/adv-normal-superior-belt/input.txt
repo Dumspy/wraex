@@ -1,0 +1,11 @@
+Item Class: Belts
+Rarity: Normal
+Superior Leather Belt
+--------
+Requirements:
+Level: 8
+--------
+Item Level: 50
+--------
+{ Implicit Modifier — Life }
++32(25-40) to maximum Life

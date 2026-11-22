@@ -1,0 +1,74 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "category": {
+              "option": "accessory.ring"
+            },
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_elemental_resistance",
+              "value": {
+                "min": 84
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_fire_resistance",
+              "value": {
+                "min": 59
+              }
+            },
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_life",
+              "value": {
+                "min": 96
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_global_critical_strike_chance",
+              "value": {
+                "min": 22
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_jewellery_resource_quality",
+              "value": {
+                "min": 20
+              }
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      }
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

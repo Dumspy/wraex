@@ -1,0 +1,61 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "foulborn_item": {
+              "option": "false"
+            },
+            "quality": {
+              "max": 0
+            },
+            "twice_corrupted": {
+              "option": "false"
+            },
+            "vestigial": {
+              "option": "false"
+            }
+          }
+        }
+      },
+      "name": "Berek's Grip",
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "implicit.stat_587431675",
+              "value": {
+                "min": 10
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_4277795662",
+              "value": {
+                "min": 28
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_3299347043",
+              "value": {
+                "min": 44
+              }
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Two-Stone Ring"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

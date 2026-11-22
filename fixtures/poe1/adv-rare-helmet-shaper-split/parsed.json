@@ -1,0 +1,611 @@
+{
+  "armourES": 220,
+  "basePercentile": 100,
+  "baseType": "Hubris Circlet",
+  "category": "Helmet",
+  "influences": [
+    "Shaper"
+  ],
+  "info": {
+    "armour": {
+      "es": [
+        80,
+        92
+      ]
+    },
+    "craftable": {
+      "category": "Helmet"
+    },
+    "h": 2,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL0hlbG1ldEludDExIiwidyI6MiwiaCI6Miwic2NhbGUiOjF9XQ/4588b92597/HelmetInt11.png",
+    "name": "Hubris Circlet",
+    "namespace": "ITEM",
+    "refName": "Hubris Circlet",
+    "w": 2
+  },
+  "infoVariants": [
+    {
+      "armour": {
+        "es": [
+          80,
+          92
+        ]
+      },
+      "craftable": {
+        "category": "Helmet"
+      },
+      "h": 2,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL0hlbG1ldEludDExIiwidyI6MiwiaCI6Miwic2NhbGUiOjF9XQ/4588b92597/HelmetInt11.png",
+      "name": "Hubris Circlet",
+      "namespace": "ITEM",
+      "refName": "Hubris Circlet",
+      "w": 2
+    }
+  ],
+  "isFractured": true,
+  "isSplit": true,
+  "isUnidentified": false,
+  "itemLevel": 86,
+  "name": "Gale Crest",
+  "newMods": [
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Fecund",
+        "tags": [
+          "Life"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 99,
+            "min": 90,
+            "unscalable": false,
+            "value": 95
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to maximum Life"
+              }
+            ],
+            "ref": "+# to maximum Life",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3299347043"
+                ],
+                "explicit": [
+                  "explicit.stat_3299347043"
+                ],
+                "fractured": [
+                  "fractured.stat_3299347043"
+                ],
+                "implicit": [
+                  "implicit.stat_3299347043"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to maximum Life"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "mechanic": "explicit-shaper",
+        "name": "of Shaping",
+        "tags": [
+          "Defences",
+          "Energy Shield"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 6,
+            "min": 4,
+            "unscalable": false,
+            "value": 5
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% increased maximum Energy Shield"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced maximum Energy Shield"
+              }
+            ],
+            "ref": "#% increased maximum Energy Shield",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_2482852589"
+                ],
+                "explicit": [
+                  "explicit.stat_2482852589"
+                ],
+                "fractured": [
+                  "fractured.stat_2482852589"
+                ],
+                "implicit": [
+                  "implicit.stat_2482852589"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased maximum Energy Shield"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of the Ice",
+        "tags": [
+          "Elemental",
+          "Cold",
+          "Resistance"
+        ],
+        "tier": 3,
+        "type": "fractured"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 41,
+            "min": 36,
+            "unscalable": false,
+            "value": 38
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "#% to Cold Resistance"
+              }
+            ],
+            "ref": "+#% to Cold Resistance",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_4220027924"
+                ],
+                "explicit": [
+                  "explicit.stat_4220027924"
+                ],
+                "fractured": [
+                  "fractured.stat_4220027924"
+                ],
+                "implicit": [
+                  "implicit.stat_4220027924"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% to Cold Resistance"
+          }
+        }
+      ]
+    }
+  ],
+  "quality": 20,
+  "rarity": "Rare",
+  "rawText": "Item Class: Helmets\nRarity: Rare\nGale Crest\nHubris Circlet\n--------\nQuality: +20% (augmented)\nEnergy Shield: 220 (augmented)\n--------\nRequirements:\nLevel: 69\nInt: 154\n--------\nSockets: B-B-B-G \n--------\nItem Level: 86\n--------\n{ Prefix Modifier \"Fecund\" (Tier: 1) — Life }\n+95(90-99) to maximum Life\n{ Suffix Modifier \"of Shaping\" (Tier: 1) — Defences, Energy Shield }\n5(4-6)% increased maximum Energy Shield\n{ Fractured Suffix Modifier \"of the Ice\" (Tier: 3) — Elemental, Cold, Resistance }\n+38(36-41)% to Cold Resistance\n--------\nSplit\n--------\nShaper Item\n",
+  "sockets": {
+    "white": 0
+  },
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 99,
+            "min": 90,
+            "value": 95
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Fecund",
+              "tags": [
+                "Life"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 99,
+                  "min": 90,
+                  "unscalable": false,
+                  "value": 95
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Life"
+                    }
+                  ],
+                  "ref": "+# to maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3299347043"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3299347043"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3299347043"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3299347043"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Life"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 99,
+              "min": 90,
+              "unscalable": false,
+              "value": 95
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to maximum Life"
+                }
+              ],
+              "ref": "+# to maximum Life",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3299347043"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3299347043"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3299347043"
+                  ],
+                  "implicit": [
+                    "implicit.stat_3299347043"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to maximum Life"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# to maximum Life"
+          }
+        ],
+        "ref": "+# to maximum Life",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_3299347043"
+            ],
+            "explicit": [
+              "explicit.stat_3299347043"
+            ],
+            "fractured": [
+              "fractured.stat_3299347043"
+            ],
+            "implicit": [
+              "implicit.stat_3299347043"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 6,
+            "min": 4,
+            "value": 5
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "mechanic": "explicit-shaper",
+              "name": "of Shaping",
+              "tags": [
+                "Defences",
+                "Energy Shield"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 6,
+                  "min": 4,
+                  "unscalable": false,
+                  "value": 5
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased maximum Energy Shield"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced maximum Energy Shield"
+                    }
+                  ],
+                  "ref": "#% increased maximum Energy Shield",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_2482852589"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2482852589"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2482852589"
+                      ],
+                      "implicit": [
+                        "implicit.stat_2482852589"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased maximum Energy Shield"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 6,
+              "min": 4,
+              "unscalable": false,
+              "value": 5
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% increased maximum Energy Shield"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced maximum Energy Shield"
+                }
+              ],
+              "ref": "#% increased maximum Energy Shield",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_2482852589"
+                  ],
+                  "explicit": [
+                    "explicit.stat_2482852589"
+                  ],
+                  "fractured": [
+                    "fractured.stat_2482852589"
+                  ],
+                  "implicit": [
+                    "implicit.stat_2482852589"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased maximum Energy Shield"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% increased maximum Energy Shield"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced maximum Energy Shield"
+          }
+        ],
+        "ref": "#% increased maximum Energy Shield",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_2482852589"
+            ],
+            "explicit": [
+              "explicit.stat_2482852589"
+            ],
+            "fractured": [
+              "fractured.stat_2482852589"
+            ],
+            "implicit": [
+              "implicit.stat_2482852589"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 41,
+            "min": 36,
+            "value": 38
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of the Ice",
+              "tags": [
+                "Elemental",
+                "Cold",
+                "Resistance"
+              ],
+              "tier": 3,
+              "type": "fractured"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 41,
+                  "min": 36,
+                  "unscalable": false,
+                  "value": 38
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% to Cold Resistance"
+                    }
+                  ],
+                  "ref": "+#% to Cold Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4220027924"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4220027924"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4220027924"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4220027924"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Cold Resistance"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 41,
+              "min": 36,
+              "unscalable": false,
+              "value": 38
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "#% to Cold Resistance"
+                }
+              ],
+              "ref": "+#% to Cold Resistance",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_4220027924"
+                  ],
+                  "explicit": [
+                    "explicit.stat_4220027924"
+                  ],
+                  "fractured": [
+                    "fractured.stat_4220027924"
+                  ],
+                  "implicit": [
+                    "implicit.stat_4220027924"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% to Cold Resistance"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "#% to Cold Resistance"
+          }
+        ],
+        "ref": "+#% to Cold Resistance",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_4220027924"
+            ],
+            "explicit": [
+              "explicit.stat_4220027924"
+            ],
+            "fractured": [
+              "fractured.stat_4220027924"
+            ],
+            "implicit": [
+              "implicit.stat_4220027924"
+            ]
+          }
+        }
+      },
+      "type": "fractured"
+    }
+  ],
+  "unknownModifiers": []
+}

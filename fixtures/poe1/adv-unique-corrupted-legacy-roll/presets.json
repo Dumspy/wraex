@@ -1,0 +1,407 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": true
+        },
+        "foulborn": {
+          "value": false
+        },
+        "notCatalysed": {
+          "disabled": false
+        },
+        "searchExact": {
+          "baseTypeTrade": "Two-Stone Ring",
+          "name": "Berek's Grip",
+          "nameTrade": "Berek's Grip"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        },
+        "vestigial": {
+          "value": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 12,
+              "min": 10
+            },
+            "default": {
+              "max": 12,
+              "min": 10
+            },
+            "dp": false,
+            "goodness": 0.5,
+            "isNegated": false,
+            "min": 10,
+            "value": 11
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 12,
+                "min": 10,
+                "value": 11
+              },
+              "modifier": {
+                "info": {
+                  "mechanic": "corrupted",
+                  "tags": [
+                    "Damage",
+                    "Critical"
+                  ],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 12,
+                      "min": 10,
+                      "unscalable": false,
+                      "value": 11
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased Global Critical Strike Chance"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Global Critical Strike Chance"
+                        }
+                      ],
+                      "ref": "#% increased Global Critical Strike Chance",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_587431675"
+                          ],
+                          "explicit": [
+                            "explicit.stat_587431675"
+                          ],
+                          "fractured": [
+                            "fractured.stat_587431675"
+                          ],
+                          "implicit": [
+                            "implicit.stat_587431675"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Global Critical Strike Chance"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 12,
+                  "min": 10,
+                  "unscalable": false,
+                  "value": 11
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Global Critical Strike Chance"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Global Critical Strike Chance"
+                    }
+                  ],
+                  "ref": "#% increased Global Critical Strike Chance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_587431675"
+                      ],
+                      "explicit": [
+                        "explicit.stat_587431675"
+                      ],
+                      "fractured": [
+                        "fractured.stat_587431675"
+                      ],
+                      "implicit": [
+                        "implicit.stat_587431675"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Global Critical Strike Chance"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Global Critical Strike Chance",
+          "tag": "corrupted",
+          "text": "#% increased Global Critical Strike Chance",
+          "tradeId": [
+            "implicit.stat_587431675"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 28,
+              "min": 20
+            },
+            "default": {
+              "max": 28,
+              "min": 28
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 28,
+            "value": 28
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 28,
+                "min": 20,
+                "value": 28
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Elemental",
+                    "Cold",
+                    "Lightning",
+                    "Resistance"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "generation": "volatile",
+                      "max": 28,
+                      "min": 20,
+                      "unscalable": false,
+                      "value": 28
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% to Cold and Lightning Resistances"
+                        }
+                      ],
+                      "ref": "+#% to Cold and Lightning Resistances",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_4277795662"
+                          ],
+                          "explicit": [
+                            "explicit.stat_4277795662"
+                          ],
+                          "fractured": [
+                            "fractured.stat_4277795662"
+                          ],
+                          "implicit": [
+                            "implicit.stat_4277795662"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Cold and Lightning Resistances"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "generation": "volatile",
+                  "max": 28,
+                  "min": 20,
+                  "unscalable": false,
+                  "value": 28
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% to Cold and Lightning Resistances"
+                    }
+                  ],
+                  "ref": "+#% to Cold and Lightning Resistances",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4277795662"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4277795662"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4277795662"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4277795662"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Cold and Lightning Resistances"
+                }
+              }
+            }
+          ],
+          "statRef": "+#% to Cold and Lightning Resistances",
+          "tag": "explicit",
+          "text": "#% to Cold and Lightning Resistances",
+          "tradeId": [
+            "explicit.stat_4277795662"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 50,
+              "min": 40
+            },
+            "default": {
+              "max": 46,
+              "min": 44
+            },
+            "dp": false,
+            "goodness": 0.5,
+            "isNegated": false,
+            "min": 44,
+            "value": 45
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 50,
+                "min": 40,
+                "value": 45
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Life"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 50,
+                      "min": 40,
+                      "unscalable": false,
+                      "value": 45
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "# to maximum Life"
+                        }
+                      ],
+                      "ref": "+# to maximum Life",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_3299347043"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3299347043"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3299347043"
+                          ],
+                          "implicit": [
+                            "implicit.stat_3299347043"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to maximum Life"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 50,
+                  "min": 40,
+                  "unscalable": false,
+                  "value": 45
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Life"
+                    }
+                  ],
+                  "ref": "+# to maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3299347043"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3299347043"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3299347043"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3299347043"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Life"
+                }
+              }
+            }
+          ],
+          "statRef": "+# to maximum Life",
+          "tag": "explicit",
+          "text": "# to maximum Life",
+          "tradeId": [
+            "explicit.stat_3299347043"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,592 @@
+{
+  "category": "Flask",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Flask"
+    },
+    "h": 2,
+    "icon": "https://web.poecdn.com/gen/image/WzksMTQseyJmIjoiMkRJdGVtcy9GbGFza3MvbGlmZWZsYXNrMTEiLCJ3IjoxLCJoIjoyLCJzY2FsZSI6MSwibGV2ZWwiOjF9XQ/54ba3c70ae/lifeflask11.png",
+    "name": "Divine Life Flask",
+    "namespace": "ITEM",
+    "refName": "Divine Life Flask"
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Flask"
+      },
+      "h": 2,
+      "icon": "https://web.poecdn.com/gen/image/WzksMTQseyJmIjoiMkRJdGVtcy9GbGFza3MvbGlmZWZsYXNrMTEiLCJ3IjoxLCJoIjoyLCJzY2FsZSI6MSwibGV2ZWwiOjF9XQ/54ba3c70ae/lifeflask11.png",
+      "name": "Divine Life Flask",
+      "namespace": "ITEM",
+      "refName": "Divine Life Flask"
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 84,
+  "name": "Divine Life Flask",
+  "newMods": [
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Seething",
+        "tags": [
+          "Life"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": -66,
+            "min": -66,
+            "unscalable": false,
+            "value": -66
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% increased Amount Recovered"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Amount Recovered"
+              }
+            ],
+            "ref": "#% increased Amount Recovered",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_700317374"
+                ],
+                "fractured": [
+                  "fractured.stat_700317374"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "negate": true,
+            "string": "#% reduced Amount Recovered"
+          }
+        },
+        {
+          "roll": {
+            "dp": false,
+            "max": 100,
+            "min": 100,
+            "unscalable": false,
+            "value": 100
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% of Recovery applied Instantly"
+              },
+              {
+                "string": "Instant Recovery",
+                "value": 100
+              }
+            ],
+            "ref": "#% of Recovery applied Instantly",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_2503377690",
+                  "{empty_if_100}explicit.stat_1526933524"
+                ],
+                "fractured": [
+                  "fractured.stat_2503377690",
+                  "{empty_if_100}fractured.stat_1526933524"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Instant Recovery",
+            "value": 100
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Staunching",
+        "tags": [
+          "Bleeding"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 9,
+            "min": 6,
+            "unscalable": false,
+            "value": 9
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Grants Immunity to Bleeding for # seconds if used while Bleeding\nGrants Immunity to Corrupted Blood for # seconds if used while affected by Corrupted Blood"
+              }
+            ],
+            "ref": "Grants Immunity to Bleeding for # seconds if used while Bleeding\nGrants Immunity to Corrupted Blood for # seconds if used while affected by Corrupted Blood",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_182714578"
+                ],
+                "fractured": [
+                  "fractured.stat_182714578"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Grants Immunity to Bleeding for # seconds if used while Bleeding\nGrants Immunity to Corrupted Blood for # seconds if used while affected by Corrupted Blood"
+          }
+        }
+      ]
+    }
+  ],
+  "quality": 20,
+  "rarity": "Magic",
+  "rawText": "Item Class: Life Flasks\nRarity: Magic\nSeething Divine Life Flask of Staunching\n--------\nQuality: +20% (augmented)\nRecovers 3360 (augmented) Life over 7.00 Seconds\nConsumes 15 of 45 Charges on use\nCurrently has 45 Charges\n--------\nRequirements:\nLevel: 60\n--------\nItem Level: 84\n--------\n{ Prefix Modifier \"Seething\" (Tier: 1) — Life }\n66% reduced Amount Recovered\nInstant Recovery\n{ Suffix Modifier \"of Staunching\" — Bleeding }\nGrants Immunity to Bleeding for 9(6-9) seconds if used while Bleeding\nGrants Immunity to Corrupted Blood for 9(6-9) seconds if used while affected by Corrupted Blood\n--------\nRight click to drink. Can only hold charges while in belt. Refills as you kill monsters.\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": -66,
+            "min": -66,
+            "value": -66
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Seething",
+              "tags": [
+                "Life"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": -66,
+                  "min": -66,
+                  "unscalable": false,
+                  "value": -66
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Amount Recovered"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Amount Recovered"
+                    }
+                  ],
+                  "ref": "#% increased Amount Recovered",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_700317374"
+                      ],
+                      "fractured": [
+                        "fractured.stat_700317374"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "negate": true,
+                  "string": "#% reduced Amount Recovered"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 100,
+                  "min": 100,
+                  "unscalable": false,
+                  "value": 100
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% of Recovery applied Instantly"
+                    },
+                    {
+                      "string": "Instant Recovery",
+                      "value": 100
+                    }
+                  ],
+                  "ref": "#% of Recovery applied Instantly",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_2503377690",
+                        "{empty_if_100}explicit.stat_1526933524"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2503377690",
+                        "{empty_if_100}fractured.stat_1526933524"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Instant Recovery",
+                  "value": 100
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": -66,
+              "min": -66,
+              "unscalable": false,
+              "value": -66
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% increased Amount Recovered"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Amount Recovered"
+                }
+              ],
+              "ref": "#% increased Amount Recovered",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_700317374"
+                  ],
+                  "fractured": [
+                    "fractured.stat_700317374"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "negate": true,
+              "string": "#% reduced Amount Recovered"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% increased Amount Recovered"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Amount Recovered"
+          }
+        ],
+        "ref": "#% increased Amount Recovered",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_700317374"
+            ],
+            "fractured": [
+              "fractured.stat_700317374"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 100,
+            "min": 100,
+            "value": 100
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Seething",
+              "tags": [
+                "Life"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": -66,
+                  "min": -66,
+                  "unscalable": false,
+                  "value": -66
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Amount Recovered"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Amount Recovered"
+                    }
+                  ],
+                  "ref": "#% increased Amount Recovered",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_700317374"
+                      ],
+                      "fractured": [
+                        "fractured.stat_700317374"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "negate": true,
+                  "string": "#% reduced Amount Recovered"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 100,
+                  "min": 100,
+                  "unscalable": false,
+                  "value": 100
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% of Recovery applied Instantly"
+                    },
+                    {
+                      "string": "Instant Recovery",
+                      "value": 100
+                    }
+                  ],
+                  "ref": "#% of Recovery applied Instantly",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_2503377690",
+                        "{empty_if_100}explicit.stat_1526933524"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2503377690",
+                        "{empty_if_100}fractured.stat_1526933524"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Instant Recovery",
+                  "value": 100
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 100,
+              "min": 100,
+              "unscalable": false,
+              "value": 100
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% of Recovery applied Instantly"
+                },
+                {
+                  "string": "Instant Recovery",
+                  "value": 100
+                }
+              ],
+              "ref": "#% of Recovery applied Instantly",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_2503377690",
+                    "{empty_if_100}explicit.stat_1526933524"
+                  ],
+                  "fractured": [
+                    "fractured.stat_2503377690",
+                    "{empty_if_100}fractured.stat_1526933524"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Instant Recovery",
+              "value": 100
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% of Recovery applied Instantly"
+          },
+          {
+            "string": "Instant Recovery",
+            "value": 100
+          }
+        ],
+        "ref": "#% of Recovery applied Instantly",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_2503377690",
+              "{empty_if_100}explicit.stat_1526933524"
+            ],
+            "fractured": [
+              "fractured.stat_2503377690",
+              "{empty_if_100}fractured.stat_1526933524"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 9,
+            "min": 6,
+            "value": 9
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Staunching",
+              "tags": [
+                "Bleeding"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 9,
+                  "min": 6,
+                  "unscalable": false,
+                  "value": 9
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Grants Immunity to Bleeding for # seconds if used while Bleeding\nGrants Immunity to Corrupted Blood for # seconds if used while affected by Corrupted Blood"
+                    }
+                  ],
+                  "ref": "Grants Immunity to Bleeding for # seconds if used while Bleeding\nGrants Immunity to Corrupted Blood for # seconds if used while affected by Corrupted Blood",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_182714578"
+                      ],
+                      "fractured": [
+                        "fractured.stat_182714578"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Grants Immunity to Bleeding for # seconds if used while Bleeding\nGrants Immunity to Corrupted Blood for # seconds if used while affected by Corrupted Blood"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 9,
+              "min": 6,
+              "unscalable": false,
+              "value": 9
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Grants Immunity to Bleeding for # seconds if used while Bleeding\nGrants Immunity to Corrupted Blood for # seconds if used while affected by Corrupted Blood"
+                }
+              ],
+              "ref": "Grants Immunity to Bleeding for # seconds if used while Bleeding\nGrants Immunity to Corrupted Blood for # seconds if used while affected by Corrupted Blood",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_182714578"
+                  ],
+                  "fractured": [
+                    "fractured.stat_182714578"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Grants Immunity to Bleeding for # seconds if used while Bleeding\nGrants Immunity to Corrupted Blood for # seconds if used while affected by Corrupted Blood"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Grants Immunity to Bleeding for # seconds if used while Bleeding\nGrants Immunity to Corrupted Blood for # seconds if used while affected by Corrupted Blood"
+          }
+        ],
+        "ref": "Grants Immunity to Bleeding for # seconds if used while Bleeding\nGrants Immunity to Corrupted Blood for # seconds if used while affected by Corrupted Blood",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_182714578"
+            ],
+            "fractured": [
+              "fractured.stat_182714578"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": []
+}

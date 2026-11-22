@@ -1,0 +1,19 @@
+Item Class: Amulets
+Rarity: Rare
+Grim Beads
+Synthesised Onyx Amulet
+--------
+Requirements:
+Level: 40
+--------
+Item Level: 82
+--------
+{ Implicit Modifier — Attribute }
++12(10-16) to all Attributes
+--------
+{ Prefix Modifier "Veiled" }
+Veiled Prefix
+{ Suffix Modifier "of the Lightning" (Tier: 2) — Elemental, Lightning, Resistance }
++40(36-41)% to Lightning Resistance
+--------
+Synthesised Item

@@ -1,0 +1,424 @@
+{
+  "category": "Jewel",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Jewel"
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvSmV3ZWxzL2Jhc2ljZGV4IiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/9ed22a2b94/basicdex.png",
+    "name": "Viridian Jewel",
+    "namespace": "ITEM",
+    "refName": "Viridian Jewel"
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Jewel"
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvSmV3ZWxzL2Jhc2ljZGV4IiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/9ed22a2b94/basicdex.png",
+      "name": "Viridian Jewel",
+      "namespace": "ITEM",
+      "refName": "Viridian Jewel"
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 83,
+  "name": "Viridian Jewel",
+  "newMods": [
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Vivid",
+        "tags": [
+          "Life"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 7,
+            "min": 5,
+            "unscalable": false,
+            "value": 7
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% increased maximum Life"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced maximum Life"
+              }
+            ],
+            "ref": "#% increased maximum Life",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_983749596"
+                ],
+                "enchant": [
+                  "enchant.stat_983749596"
+                ],
+                "explicit": [
+                  "explicit.stat_983749596"
+                ],
+                "fractured": [
+                  "fractured.stat_983749596"
+                ],
+                "implicit": [
+                  "implicit.stat_983749596"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased maximum Life"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of the Rainbow",
+        "tags": [
+          "Mana"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 10,
+            "min": 8,
+            "unscalable": false,
+            "value": 10
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% reduced Mana Cost of Skills"
+              },
+              {
+                "negate": true,
+                "string": "#% increased Mana Cost of Skills"
+              }
+            ],
+            "ref": "#% reduced Mana Cost of Skills",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_474294393"
+                ],
+                "explicit": [
+                  "explicit.stat_474294393"
+                ],
+                "fractured": [
+                  "fractured.stat_474294393"
+                ],
+                "implicit": [
+                  "implicit.stat_474294393"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% reduced Mana Cost of Skills"
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Magic",
+  "rawText": "Item Class: Jewels\nRarity: Magic\nVivid Viridian Jewel of the Rainbow\n--------\nItem Level: 83\n--------\n{ Prefix Modifier \"Vivid\" (Tier: 1) — Life }\n7(5-7)% increased maximum Life\n{ Suffix Modifier \"of the Rainbow\" — Mana }\n10(8-10)% reduced Mana Cost of Skills\n--------\nPlace into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 7,
+            "min": 5,
+            "value": 7
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Vivid",
+              "tags": [
+                "Life"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 7,
+                  "min": 5,
+                  "unscalable": false,
+                  "value": 7
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased maximum Life"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced maximum Life"
+                    }
+                  ],
+                  "ref": "#% increased maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_983749596"
+                      ],
+                      "enchant": [
+                        "enchant.stat_983749596"
+                      ],
+                      "explicit": [
+                        "explicit.stat_983749596"
+                      ],
+                      "fractured": [
+                        "fractured.stat_983749596"
+                      ],
+                      "implicit": [
+                        "implicit.stat_983749596"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased maximum Life"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 7,
+              "min": 5,
+              "unscalable": false,
+              "value": 7
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% increased maximum Life"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced maximum Life"
+                }
+              ],
+              "ref": "#% increased maximum Life",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_983749596"
+                  ],
+                  "enchant": [
+                    "enchant.stat_983749596"
+                  ],
+                  "explicit": [
+                    "explicit.stat_983749596"
+                  ],
+                  "fractured": [
+                    "fractured.stat_983749596"
+                  ],
+                  "implicit": [
+                    "implicit.stat_983749596"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased maximum Life"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% increased maximum Life"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced maximum Life"
+          }
+        ],
+        "ref": "#% increased maximum Life",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_983749596"
+            ],
+            "enchant": [
+              "enchant.stat_983749596"
+            ],
+            "explicit": [
+              "explicit.stat_983749596"
+            ],
+            "fractured": [
+              "fractured.stat_983749596"
+            ],
+            "implicit": [
+              "implicit.stat_983749596"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 10,
+            "min": 8,
+            "value": 10
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of the Rainbow",
+              "tags": [
+                "Mana"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 10,
+                  "min": 8,
+                  "unscalable": false,
+                  "value": 10
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% reduced Mana Cost of Skills"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% increased Mana Cost of Skills"
+                    }
+                  ],
+                  "ref": "#% reduced Mana Cost of Skills",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_474294393"
+                      ],
+                      "explicit": [
+                        "explicit.stat_474294393"
+                      ],
+                      "fractured": [
+                        "fractured.stat_474294393"
+                      ],
+                      "implicit": [
+                        "implicit.stat_474294393"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% reduced Mana Cost of Skills"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 10,
+              "min": 8,
+              "unscalable": false,
+              "value": 10
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% reduced Mana Cost of Skills"
+                },
+                {
+                  "negate": true,
+                  "string": "#% increased Mana Cost of Skills"
+                }
+              ],
+              "ref": "#% reduced Mana Cost of Skills",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_474294393"
+                  ],
+                  "explicit": [
+                    "explicit.stat_474294393"
+                  ],
+                  "fractured": [
+                    "fractured.stat_474294393"
+                  ],
+                  "implicit": [
+                    "implicit.stat_474294393"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% reduced Mana Cost of Skills"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% reduced Mana Cost of Skills"
+          },
+          {
+            "negate": true,
+            "string": "#% increased Mana Cost of Skills"
+          }
+        ],
+        "ref": "#% reduced Mana Cost of Skills",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_474294393"
+            ],
+            "explicit": [
+              "explicit.stat_474294393"
+            ],
+            "fractured": [
+              "fractured.stat_474294393"
+            ],
+            "implicit": [
+              "implicit.stat_474294393"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": []
+}

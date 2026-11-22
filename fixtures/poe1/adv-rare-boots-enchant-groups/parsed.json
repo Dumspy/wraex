@@ -1,0 +1,888 @@
+{
+  "armourAR": 120,
+  "armourES": 24,
+  "basePercentile": 0,
+  "baseType": "Two-Toned Boots",
+  "category": "Boots",
+  "influences": [],
+  "info": {
+    "armour": {
+      "ar": [
+        126,
+        145
+      ],
+      "es": [
+        26,
+        30
+      ]
+    },
+    "craftable": {
+      "category": "Boots"
+    },
+    "disc": {
+      "propAR": true,
+      "propES": true
+    },
+    "h": 2,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9Ud29Ub25lZEJvb3RzM0IiLCJ3IjoyLCJoIjoyLCJzY2FsZSI6MX1d/e3271c5de1/TwoTonedBoots3B.png",
+    "name": "Two-Toned Boots",
+    "namespace": "ITEM",
+    "refName": "Two-Toned Boots",
+    "w": 2
+  },
+  "infoVariants": [
+    {
+      "armour": {
+        "es": [
+          26,
+          30
+        ],
+        "ev": [
+          126,
+          145
+        ]
+      },
+      "craftable": {
+        "category": "Boots"
+      },
+      "disc": {
+        "propES": true,
+        "propEV": true
+      },
+      "h": 2,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9Ud29Ub25lZEJvb3RzIiwidyI6MiwiaCI6Miwic2NhbGUiOjF9XQ/93a61b5672/TwoTonedBoots.png",
+      "name": "Two-Toned Boots",
+      "namespace": "ITEM",
+      "refName": "Two-Toned Boots",
+      "w": 2
+    },
+    {
+      "armour": {
+        "ar": [
+          126,
+          145
+        ],
+        "ev": [
+          126,
+          145
+        ]
+      },
+      "craftable": {
+        "category": "Boots"
+      },
+      "disc": {
+        "propAR": true,
+        "propEV": true
+      },
+      "h": 2,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9Ud29Ub25lZEJvb3RzMkIiLCJ3IjoyLCJoIjoyLCJzY2FsZSI6MX1d/c046f556ab/TwoTonedBoots2B.png",
+      "name": "Two-Toned Boots",
+      "namespace": "ITEM",
+      "refName": "Two-Toned Boots",
+      "w": 2
+    },
+    {
+      "armour": {
+        "ar": [
+          126,
+          145
+        ],
+        "es": [
+          26,
+          30
+        ]
+      },
+      "craftable": {
+        "category": "Boots"
+      },
+      "disc": {
+        "propAR": true,
+        "propES": true
+      },
+      "h": 2,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9Ud29Ub25lZEJvb3RzM0IiLCJ3IjoyLCJoIjoyLCJzY2FsZSI6MX1d/e3271c5de1/TwoTonedBoots3B.png",
+      "name": "Two-Toned Boots",
+      "namespace": "ITEM",
+      "refName": "Two-Toned Boots",
+      "w": 2
+    }
+  ],
+  "isCorrupted": {
+    "twice": true
+  },
+  "isUnidentified": false,
+  "itemLevel": 84,
+  "name": "Gloom Track",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "enchant"
+      },
+      "stats": []
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "scourge"
+      },
+      "stats": []
+    },
+    {
+      "info": {
+        "tags": [
+          "Elemental",
+          "Fire",
+          "Cold",
+          "Resistance"
+        ],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 12,
+            "min": 8,
+            "unscalable": false,
+            "value": 12
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% to Fire and Cold Resistances"
+              }
+            ],
+            "ref": "+#% to Fire and Cold Resistances",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_2915988346"
+                ],
+                "explicit": [
+                  "explicit.stat_2915988346"
+                ],
+                "fractured": [
+                  "fractured.stat_2915988346"
+                ],
+                "implicit": [
+                  "implicit.stat_2915988346"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% to Fire and Cold Resistances"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Fecund",
+        "tags": [
+          "Life"
+        ],
+        "tier": 2,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 89,
+            "min": 80,
+            "unscalable": false,
+            "value": 80
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to maximum Life"
+              }
+            ],
+            "ref": "+# to maximum Life",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3299347043"
+                ],
+                "explicit": [
+                  "explicit.stat_3299347043"
+                ],
+                "fractured": [
+                  "fractured.stat_3299347043"
+                ],
+                "implicit": [
+                  "implicit.stat_3299347043"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to maximum Life"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Vulnerability",
+        "tags": [
+          "Curse"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 100,
+            "min": 100,
+            "unscalable": false,
+            "value": 100
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% chance to Curse Enemies with Vulnerability on Hit"
+              },
+              {
+                "string": "Curse Enemies with Vulnerability on Hit",
+                "value": 100
+              }
+            ],
+            "ref": "#% chance to Curse Enemies with Vulnerability on Hit",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_2213584313",
+                  "{empty_if_100}explicit.stat_3967845372"
+                ],
+                "fractured": [
+                  "fractured.stat_2213584313",
+                  "{empty_if_100}fractured.stat_3967845372"
+                ],
+                "implicit": [
+                  "{empty_if_100}implicit.stat_3967845372"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Curse Enemies with Vulnerability on Hit",
+            "value": 100
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of the Wall",
+        "tags": [
+          "Block"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 5,
+            "min": 5,
+            "unscalable": false,
+            "value": 5
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "#% Chance to Block Spell Damage"
+              }
+            ],
+            "ref": "#% Chance to Block Spell Damage",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_561307714",
+                  "crafted.stat_19803471"
+                ],
+                "explicit": [
+                  "explicit.stat_561307714",
+                  "explicit.stat_19803471"
+                ],
+                "fractured": [
+                  "fractured.stat_561307714",
+                  "fractured.stat_19803471"
+                ],
+                "implicit": [
+                  "implicit.stat_561307714",
+                  "implicit.stat_19803471"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% Chance to Block Spell Damage"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Nonsense",
+        "tags": [
+          "Nonsense"
+        ],
+        "type": "explicit"
+      },
+      "stats": []
+    }
+  ],
+  "rarity": "Rare",
+  "rawText": "Item Class: Boots\nRarity: Rare\nGloom Track\nTwo-Toned Boots\n--------\nArmour: 120\nEnergy Shield: 24\n--------\nRequirements:\nLevel: 70\n--------\nItem Level: 84\n--------\nAdds 14 to 18 Fire Damage if you've Killed Recently (enchant)\n--------\n+20% to Fire Resistance (scourge)\n--------\n{ Implicit Modifier — Elemental, Fire, Cold, Resistance }\n+12(8-12)% to Fire and Cold Resistances\n--------\n{ Prefix Modifier \"Fecund\" (Tier: 2) — Life }\n+80(80-89) to maximum Life\n{ Suffix Modifier \"of Vulnerability\" — Curse }\nCurse Enemies with Vulnerability on Hit\n{ Suffix Modifier \"of the Wall\" — Block }\n+5% Chance to Block Spell Damage\n{ Suffix Modifier \"of Nonsense\" — Nonsense }\nThis line matches no stat at all\n--------\nTwice Corrupted\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 12,
+            "min": 8,
+            "value": 12
+          },
+          "modifier": {
+            "info": {
+              "tags": [
+                "Elemental",
+                "Fire",
+                "Cold",
+                "Resistance"
+              ],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 12,
+                  "min": 8,
+                  "unscalable": false,
+                  "value": 12
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% to Fire and Cold Resistances"
+                    }
+                  ],
+                  "ref": "+#% to Fire and Cold Resistances",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_2915988346"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2915988346"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2915988346"
+                      ],
+                      "implicit": [
+                        "implicit.stat_2915988346"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Fire and Cold Resistances"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 12,
+              "min": 8,
+              "unscalable": false,
+              "value": 12
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% to Fire and Cold Resistances"
+                }
+              ],
+              "ref": "+#% to Fire and Cold Resistances",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_2915988346"
+                  ],
+                  "explicit": [
+                    "explicit.stat_2915988346"
+                  ],
+                  "fractured": [
+                    "fractured.stat_2915988346"
+                  ],
+                  "implicit": [
+                    "implicit.stat_2915988346"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% to Fire and Cold Resistances"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% to Fire and Cold Resistances"
+          }
+        ],
+        "ref": "+#% to Fire and Cold Resistances",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_2915988346"
+            ],
+            "explicit": [
+              "explicit.stat_2915988346"
+            ],
+            "fractured": [
+              "fractured.stat_2915988346"
+            ],
+            "implicit": [
+              "implicit.stat_2915988346"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 89,
+            "min": 80,
+            "value": 80
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Fecund",
+              "tags": [
+                "Life"
+              ],
+              "tier": 2,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 89,
+                  "min": 80,
+                  "unscalable": false,
+                  "value": 80
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Life"
+                    }
+                  ],
+                  "ref": "+# to maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3299347043"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3299347043"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3299347043"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3299347043"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Life"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 89,
+              "min": 80,
+              "unscalable": false,
+              "value": 80
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to maximum Life"
+                }
+              ],
+              "ref": "+# to maximum Life",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3299347043"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3299347043"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3299347043"
+                  ],
+                  "implicit": [
+                    "implicit.stat_3299347043"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to maximum Life"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# to maximum Life"
+          }
+        ],
+        "ref": "+# to maximum Life",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_3299347043"
+            ],
+            "explicit": [
+              "explicit.stat_3299347043"
+            ],
+            "fractured": [
+              "fractured.stat_3299347043"
+            ],
+            "implicit": [
+              "implicit.stat_3299347043"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 100,
+            "min": 100,
+            "value": 100
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Vulnerability",
+              "tags": [
+                "Curse"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 100,
+                  "min": 100,
+                  "unscalable": false,
+                  "value": 100
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% chance to Curse Enemies with Vulnerability on Hit"
+                    },
+                    {
+                      "string": "Curse Enemies with Vulnerability on Hit",
+                      "value": 100
+                    }
+                  ],
+                  "ref": "#% chance to Curse Enemies with Vulnerability on Hit",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_2213584313",
+                        "{empty_if_100}explicit.stat_3967845372"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2213584313",
+                        "{empty_if_100}fractured.stat_3967845372"
+                      ],
+                      "implicit": [
+                        "{empty_if_100}implicit.stat_3967845372"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Curse Enemies with Vulnerability on Hit",
+                  "value": 100
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 100,
+              "min": 100,
+              "unscalable": false,
+              "value": 100
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% chance to Curse Enemies with Vulnerability on Hit"
+                },
+                {
+                  "string": "Curse Enemies with Vulnerability on Hit",
+                  "value": 100
+                }
+              ],
+              "ref": "#% chance to Curse Enemies with Vulnerability on Hit",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_2213584313",
+                    "{empty_if_100}explicit.stat_3967845372"
+                  ],
+                  "fractured": [
+                    "fractured.stat_2213584313",
+                    "{empty_if_100}fractured.stat_3967845372"
+                  ],
+                  "implicit": [
+                    "{empty_if_100}implicit.stat_3967845372"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Curse Enemies with Vulnerability on Hit",
+              "value": 100
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% chance to Curse Enemies with Vulnerability on Hit"
+          },
+          {
+            "string": "Curse Enemies with Vulnerability on Hit",
+            "value": 100
+          }
+        ],
+        "ref": "#% chance to Curse Enemies with Vulnerability on Hit",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_2213584313",
+              "{empty_if_100}explicit.stat_3967845372"
+            ],
+            "fractured": [
+              "fractured.stat_2213584313",
+              "{empty_if_100}fractured.stat_3967845372"
+            ],
+            "implicit": [
+              "{empty_if_100}implicit.stat_3967845372"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 5,
+            "min": 5,
+            "value": 5
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of the Wall",
+              "tags": [
+                "Block"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 5,
+                  "min": 5,
+                  "unscalable": false,
+                  "value": 5
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% Chance to Block Spell Damage"
+                    }
+                  ],
+                  "ref": "#% Chance to Block Spell Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_561307714",
+                        "crafted.stat_19803471"
+                      ],
+                      "explicit": [
+                        "explicit.stat_561307714",
+                        "explicit.stat_19803471"
+                      ],
+                      "fractured": [
+                        "fractured.stat_561307714",
+                        "fractured.stat_19803471"
+                      ],
+                      "implicit": [
+                        "implicit.stat_561307714",
+                        "implicit.stat_19803471"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% Chance to Block Spell Damage"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 5,
+              "min": 5,
+              "unscalable": false,
+              "value": 5
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "#% Chance to Block Spell Damage"
+                }
+              ],
+              "ref": "#% Chance to Block Spell Damage",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_561307714",
+                    "crafted.stat_19803471"
+                  ],
+                  "explicit": [
+                    "explicit.stat_561307714",
+                    "explicit.stat_19803471"
+                  ],
+                  "fractured": [
+                    "fractured.stat_561307714",
+                    "fractured.stat_19803471"
+                  ],
+                  "implicit": [
+                    "implicit.stat_561307714",
+                    "implicit.stat_19803471"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% Chance to Block Spell Damage"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "#% Chance to Block Spell Damage"
+          }
+        ],
+        "ref": "#% Chance to Block Spell Damage",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_561307714",
+              "crafted.stat_19803471"
+            ],
+            "explicit": [
+              "explicit.stat_561307714",
+              "explicit.stat_19803471"
+            ],
+            "fractured": [
+              "fractured.stat_561307714",
+              "fractured.stat_19803471"
+            ],
+            "implicit": [
+              "implicit.stat_561307714",
+              "implicit.stat_19803471"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": [
+    {
+      "text": "Adds 14 to 18 Fire Damage if you've Killed Recently",
+      "type": "enchant"
+    },
+    {
+      "text": "+20% to Fire Resistance",
+      "type": "scourge"
+    },
+    {
+      "text": "This line matches no stat at all",
+      "type": "explicit"
+    }
+  ]
+}

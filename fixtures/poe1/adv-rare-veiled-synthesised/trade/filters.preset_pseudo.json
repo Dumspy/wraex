@@ -1,0 +1,77 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "ilvl": {
+              "min": 82
+            },
+            "mirrored": {
+              "option": "false"
+            },
+            "quality": {
+              "max": 0
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "category": {
+              "option": "accessory.amulet"
+            },
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_elemental_resistance",
+              "value": {
+                "min": 36
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_lightning_resistance",
+              "value": {
+                "min": 36
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_all_attributes",
+              "value": {
+                "min": 10
+              }
+            },
+            {
+              "disabled": false,
+              "id": "veiled.mod_65000",
+              "value": {}
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      }
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

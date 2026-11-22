@@ -1,0 +1,59 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "ilvl": {
+              "min": 50
+            },
+            "mirrored": {
+              "option": "false"
+            },
+            "quality": {
+              "max": 0
+            },
+            "split": {
+              "option": "false"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "implicit.stat_3299347043",
+              "value": {
+                "min": 31
+              }
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Leather Belt"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "category": {
+              "option": "weapon.onesword"
+            },
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        },
+        "weapon_filters": {
+          "filters": {
+            "dps": {
+              "min": 217
+            },
+            "pdps": {
+              "min": 161
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_global_critical_strike_multiplier",
+              "value": {
+                "min": 25
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_3885634897",
+              "value": {
+                "min": 18
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_1621470436",
+              "value": {
+                "min": 20
+              }
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      }
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "type_filters": {
+          "filters": {
+            "category": {
+              "option": "armour.boots"
+            },
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_elemental_resistance",
+              "value": {
+                "min": 21
+              }
+            },
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_life",
+              "value": {
+                "min": 80
+              }
+            }
+          ],
+          "type": "and"
+        },
+        {
+          "disabled": true,
+          "filters": [
+            {
+              "disabled": true,
+              "id": "explicit.stat_2213584313",
+              "value": {
+                "min": 100
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_3967845372",
+              "value": {}
+            }
+          ],
+          "type": "count",
+          "value": {
+            "min": 1
+          }
+        },
+        {
+          "disabled": true,
+          "filters": [
+            {
+              "disabled": true,
+              "id": "explicit.stat_561307714",
+              "value": {
+                "min": 5
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_19803471",
+              "value": {
+                "min": 5
+              }
+            }
+          ],
+          "type": "count",
+          "value": {
+            "min": 1
+          }
+        }
+      ],
+      "status": {
+        "option": "securable"
+      }
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}
