@@ -1,0 +1,35 @@
+Item Class: Shields
+Rarity: Rare
+Wrath Tower
+Champion Kite Shield
+--------
+Quality: +20% (augmented)
+Chance to Block: 26%
+Armour: 1024 (augmented)
+Energy Shield: 229 (augmented)
+--------
+Requirements:
+Level: 72
+Str: 85
+Dex: 114
+Int: 100
+--------
+Sockets: W-B-W 
+--------
+Item Level: 86
+--------
+{ Fractured Prefix Modifier "Saintly" (Tier: 1) — Defences, Armour, Energy Shield }
++290(221-300) to Armour
++69(61-72) to maximum Energy Shield
+{ Prefix Modifier "Athlete's" (Tier: 3) — Life }
++118(115-129) to maximum Life
+{ Master Crafted Prefix Modifier "Upgraded" (Rank: 3) — Defences, Armour, Energy Shield }
+69(56-74)% increased Armour and Energy Shield
+{ Suffix Modifier "of Bameth" (Tier: 1) — Chaos, Resistance }
++35(31-35)% to Chaos Resistance
+{ Suffix Modifier "of Interference" (Tier: 2) — Damage, Critical }
+You take 44(41-50)% reduced Extra Damage from Critical Strikes
+{ Suffix Modifier "of the Conservator" (Tier: 1) — Physical }
+8% additional Physical Damage Reduction
+--------
+Fractured Item

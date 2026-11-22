@@ -1,0 +1,144 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "category": {
+              "option": "armour.helmet"
+            },
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_elemental_resistance",
+              "value": {
+                "min": 13
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_cold_resistance",
+              "value": {
+                "min": 13
+              }
+            },
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_chaos_resistance",
+              "value": {
+                "min": 44
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_intelligence",
+              "value": {
+                "min": 33
+              }
+            },
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_life",
+              "value": {
+                "min": 144
+              }
+            },
+            {
+              "disabled": true,
+              "id": "implicit.stat_4021566756",
+              "value": {
+                "min": 9
+              }
+            },
+            {
+              "disabled": true,
+              "id": "implicit.stat_425242359",
+              "value": {
+                "min": 6
+              }
+            }
+          ],
+          "type": "and"
+        },
+        {
+          "disabled": true,
+          "filters": [
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_number_of_empty_suffix_mods",
+              "value": {
+                "max": 1,
+                "min": 1
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_number_of_crafted_suffix_mods",
+              "value": {
+                "min": 1
+              }
+            }
+          ],
+          "type": "count",
+          "value": {
+            "max": 1,
+            "min": 1
+          }
+        },
+        {
+          "disabled": true,
+          "filters": [
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_number_of_empty_suffix_mods",
+              "value": {
+                "max": 1,
+                "min": 1
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_number_of_affix_mods",
+              "value": {
+                "min": 6
+              }
+            }
+          ],
+          "type": "count",
+          "value": {
+            "max": 1,
+            "min": 1
+          }
+        }
+      ],
+      "status": {
+        "option": "securable"
+      }
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

@@ -1,0 +1,43 @@
+Item Class: Body Armours
+Rarity: Unique
+Loreweave
+Elegant Ringmail
+--------
+Armour: 417
+Energy Shield: 136 (augmented)
+--------
+Requirements:
+Level: 78
+Str: 114
+Dex: 159
+Int: 105
+--------
+Sockets: W-W-W-R-W-G 
+--------
+Item Level: 81
+--------
+{ Unique Modifier — Elemental, Chaos, Resistance }
+Your Maximum Resistances are 78(76-78)% — Unscalable Value
+{ Unique Modifier — Attribute }
++16(8-24) to all Attributes
+(Attributes are Strength, Dexterity, and Intelligence)
+{ Unique Modifier — Life }
++29(20-60) to maximum Life
+{ Unique Modifier — Mana }
++28(20-50) to maximum Mana
+{ Unique Modifier — Drop }
++19(6-30)% to Item Rarity
+{ Unique Modifier — Defences, Energy Shield }
++35(15-50) to maximum Energy Shield
+{ Unique Modifier — Critical }
+56(20-60)% increased Global Critical Strike Chance
+{ Unique Modifier }
+Has 6 Sockets — Unscalable Value
+{ Unique Modifier — Damage, Elemental }
+26(15-50)% increased Elemental Damage
+{ Unique Modifier — Damage, Physical, Attack }
+Adds 4(4-10) to 29(14-36) Physical Damage to Attacks
+--------
+When it comes to finding a use for surplus,
+a rich man has within himself
+boundless creativity.

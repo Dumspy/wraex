@@ -1,0 +1,105 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "foulborn_item": {
+              "option": "false"
+            },
+            "vestigial": {
+              "option": "false"
+            }
+          }
+        },
+        "socket_filters": {
+          "filters": {
+            "links": {
+              "min": 6
+            }
+          }
+        }
+      },
+      "name": "Loreweave",
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_life",
+              "value": {
+                "min": 32
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_mana",
+              "value": {
+                "min": 32
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_798767971",
+              "value": {
+                "min": 78
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_1379411836",
+              "value": {
+                "min": 14
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_3917489142",
+              "value": {
+                "min": 16
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_587431675",
+              "value": {
+                "min": 52
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_4077843608",
+              "value": {}
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_3141070085",
+              "value": {
+                "min": 22
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_3032590688",
+              "value": {
+                "min": 15
+              }
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Elegant Ringmail"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

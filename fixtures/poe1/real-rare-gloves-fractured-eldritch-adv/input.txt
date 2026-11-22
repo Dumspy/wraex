@@ -1,0 +1,39 @@
+Item Class: Gloves
+Rarity: Rare
+Glyph Paw
+Paladin Gloves
+--------
+Quality: +20% (augmented)
+Armour: 247 (augmented)
+Energy Shield: 49 (augmented)
+--------
+Requirements:
+Level: 84
+Str: 159
+Int: 80
+--------
+Sockets: B-W-W-W 
+--------
+Item Level: 85
+--------
+{ Searing Exarch Implicit Modifier (Exquisite) — Attack }
+Non-Vaal Strike Skills target 2 additional nearby Enemies
+{ Eater of Worlds Implicit Modifier (Grand) — Attack }
+14(13-14)% increased Global Accuracy Rating
+--------
+{ Prefix Modifier "Rotund" (Tier: 3) — Life }
++93(85-99) to maximum Life
+{ Prefix Modifier "Frozen" (Tier: 1) — Damage, Elemental, Cold, Attack }
+Adds 11(10-13) to 20(20-24) Cold Damage to Attacks
+{ Master Crafted Prefix Modifier "Upgraded" — Damage }
+25(24-28)% increased Damage during any Flask Effect
+{ Fractured Suffix Modifier "of Lioneye" (Tier: 1) — Attack }
++589(481-600) to Accuracy Rating
+{ Suffix Modifier "of the Essence" — Attack, Speed }
+18(17-18)% increased Attack Speed
+{ Suffix Modifier "of Exile" (Tier: 2) — Chaos, Resistance }
++26(26-30)% to Chaos Resistance
+Searing Exarch Item
+Eater of Worlds Item
+--------
+Fractured Item

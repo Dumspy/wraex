@@ -1,0 +1,155 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "category": {
+              "option": "armour.gloves"
+            },
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_chaos_resistance",
+              "value": {
+                "min": 26
+              }
+            },
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_life",
+              "value": {
+                "min": 85
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_attack_speed",
+              "value": {
+                "min": 17
+              }
+            },
+            {
+              "disabled": true,
+              "id": "implicit.stat_1661253443",
+              "value": {
+                "min": 2
+              }
+            },
+            {
+              "disabled": true,
+              "id": "implicit.stat_624954515",
+              "value": {
+                "min": 13
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_4067062424",
+              "value": {
+                "min": 15
+              }
+            },
+            {
+              "disabled": true,
+              "id": "crafted.stat_2947215268",
+              "value": {
+                "min": 24
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_803737631",
+              "value": {
+                "min": 530
+              }
+            },
+            {
+              "disabled": true,
+              "id": "fractured.stat_803737631",
+              "value": {
+                "min": 530
+              }
+            }
+          ],
+          "type": "and"
+        },
+        {
+          "disabled": true,
+          "filters": [
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_number_of_empty_prefix_mods",
+              "value": {
+                "max": 1,
+                "min": 1
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_number_of_crafted_prefix_mods",
+              "value": {
+                "min": 1
+              }
+            }
+          ],
+          "type": "count",
+          "value": {
+            "max": 1,
+            "min": 1
+          }
+        },
+        {
+          "disabled": true,
+          "filters": [
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_number_of_empty_prefix_mods",
+              "value": {
+                "max": 1,
+                "min": 1
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_number_of_affix_mods",
+              "value": {
+                "min": 6
+              }
+            }
+          ],
+          "type": "count",
+          "value": {
+            "max": 1,
+            "min": 1
+          }
+        }
+      ],
+      "status": {
+        "option": "securable"
+      }
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

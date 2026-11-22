@@ -1,0 +1,79 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "vestigial": {
+              "option": "false"
+            }
+          }
+        }
+      },
+      "name": "Mageblood",
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_elemental_resistance",
+              "value": {
+                "min": 35
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_jewellery_attribute_quality",
+              "value": {
+                "min": 20
+              }
+            },
+            {
+              "disabled": true,
+              "id": "implicit.stat_4080418644",
+              "value": {
+                "min": 30
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_3261801346",
+              "value": {
+                "min": 54
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_3986704288",
+              "value": {}
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_344389721",
+              "value": {}
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_2651470813",
+              "value": {
+                "min": 4
+              }
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Heavy Belt"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

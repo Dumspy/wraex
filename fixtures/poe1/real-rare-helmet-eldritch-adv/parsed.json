@@ -1,0 +1,1619 @@
+{
+  "armourAR": 753,
+  "armourES": 186,
+  "basePercentile": 18,
+  "baseType": "Divine Crown",
+  "category": "Helmet",
+  "influences": [],
+  "info": {
+    "armour": {
+      "ar": [
+        355,
+        409
+      ],
+      "es": [
+        71,
+        82
+      ]
+    },
+    "craftable": {
+      "category": "Helmet"
+    },
+    "h": 2,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL0hlbG1ldFN0ckludDkiLCJ3IjoyLCJoIjoyLCJzY2FsZSI6MX1d/6ad7c513a8/HelmetStrInt9.png",
+    "name": "Divine Crown",
+    "namespace": "ITEM",
+    "refName": "Divine Crown",
+    "w": 2
+  },
+  "infoVariants": [
+    {
+      "armour": {
+        "ar": [
+          355,
+          409
+        ],
+        "es": [
+          71,
+          82
+        ]
+      },
+      "craftable": {
+        "category": "Helmet"
+      },
+      "h": 2,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL0hlbG1ldFN0ckludDkiLCJ3IjoyLCJoIjoyLCJzY2FsZSI6MX1d/6ad7c513a8/HelmetStrInt9.png",
+      "name": "Divine Crown",
+      "namespace": "ITEM",
+      "refName": "Divine Crown",
+      "w": 2
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 85,
+  "name": "Loath Glance",
+  "newMods": [
+    {
+      "info": {
+        "mechanic": "eldritch",
+        "rank": 2,
+        "tags": [],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 10,
+            "min": 9,
+            "unscalable": false,
+            "value": 9
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% of Physical Damage taken Recouped as Life"
+              }
+            ],
+            "ref": "#% of Physical Damage taken Recouped as Life",
+            "trade": {
+              "ids": {
+                "implicit": [
+                  "implicit.stat_4021566756"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% of Physical Damage taken Recouped as Life"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "mechanic": "eldritch",
+        "rank": 2,
+        "tags": [
+          "Physical",
+          "Elemental",
+          "Lightning"
+        ],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 6,
+            "min": 6,
+            "unscalable": false,
+            "value": 6
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% of Physical Damage from Hits taken as Lightning Damage"
+              }
+            ],
+            "ref": "#% of Physical Damage from Hits taken as Lightning Damage",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_425242359"
+                ],
+                "explicit": [
+                  "explicit.stat_425242359"
+                ],
+                "fractured": [
+                  "fractured.stat_425242359"
+                ],
+                "implicit": [
+                  "implicit.stat_425242359"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% of Physical Damage from Hits taken as Lightning Damage"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Abbot's",
+        "tags": [
+          "Life",
+          "Defences",
+          "Energy Shield"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 25,
+            "min": 16,
+            "unscalable": false,
+            "value": 17
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to maximum Energy Shield"
+              }
+            ],
+            "ref": "+# to maximum Energy Shield",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_4052037485"
+                ],
+                "explicit": [
+                  "explicit.stat_4052037485"
+                ],
+                "fractured": [
+                  "fractured.stat_4052037485"
+                ],
+                "implicit": [
+                  "implicit.stat_4052037485"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to maximum Energy Shield"
+          }
+        },
+        {
+          "roll": {
+            "dp": false,
+            "max": 33,
+            "min": 29,
+            "unscalable": false,
+            "value": 30
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to maximum Life"
+              }
+            ],
+            "ref": "+# to maximum Life",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3299347043"
+                ],
+                "explicit": [
+                  "explicit.stat_3299347043"
+                ],
+                "fractured": [
+                  "fractured.stat_3299347043"
+                ],
+                "implicit": [
+                  "implicit.stat_3299347043"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to maximum Life"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Athlete's",
+        "tags": [
+          "Life"
+        ],
+        "tier": 2,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 129,
+            "min": 115,
+            "unscalable": false,
+            "value": 123
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to maximum Life"
+              }
+            ],
+            "ref": "+# to maximum Life",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3299347043"
+                ],
+                "explicit": [
+                  "explicit.stat_3299347043"
+                ],
+                "fractured": [
+                  "fractured.stat_3299347043"
+                ],
+                "implicit": [
+                  "implicit.stat_3299347043"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to maximum Life"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Inculcated",
+        "tags": [
+          "Defences",
+          "Armour",
+          "Energy Shield"
+        ],
+        "tier": 3,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 79,
+            "min": 68,
+            "unscalable": false,
+            "value": 72
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% increased Armour and Energy Shield"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Armour and Energy Shield"
+              }
+            ],
+            "ref": "#% increased Armour and Energy Shield",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3321629045"
+                ],
+                "explicit": [
+                  "explicit.stat_3321629045"
+                ],
+                "fractured": [
+                  "fractured.stat_3321629045"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Armour and Energy Shield"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Bameth",
+        "tags": [
+          "Chaos",
+          "Resistance"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 35,
+            "min": 31,
+            "unscalable": false,
+            "value": 33
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% to Chaos Resistance"
+              }
+            ],
+            "ref": "+#% to Chaos Resistance",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_2923486259"
+                ],
+                "fractured": [
+                  "fractured.stat_2923486259"
+                ],
+                "implicit": [
+                  "implicit.stat_2923486259"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% to Chaos Resistance"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of the Sage",
+        "tags": [
+          "Attribute"
+        ],
+        "tier": 5,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 37,
+            "min": 33,
+            "unscalable": false,
+            "value": 34
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to Intelligence"
+              }
+            ],
+            "ref": "+# to Intelligence",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_328541901"
+                ],
+                "explicit": [
+                  "explicit.stat_328541901"
+                ],
+                "fractured": [
+                  "fractured.stat_328541901"
+                ],
+                "implicit": [
+                  "implicit.stat_328541901"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to Intelligence"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Craft",
+        "tags": [
+          "Elemental",
+          "Cold",
+          "Chaos",
+          "Resistance"
+        ],
+        "type": "crafted"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 15,
+            "min": 13,
+            "unscalable": false,
+            "value": 13
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% to Cold and Chaos Resistances"
+              }
+            ],
+            "ref": "+#% to Cold and Chaos Resistances",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3393628375"
+                ],
+                "explicit": [
+                  "explicit.stat_3393628375"
+                ],
+                "fractured": [
+                  "fractured.stat_3393628375"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% to Cold and Chaos Resistances"
+          }
+        }
+      ]
+    }
+  ],
+  "quality": 20,
+  "rarity": "Rare",
+  "rawText": "Item Class: Helmets\nRarity: Rare\nLoath Glance\nDivine Crown\n--------\nQuality: +20% (augmented)\nArmour: 753 (augmented)\nEnergy Shield: 186 (augmented)\n--------\nRequirements:\nLevel: 84\nStr: 159\nDex: 100\nInt: 132\n--------\nSockets: W-W-W-W \n--------\nItem Level: 85\n--------\n{ Searing Exarch Implicit Modifier (Greater) }\n9(9-10)% of Physical Damage taken Recouped as Life\n(Only Damage from Hits can be Recouped, over 4 seconds following the Hit)\n{ Eater of Worlds Implicit Modifier (Greater) — Physical, Elemental, Lightning }\n6% of Physical Damage from Hits taken as Lightning Damage\n--------\n{ Prefix Modifier \"Abbot's\" (Tier: 1) — Life, Defences, Energy Shield }\n+17(16-25) to maximum Energy Shield\n+30(29-33) to maximum Life\n{ Prefix Modifier \"Athlete's\" (Tier: 2) — Life }\n+123(115-129) to maximum Life\n{ Prefix Modifier \"Inculcated\" (Tier: 3) — Defences, Armour, Energy Shield }\n72(68-79)% increased Armour and Energy Shield\n{ Suffix Modifier \"of Bameth\" (Tier: 1) — Chaos, Resistance }\n+33(31-35)% to Chaos Resistance\n{ Suffix Modifier \"of the Sage\" (Tier: 5) — Attribute }\n+34(33-37) to Intelligence\n{ Master Crafted Suffix Modifier \"of Craft\" — Elemental, Cold, Chaos, Resistance }\n+13(13-15)% to Cold and Chaos Resistances\nSearing Exarch Item\nEater of Worlds Item\n",
+  "sockets": {
+    "white": 4
+  },
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 10,
+            "min": 9,
+            "value": 9
+          },
+          "modifier": {
+            "info": {
+              "mechanic": "eldritch",
+              "rank": 2,
+              "tags": [],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 10,
+                  "min": 9,
+                  "unscalable": false,
+                  "value": 9
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% of Physical Damage taken Recouped as Life"
+                    }
+                  ],
+                  "ref": "#% of Physical Damage taken Recouped as Life",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_4021566756"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% of Physical Damage taken Recouped as Life"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 10,
+              "min": 9,
+              "unscalable": false,
+              "value": 9
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% of Physical Damage taken Recouped as Life"
+                }
+              ],
+              "ref": "#% of Physical Damage taken Recouped as Life",
+              "trade": {
+                "ids": {
+                  "implicit": [
+                    "implicit.stat_4021566756"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% of Physical Damage taken Recouped as Life"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% of Physical Damage taken Recouped as Life"
+          }
+        ],
+        "ref": "#% of Physical Damage taken Recouped as Life",
+        "trade": {
+          "ids": {
+            "implicit": [
+              "implicit.stat_4021566756"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 6,
+            "min": 6,
+            "value": 6
+          },
+          "modifier": {
+            "info": {
+              "mechanic": "eldritch",
+              "rank": 2,
+              "tags": [
+                "Physical",
+                "Elemental",
+                "Lightning"
+              ],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 6,
+                  "min": 6,
+                  "unscalable": false,
+                  "value": 6
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% of Physical Damage from Hits taken as Lightning Damage"
+                    }
+                  ],
+                  "ref": "#% of Physical Damage from Hits taken as Lightning Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_425242359"
+                      ],
+                      "explicit": [
+                        "explicit.stat_425242359"
+                      ],
+                      "fractured": [
+                        "fractured.stat_425242359"
+                      ],
+                      "implicit": [
+                        "implicit.stat_425242359"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% of Physical Damage from Hits taken as Lightning Damage"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 6,
+              "min": 6,
+              "unscalable": false,
+              "value": 6
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% of Physical Damage from Hits taken as Lightning Damage"
+                }
+              ],
+              "ref": "#% of Physical Damage from Hits taken as Lightning Damage",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_425242359"
+                  ],
+                  "explicit": [
+                    "explicit.stat_425242359"
+                  ],
+                  "fractured": [
+                    "fractured.stat_425242359"
+                  ],
+                  "implicit": [
+                    "implicit.stat_425242359"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% of Physical Damage from Hits taken as Lightning Damage"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% of Physical Damage from Hits taken as Lightning Damage"
+          }
+        ],
+        "ref": "#% of Physical Damage from Hits taken as Lightning Damage",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_425242359"
+            ],
+            "explicit": [
+              "explicit.stat_425242359"
+            ],
+            "fractured": [
+              "fractured.stat_425242359"
+            ],
+            "implicit": [
+              "implicit.stat_425242359"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 25,
+            "min": 16,
+            "value": 17
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Abbot's",
+              "tags": [
+                "Life",
+                "Defences",
+                "Energy Shield"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 25,
+                  "min": 16,
+                  "unscalable": false,
+                  "value": 17
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Energy Shield"
+                    }
+                  ],
+                  "ref": "+# to maximum Energy Shield",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4052037485"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4052037485"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4052037485"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4052037485"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Energy Shield"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 33,
+                  "min": 29,
+                  "unscalable": false,
+                  "value": 30
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Life"
+                    }
+                  ],
+                  "ref": "+# to maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3299347043"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3299347043"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3299347043"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3299347043"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Life"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 25,
+              "min": 16,
+              "unscalable": false,
+              "value": 17
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to maximum Energy Shield"
+                }
+              ],
+              "ref": "+# to maximum Energy Shield",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_4052037485"
+                  ],
+                  "explicit": [
+                    "explicit.stat_4052037485"
+                  ],
+                  "fractured": [
+                    "fractured.stat_4052037485"
+                  ],
+                  "implicit": [
+                    "implicit.stat_4052037485"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to maximum Energy Shield"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# to maximum Energy Shield"
+          }
+        ],
+        "ref": "+# to maximum Energy Shield",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_4052037485"
+            ],
+            "explicit": [
+              "explicit.stat_4052037485"
+            ],
+            "fractured": [
+              "fractured.stat_4052037485"
+            ],
+            "implicit": [
+              "implicit.stat_4052037485"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 33,
+            "min": 29,
+            "value": 30
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Abbot's",
+              "tags": [
+                "Life",
+                "Defences",
+                "Energy Shield"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 25,
+                  "min": 16,
+                  "unscalable": false,
+                  "value": 17
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Energy Shield"
+                    }
+                  ],
+                  "ref": "+# to maximum Energy Shield",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4052037485"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4052037485"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4052037485"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4052037485"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Energy Shield"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 33,
+                  "min": 29,
+                  "unscalable": false,
+                  "value": 30
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Life"
+                    }
+                  ],
+                  "ref": "+# to maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3299347043"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3299347043"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3299347043"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3299347043"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Life"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 33,
+              "min": 29,
+              "unscalable": false,
+              "value": 30
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to maximum Life"
+                }
+              ],
+              "ref": "+# to maximum Life",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3299347043"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3299347043"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3299347043"
+                  ],
+                  "implicit": [
+                    "implicit.stat_3299347043"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to maximum Life"
+            }
+          }
+        },
+        {
+          "contributes": {
+            "max": 129,
+            "min": 115,
+            "value": 123
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Athlete's",
+              "tags": [
+                "Life"
+              ],
+              "tier": 2,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 129,
+                  "min": 115,
+                  "unscalable": false,
+                  "value": 123
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Life"
+                    }
+                  ],
+                  "ref": "+# to maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3299347043"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3299347043"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3299347043"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3299347043"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Life"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 129,
+              "min": 115,
+              "unscalable": false,
+              "value": 123
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to maximum Life"
+                }
+              ],
+              "ref": "+# to maximum Life",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3299347043"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3299347043"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3299347043"
+                  ],
+                  "implicit": [
+                    "implicit.stat_3299347043"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to maximum Life"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# to maximum Life"
+          }
+        ],
+        "ref": "+# to maximum Life",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_3299347043"
+            ],
+            "explicit": [
+              "explicit.stat_3299347043"
+            ],
+            "fractured": [
+              "fractured.stat_3299347043"
+            ],
+            "implicit": [
+              "implicit.stat_3299347043"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 79,
+            "min": 68,
+            "value": 72
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Inculcated",
+              "tags": [
+                "Defences",
+                "Armour",
+                "Energy Shield"
+              ],
+              "tier": 3,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 79,
+                  "min": 68,
+                  "unscalable": false,
+                  "value": 72
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Armour and Energy Shield"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Armour and Energy Shield"
+                    }
+                  ],
+                  "ref": "#% increased Armour and Energy Shield",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3321629045"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3321629045"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3321629045"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Armour and Energy Shield"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 79,
+              "min": 68,
+              "unscalable": false,
+              "value": 72
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% increased Armour and Energy Shield"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Armour and Energy Shield"
+                }
+              ],
+              "ref": "#% increased Armour and Energy Shield",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3321629045"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3321629045"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3321629045"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Armour and Energy Shield"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% increased Armour and Energy Shield"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Armour and Energy Shield"
+          }
+        ],
+        "ref": "#% increased Armour and Energy Shield",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_3321629045"
+            ],
+            "explicit": [
+              "explicit.stat_3321629045"
+            ],
+            "fractured": [
+              "fractured.stat_3321629045"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 35,
+            "min": 31,
+            "value": 33
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Bameth",
+              "tags": [
+                "Chaos",
+                "Resistance"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 35,
+                  "min": 31,
+                  "unscalable": false,
+                  "value": 33
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% to Chaos Resistance"
+                    }
+                  ],
+                  "ref": "+#% to Chaos Resistance",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_2923486259"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2923486259"
+                      ],
+                      "implicit": [
+                        "implicit.stat_2923486259"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Chaos Resistance"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 35,
+              "min": 31,
+              "unscalable": false,
+              "value": 33
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% to Chaos Resistance"
+                }
+              ],
+              "ref": "+#% to Chaos Resistance",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_2923486259"
+                  ],
+                  "fractured": [
+                    "fractured.stat_2923486259"
+                  ],
+                  "implicit": [
+                    "implicit.stat_2923486259"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% to Chaos Resistance"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% to Chaos Resistance"
+          }
+        ],
+        "ref": "+#% to Chaos Resistance",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_2923486259"
+            ],
+            "fractured": [
+              "fractured.stat_2923486259"
+            ],
+            "implicit": [
+              "implicit.stat_2923486259"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 37,
+            "min": 33,
+            "value": 34
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of the Sage",
+              "tags": [
+                "Attribute"
+              ],
+              "tier": 5,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 37,
+                  "min": 33,
+                  "unscalable": false,
+                  "value": 34
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to Intelligence"
+                    }
+                  ],
+                  "ref": "+# to Intelligence",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_328541901"
+                      ],
+                      "explicit": [
+                        "explicit.stat_328541901"
+                      ],
+                      "fractured": [
+                        "fractured.stat_328541901"
+                      ],
+                      "implicit": [
+                        "implicit.stat_328541901"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Intelligence"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 37,
+              "min": 33,
+              "unscalable": false,
+              "value": 34
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to Intelligence"
+                }
+              ],
+              "ref": "+# to Intelligence",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_328541901"
+                  ],
+                  "explicit": [
+                    "explicit.stat_328541901"
+                  ],
+                  "fractured": [
+                    "fractured.stat_328541901"
+                  ],
+                  "implicit": [
+                    "implicit.stat_328541901"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to Intelligence"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# to Intelligence"
+          }
+        ],
+        "ref": "+# to Intelligence",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_328541901"
+            ],
+            "explicit": [
+              "explicit.stat_328541901"
+            ],
+            "fractured": [
+              "fractured.stat_328541901"
+            ],
+            "implicit": [
+              "implicit.stat_328541901"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 15,
+            "min": 13,
+            "value": 13
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Craft",
+              "tags": [
+                "Elemental",
+                "Cold",
+                "Chaos",
+                "Resistance"
+              ],
+              "type": "crafted"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 15,
+                  "min": 13,
+                  "unscalable": false,
+                  "value": 13
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% to Cold and Chaos Resistances"
+                    }
+                  ],
+                  "ref": "+#% to Cold and Chaos Resistances",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3393628375"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3393628375"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3393628375"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Cold and Chaos Resistances"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 15,
+              "min": 13,
+              "unscalable": false,
+              "value": 13
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% to Cold and Chaos Resistances"
+                }
+              ],
+              "ref": "+#% to Cold and Chaos Resistances",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3393628375"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3393628375"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3393628375"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% to Cold and Chaos Resistances"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% to Cold and Chaos Resistances"
+          }
+        ],
+        "ref": "+#% to Cold and Chaos Resistances",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_3393628375"
+            ],
+            "explicit": [
+              "explicit.stat_3393628375"
+            ],
+            "fractured": [
+              "fractured.stat_3393628375"
+            ]
+          }
+        }
+      },
+      "type": "crafted"
+    }
+  ],
+  "unknownModifiers": []
+}

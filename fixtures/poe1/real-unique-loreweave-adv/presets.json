@@ -1,0 +1,1446 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "foulborn": {
+          "value": false
+        },
+        "linkedSockets": {
+          "disabled": false,
+          "value": 6
+        },
+        "searchExact": {
+          "baseTypeTrade": "Elegant Ringmail",
+          "name": "Loreweave",
+          "nameTrade": "Loreweave"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        },
+        "vestigial": {
+          "value": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": true,
+          "hidden": "hide_variable_by_base_percentile_only",
+          "roll": {
+            "bounds": {
+              "max": 520,
+              "min": 452
+            },
+            "default": {
+              "max": 508,
+              "min": 493
+            },
+            "dp": false,
+            "goodness": 0.7142857142857139,
+            "isNegated": false,
+            "value": 500
+          },
+          "sources": [],
+          "statRef": "Armour: #",
+          "tag": "property",
+          "text": "Armour: #",
+          "tradeId": [
+            "item.armour"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 186,
+              "min": 128
+            },
+            "default": {
+              "max": 169,
+              "min": 157
+            },
+            "dp": false,
+            "goodness": 0.6041666666666664,
+            "isNegated": false,
+            "min": 157,
+            "value": 163
+          },
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Defences",
+                    "Energy Shield"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 50,
+                      "min": 15,
+                      "unscalable": false,
+                      "value": 35
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "# to maximum Energy Shield"
+                        }
+                      ],
+                      "ref": "+# to maximum Energy Shield",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_4052037485"
+                          ],
+                          "explicit": [
+                            "explicit.stat_4052037485"
+                          ],
+                          "fractured": [
+                            "fractured.stat_4052037485"
+                          ],
+                          "implicit": [
+                            "implicit.stat_4052037485"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to maximum Energy Shield"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 50,
+                  "min": 15,
+                  "unscalable": false,
+                  "value": 35
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Energy Shield"
+                    }
+                  ],
+                  "ref": "+# to maximum Energy Shield",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4052037485"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4052037485"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4052037485"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4052037485"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Energy Shield"
+                }
+              }
+            }
+          ],
+          "statRef": "Energy Shield: #",
+          "tag": "property",
+          "text": "Energy Shield: #",
+          "tradeId": [
+            "item.energy_shield"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "hide_redundant",
+          "roll": {
+            "bounds": {
+              "max": 100,
+              "min": 0
+            },
+            "default": {
+              "max": 81,
+              "min": 61
+            },
+            "dp": false,
+            "goodness": 0.71,
+            "isNegated": false,
+            "min": 61,
+            "value": 71
+          },
+          "sources": [],
+          "statRef": "Base Percentile: #%",
+          "tag": "property",
+          "text": "Base Percentile: #%",
+          "tradeId": [
+            "item.base_percentile"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 72,
+              "min": 24
+            },
+            "default": {
+              "max": 42,
+              "min": 32
+            },
+            "dp": false,
+            "goodness": 0.2708333333333333,
+            "isNegated": false,
+            "min": 32,
+            "value": 37
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 12,
+                "min": 4,
+                "value": 8
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Attribute"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 24,
+                      "min": 8,
+                      "unscalable": false,
+                      "value": 16
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "# to all Attributes"
+                        }
+                      ],
+                      "ref": "+# to all Attributes",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1379411836"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1379411836"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1379411836"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1379411836"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to all Attributes"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 24,
+                  "min": 8,
+                  "unscalable": false,
+                  "value": 16
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to all Attributes"
+                    }
+                  ],
+                  "ref": "+# to all Attributes",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1379411836"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1379411836"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1379411836"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1379411836"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to all Attributes"
+                }
+              }
+            },
+            {
+              "contributes": {
+                "max": 60,
+                "min": 20,
+                "value": 29
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Life"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 60,
+                      "min": 20,
+                      "unscalable": false,
+                      "value": 29
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "# to maximum Life"
+                        }
+                      ],
+                      "ref": "+# to maximum Life",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_3299347043"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3299347043"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3299347043"
+                          ],
+                          "implicit": [
+                            "implicit.stat_3299347043"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to maximum Life"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 60,
+                  "min": 20,
+                  "unscalable": false,
+                  "value": 29
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Life"
+                    }
+                  ],
+                  "ref": "+# to maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3299347043"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3299347043"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3299347043"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3299347043"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Life"
+                }
+              }
+            }
+          ],
+          "statRef": "+# total maximum Life",
+          "tag": "pseudo",
+          "text": "+# total maximum Life ",
+          "tradeId": [
+            "pseudo.pseudo_total_life"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 62,
+              "min": 24
+            },
+            "default": {
+              "max": 40,
+              "min": 32
+            },
+            "dp": false,
+            "goodness": 0.3157894736842105,
+            "isNegated": false,
+            "min": 32,
+            "value": 36
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 12,
+                "min": 4,
+                "value": 8
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Attribute"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 24,
+                      "min": 8,
+                      "unscalable": false,
+                      "value": 16
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "# to all Attributes"
+                        }
+                      ],
+                      "ref": "+# to all Attributes",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1379411836"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1379411836"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1379411836"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1379411836"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to all Attributes"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 24,
+                  "min": 8,
+                  "unscalable": false,
+                  "value": 16
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to all Attributes"
+                    }
+                  ],
+                  "ref": "+# to all Attributes",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1379411836"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1379411836"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1379411836"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1379411836"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to all Attributes"
+                }
+              }
+            },
+            {
+              "contributes": {
+                "max": 50,
+                "min": 20,
+                "value": 28
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Mana"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 50,
+                      "min": 20,
+                      "unscalable": false,
+                      "value": 28
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "# to maximum Mana"
+                        }
+                      ],
+                      "ref": "+# to maximum Mana",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1050105434"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1050105434"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1050105434"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1050105434"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to maximum Mana"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 50,
+                  "min": 20,
+                  "unscalable": false,
+                  "value": 28
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Mana"
+                    }
+                  ],
+                  "ref": "+# to maximum Mana",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1050105434"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1050105434"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1050105434"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1050105434"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Mana"
+                }
+              }
+            }
+          ],
+          "statRef": "+# total maximum Mana",
+          "tag": "pseudo",
+          "text": "+# total maximum Mana ",
+          "tradeId": [
+            "pseudo.pseudo_total_mana"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 78,
+              "min": 76
+            },
+            "default": {
+              "max": 78,
+              "min": 78
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 78,
+            "value": 78
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 78,
+                "min": 76,
+                "value": 78
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Elemental",
+                    "Chaos",
+                    "Resistance"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 78,
+                      "min": 76,
+                      "unscalable": true,
+                      "value": 78
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Your Maximum Resistances are #%"
+                        }
+                      ],
+                      "ref": "Your Maximum Resistances are #%",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_798767971"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Your Maximum Resistances are #%"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 78,
+                  "min": 76,
+                  "unscalable": true,
+                  "value": 78
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Your Maximum Resistances are #%"
+                    }
+                  ],
+                  "ref": "Your Maximum Resistances are #%",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_798767971"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Your Maximum Resistances are #%"
+                }
+              }
+            }
+          ],
+          "statRef": "Your Maximum Resistances are #%",
+          "tag": "explicit",
+          "text": "Your Maximum Resistances are #%",
+          "tradeId": [
+            "explicit.stat_798767971"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 24,
+              "min": 8
+            },
+            "default": {
+              "max": 18,
+              "min": 14
+            },
+            "dp": false,
+            "goodness": 0.5,
+            "isNegated": false,
+            "min": 14,
+            "value": 16
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 24,
+                "min": 8,
+                "value": 16
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Attribute"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 24,
+                      "min": 8,
+                      "unscalable": false,
+                      "value": 16
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "# to all Attributes"
+                        }
+                      ],
+                      "ref": "+# to all Attributes",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1379411836"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1379411836"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1379411836"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1379411836"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to all Attributes"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 24,
+                  "min": 8,
+                  "unscalable": false,
+                  "value": 16
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to all Attributes"
+                    }
+                  ],
+                  "ref": "+# to all Attributes",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1379411836"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1379411836"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1379411836"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1379411836"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to all Attributes"
+                }
+              }
+            }
+          ],
+          "statRef": "+# to all Attributes",
+          "tag": "explicit",
+          "text": "# to all Attributes",
+          "tradeId": [
+            "explicit.stat_1379411836"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 30,
+              "min": 6
+            },
+            "default": {
+              "max": 22,
+              "min": 16
+            },
+            "dp": false,
+            "goodness": 0.5416666666666666,
+            "isNegated": false,
+            "min": 16,
+            "value": 19
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 30,
+                "min": 6,
+                "value": 19
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Drop"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 30,
+                      "min": 6,
+                      "unscalable": false,
+                      "value": 19
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% to Item Rarity"
+                        }
+                      ],
+                      "ref": "+#% to Item Rarity",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_3917489142"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3917489142"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3917489142"
+                          ],
+                          "implicit": [
+                            "implicit.stat_3917489142"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Item Rarity"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 6,
+                  "unscalable": false,
+                  "value": 19
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% to Item Rarity"
+                    }
+                  ],
+                  "ref": "+#% to Item Rarity",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3917489142"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3917489142"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3917489142"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3917489142"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Item Rarity"
+                }
+              }
+            }
+          ],
+          "statRef": "+#% to Item Rarity",
+          "tag": "explicit",
+          "text": "#% to Item Rarity",
+          "tradeId": [
+            "explicit.stat_3917489142"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 60,
+              "min": 20
+            },
+            "default": {
+              "max": 60,
+              "min": 52
+            },
+            "dp": false,
+            "goodness": 0.9,
+            "isNegated": false,
+            "min": 52,
+            "value": 56
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 60,
+                "min": 20,
+                "value": 56
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Critical"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 60,
+                      "min": 20,
+                      "unscalable": false,
+                      "value": 56
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased Global Critical Strike Chance"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Global Critical Strike Chance"
+                        }
+                      ],
+                      "ref": "#% increased Global Critical Strike Chance",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_587431675"
+                          ],
+                          "explicit": [
+                            "explicit.stat_587431675"
+                          ],
+                          "fractured": [
+                            "fractured.stat_587431675"
+                          ],
+                          "implicit": [
+                            "implicit.stat_587431675"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Global Critical Strike Chance"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 60,
+                  "min": 20,
+                  "unscalable": false,
+                  "value": 56
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Global Critical Strike Chance"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Global Critical Strike Chance"
+                    }
+                  ],
+                  "ref": "#% increased Global Critical Strike Chance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_587431675"
+                      ],
+                      "explicit": [
+                        "explicit.stat_587431675"
+                      ],
+                      "fractured": [
+                        "fractured.stat_587431675"
+                      ],
+                      "implicit": [
+                        "implicit.stat_587431675"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Global Critical Strike Chance"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Global Critical Strike Chance",
+          "tag": "explicit",
+          "text": "#% increased Global Critical Strike Chance",
+          "tradeId": [
+            "explicit.stat_587431675"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_const_roll",
+          "roll": {
+            "default": {
+              "max": 6,
+              "min": 6
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "value": 6
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 6,
+                "min": 6,
+                "value": 6
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 6,
+                      "min": 6,
+                      "unscalable": true,
+                      "value": 6
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Has # Sockets"
+                        },
+                        {
+                          "string": "Has 1 Socket",
+                          "value": 1
+                        }
+                      ],
+                      "ref": "Has 1 Socket",
+                      "trade": {
+                        "ids": {
+                          "enchant": [
+                            "enchant.stat_4077843608"
+                          ],
+                          "explicit": [
+                            "explicit.stat_4077843608"
+                          ],
+                          "implicit": [
+                            "implicit.stat_4077843608"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Has # Sockets"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 6,
+                  "min": 6,
+                  "unscalable": true,
+                  "value": 6
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Has # Sockets"
+                    },
+                    {
+                      "string": "Has 1 Socket",
+                      "value": 1
+                    }
+                  ],
+                  "ref": "Has 1 Socket",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_4077843608"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4077843608"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4077843608"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Has # Sockets"
+                }
+              }
+            }
+          ],
+          "statRef": "Has 1 Socket",
+          "tag": "explicit",
+          "text": "Has # Sockets",
+          "tradeId": [
+            "explicit.stat_4077843608"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 50,
+              "min": 15
+            },
+            "default": {
+              "max": 30,
+              "min": 22
+            },
+            "dp": false,
+            "goodness": 0.3142857142857143,
+            "isNegated": false,
+            "min": 22,
+            "value": 26
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 50,
+                "min": 15,
+                "value": 26
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Damage",
+                    "Elemental"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 50,
+                      "min": 15,
+                      "unscalable": false,
+                      "value": 26
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased Elemental Damage"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Elemental Damage"
+                        }
+                      ],
+                      "ref": "#% increased Elemental Damage",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_3141070085"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3141070085"
+                          ],
+                          "implicit": [
+                            "implicit.stat_3141070085"
+                          ],
+                          "pseudo": [
+                            "pseudo.pseudo_increased_elemental_damage"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Elemental Damage"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 50,
+                  "min": 15,
+                  "unscalable": false,
+                  "value": 26
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Elemental Damage"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Elemental Damage"
+                    }
+                  ],
+                  "ref": "#% increased Elemental Damage",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3141070085"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3141070085"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3141070085"
+                      ],
+                      "pseudo": [
+                        "pseudo.pseudo_increased_elemental_damage"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Elemental Damage"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Elemental Damage",
+          "tag": "explicit",
+          "text": "#% increased Elemental Damage",
+          "tradeId": [
+            "explicit.stat_3141070085"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 23,
+              "min": 9
+            },
+            "default": {
+              "max": 18,
+              "min": 15
+            },
+            "dp": false,
+            "goodness": 0.5357142857142857,
+            "isNegated": false,
+            "min": 15,
+            "value": 16
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 23,
+                "min": 9,
+                "value": 16.5
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Damage",
+                    "Physical",
+                    "Attack"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 23,
+                      "min": 9,
+                      "unscalable": false,
+                      "value": 16.5
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Adds # to # Physical Damage to Attacks"
+                        }
+                      ],
+                      "ref": "Adds # to # Physical Damage to Attacks",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_3032590688"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3032590688"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3032590688"
+                          ],
+                          "implicit": [
+                            "implicit.stat_3032590688"
+                          ],
+                          "pseudo": [
+                            "pseudo.pseudo_adds_physical_damage_to_attacks"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Adds # to # Physical Damage to Attacks"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 23,
+                  "min": 9,
+                  "unscalable": false,
+                  "value": 16.5
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Adds # to # Physical Damage to Attacks"
+                    }
+                  ],
+                  "ref": "Adds # to # Physical Damage to Attacks",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3032590688"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3032590688"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3032590688"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3032590688"
+                      ],
+                      "pseudo": [
+                        "pseudo.pseudo_adds_physical_damage_to_attacks"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Adds # to # Physical Damage to Attacks"
+                }
+              }
+            }
+          ],
+          "statRef": "Adds # to # Physical Damage to Attacks",
+          "tag": "explicit",
+          "text": "Adds # to # Physical Damage to Attacks",
+          "tradeId": [
+            "explicit.stat_3032590688"
+          ]
+        }
+      ]
+    }
+  ]
+}

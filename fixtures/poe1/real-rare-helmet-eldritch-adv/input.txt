@@ -1,0 +1,40 @@
+Item Class: Helmets
+Rarity: Rare
+Loath Glance
+Divine Crown
+--------
+Quality: +20% (augmented)
+Armour: 753 (augmented)
+Energy Shield: 186 (augmented)
+--------
+Requirements:
+Level: 84
+Str: 159
+Dex: 100
+Int: 132
+--------
+Sockets: W-W-W-W 
+--------
+Item Level: 85
+--------
+{ Searing Exarch Implicit Modifier (Greater) }
+9(9-10)% of Physical Damage taken Recouped as Life
+(Only Damage from Hits can be Recouped, over 4 seconds following the Hit)
+{ Eater of Worlds Implicit Modifier (Greater) — Physical, Elemental, Lightning }
+6% of Physical Damage from Hits taken as Lightning Damage
+--------
+{ Prefix Modifier "Abbot's" (Tier: 1) — Life, Defences, Energy Shield }
++17(16-25) to maximum Energy Shield
++30(29-33) to maximum Life
+{ Prefix Modifier "Athlete's" (Tier: 2) — Life }
++123(115-129) to maximum Life
+{ Prefix Modifier "Inculcated" (Tier: 3) — Defences, Armour, Energy Shield }
+72(68-79)% increased Armour and Energy Shield
+{ Suffix Modifier "of Bameth" (Tier: 1) — Chaos, Resistance }
++33(31-35)% to Chaos Resistance
+{ Suffix Modifier "of the Sage" (Tier: 5) — Attribute }
++34(33-37) to Intelligence
+{ Master Crafted Suffix Modifier "of Craft" — Elemental, Cold, Chaos, Resistance }
++13(13-15)% to Cold and Chaos Resistances
+Searing Exarch Item
+Eater of Worlds Item

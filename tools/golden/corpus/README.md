@@ -10,6 +10,9 @@ this list current when adding cases, so it is clear which ones are real copies.
 
 ## poe1
 
+- `real-*`: real in-game copies (advanced format, Ctrl+Alt+C), from the
+  maintainer's own play: fractured and eldritch-implicit rares, a Foulborn unique
+  and a six-socket unique.
 - Everything else: hand-written in the in-game clipboard format (Ctrl+C, not the
   advanced Ctrl+Alt+C), checked only in that the reference parses each one with no
   unknown modifiers. They exercise the pipeline per item class (currency, cards,

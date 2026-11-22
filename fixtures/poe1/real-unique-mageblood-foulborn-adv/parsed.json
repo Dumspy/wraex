@@ -1,0 +1,1224 @@
+{
+  "baseType": "Heavy Belt",
+  "category": "Belt",
+  "dustEquivalent": 2495248,
+  "influences": [],
+  "info": {
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvSW5qZWN0b3JCZWx0IiwidyI6MiwiaCI6MSwic2NhbGUiOjF9XQ/21ec0269de/InjectorBelt.png",
+    "name": "Mageblood",
+    "namespace": "UNIQUE",
+    "refName": "Mageblood",
+    "unique": {
+      "base": "Heavy Belt",
+      "disenchantValue": 891.16
+    }
+  },
+  "infoVariants": [
+    {
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvSW5qZWN0b3JCZWx0IiwidyI6MiwiaCI6MSwic2NhbGUiOjF9XQ/21ec0269de/InjectorBelt.png",
+      "name": "Mageblood",
+      "namespace": "UNIQUE",
+      "refName": "Mageblood",
+      "unique": {
+        "base": "Heavy Belt",
+        "disenchantValue": 891.16
+      }
+    }
+  ],
+  "isFoulborn": true,
+  "isUnidentified": false,
+  "itemLevel": 80,
+  "name": "Mageblood",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "pseudo"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 20,
+            "min": 20,
+            "unscalable": true,
+            "value": 20
+          },
+          "stat": {
+            "better": 1,
+            "jewelleryQuality": {
+              "catalyst": "Intrinsic Catalyst"
+            },
+            "matchers": [
+              {
+                "string": "Quality (Attribute Modifiers): #%"
+              }
+            ],
+            "ref": "Quality (Attribute Modifiers): +#%",
+            "trade": {
+              "ids": {
+                "pseudo": [
+                  "pseudo.pseudo_jewellery_attribute_quality"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Quality (Attribute Modifiers): #%"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "rollIncr": 20,
+        "tags": [
+          "Attribute"
+        ],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 35,
+            "min": 25,
+            "unscalable": false,
+            "value": 25
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to Strength"
+              }
+            ],
+            "ref": "+# to Strength",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_4080418644"
+                ],
+                "explicit": [
+                  "explicit.stat_4080418644"
+                ],
+                "fractured": [
+                  "fractured.stat_4080418644"
+                ],
+                "implicit": [
+                  "implicit.stat_4080418644"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to Strength"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "rollIncr": 20,
+        "tags": [
+          "Attribute"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 50,
+            "min": 30,
+            "unscalable": false,
+            "value": 48
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to Dexterity"
+              }
+            ],
+            "ref": "+# to Dexterity",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3261801346"
+                ],
+                "explicit": [
+                  "explicit.stat_3261801346"
+                ],
+                "fractured": [
+                  "fractured.stat_3261801346"
+                ],
+                "implicit": [
+                  "implicit.stat_3261801346"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to Dexterity"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [
+          "Elemental",
+          "Fire",
+          "Resistance"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 25,
+            "min": 15,
+            "unscalable": false,
+            "value": 15
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% to Fire Resistance"
+              }
+            ],
+            "ref": "+#% to Fire Resistance",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3372524247"
+                ],
+                "explicit": [
+                  "explicit.stat_3372524247"
+                ],
+                "fractured": [
+                  "fractured.stat_3372524247"
+                ],
+                "implicit": [
+                  "implicit.stat_3372524247"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% to Fire Resistance"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [
+          "Elemental",
+          "Cold",
+          "Resistance"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 25,
+            "min": 15,
+            "unscalable": false,
+            "value": 22
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "#% to Cold Resistance"
+              }
+            ],
+            "ref": "+#% to Cold Resistance",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_4220027924"
+                ],
+                "explicit": [
+                  "explicit.stat_4220027924"
+                ],
+                "fractured": [
+                  "fractured.stat_4220027924"
+                ],
+                "implicit": [
+                  "implicit.stat_4220027924"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% to Cold Resistance"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Magic Utility Flasks cannot be Used"
+              }
+            ],
+            "ref": "Magic Utility Flasks cannot be Used",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_3986704288"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Magic Utility Flasks cannot be Used"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Magic Utility Flask Effects cannot be removed"
+              }
+            ],
+            "ref": "Magic Utility Flask Effects cannot be removed",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_344389721"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Magic Utility Flask Effects cannot be removed"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "mechanic": "foulborn",
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 4,
+            "min": 2,
+            "unscalable": false,
+            "value": 4
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Rightmost # Magic Utility Flask constantly applies its Flask Effect to you"
+              },
+              {
+                "string": "Rightmost # Magic Utility Flasks constantly apply their Flask Effects to you"
+              }
+            ],
+            "ref": "Rightmost # Magic Utility Flask constantly applies its Flask Effect to you",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_2651470813"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Rightmost # Magic Utility Flasks constantly apply their Flask Effects to you"
+          }
+        }
+      ]
+    }
+  ],
+  "quality": 20,
+  "rarity": "Unique",
+  "rawText": "Item Class: Belts\nRarity: Unique\nFoulborn Mageblood\nHeavy Belt\n--------\nQuality (Attribute Modifiers): +20% (augmented)\n--------\nRequirements:\nLevel: 44\n--------\nItem Level: 80\n--------\n{ Implicit Modifier — Attribute  — 20% Increased }\n+25(25-35) to Strength\n--------\n{ Unique Modifier — Attribute  — 20% Increased }\n+48(30-50) to Dexterity\n{ Unique Modifier — Elemental, Fire, Resistance }\n+15(15-25)% to Fire Resistance\n{ Unique Modifier — Elemental, Cold, Resistance }\n+22(15-25)% to Cold Resistance\n{ Unique Modifier }\nMagic Utility Flasks cannot be Used\n{ Unique Modifier }\nMagic Utility Flask Effects cannot be removed\n{ Foulborn Unique Modifier }\nRightmost 4(2-4) Magic Utility Flasks constantly apply their Flask Effects to you\n--------\nRivers of power course through your veins.\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 20,
+            "min": 20,
+            "value": 20
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "pseudo"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 20,
+                  "min": 20,
+                  "unscalable": true,
+                  "value": 20
+                },
+                "stat": {
+                  "better": 1,
+                  "jewelleryQuality": {
+                    "catalyst": "Intrinsic Catalyst"
+                  },
+                  "matchers": [
+                    {
+                      "string": "Quality (Attribute Modifiers): #%"
+                    }
+                  ],
+                  "ref": "Quality (Attribute Modifiers): +#%",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.pseudo_jewellery_attribute_quality"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Quality (Attribute Modifiers): #%"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 20,
+              "min": 20,
+              "unscalable": true,
+              "value": 20
+            },
+            "stat": {
+              "better": 1,
+              "jewelleryQuality": {
+                "catalyst": "Intrinsic Catalyst"
+              },
+              "matchers": [
+                {
+                  "string": "Quality (Attribute Modifiers): #%"
+                }
+              ],
+              "ref": "Quality (Attribute Modifiers): +#%",
+              "trade": {
+                "ids": {
+                  "pseudo": [
+                    "pseudo.pseudo_jewellery_attribute_quality"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Quality (Attribute Modifiers): #%"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "jewelleryQuality": {
+          "catalyst": "Intrinsic Catalyst"
+        },
+        "matchers": [
+          {
+            "string": "Quality (Attribute Modifiers): #%"
+          }
+        ],
+        "ref": "Quality (Attribute Modifiers): +#%",
+        "trade": {
+          "ids": {
+            "pseudo": [
+              "pseudo.pseudo_jewellery_attribute_quality"
+            ]
+          }
+        }
+      },
+      "type": "pseudo"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 42,
+            "min": 30,
+            "value": 30
+          },
+          "modifier": {
+            "info": {
+              "rollIncr": 20,
+              "tags": [
+                "Attribute"
+              ],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 35,
+                  "min": 25,
+                  "unscalable": false,
+                  "value": 25
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to Strength"
+                    }
+                  ],
+                  "ref": "+# to Strength",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4080418644"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4080418644"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4080418644"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4080418644"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Strength"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 35,
+              "min": 25,
+              "unscalable": false,
+              "value": 25
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to Strength"
+                }
+              ],
+              "ref": "+# to Strength",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_4080418644"
+                  ],
+                  "explicit": [
+                    "explicit.stat_4080418644"
+                  ],
+                  "fractured": [
+                    "fractured.stat_4080418644"
+                  ],
+                  "implicit": [
+                    "implicit.stat_4080418644"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to Strength"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# to Strength"
+          }
+        ],
+        "ref": "+# to Strength",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_4080418644"
+            ],
+            "explicit": [
+              "explicit.stat_4080418644"
+            ],
+            "fractured": [
+              "fractured.stat_4080418644"
+            ],
+            "implicit": [
+              "implicit.stat_4080418644"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 60,
+            "min": 36,
+            "value": 57
+          },
+          "modifier": {
+            "info": {
+              "rollIncr": 20,
+              "tags": [
+                "Attribute"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 50,
+                  "min": 30,
+                  "unscalable": false,
+                  "value": 48
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to Dexterity"
+                    }
+                  ],
+                  "ref": "+# to Dexterity",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3261801346"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3261801346"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3261801346"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3261801346"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Dexterity"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 50,
+              "min": 30,
+              "unscalable": false,
+              "value": 48
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to Dexterity"
+                }
+              ],
+              "ref": "+# to Dexterity",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3261801346"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3261801346"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3261801346"
+                  ],
+                  "implicit": [
+                    "implicit.stat_3261801346"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to Dexterity"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# to Dexterity"
+          }
+        ],
+        "ref": "+# to Dexterity",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_3261801346"
+            ],
+            "explicit": [
+              "explicit.stat_3261801346"
+            ],
+            "fractured": [
+              "fractured.stat_3261801346"
+            ],
+            "implicit": [
+              "implicit.stat_3261801346"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 25,
+            "min": 15,
+            "value": 15
+          },
+          "modifier": {
+            "info": {
+              "tags": [
+                "Elemental",
+                "Fire",
+                "Resistance"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 25,
+                  "min": 15,
+                  "unscalable": false,
+                  "value": 15
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% to Fire Resistance"
+                    }
+                  ],
+                  "ref": "+#% to Fire Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3372524247"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3372524247"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3372524247"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3372524247"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Fire Resistance"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 25,
+              "min": 15,
+              "unscalable": false,
+              "value": 15
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% to Fire Resistance"
+                }
+              ],
+              "ref": "+#% to Fire Resistance",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3372524247"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3372524247"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3372524247"
+                  ],
+                  "implicit": [
+                    "implicit.stat_3372524247"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% to Fire Resistance"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% to Fire Resistance"
+          }
+        ],
+        "ref": "+#% to Fire Resistance",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_3372524247"
+            ],
+            "explicit": [
+              "explicit.stat_3372524247"
+            ],
+            "fractured": [
+              "fractured.stat_3372524247"
+            ],
+            "implicit": [
+              "implicit.stat_3372524247"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 25,
+            "min": 15,
+            "value": 22
+          },
+          "modifier": {
+            "info": {
+              "tags": [
+                "Elemental",
+                "Cold",
+                "Resistance"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 25,
+                  "min": 15,
+                  "unscalable": false,
+                  "value": 22
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% to Cold Resistance"
+                    }
+                  ],
+                  "ref": "+#% to Cold Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4220027924"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4220027924"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4220027924"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4220027924"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Cold Resistance"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 25,
+              "min": 15,
+              "unscalable": false,
+              "value": 22
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "#% to Cold Resistance"
+                }
+              ],
+              "ref": "+#% to Cold Resistance",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_4220027924"
+                  ],
+                  "explicit": [
+                    "explicit.stat_4220027924"
+                  ],
+                  "fractured": [
+                    "fractured.stat_4220027924"
+                  ],
+                  "implicit": [
+                    "implicit.stat_4220027924"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% to Cold Resistance"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "#% to Cold Resistance"
+          }
+        ],
+        "ref": "+#% to Cold Resistance",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_4220027924"
+            ],
+            "explicit": [
+              "explicit.stat_4220027924"
+            ],
+            "fractured": [
+              "fractured.stat_4220027924"
+            ],
+            "implicit": [
+              "implicit.stat_4220027924"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Magic Utility Flasks cannot be Used"
+                    }
+                  ],
+                  "ref": "Magic Utility Flasks cannot be Used",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3986704288"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Magic Utility Flasks cannot be Used"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Magic Utility Flasks cannot be Used"
+                }
+              ],
+              "ref": "Magic Utility Flasks cannot be Used",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_3986704288"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Magic Utility Flasks cannot be Used"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Magic Utility Flasks cannot be Used"
+          }
+        ],
+        "ref": "Magic Utility Flasks cannot be Used",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_3986704288"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Magic Utility Flask Effects cannot be removed"
+                    }
+                  ],
+                  "ref": "Magic Utility Flask Effects cannot be removed",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_344389721"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Magic Utility Flask Effects cannot be removed"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Magic Utility Flask Effects cannot be removed"
+                }
+              ],
+              "ref": "Magic Utility Flask Effects cannot be removed",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_344389721"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Magic Utility Flask Effects cannot be removed"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Magic Utility Flask Effects cannot be removed"
+          }
+        ],
+        "ref": "Magic Utility Flask Effects cannot be removed",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_344389721"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 4,
+            "min": 2,
+            "value": 4
+          },
+          "modifier": {
+            "info": {
+              "mechanic": "foulborn",
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 4,
+                  "min": 2,
+                  "unscalable": false,
+                  "value": 4
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Rightmost # Magic Utility Flask constantly applies its Flask Effect to you"
+                    },
+                    {
+                      "string": "Rightmost # Magic Utility Flasks constantly apply their Flask Effects to you"
+                    }
+                  ],
+                  "ref": "Rightmost # Magic Utility Flask constantly applies its Flask Effect to you",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_2651470813"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Rightmost # Magic Utility Flasks constantly apply their Flask Effects to you"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 4,
+              "min": 2,
+              "unscalable": false,
+              "value": 4
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Rightmost # Magic Utility Flask constantly applies its Flask Effect to you"
+                },
+                {
+                  "string": "Rightmost # Magic Utility Flasks constantly apply their Flask Effects to you"
+                }
+              ],
+              "ref": "Rightmost # Magic Utility Flask constantly applies its Flask Effect to you",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_2651470813"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Rightmost # Magic Utility Flasks constantly apply their Flask Effects to you"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Rightmost # Magic Utility Flask constantly applies its Flask Effect to you"
+          },
+          {
+            "string": "Rightmost # Magic Utility Flasks constantly apply their Flask Effects to you"
+          }
+        ],
+        "ref": "Rightmost # Magic Utility Flask constantly applies its Flask Effect to you",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_2651470813"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "uniqueBase": {
+    "craftable": {
+      "category": "Belt"
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvQmVsdDUiLCJ3IjoyLCJoIjoxLCJzY2FsZSI6MSwiZWxkZXIiOnRydWV9XQ/440fb77647/Belt5.png",
+    "name": "Heavy Belt",
+    "namespace": "ITEM",
+    "refName": "Heavy Belt",
+    "w": 2
+  },
+  "unknownModifiers": []
+}
