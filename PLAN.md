@@ -145,6 +145,43 @@ query building) and what is per game (parser sections, item classes, PoE2
 augments/spirit, PoE1 influences/heist/etc.). Port the shared parts once, then
 each game's parser behind the `game` trait.
 
+### Shared vs per-game split (decided 2026-11-22)
+
+Method: both `renderer/src` trees normalised with the same prettier settings (EE2
+reformatted everything, so raw diffs are noise), then compared function by
+function. Result: the two have diverged far more than "much of filter and query
+building" suggested. Outside the data-access mechanics and a few helpers, no
+function body is identical: in `Parser.ts` only `markupConditionParser` matches,
+and `modifiers.ts`, `calc-q20.ts`, `magic-name.ts` and `pathofexile-trade.ts`
+share none. Merging diverged logic behind flags would make every reference bump
+hard to follow, so the rule is: **core holds mechanisms and byte-identical
+helpers; anything that reads or writes a game's item, stat or filter shapes is
+per game, one Rust module per TS file**, so a reference diff maps onto one module.
+
+| TS module (`renderer/src/…`) | Where | Notes |
+|---|---|---|
+| `assets/data/index.ts`: fnv1a 32, index build (`make-index-files.mjs`), binary search, ndjson line lookup and substring iterator | `core::data` | Same algorithm in both. The game supplies which keys a line indexes: PoE1 stat lines may be groups and index `advanced ?? string`, PoE2 lines index `string` and `advanced` |
+| Data files: where `items/stats.ndjson`, `client_strings.js`, `item-drop.json` come from | `core::data::DataSource` trait | Directory source now (`ref/*/renderer/public/data`), swappable later (PLAN: less static data) |
+| `client_strings.js` | `core::data` reader, per-game key structs | Every file is one literal per line (string, regex, array); a strict reader, no JS engine. Keys differ a lot between games |
+| `assets/data/interfaces.ts` (`BaseType`, `Stat`, `StatGroup`, `TranslationDict`) | per game | Schemas diverged (PoE1 stat groups, areas, mercenaries; PoE2 augments, stat tiers) |
+| PoE2-only data: `TradeData` (`/api/trade2/data`), augment and catalyst tables | `poe2::data` | Tests read the trade data from `ref/ee2/renderer/specs/data`, as the harness does |
+| `parser/*` (`Parser.ts`, `ParsedItem.ts`, `meta.ts`, `modifiers.ts`, `stat-translations.ts`, `advanced-mod-desc.ts`, `calc-q20.ts`, `magic-name.ts`; EE2's `augment-builder.ts`, `calc-base.ts`, `utils.ts`) | per game | `ParsedItem` differs (`isCorrupted` is `{twice?}` vs `boolean`, PoE2 augments/requires/waystones), so `Item` moves out of core. Section pipeline and section order differ |
+| Byte-identical helpers: `advanced-mod-desc` `applyIncr`/`groupLinesByMod`/`incrRoll`/`isModInfoLine`, `linesToStatStrings`, `markupConditionParser`, `filters/util.ts`, `ceil/floorToBracket` | `core` | Only while they stay identical in both references and touch no game types; if one side changes, the copy moves to that game |
+| `ItemRarity` | `core` | Same enum in both |
+| `web/price-check/filters/*` (`create-item-filters`, `create-stat-filters`, `create-presets`, `interfaces`, `pseudo/*`; EE2's `common`, `create-unique-filters`, `fill-augments`) | per game | 30–100 % of lines differ; PoE1 has stat-filter groups, PoE2 augments and unique presets |
+| `trade/pathofexile-trade.ts` (`createTradeRequest`) | per game | 961 vs 2103 lines, nothing shared |
+| `trade/common.ts` `apiToSatisfySearch` | per game | Small, differs (PoE2 stack-size rule, PoE1 filter groups) |
+| `trade/pathofexile-bulk.ts` | `core`, parameterised | Differs in endpoint (`trade`/`trade2`), listing option, result count and default currency |
+| `trade/RateLimiter.ts`, `artificial-slowdown.ts`, `Cache.ts`, request sending in `common.ts` | `core` (phase 4) | Identical apart from `Cache.purgeIfDifferentCurrency` (PoE2) |
+
+The `Game` trait gets associated types (`type Item: Serialize`, later filters and
+presets) instead of the shared `core::Item`; the app selects a game through an enum
+over the two implementations, so the trait need not be object-safe.
+
+Corpus gap: every fixture is `en`. PoE1 ships `ru`, `ko`, `cmn-Hant`; PoE2 adds
+`ja`, `de`, `es`, `pt`, `fr` (`th` is UI text only). The data layer loads them all, but parser
+behaviour in other languages is unverified until real item texts arrive.
+
 In order, each step done when its fixtures pass (for each game):
 
 1. `apt-data`: items/stats ndjson + index loading, per language
