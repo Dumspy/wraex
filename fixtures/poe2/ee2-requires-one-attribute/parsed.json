@@ -1,0 +1,63 @@
+{
+  "armourES": 58,
+  "basePercentile": 0,
+  "category": "Boots",
+  "influences": [],
+  "info": {
+    "armour": {
+      "es": [
+        63,
+        63
+      ]
+    },
+    "craftable": {
+      "category": "Boots"
+    },
+    "h": 2,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9CYXNldHlwZXMvQm9vdHNJbnQwNSIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/2f27d465e1/BootsInt05.png",
+    "name": "Dunerunner Sandals",
+    "namespace": "ITEM",
+    "refName": "Dunerunner Sandals",
+    "tags": [
+      "int_armour"
+    ],
+    "w": 2
+  },
+  "infoVariants": [
+    {
+      "armour": {
+        "es": [
+          63,
+          63
+        ]
+      },
+      "craftable": {
+        "category": "Boots"
+      },
+      "h": 2,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9CYXNldHlwZXMvQm9vdHNJbnQwNSIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/2f27d465e1/BootsInt05.png",
+      "name": "Dunerunner Sandals",
+      "namespace": "ITEM",
+      "refName": "Dunerunner Sandals",
+      "tags": [
+        "int_armour"
+      ],
+      "w": 2
+    }
+  ],
+  "isCorrupted": false,
+  "isUnidentified": true,
+  "itemLevel": 68,
+  "name": "Dunerunner Sandals",
+  "newMods": [],
+  "rarity": "Rare",
+  "rawText": "Item Class: Boots\nRarity: Rare\nDunerunner Sandals\n--------\nEnergy Shield: 58\n--------\nRequires: 78 (unmet) Intelligence\n--------\nItem Level: 68\n--------\nUnidentified\n",
+  "requires": {
+    "dex": 0,
+    "int": 78,
+    "level": 0,
+    "str": 0
+  },
+  "statsByType": [],
+  "unknownModifiers": []
+}

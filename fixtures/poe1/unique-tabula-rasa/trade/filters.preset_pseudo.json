@@ -1,0 +1,43 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "foulborn_item": {
+              "option": "false"
+            },
+            "vestigial": {
+              "option": "false"
+            }
+          }
+        },
+        "socket_filters": {
+          "filters": {
+            "links": {
+              "min": 6
+            }
+          }
+        }
+      },
+      "name": "Tabula Rasa",
+      "stats": [
+        {
+          "filters": [],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Simple Robe"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

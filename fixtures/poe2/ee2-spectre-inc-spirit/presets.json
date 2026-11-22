@@ -1,0 +1,1197 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "augmentSockets": {
+          "disabled": true,
+          "value": 1
+        },
+        "corrupted": {
+          "exact": false,
+          "value": false
+        },
+        "itemEditorSelection": {
+          "disabled": true,
+          "editing": false,
+          "value": "None"
+        },
+        "itemLevel": {
+          "disabled": true,
+          "value": 79
+        },
+        "rarity": {
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Shrine Sceptre",
+          "baseTypeTrade": "Shrine Sceptre"
+        },
+        "searchRelaxed": {
+          "category": "Sceptre",
+          "disabled": false
+        },
+        "tempAugmentStorage": [],
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 155,
+              "min": 151
+            },
+            "dp": false,
+            "goodness": 0.25,
+            "isNegated": false,
+            "min": 151,
+            "value": 152
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 55,
+                "min": 51,
+                "value": 52
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Duke's",
+                  "tags": [],
+                  "tier": 3,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 55,
+                      "min": 51,
+                      "unscalable": false,
+                      "value": 52
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "spirit_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Spirit"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Spirit"
+                        }
+                      ],
+                      "ref": "#% increased Spirit",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1416406066",
+                            "desecrated.stat_3984865854"
+                          ],
+                          "enchant": [
+                            "enchant.stat_3984865854"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1416406066",
+                            "explicit.stat_3984865854"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1416406066",
+                            "fractured.stat_3984865854"
+                          ],
+                          "rune": [
+                            "rune.stat_1416406066",
+                            "rune.stat_3984865854"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Spirit"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 55,
+                  "min": 51,
+                  "unscalable": false,
+                  "value": 52
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "spirit_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Spirit"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Spirit"
+                    }
+                  ],
+                  "ref": "#% increased Spirit",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1416406066",
+                        "desecrated.stat_3984865854"
+                      ],
+                      "enchant": [
+                        "enchant.stat_3984865854"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1416406066",
+                        "explicit.stat_3984865854"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1416406066",
+                        "fractured.stat_3984865854"
+                      ],
+                      "rune": [
+                        "rune.stat_1416406066",
+                        "rune.stat_3984865854"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Spirit"
+                }
+              }
+            }
+          ],
+          "statRef": "Spirit: #%",
+          "tag": "property",
+          "text": "Spirit: #%",
+          "tradeId": [
+            "item.spirit"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 27,
+              "min": 25
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 25,
+            "value": 27
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 27,
+                "min": 25,
+                "value": 27
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Sage",
+                  "tags": [
+                    "Attribute"
+                  ],
+                  "tier": 3,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 27,
+                      "min": 25,
+                      "unscalable": false,
+                      "value": 27
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "additional_intelligence",
+                      "matchers": [
+                        {
+                          "string": "# to Intelligence"
+                        }
+                      ],
+                      "ref": "# to Intelligence",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_328541901"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_328541901"
+                          ],
+                          "enchant": [
+                            "enchant.stat_328541901"
+                          ],
+                          "explicit": [
+                            "explicit.stat_328541901"
+                          ],
+                          "fractured": [
+                            "fractured.stat_328541901"
+                          ],
+                          "implicit": [
+                            "implicit.stat_328541901"
+                          ],
+                          "rune": [
+                            "rune.stat_328541901"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to Intelligence"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 27,
+                  "min": 25,
+                  "unscalable": false,
+                  "value": 27
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "additional_intelligence",
+                  "matchers": [
+                    {
+                      "string": "# to Intelligence"
+                    }
+                  ],
+                  "ref": "# to Intelligence",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_328541901"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_328541901"
+                      ],
+                      "enchant": [
+                        "enchant.stat_328541901"
+                      ],
+                      "explicit": [
+                        "explicit.stat_328541901"
+                      ],
+                      "fractured": [
+                        "fractured.stat_328541901"
+                      ],
+                      "implicit": [
+                        "implicit.stat_328541901"
+                      ],
+                      "rune": [
+                        "rune.stat_328541901"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Intelligence"
+                }
+              }
+            }
+          ],
+          "statRef": "+# total to Intelligence",
+          "tag": "pseudo",
+          "text": "+# total to Intelligence ",
+          "tradeId": [
+            "pseudo.pseudo_total_intelligence"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 143,
+              "min": 130
+            },
+            "dp": false,
+            "goodness": 0.5384615384615384,
+            "isNegated": false,
+            "min": 130,
+            "value": 137
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 89,
+                "min": 80,
+                "value": 83
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Opalescent",
+                  "tags": [
+                    "Mana"
+                  ],
+                  "tier": 5,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 89,
+                      "min": 80,
+                      "unscalable": false,
+                      "value": 83
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_maximum_mana",
+                      "matchers": [
+                        {
+                          "string": "# to maximum Mana"
+                        }
+                      ],
+                      "ref": "# to maximum Mana",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1050105434"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_1050105434"
+                          ],
+                          "enchant": [
+                            "enchant.stat_1050105434"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1050105434"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1050105434"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1050105434"
+                          ],
+                          "rune": [
+                            "rune.stat_1050105434"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to maximum Mana"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 89,
+                  "min": 80,
+                  "unscalable": false,
+                  "value": 83
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_maximum_mana",
+                  "matchers": [
+                    {
+                      "string": "# to maximum Mana"
+                    }
+                  ],
+                  "ref": "# to maximum Mana",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1050105434"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_1050105434"
+                      ],
+                      "enchant": [
+                        "enchant.stat_1050105434"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1050105434"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1050105434"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1050105434"
+                      ],
+                      "rune": [
+                        "rune.stat_1050105434"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Mana"
+                }
+              }
+            },
+            {
+              "contributes": {
+                "max": 54,
+                "min": 50,
+                "value": 54
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Sage",
+                  "tags": [
+                    "Attribute"
+                  ],
+                  "tier": 3,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 27,
+                      "min": 25,
+                      "unscalable": false,
+                      "value": 27
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "additional_intelligence",
+                      "matchers": [
+                        {
+                          "string": "# to Intelligence"
+                        }
+                      ],
+                      "ref": "# to Intelligence",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_328541901"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_328541901"
+                          ],
+                          "enchant": [
+                            "enchant.stat_328541901"
+                          ],
+                          "explicit": [
+                            "explicit.stat_328541901"
+                          ],
+                          "fractured": [
+                            "fractured.stat_328541901"
+                          ],
+                          "implicit": [
+                            "implicit.stat_328541901"
+                          ],
+                          "rune": [
+                            "rune.stat_328541901"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to Intelligence"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 27,
+                  "min": 25,
+                  "unscalable": false,
+                  "value": 27
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "additional_intelligence",
+                  "matchers": [
+                    {
+                      "string": "# to Intelligence"
+                    }
+                  ],
+                  "ref": "# to Intelligence",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_328541901"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_328541901"
+                      ],
+                      "enchant": [
+                        "enchant.stat_328541901"
+                      ],
+                      "explicit": [
+                        "explicit.stat_328541901"
+                      ],
+                      "fractured": [
+                        "fractured.stat_328541901"
+                      ],
+                      "implicit": [
+                        "implicit.stat_328541901"
+                      ],
+                      "rune": [
+                        "rune.stat_328541901"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Intelligence"
+                }
+              }
+            }
+          ],
+          "statRef": "+# total maximum Mana",
+          "tag": "pseudo",
+          "text": "+# total maximum Mana ",
+          "tradeId": [
+            "pseudo.pseudo_total_mana"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_not_max_level",
+          "roll": {
+            "default": {
+              "max": 17,
+              "min": 17
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 17,
+            "value": 17
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 17,
+                "min": 17,
+                "value": 17
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "skill"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 17,
+                      "min": 17,
+                      "unscalable": false,
+                      "value": 17
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Grants Skill: Level # Purity of Lightning"
+                        }
+                      ],
+                      "ref": "Grants Skill: Level # Purity of Lightning",
+                      "trade": {
+                        "ids": {
+                          "skill": [
+                            "skill.purity_of_lightning"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Grants Skill: Level # Purity of Lightning"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 17,
+                  "min": 17,
+                  "unscalable": false,
+                  "value": 17
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Grants Skill: Level # Purity of Lightning"
+                    }
+                  ],
+                  "ref": "Grants Skill: Level # Purity of Lightning",
+                  "trade": {
+                    "ids": {
+                      "skill": [
+                        "skill.purity_of_lightning"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Grants Skill: Level # Purity of Lightning"
+                }
+              }
+            }
+          ],
+          "statRef": "Grants Skill: Level # Purity of Lightning",
+          "tag": "skill",
+          "text": "Grants Skill: Level # Purity of Lightning",
+          "tradeId": [
+            "skill.purity_of_lightning"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 20,
+              "min": 17
+            },
+            "dp": false,
+            "goodness": 0.25,
+            "isNegated": false,
+            "min": 17,
+            "value": 18
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 21,
+                "min": 17,
+                "value": 18
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Arcing",
+                  "tags": [
+                    "Damage",
+                    "Elemental",
+                    "Lightning",
+                    "Attack"
+                  ],
+                  "tier": 4,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 21,
+                      "min": 17,
+                      "unscalable": false,
+                      "value": 18
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "allies_in_presence_attack_minimum_added_lightning_damage",
+                      "matchers": [
+                        {
+                          "string": "Allies in your Presence deal # to # added Attack Lightning Damage"
+                        }
+                      ],
+                      "ref": "Allies in your Presence deal # to # added Attack Lightning Damage",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_2854751904"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2854751904"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2854751904"
+                          ],
+                          "rune": [
+                            "rune.stat_2854751904"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Allies in your Presence deal # to # added Attack Lightning Damage"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 21,
+                  "min": 17,
+                  "unscalable": false,
+                  "value": 18
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "allies_in_presence_attack_minimum_added_lightning_damage",
+                  "matchers": [
+                    {
+                      "string": "Allies in your Presence deal # to # added Attack Lightning Damage"
+                    }
+                  ],
+                  "ref": "Allies in your Presence deal # to # added Attack Lightning Damage",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_2854751904"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2854751904"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2854751904"
+                      ],
+                      "rune": [
+                        "rune.stat_2854751904"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Allies in your Presence deal # to # added Attack Lightning Damage"
+                }
+              }
+            }
+          ],
+          "statRef": "Allies in your Presence deal # to # added Attack Lightning Damage",
+          "tag": "explicit",
+          "text": "Allies in your Presence deal # to # added Attack Lightning Damage",
+          "tradeId": [
+            "explicit.stat_2854751904"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 19,
+              "min": 16
+            },
+            "dp": false,
+            "goodness": 0.8888888888888888,
+            "isNegated": false,
+            "min": 16,
+            "value": 18
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 19,
+                "min": 10,
+                "value": 18
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Excitement",
+                  "tags": [
+                    "Mana"
+                  ],
+                  "tier": 6,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 19,
+                      "min": 10,
+                      "unscalable": false,
+                      "value": 18
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "mana_regeneration_rate_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Mana Regeneration Rate"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Mana Regeneration Rate"
+                        }
+                      ],
+                      "ref": "#% increased Mana Regeneration Rate",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_789117908"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_789117908"
+                          ],
+                          "enchant": [
+                            "enchant.stat_789117908"
+                          ],
+                          "explicit": [
+                            "explicit.stat_789117908"
+                          ],
+                          "fractured": [
+                            "fractured.stat_789117908"
+                          ],
+                          "implicit": [
+                            "implicit.stat_789117908"
+                          ],
+                          "rune": [
+                            "rune.stat_789117908"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Mana Regeneration Rate"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 19,
+                  "min": 10,
+                  "unscalable": false,
+                  "value": 18
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "mana_regeneration_rate_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Mana Regeneration Rate"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Mana Regeneration Rate"
+                    }
+                  ],
+                  "ref": "#% increased Mana Regeneration Rate",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_789117908"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_789117908"
+                      ],
+                      "enchant": [
+                        "enchant.stat_789117908"
+                      ],
+                      "explicit": [
+                        "explicit.stat_789117908"
+                      ],
+                      "fractured": [
+                        "fractured.stat_789117908"
+                      ],
+                      "implicit": [
+                        "implicit.stat_789117908"
+                      ],
+                      "rune": [
+                        "rune.stat_789117908"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Mana Regeneration Rate"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Mana Regeneration Rate",
+          "tag": "explicit",
+          "text": "#% increased Mana Regeneration Rate",
+          "tradeId": [
+            "explicit.stat_789117908"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 30,
+              "min": 26
+            },
+            "dp": false,
+            "goodness": 0.5,
+            "isNegated": false,
+            "min": 26,
+            "value": 28
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 30,
+                "min": 26,
+                "value": 28
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Tutor",
+                  "tags": [
+                    "Life",
+                    "Minion"
+                  ],
+                  "tier": 5,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 30,
+                      "min": 26,
+                      "unscalable": false,
+                      "value": 28
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "minion_maximum_life_+%",
+                      "matchers": [
+                        {
+                          "string": "Minions have #% increased maximum Life"
+                        },
+                        {
+                          "negate": true,
+                          "string": "Minions have #% reduced maximum Life"
+                        }
+                      ],
+                      "ref": "Minions have #% increased maximum Life",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_770672621"
+                          ],
+                          "explicit": [
+                            "explicit.stat_770672621"
+                          ],
+                          "fractured": [
+                            "fractured.stat_770672621"
+                          ],
+                          "rune": [
+                            "rune.stat_770672621"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Minions have #% increased maximum Life"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 26,
+                  "unscalable": false,
+                  "value": 28
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "minion_maximum_life_+%",
+                  "matchers": [
+                    {
+                      "string": "Minions have #% increased maximum Life"
+                    },
+                    {
+                      "negate": true,
+                      "string": "Minions have #% reduced maximum Life"
+                    }
+                  ],
+                  "ref": "Minions have #% increased maximum Life",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_770672621"
+                      ],
+                      "explicit": [
+                        "explicit.stat_770672621"
+                      ],
+                      "fractured": [
+                        "fractured.stat_770672621"
+                      ],
+                      "rune": [
+                        "rune.stat_770672621"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Minions have #% increased maximum Life"
+                }
+              }
+            }
+          ],
+          "statRef": "Minions have #% increased maximum Life",
+          "tag": "explicit",
+          "text": "Minions have #% increased maximum Life",
+          "tradeId": [
+            "explicit.stat_770672621"
+          ]
+        }
+      ]
+    },
+    {
+      "filters": {
+        "augmentSockets": {
+          "disabled": true,
+          "value": 1
+        },
+        "corrupted": {
+          "exact": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "itemEditorSelection": {
+          "disabled": true,
+          "editing": false,
+          "value": "None"
+        },
+        "itemLevel": {
+          "disabled": false,
+          "value": 79
+        },
+        "rarity": {
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Shrine Sceptre",
+          "baseTypeTrade": "Shrine Sceptre"
+        },
+        "searchRelaxed": {
+          "category": "Sceptre",
+          "disabled": true
+        },
+        "tempAugmentStorage": [],
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_base_item",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 17,
+              "min": 17
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 17,
+            "value": 17
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 17,
+                "min": 17,
+                "value": 17
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "skill"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 17,
+                      "min": 17,
+                      "unscalable": false,
+                      "value": 17
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Grants Skill: Level # Purity of Lightning"
+                        }
+                      ],
+                      "ref": "Grants Skill: Level # Purity of Lightning",
+                      "trade": {
+                        "ids": {
+                          "skill": [
+                            "skill.purity_of_lightning"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Grants Skill: Level # Purity of Lightning"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 17,
+                  "min": 17,
+                  "unscalable": false,
+                  "value": 17
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Grants Skill: Level # Purity of Lightning"
+                    }
+                  ],
+                  "ref": "Grants Skill: Level # Purity of Lightning",
+                  "trade": {
+                    "ids": {
+                      "skill": [
+                        "skill.purity_of_lightning"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Grants Skill: Level # Purity of Lightning"
+                }
+              }
+            }
+          ],
+          "statRef": "Grants Skill: Level # Purity of Lightning",
+          "tag": "skill",
+          "text": "Grants Skill: Level # Purity of Lightning",
+          "tradeId": [
+            "skill.purity_of_lightning"
+          ]
+        }
+      ]
+    }
+  ]
+}

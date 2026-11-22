@@ -1,0 +1,1006 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "itemEditorSelection": {
+          "disabled": true,
+          "editing": false,
+          "value": "None"
+        },
+        "mapTier": {
+          "disabled": false,
+          "value": 16
+        },
+        "rarity": {
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Waystone (Tier 16)",
+          "baseTypeTrade": "Waystone (Tier 16)"
+        },
+        "searchRelaxed": {
+          "category": "Map",
+          "disabled": false
+        },
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 20,
+              "min": 20
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 20,
+            "value": 20
+          },
+          "sources": [],
+          "statRef": "Monster Pack Size: #",
+          "tag": "property",
+          "text": "Monster Pack Size: #",
+          "tradeId": [
+            "item.map_pack_size"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 30,
+              "min": 30
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 30,
+            "value": 30
+          },
+          "sources": [],
+          "statRef": "Magic Monsters: #",
+          "tag": "property",
+          "text": "Magic Monsters: #",
+          "tradeId": [
+            "item.map_magic_monsters"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 71,
+              "min": 71
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 71,
+            "value": 71
+          },
+          "sources": [],
+          "statRef": "Rare Monsters: #",
+          "tag": "property",
+          "text": "Rare Monsters: #",
+          "tradeId": [
+            "item.map_rare_monsters"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 90,
+              "min": 90
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 90,
+            "value": 90
+          },
+          "sources": [],
+          "statRef": "Waystone Drop Chance: #%",
+          "tag": "property",
+          "text": "Waystone Drop Chance: #%",
+          "tradeId": [
+            "item.map_drop_chance"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 17,
+              "min": 17
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 17,
+            "value": 17
+          },
+          "sources": [],
+          "statRef": "Map Item Rarity: #%",
+          "tag": "property",
+          "text": "Map Item Rarity: #%",
+          "tradeId": [
+            "item.map_item_rarity"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 32,
+              "min": 32
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 32,
+            "value": 32
+          },
+          "sources": [],
+          "statRef": "Monster Rarity: #%",
+          "tag": "property",
+          "text": "Monster Rarity: #%",
+          "tradeId": [
+            "item.map_rare_monsters"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 45,
+              "min": 45
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 45,
+            "value": 45
+          },
+          "sources": [],
+          "statRef": "Monster Effectiveness: #%",
+          "tag": "property",
+          "text": "Monster Effectiveness: #%",
+          "tradeId": [
+            "item.map_magic_monsters"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_for_map",
+          "roll": {
+            "default": {
+              "max": 30,
+              "min": 27
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 27,
+            "value": 30
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 30,
+                "min": 26,
+                "value": 30
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Painful",
+                  "tags": [],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 30,
+                      "min": 26,
+                      "unscalable": false,
+                      "value": 30
+                    },
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": true,
+                      "id": "map_monsters_damage_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Monster Damage"
+                        }
+                      ],
+                      "ref": "#% increased Monster Damage",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1890519597"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1890519597"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1890519597"
+                          ],
+                          "sanctum": [
+                            "sanctum.stat_1890519597"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Monster Damage"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 26,
+                  "unscalable": false,
+                  "value": 30
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": true,
+                  "id": "map_monsters_damage_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Monster Damage"
+                    }
+                  ],
+                  "ref": "#% increased Monster Damage",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1890519597"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1890519597"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1890519597"
+                      ],
+                      "sanctum": [
+                        "sanctum.stat_1890519597"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Monster Damage"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Monster Damage",
+          "tag": "explicit",
+          "text": "#% increased Monster Damage",
+          "tradeId": [
+            "explicit.stat_1890519597"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_for_map",
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Enduring",
+                  "tags": [],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": true,
+                      "id": "map_monsters_additional_strength_ratio_%_for_armour",
+                      "matchers": [
+                        {
+                          "string": "Monsters are Armoured"
+                        }
+                      ],
+                      "ref": "Monsters are Armoured",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_2539290279"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2539290279"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2539290279"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Monsters are Armoured"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": true,
+                  "id": "map_monsters_additional_strength_ratio_%_for_armour",
+                  "matchers": [
+                    {
+                      "string": "Monsters are Armoured"
+                    }
+                  ],
+                  "ref": "Monsters are Armoured",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_2539290279"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2539290279"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2539290279"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Monsters are Armoured"
+                }
+              }
+            }
+          ],
+          "statRef": "Monsters are Armoured",
+          "tag": "explicit",
+          "text": "Monsters are Armoured",
+          "tradeId": [
+            "explicit.stat_2539290279"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_for_map",
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Slowing",
+                  "tags": [],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": true,
+                      "id": "map_temporal_chains_curse_zones",
+                      "matchers": [
+                        {
+                          "string": "Players are periodically Cursed with Temporal Chains"
+                        }
+                      ],
+                      "ref": "Players are periodically Cursed with Temporal Chains",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1629357380"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1629357380"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1629357380"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Players are periodically Cursed with Temporal Chains"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": true,
+                  "id": "map_temporal_chains_curse_zones",
+                  "matchers": [
+                    {
+                      "string": "Players are periodically Cursed with Temporal Chains"
+                    }
+                  ],
+                  "ref": "Players are periodically Cursed with Temporal Chains",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1629357380"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1629357380"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1629357380"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Players are periodically Cursed with Temporal Chains"
+                }
+              }
+            }
+          ],
+          "statRef": "Players are periodically Cursed with Temporal Chains",
+          "tag": "explicit",
+          "text": "Players are periodically Cursed with Temporal Chains",
+          "tradeId": [
+            "explicit.stat_1629357380"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_for_map",
+          "roll": {
+            "default": {
+              "max": 79,
+              "min": 70
+            },
+            "dp": false,
+            "goodness": 0.1111111111111111,
+            "isNegated": false,
+            "min": 70,
+            "value": 71
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 79,
+                "min": 70,
+                "value": 71
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Unwavering",
+                  "tags": [],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 79,
+                      "min": 70,
+                      "unscalable": false,
+                      "value": 71
+                    },
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": true,
+                      "id": "map_monsters_ailment_threshold_+%",
+                      "matchers": [
+                        {
+                          "string": "Monsters have #% increased Ailment Threshold"
+                        }
+                      ],
+                      "ref": "Monsters have #% increased Ailment Threshold",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1994551050"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1994551050"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1994551050"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Monsters have #% increased Ailment Threshold"
+                    }
+                  },
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 79,
+                      "min": 70,
+                      "unscalable": false,
+                      "value": 72
+                    },
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": true,
+                      "id": "map_monsters_stun_threshold_+%",
+                      "matchers": [
+                        {
+                          "string": "Monsters have #% increased Stun Threshold"
+                        }
+                      ],
+                      "ref": "Monsters have #% increased Stun Threshold",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_4101943684"
+                          ],
+                          "explicit": [
+                            "explicit.stat_4101943684"
+                          ],
+                          "fractured": [
+                            "fractured.stat_4101943684"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Monsters have #% increased Stun Threshold"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 79,
+                  "min": 70,
+                  "unscalable": false,
+                  "value": 71
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": true,
+                  "id": "map_monsters_ailment_threshold_+%",
+                  "matchers": [
+                    {
+                      "string": "Monsters have #% increased Ailment Threshold"
+                    }
+                  ],
+                  "ref": "Monsters have #% increased Ailment Threshold",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1994551050"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1994551050"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1994551050"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Monsters have #% increased Ailment Threshold"
+                }
+              }
+            }
+          ],
+          "statRef": "Monsters have #% increased Ailment Threshold",
+          "tag": "explicit",
+          "text": "Monsters have #% increased Ailment Threshold",
+          "tradeId": [
+            "explicit.stat_1994551050"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_for_map",
+          "roll": {
+            "default": {
+              "max": 79,
+              "min": 70
+            },
+            "dp": false,
+            "goodness": 0.2222222222222222,
+            "isNegated": false,
+            "min": 70,
+            "value": 72
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 79,
+                "min": 70,
+                "value": 72
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Unwavering",
+                  "tags": [],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 79,
+                      "min": 70,
+                      "unscalable": false,
+                      "value": 71
+                    },
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": true,
+                      "id": "map_monsters_ailment_threshold_+%",
+                      "matchers": [
+                        {
+                          "string": "Monsters have #% increased Ailment Threshold"
+                        }
+                      ],
+                      "ref": "Monsters have #% increased Ailment Threshold",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1994551050"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1994551050"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1994551050"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Monsters have #% increased Ailment Threshold"
+                    }
+                  },
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 79,
+                      "min": 70,
+                      "unscalable": false,
+                      "value": 72
+                    },
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": true,
+                      "id": "map_monsters_stun_threshold_+%",
+                      "matchers": [
+                        {
+                          "string": "Monsters have #% increased Stun Threshold"
+                        }
+                      ],
+                      "ref": "Monsters have #% increased Stun Threshold",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_4101943684"
+                          ],
+                          "explicit": [
+                            "explicit.stat_4101943684"
+                          ],
+                          "fractured": [
+                            "fractured.stat_4101943684"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Monsters have #% increased Stun Threshold"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 79,
+                  "min": 70,
+                  "unscalable": false,
+                  "value": 72
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": true,
+                  "id": "map_monsters_stun_threshold_+%",
+                  "matchers": [
+                    {
+                      "string": "Monsters have #% increased Stun Threshold"
+                    }
+                  ],
+                  "ref": "Monsters have #% increased Stun Threshold",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_4101943684"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4101943684"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4101943684"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Monsters have #% increased Stun Threshold"
+                }
+              }
+            }
+          ],
+          "statRef": "Monsters have #% increased Stun Threshold",
+          "tag": "explicit",
+          "text": "Monsters have #% increased Stun Threshold",
+          "tradeId": [
+            "explicit.stat_4101943684"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_for_map",
+          "roll": {
+            "default": {
+              "max": 35,
+              "min": 30
+            },
+            "dp": false,
+            "goodness": 0.4,
+            "isNegated": true,
+            "max": 35,
+            "tradeInvert": true,
+            "value": 33
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": -30,
+                "min": -35,
+                "value": -33
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Drought",
+                  "tags": [],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": -30,
+                      "min": -35,
+                      "unscalable": false,
+                      "value": -33
+                    },
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": true,
+                      "id": "map_player_charges_gained_+%",
+                      "matchers": [
+                        {
+                          "string": "Players gain #% increased Flask Charges"
+                        },
+                        {
+                          "negate": true,
+                          "string": "Players gain #% reduced Flask Charges"
+                        }
+                      ],
+                      "ref": "Players gain #% reduced Flask Charges",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_2549889921"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2549889921"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2549889921"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "negate": true,
+                      "string": "Players gain #% reduced Flask Charges"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": -30,
+                  "min": -35,
+                  "unscalable": false,
+                  "value": -33
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": true,
+                  "id": "map_player_charges_gained_+%",
+                  "matchers": [
+                    {
+                      "string": "Players gain #% increased Flask Charges"
+                    },
+                    {
+                      "negate": true,
+                      "string": "Players gain #% reduced Flask Charges"
+                    }
+                  ],
+                  "ref": "Players gain #% reduced Flask Charges",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_2549889921"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2549889921"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2549889921"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "negate": true,
+                  "string": "Players gain #% reduced Flask Charges"
+                }
+              }
+            }
+          ],
+          "statRef": "Players gain #% reduced Flask Charges",
+          "tag": "explicit",
+          "text": "Players gain #% reduced Flask Charges",
+          "tradeId": [
+            "explicit.stat_2549889921"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_for_map",
+          "roll": {
+            "default": {
+              "max": 40,
+              "min": 32
+            },
+            "dp": false,
+            "goodness": 0.4,
+            "isNegated": false,
+            "min": 32,
+            "value": 36
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 45,
+                "min": 30,
+                "value": 36
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Shattering",
+                  "tags": [],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 45,
+                      "min": 30,
+                      "unscalable": false,
+                      "value": 36
+                    },
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": true,
+                      "id": "map_monsters_armour_break_physical_damage_%_dealt_as_armour_break",
+                      "matchers": [
+                        {
+                          "string": "Monsters Break Armour equal to #% of Physical Damage dealt"
+                        }
+                      ],
+                      "ref": "Monsters Break Armour equal to #% of Physical Damage dealt",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1879340377"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1879340377"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1879340377"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Monsters Break Armour equal to #% of Physical Damage dealt"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 45,
+                  "min": 30,
+                  "unscalable": false,
+                  "value": 36
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": true,
+                  "id": "map_monsters_armour_break_physical_damage_%_dealt_as_armour_break",
+                  "matchers": [
+                    {
+                      "string": "Monsters Break Armour equal to #% of Physical Damage dealt"
+                    }
+                  ],
+                  "ref": "Monsters Break Armour equal to #% of Physical Damage dealt",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1879340377"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1879340377"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1879340377"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Monsters Break Armour equal to #% of Physical Damage dealt"
+                }
+              }
+            }
+          ],
+          "statRef": "Monsters Break Armour equal to #% of Physical Damage dealt",
+          "tag": "explicit",
+          "text": "Monsters Break Armour equal to #% of Physical Damage dealt",
+          "tradeId": [
+            "explicit.stat_1879340377"
+          ]
+        }
+      ]
+    }
+  ]
+}

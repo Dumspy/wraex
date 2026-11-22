@@ -1,0 +1,39 @@
+{
+  "category": "Currency",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "UncutSkillGem"
+    },
+    "h": 1,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9VbmN1dFNraWxsR2VtQnVmZiIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/ab25e9aa3b/UncutSkillGemBuff.png",
+    "name": "Uncut Spirit Gem (Level 16)",
+    "namespace": "ITEM",
+    "refName": "Uncut Spirit Gem (Level 16)",
+    "tags": [],
+    "tradeTag": "uncut-spirit-gem-16",
+    "w": 1
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "UncutSkillGem"
+      },
+      "h": 1,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9VbmN1dFNraWxsR2VtQnVmZiIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/ab25e9aa3b/UncutSkillGemBuff.png",
+      "name": "Uncut Spirit Gem (Level 16)",
+      "namespace": "ITEM",
+      "refName": "Uncut Spirit Gem (Level 16)",
+      "tags": [],
+      "tradeTag": "uncut-spirit-gem-16",
+      "w": 1
+    }
+  ],
+  "isCorrupted": false,
+  "isUnidentified": false,
+  "name": "Uncut Spirit Gem (Level 16)",
+  "newMods": [],
+  "rawText": "Item Class: Uncut Spirit Gems\nRarity: Currency\nUncut Spirit Gem (Level 16)\n--------\nCreates a Persistent Buff Skill Gem or Level an existing gem to Level 16\n--------\nRight Click to engrave a Persistent Buff Skill Gem.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

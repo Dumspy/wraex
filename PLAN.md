@@ -96,8 +96,9 @@ texts from EE2's `specs/Parser/items.ts` and port its vitest assertions too.
   maps, currency, divination cards, cluster jewels, heist items, sanctum items,
   logbooks; plus every supported language (en, ru, ko, cmn-Hant). Sources: own
   play, GitHub issues, community dumps.
-- **Node harness** (`tools/golden/`, see its README for the contract): runs under
-  vitest/vite-node with the reference repo's config and mocks, runs:
+- **Node harness** (`tools/golden/`, see its README for the contract; done: 16 PoE1
+  and 27 PoE2 cases, CI regenerates and diffs them): runs under vitest with the
+  reference repo's aliases and mocks, runs:
   1. `init(lang)` → `parseClipboard(text)` → `ParsedItem` JSON
   2. `createPresets` (`web/price-check/filters/create-presets.ts`) →
      `{ presets, active }`, then per preset `createTradeRequest` on the preset's
@@ -107,7 +108,11 @@ texts from EE2's `specs/Parser/items.ts` and port its vitest assertions too.
   Writes `fixtures/<game>/<case>/{input.txt,options.json,parsed.json,presets.json,trade/<id>.json}`.
   The `CreateOptions` used are recorded per case; they differ between the games.
 - Normalize JSON (key order, floats) so Rust and TS output compare as text.
-- Script: `golden regen` (TS) and `golden check` (Rust) → diff report.
+- Script: `golden regen` (TS, `devenv tasks run golden:regen`) and `golden check`
+  (Rust, `wraex_golden::{cases, diff}` in each ported module's tests) → diff report.
+- Still open: map-check / item-check data (step 3 above), a real PoE1 corpus
+  (the current one is hand-written, see `tools/golden/corpus/README.md`),
+  non-English cases, and porting EE2's vitest assertions.
 
 ## Phase 2: platform spike on Windows (≈ 1–2 weeks, go/no-go)
 

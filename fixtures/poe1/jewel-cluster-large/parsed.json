@@ -1,0 +1,632 @@
+{
+  "category": "Cluster Jewel",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Cluster Jewel"
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvSmV3ZWxzL05ld0dlbUJhc2UzIiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/db35e60885/NewGemBase3.png",
+    "name": "Large Cluster Jewel",
+    "namespace": "ITEM",
+    "refName": "Large Cluster Jewel"
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Cluster Jewel"
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvSmV3ZWxzL05ld0dlbUJhc2UzIiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/db35e60885/NewGemBase3.png",
+      "name": "Large Cluster Jewel",
+      "namespace": "ITEM",
+      "refName": "Large Cluster Jewel"
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 84,
+  "name": "Large Cluster Jewel",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "enchant"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 8,
+            "min": 8,
+            "unscalable": false,
+            "value": 8
+          },
+          "stat": {
+            "better": -1,
+            "matchers": [
+              {
+                "string": "Adds # Passive Skills"
+              },
+              {
+                "string": "Adds 1 Passive Skill",
+                "value": 1
+              }
+            ],
+            "ref": "Adds # Passive Skills",
+            "trade": {
+              "ids": {
+                "enchant": [
+                  "enchant.stat_3086156145"
+                ],
+                "explicit": [
+                  "explicit.stat_3086156145"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Adds # Passive Skills"
+          }
+        },
+        {
+          "roll": {
+            "dp": false,
+            "max": 2,
+            "min": 2,
+            "unscalable": false,
+            "value": 2
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# Added Passive Skills are Jewel Sockets"
+              },
+              {
+                "string": "1 Added Passive Skill is a Jewel Socket",
+                "value": 1
+              }
+            ],
+            "ref": "# Added Passive Skills are Jewel Sockets",
+            "trade": {
+              "ids": {
+                "enchant": [
+                  "enchant.stat_4079888060"
+                ],
+                "explicit": [
+                  "explicit.stat_4079888060"
+                ],
+                "fractured": [
+                  "fractured.stat_4079888060"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# Added Passive Skills are Jewel Sockets"
+          }
+        },
+        {
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Added Small Passive Skills grant: 12% increased Fire Damage"
+              }
+            ],
+            "ref": "Added Small Passive Skills grant: 12% increased Fire Damage",
+            "trade": {
+              "ids": {
+                "enchant": [
+                  "enchant.stat_3948993189|13"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Added Small Passive Skills grant: 12% increased Fire Damage"
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Magic",
+  "rawText": "Item Class: Jewels\nRarity: Magic\nFearsome Large Cluster Jewel of Potency\n--------\nRequirements:\nLevel: 54\n--------\nItem Level: 84\n--------\nAdds 8 Passive Skills (enchant)\n2 Added Passive Skills are Jewel Sockets (enchant)\nAdded Small Passive Skills grant: 12% increased Fire Damage (enchant)\n--------\n1 Added Passive Skill is Prismatic Heart\n--------\nPlace into an allocated Large Jewel Socket on the Passive Skill Tree. Added passives do not interact with jewel radiuses. Right click to remove from the Socket.\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 8,
+            "min": 8,
+            "value": 8
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "enchant"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 8,
+                  "min": 8,
+                  "unscalable": false,
+                  "value": 8
+                },
+                "stat": {
+                  "better": -1,
+                  "matchers": [
+                    {
+                      "string": "Adds # Passive Skills"
+                    },
+                    {
+                      "string": "Adds 1 Passive Skill",
+                      "value": 1
+                    }
+                  ],
+                  "ref": "Adds # Passive Skills",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_3086156145"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3086156145"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Adds # Passive Skills"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 2,
+                  "min": 2,
+                  "unscalable": false,
+                  "value": 2
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# Added Passive Skills are Jewel Sockets"
+                    },
+                    {
+                      "string": "1 Added Passive Skill is a Jewel Socket",
+                      "value": 1
+                    }
+                  ],
+                  "ref": "# Added Passive Skills are Jewel Sockets",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_4079888060"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4079888060"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4079888060"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# Added Passive Skills are Jewel Sockets"
+                }
+              },
+              {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Added Small Passive Skills grant: 12% increased Fire Damage"
+                    }
+                  ],
+                  "ref": "Added Small Passive Skills grant: 12% increased Fire Damage",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_3948993189|13"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Added Small Passive Skills grant: 12% increased Fire Damage"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 8,
+              "min": 8,
+              "unscalable": false,
+              "value": 8
+            },
+            "stat": {
+              "better": -1,
+              "matchers": [
+                {
+                  "string": "Adds # Passive Skills"
+                },
+                {
+                  "string": "Adds 1 Passive Skill",
+                  "value": 1
+                }
+              ],
+              "ref": "Adds # Passive Skills",
+              "trade": {
+                "ids": {
+                  "enchant": [
+                    "enchant.stat_3086156145"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3086156145"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Adds # Passive Skills"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": -1,
+        "matchers": [
+          {
+            "string": "Adds # Passive Skills"
+          },
+          {
+            "string": "Adds 1 Passive Skill",
+            "value": 1
+          }
+        ],
+        "ref": "Adds # Passive Skills",
+        "trade": {
+          "ids": {
+            "enchant": [
+              "enchant.stat_3086156145"
+            ],
+            "explicit": [
+              "explicit.stat_3086156145"
+            ]
+          }
+        }
+      },
+      "type": "enchant"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 2,
+            "min": 2,
+            "value": 2
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "enchant"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 8,
+                  "min": 8,
+                  "unscalable": false,
+                  "value": 8
+                },
+                "stat": {
+                  "better": -1,
+                  "matchers": [
+                    {
+                      "string": "Adds # Passive Skills"
+                    },
+                    {
+                      "string": "Adds 1 Passive Skill",
+                      "value": 1
+                    }
+                  ],
+                  "ref": "Adds # Passive Skills",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_3086156145"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3086156145"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Adds # Passive Skills"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 2,
+                  "min": 2,
+                  "unscalable": false,
+                  "value": 2
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# Added Passive Skills are Jewel Sockets"
+                    },
+                    {
+                      "string": "1 Added Passive Skill is a Jewel Socket",
+                      "value": 1
+                    }
+                  ],
+                  "ref": "# Added Passive Skills are Jewel Sockets",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_4079888060"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4079888060"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4079888060"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# Added Passive Skills are Jewel Sockets"
+                }
+              },
+              {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Added Small Passive Skills grant: 12% increased Fire Damage"
+                    }
+                  ],
+                  "ref": "Added Small Passive Skills grant: 12% increased Fire Damage",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_3948993189|13"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Added Small Passive Skills grant: 12% increased Fire Damage"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 2,
+              "min": 2,
+              "unscalable": false,
+              "value": 2
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# Added Passive Skills are Jewel Sockets"
+                },
+                {
+                  "string": "1 Added Passive Skill is a Jewel Socket",
+                  "value": 1
+                }
+              ],
+              "ref": "# Added Passive Skills are Jewel Sockets",
+              "trade": {
+                "ids": {
+                  "enchant": [
+                    "enchant.stat_4079888060"
+                  ],
+                  "explicit": [
+                    "explicit.stat_4079888060"
+                  ],
+                  "fractured": [
+                    "fractured.stat_4079888060"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# Added Passive Skills are Jewel Sockets"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# Added Passive Skills are Jewel Sockets"
+          },
+          {
+            "string": "1 Added Passive Skill is a Jewel Socket",
+            "value": 1
+          }
+        ],
+        "ref": "# Added Passive Skills are Jewel Sockets",
+        "trade": {
+          "ids": {
+            "enchant": [
+              "enchant.stat_4079888060"
+            ],
+            "explicit": [
+              "explicit.stat_4079888060"
+            ],
+            "fractured": [
+              "fractured.stat_4079888060"
+            ]
+          }
+        }
+      },
+      "type": "enchant"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "enchant"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 8,
+                  "min": 8,
+                  "unscalable": false,
+                  "value": 8
+                },
+                "stat": {
+                  "better": -1,
+                  "matchers": [
+                    {
+                      "string": "Adds # Passive Skills"
+                    },
+                    {
+                      "string": "Adds 1 Passive Skill",
+                      "value": 1
+                    }
+                  ],
+                  "ref": "Adds # Passive Skills",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_3086156145"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3086156145"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Adds # Passive Skills"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 2,
+                  "min": 2,
+                  "unscalable": false,
+                  "value": 2
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# Added Passive Skills are Jewel Sockets"
+                    },
+                    {
+                      "string": "1 Added Passive Skill is a Jewel Socket",
+                      "value": 1
+                    }
+                  ],
+                  "ref": "# Added Passive Skills are Jewel Sockets",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_4079888060"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4079888060"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4079888060"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# Added Passive Skills are Jewel Sockets"
+                }
+              },
+              {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Added Small Passive Skills grant: 12% increased Fire Damage"
+                    }
+                  ],
+                  "ref": "Added Small Passive Skills grant: 12% increased Fire Damage",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_3948993189|13"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Added Small Passive Skills grant: 12% increased Fire Damage"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Added Small Passive Skills grant: 12% increased Fire Damage"
+                }
+              ],
+              "ref": "Added Small Passive Skills grant: 12% increased Fire Damage",
+              "trade": {
+                "ids": {
+                  "enchant": [
+                    "enchant.stat_3948993189|13"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Added Small Passive Skills grant: 12% increased Fire Damage"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Added Small Passive Skills grant: 12% increased Fire Damage"
+          }
+        ],
+        "ref": "Added Small Passive Skills grant: 12% increased Fire Damage",
+        "trade": {
+          "ids": {
+            "enchant": [
+              "enchant.stat_3948993189|13"
+            ]
+          }
+        }
+      },
+      "type": "enchant"
+    }
+  ],
+  "unknownModifiers": []
+}

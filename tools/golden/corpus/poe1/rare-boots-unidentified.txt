@@ -1,0 +1,17 @@
+Item Class: Boots
+Rarity: Rare
+Two-Toned Boots
+--------
+Armour: 109
+Energy Shield: 22
+--------
+Requirements:
+Level: 70
+Str: 62
+Int: 62
+--------
+Item Level: 86
+--------
++15% to Fire and Cold Resistances (implicit)
+--------
+Unidentified

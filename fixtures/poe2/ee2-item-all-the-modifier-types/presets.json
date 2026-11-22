@@ -1,0 +1,2158 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "augmentSockets": {
+          "disabled": false,
+          "value": 2
+        },
+        "corrupted": {
+          "exact": false,
+          "value": true
+        },
+        "itemEditorSelection": {
+          "disabled": true,
+          "editing": false,
+          "value": "None"
+        },
+        "itemLevel": {
+          "disabled": true,
+          "value": 80
+        },
+        "rarity": {
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Gemini Crossbow",
+          "baseTypeTrade": "Gemini Crossbow"
+        },
+        "searchRelaxed": {
+          "category": "Crossbow",
+          "disabled": false
+        },
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 612,
+              "min": 500
+            },
+            "dp": false,
+            "goodness": 0.5018128629599554,
+            "isNegated": false,
+            "min": 500,
+            "value": 555
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 158,
+                "min": 120,
+                "value": 141.5
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Electrocuting",
+                  "tags": [
+                    "Damage",
+                    "Elemental",
+                    "Lightning",
+                    "Attack"
+                  ],
+                  "tier": 2,
+                  "type": "fractured"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 158,
+                      "min": 120,
+                      "unscalable": false,
+                      "value": 141.5
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "local_minimum_added_lightning_damage",
+                      "matchers": [
+                        {
+                          "string": "Adds # to # Lightning Damage"
+                        }
+                      ],
+                      "ref": "Adds # to # Lightning Damage",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_3336890334"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_3336890334"
+                          ],
+                          "enchant": [
+                            "enchant.stat_3336890334"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3336890334"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3336890334"
+                          ],
+                          "rune": [
+                            "rune.stat_3336890334"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Adds # to # Lightning Damage"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 158,
+                  "min": 120,
+                  "unscalable": false,
+                  "value": 141.5
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_minimum_added_lightning_damage",
+                  "matchers": [
+                    {
+                      "string": "Adds # to # Lightning Damage"
+                    }
+                  ],
+                  "ref": "Adds # to # Lightning Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3336890334"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_3336890334"
+                      ],
+                      "enchant": [
+                        "enchant.stat_3336890334"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3336890334"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3336890334"
+                      ],
+                      "rune": [
+                        "rune.stat_3336890334"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Adds # to # Lightning Damage"
+                }
+              }
+            },
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "rune"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 18,
+                      "min": 18,
+                      "unscalable": false,
+                      "value": 18
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "local_physical_damage_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Physical Damage"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Physical Damage"
+                        },
+                        {
+                          "string": "No Physical Damage",
+                          "value": -100
+                        }
+                      ],
+                      "ref": "#% increased Physical Damage",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1509134228"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_1509134228"
+                          ],
+                          "enchant": [
+                            "enchant.stat_1509134228"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1509134228"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1509134228"
+                          ],
+                          "rune": [
+                            "rune.stat_1509134228"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Physical Damage"
+                    }
+                  },
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 30,
+                      "min": 30,
+                      "unscalable": false,
+                      "value": 30
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_mana_gained_on_enemy_death",
+                      "matchers": [
+                        {
+                          "string": "Gain # Mana per enemy killed"
+                        },
+                        {
+                          "negate": true,
+                          "string": "Lose # Mana per enemy killed"
+                        }
+                      ],
+                      "ref": "Gain # Mana per enemy killed",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1368271171"
+                          ],
+                          "enchant": [
+                            "enchant.stat_1368271171"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1368271171"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1368271171"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1368271171"
+                          ],
+                          "rune": [
+                            "rune.stat_1368271171"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Gain # Mana per enemy killed"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 18,
+                  "min": 18,
+                  "unscalable": false,
+                  "value": 18
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_physical_damage_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Physical Damage"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Physical Damage"
+                    },
+                    {
+                      "string": "No Physical Damage",
+                      "value": -100
+                    }
+                  ],
+                  "ref": "#% increased Physical Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1509134228"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_1509134228"
+                      ],
+                      "enchant": [
+                        "enchant.stat_1509134228"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1509134228"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1509134228"
+                      ],
+                      "rune": [
+                        "rune.stat_1509134228"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Physical Damage"
+                }
+              }
+            },
+            {
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Razor-sharp",
+                  "tags": [
+                    "Damage",
+                    "Physical",
+                    "Attack"
+                  ],
+                  "tier": 3,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 47,
+                      "min": 31,
+                      "unscalable": false,
+                      "value": 37.5
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "local_minimum_added_physical_damage",
+                      "matchers": [
+                        {
+                          "string": "Adds # to # Physical Damage"
+                        }
+                      ],
+                      "ref": "Adds # to # Physical Damage",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1940865751"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_1940865751"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1940865751"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1940865751"
+                          ],
+                          "rune": [
+                            "rune.stat_1940865751"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Adds # to # Physical Damage"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 47,
+                  "min": 31,
+                  "unscalable": false,
+                  "value": 37.5
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_minimum_added_physical_damage",
+                  "matchers": [
+                    {
+                      "string": "Adds # to # Physical Damage"
+                    }
+                  ],
+                  "ref": "Adds # to # Physical Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1940865751"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_1940865751"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1940865751"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1940865751"
+                      ],
+                      "rune": [
+                        "rune.stat_1940865751"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Adds # to # Physical Damage"
+                }
+              }
+            }
+          ],
+          "statRef": "Total DPS: #",
+          "tag": "property",
+          "text": "Total DPS: #",
+          "tradeId": [
+            "item.total_dps"
+          ]
+        },
+        {
+          "additionalInfo": {
+            "elementalInfo": {
+              "item.has_elemental_affix": {
+                "default": {
+                  "max": 295,
+                  "min": 240
+                },
+                "dp": false,
+                "goodness": 0.5579588408231837,
+                "isNegated": false,
+                "min": 240,
+                "value": 267
+              },
+              "item.has_elemental_lightning_affix": {
+                "default": {
+                  "max": 295,
+                  "min": 240
+                },
+                "dp": false,
+                "isNegated": false,
+                "min": 240,
+                "tradeInvert": false,
+                "value": 267
+              }
+            }
+          },
+          "disabled": false,
+          "option": {
+            "value": 0
+          },
+          "roll": {
+            "default": {
+              "max": 295,
+              "min": 240
+            },
+            "dp": false,
+            "goodness": 0.5579588408231837,
+            "isNegated": false,
+            "min": 240,
+            "value": 267
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 158,
+                "min": 120,
+                "value": 141.5
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Electrocuting",
+                  "tags": [
+                    "Damage",
+                    "Elemental",
+                    "Lightning",
+                    "Attack"
+                  ],
+                  "tier": 2,
+                  "type": "fractured"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 158,
+                      "min": 120,
+                      "unscalable": false,
+                      "value": 141.5
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "local_minimum_added_lightning_damage",
+                      "matchers": [
+                        {
+                          "string": "Adds # to # Lightning Damage"
+                        }
+                      ],
+                      "ref": "Adds # to # Lightning Damage",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_3336890334"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_3336890334"
+                          ],
+                          "enchant": [
+                            "enchant.stat_3336890334"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3336890334"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3336890334"
+                          ],
+                          "rune": [
+                            "rune.stat_3336890334"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Adds # to # Lightning Damage"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 158,
+                  "min": 120,
+                  "unscalable": false,
+                  "value": 141.5
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_minimum_added_lightning_damage",
+                  "matchers": [
+                    {
+                      "string": "Adds # to # Lightning Damage"
+                    }
+                  ],
+                  "ref": "Adds # to # Lightning Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3336890334"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_3336890334"
+                      ],
+                      "enchant": [
+                        "enchant.stat_3336890334"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3336890334"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3336890334"
+                      ],
+                      "rune": [
+                        "rune.stat_3336890334"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Adds # to # Lightning Damage"
+                }
+              }
+            }
+          ],
+          "statRef": "Elemental DPS: #",
+          "tag": "property",
+          "text": "Elemental DPS: #",
+          "tradeId": [
+            "item.elemental_dps"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_phys_dps",
+          "roll": {
+            "default": {
+              "max": 317,
+              "min": 268
+            },
+            "dp": false,
+            "goodness": 0.4121722384344682,
+            "isNegated": false,
+            "min": 268,
+            "value": 288
+          },
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "rune"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 18,
+                      "min": 18,
+                      "unscalable": false,
+                      "value": 18
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "local_physical_damage_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Physical Damage"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Physical Damage"
+                        },
+                        {
+                          "string": "No Physical Damage",
+                          "value": -100
+                        }
+                      ],
+                      "ref": "#% increased Physical Damage",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1509134228"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_1509134228"
+                          ],
+                          "enchant": [
+                            "enchant.stat_1509134228"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1509134228"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1509134228"
+                          ],
+                          "rune": [
+                            "rune.stat_1509134228"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Physical Damage"
+                    }
+                  },
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 30,
+                      "min": 30,
+                      "unscalable": false,
+                      "value": 30
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_mana_gained_on_enemy_death",
+                      "matchers": [
+                        {
+                          "string": "Gain # Mana per enemy killed"
+                        },
+                        {
+                          "negate": true,
+                          "string": "Lose # Mana per enemy killed"
+                        }
+                      ],
+                      "ref": "Gain # Mana per enemy killed",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1368271171"
+                          ],
+                          "enchant": [
+                            "enchant.stat_1368271171"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1368271171"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1368271171"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1368271171"
+                          ],
+                          "rune": [
+                            "rune.stat_1368271171"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Gain # Mana per enemy killed"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 18,
+                  "min": 18,
+                  "unscalable": false,
+                  "value": 18
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_physical_damage_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Physical Damage"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Physical Damage"
+                    },
+                    {
+                      "string": "No Physical Damage",
+                      "value": -100
+                    }
+                  ],
+                  "ref": "#% increased Physical Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1509134228"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_1509134228"
+                      ],
+                      "enchant": [
+                        "enchant.stat_1509134228"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1509134228"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1509134228"
+                      ],
+                      "rune": [
+                        "rune.stat_1509134228"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Physical Damage"
+                }
+              }
+            },
+            {
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Razor-sharp",
+                  "tags": [
+                    "Damage",
+                    "Physical",
+                    "Attack"
+                  ],
+                  "tier": 3,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 47,
+                      "min": 31,
+                      "unscalable": false,
+                      "value": 37.5
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "local_minimum_added_physical_damage",
+                      "matchers": [
+                        {
+                          "string": "Adds # to # Physical Damage"
+                        }
+                      ],
+                      "ref": "Adds # to # Physical Damage",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1940865751"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_1940865751"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1940865751"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1940865751"
+                          ],
+                          "rune": [
+                            "rune.stat_1940865751"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Adds # to # Physical Damage"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 47,
+                  "min": 31,
+                  "unscalable": false,
+                  "value": 37.5
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_minimum_added_physical_damage",
+                  "matchers": [
+                    {
+                      "string": "Adds # to # Physical Damage"
+                    }
+                  ],
+                  "ref": "Adds # to # Physical Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1940865751"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_1940865751"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1940865751"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1940865751"
+                      ],
+                      "rune": [
+                        "rune.stat_1940865751"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Adds # to # Physical Damage"
+                }
+              }
+            }
+          ],
+          "statRef": "Physical DPS: #",
+          "tag": "property",
+          "text": "Physical DPS: #",
+          "tradeId": [
+            "item.physical_dps"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 1.91,
+              "min": 1.87
+            },
+            "dp": true,
+            "goodness": 0.5,
+            "isNegated": false,
+            "min": 1.87,
+            "value": 1.89
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 0.3043220338983051,
+                "min": 0.27228813559322035,
+                "value": 0.2883050847457627
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Acclaim",
+                  "tags": [
+                    "Attack",
+                    "Speed"
+                  ],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 19,
+                      "min": 17,
+                      "unscalable": false,
+                      "value": 18
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "local_attack_speed_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Attack Speed"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Attack Speed"
+                        }
+                      ],
+                      "ref": "#% increased Attack Speed",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_210067635",
+                            "crafted.stat_681332047"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_210067635",
+                            "desecrated.stat_681332047"
+                          ],
+                          "enchant": [
+                            "enchant.stat_210067635"
+                          ],
+                          "explicit": [
+                            "explicit.stat_210067635",
+                            "explicit.stat_681332047"
+                          ],
+                          "fractured": [
+                            "fractured.stat_210067635",
+                            "fractured.stat_681332047"
+                          ],
+                          "implicit": [
+                            "implicit.stat_681332047"
+                          ],
+                          "rune": [
+                            "rune.stat_210067635",
+                            "rune.stat_681332047"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Attack Speed"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 19,
+                  "min": 17,
+                  "unscalable": false,
+                  "value": 18
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_attack_speed_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Attack Speed"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Attack Speed"
+                    }
+                  ],
+                  "ref": "#% increased Attack Speed",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_210067635",
+                        "crafted.stat_681332047"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_210067635",
+                        "desecrated.stat_681332047"
+                      ],
+                      "enchant": [
+                        "enchant.stat_210067635"
+                      ],
+                      "explicit": [
+                        "explicit.stat_210067635",
+                        "explicit.stat_681332047"
+                      ],
+                      "fractured": [
+                        "fractured.stat_210067635",
+                        "fractured.stat_681332047"
+                      ],
+                      "implicit": [
+                        "implicit.stat_681332047"
+                      ],
+                      "rune": [
+                        "rune.stat_210067635",
+                        "rune.stat_681332047"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Attack Speed"
+                }
+              }
+            }
+          ],
+          "statRef": "Attacks per Second: #",
+          "tag": "property",
+          "text": "Attacks per Second: #",
+          "tradeId": [
+            "item.aps"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 5,
+              "min": 5
+            },
+            "dp": true,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 5,
+            "value": 5
+          },
+          "sources": [],
+          "statRef": "Critical Hit Chance: #%",
+          "tag": "property",
+          "text": "Critical Hit Chance: #%",
+          "tradeId": [
+            "item.crit"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 0.93,
+              "min": 0.93
+            },
+            "dp": true,
+            "goodness": 0.504237288135596,
+            "isNegated": false,
+            "max": 0.93,
+            "value": 0.93
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 0.208506,
+                "min": 0.186558,
+                "value": 0.19753199999999999
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Acclaim",
+                  "tags": [
+                    "Attack",
+                    "Speed"
+                  ],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 19,
+                      "min": 17,
+                      "unscalable": false,
+                      "value": 18
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "local_attack_speed_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Attack Speed"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Attack Speed"
+                        }
+                      ],
+                      "ref": "#% increased Attack Speed",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_210067635",
+                            "crafted.stat_681332047"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_210067635",
+                            "desecrated.stat_681332047"
+                          ],
+                          "enchant": [
+                            "enchant.stat_210067635"
+                          ],
+                          "explicit": [
+                            "explicit.stat_210067635",
+                            "explicit.stat_681332047"
+                          ],
+                          "fractured": [
+                            "fractured.stat_210067635",
+                            "fractured.stat_681332047"
+                          ],
+                          "implicit": [
+                            "implicit.stat_681332047"
+                          ],
+                          "rune": [
+                            "rune.stat_210067635",
+                            "rune.stat_681332047"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Attack Speed"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 19,
+                  "min": 17,
+                  "unscalable": false,
+                  "value": 18
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_attack_speed_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Attack Speed"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Attack Speed"
+                    }
+                  ],
+                  "ref": "#% increased Attack Speed",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_210067635",
+                        "crafted.stat_681332047"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_210067635",
+                        "desecrated.stat_681332047"
+                      ],
+                      "enchant": [
+                        "enchant.stat_210067635"
+                      ],
+                      "explicit": [
+                        "explicit.stat_210067635",
+                        "explicit.stat_681332047"
+                      ],
+                      "fractured": [
+                        "fractured.stat_210067635",
+                        "fractured.stat_681332047"
+                      ],
+                      "implicit": [
+                        "implicit.stat_681332047"
+                      ],
+                      "rune": [
+                        "rune.stat_210067635",
+                        "rune.stat_681332047"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Attack Speed"
+                }
+              }
+            }
+          ],
+          "statRef": "Reload Time: #",
+          "tag": "property",
+          "text": "Reload Time: #",
+          "tradeId": [
+            "item.reload_time"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 45,
+              "min": 45
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 45,
+            "value": 45
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 45,
+                "min": 45,
+                "value": 45
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "enchant"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 45,
+                      "min": 45,
+                      "unscalable": false,
+                      "value": 45
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "elemental_damage_with_attack_skills_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Elemental Damage with Attacks"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Elemental Damage with Attacks"
+                        }
+                      ],
+                      "ref": "#% increased Elemental Damage with Attacks",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_387439868"
+                          ],
+                          "enchant": [
+                            "enchant.stat_387439868"
+                          ],
+                          "explicit": [
+                            "explicit.stat_387439868"
+                          ],
+                          "fractured": [
+                            "fractured.stat_387439868"
+                          ],
+                          "rune": [
+                            "rune.stat_387439868"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Elemental Damage with Attacks"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 45,
+                  "min": 45,
+                  "unscalable": false,
+                  "value": 45
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "elemental_damage_with_attack_skills_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Elemental Damage with Attacks"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Elemental Damage with Attacks"
+                    }
+                  ],
+                  "ref": "#% increased Elemental Damage with Attacks",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_387439868"
+                      ],
+                      "enchant": [
+                        "enchant.stat_387439868"
+                      ],
+                      "explicit": [
+                        "explicit.stat_387439868"
+                      ],
+                      "fractured": [
+                        "fractured.stat_387439868"
+                      ],
+                      "rune": [
+                        "rune.stat_387439868"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Elemental Damage with Attacks"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Elemental Damage with Attacks",
+          "tag": "enchant",
+          "text": "#% increased Elemental Damage with Attacks",
+          "tradeId": [
+            "enchant.stat_387439868"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 30,
+              "min": 30
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 30,
+            "value": 30
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 30,
+                "min": 30,
+                "value": 30
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "rune"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 18,
+                      "min": 18,
+                      "unscalable": false,
+                      "value": 18
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "local_physical_damage_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Physical Damage"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Physical Damage"
+                        },
+                        {
+                          "string": "No Physical Damage",
+                          "value": -100
+                        }
+                      ],
+                      "ref": "#% increased Physical Damage",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1509134228"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_1509134228"
+                          ],
+                          "enchant": [
+                            "enchant.stat_1509134228"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1509134228"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1509134228"
+                          ],
+                          "rune": [
+                            "rune.stat_1509134228"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Physical Damage"
+                    }
+                  },
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 30,
+                      "min": 30,
+                      "unscalable": false,
+                      "value": 30
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_mana_gained_on_enemy_death",
+                      "matchers": [
+                        {
+                          "string": "Gain # Mana per enemy killed"
+                        },
+                        {
+                          "negate": true,
+                          "string": "Lose # Mana per enemy killed"
+                        }
+                      ],
+                      "ref": "Gain # Mana per enemy killed",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1368271171"
+                          ],
+                          "enchant": [
+                            "enchant.stat_1368271171"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1368271171"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1368271171"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1368271171"
+                          ],
+                          "rune": [
+                            "rune.stat_1368271171"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Gain # Mana per enemy killed"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 30,
+                  "unscalable": false,
+                  "value": 30
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_mana_gained_on_enemy_death",
+                  "matchers": [
+                    {
+                      "string": "Gain # Mana per enemy killed"
+                    },
+                    {
+                      "negate": true,
+                      "string": "Lose # Mana per enemy killed"
+                    }
+                  ],
+                  "ref": "Gain # Mana per enemy killed",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1368271171"
+                      ],
+                      "enchant": [
+                        "enchant.stat_1368271171"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1368271171"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1368271171"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1368271171"
+                      ],
+                      "rune": [
+                        "rune.stat_1368271171"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Gain # Mana per enemy killed"
+                }
+              }
+            }
+          ],
+          "statRef": "Gain # Mana per enemy killed",
+          "tag": "rune",
+          "text": "Gain # Mana per enemy killed",
+          "tradeId": [
+            "rune.stat_1368271171"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 2,
+              "min": 1
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 1,
+            "value": 1
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 1,
+                "min": 1,
+                "option": 1,
+                "value": 1
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Attack"
+                  ],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 1,
+                      "min": 1,
+                      "option": 1,
+                      "unscalable": false,
+                      "value": 1
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_number_of_crossbow_bolts",
+                      "matchers": [
+                        {
+                          "string": "Loads # additional bolts"
+                        },
+                        {
+                          "string": "Loads an additional bolt",
+                          "value": 1
+                        }
+                      ],
+                      "ref": "Loads an additional bolt",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1967051901"
+                          ],
+                          "enchant": [
+                            "enchant.stat_1967051901"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1967051901"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1967051901"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1967051901"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Loads an additional bolt",
+                      "value": 1
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 1,
+                  "min": 1,
+                  "option": 1,
+                  "unscalable": false,
+                  "value": 1
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_number_of_crossbow_bolts",
+                  "matchers": [
+                    {
+                      "string": "Loads # additional bolts"
+                    },
+                    {
+                      "string": "Loads an additional bolt",
+                      "value": 1
+                    }
+                  ],
+                  "ref": "Loads an additional bolt",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1967051901"
+                      ],
+                      "enchant": [
+                        "enchant.stat_1967051901"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1967051901"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1967051901"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1967051901"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Loads an additional bolt",
+                  "value": 1
+                }
+              }
+            }
+          ],
+          "statRef": "Loads an additional bolt",
+          "tag": "implicit",
+          "text": "Loads an additional bolt",
+          "tradeId": [
+            "implicit.stat_1967051901"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_not_max_level",
+          "roll": {
+            "default": {
+              "max": 18,
+              "min": 18
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 18,
+            "value": 18
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 18,
+                "min": 18,
+                "value": 18
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "skill"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 18,
+                      "min": 18,
+                      "unscalable": false,
+                      "value": 18
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Grants Skill: Level # Cackling Companions"
+                        }
+                      ],
+                      "ref": "Grants Skill: Level # Cackling Companions",
+                      "trade": {
+                        "ids": {
+                          "skill": [
+                            "skill.hyena_cackle"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Grants Skill: Level # Cackling Companions"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 18,
+                  "min": 18,
+                  "unscalable": false,
+                  "value": 18
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Grants Skill: Level # Cackling Companions"
+                    }
+                  ],
+                  "ref": "Grants Skill: Level # Cackling Companions",
+                  "trade": {
+                    "ids": {
+                      "skill": [
+                        "skill.hyena_cackle"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Grants Skill: Level # Cackling Companions"
+                }
+              }
+            }
+          ],
+          "statRef": "Grants Skill: Level # Cackling Companions",
+          "tag": "skill",
+          "text": "Grants Skill: Level # Cackling Companions",
+          "tradeId": [
+            "skill.hyena_cackle"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 119,
+              "min": 100
+            },
+            "dp": false,
+            "goodness": 0.47368421052631576,
+            "isNegated": false,
+            "min": 100,
+            "value": 109
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 119,
+                "min": 100,
+                "value": 109
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Overpowering",
+                  "tags": [
+                    "Damage",
+                    "Elemental",
+                    "Attack"
+                  ],
+                  "tier": 2,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 119,
+                      "min": 100,
+                      "unscalable": false,
+                      "value": 109
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "elemental_damage_with_attack_skills_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Elemental Damage with Attacks"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Elemental Damage with Attacks"
+                        }
+                      ],
+                      "ref": "#% increased Elemental Damage with Attacks",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_387439868"
+                          ],
+                          "enchant": [
+                            "enchant.stat_387439868"
+                          ],
+                          "explicit": [
+                            "explicit.stat_387439868"
+                          ],
+                          "fractured": [
+                            "fractured.stat_387439868"
+                          ],
+                          "rune": [
+                            "rune.stat_387439868"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Elemental Damage with Attacks"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 119,
+                  "min": 100,
+                  "unscalable": false,
+                  "value": 109
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "elemental_damage_with_attack_skills_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Elemental Damage with Attacks"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Elemental Damage with Attacks"
+                    }
+                  ],
+                  "ref": "#% increased Elemental Damage with Attacks",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_387439868"
+                      ],
+                      "enchant": [
+                        "enchant.stat_387439868"
+                      ],
+                      "explicit": [
+                        "explicit.stat_387439868"
+                      ],
+                      "fractured": [
+                        "fractured.stat_387439868"
+                      ],
+                      "rune": [
+                        "rune.stat_387439868"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Elemental Damage with Attacks"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Elemental Damage with Attacks",
+          "tag": "explicit",
+          "text": "#% increased Elemental Damage with Attacks",
+          "tradeId": [
+            "explicit.stat_387439868"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 7.9,
+              "min": 7
+            },
+            "dp": true,
+            "goodness": 0.6555555555555551,
+            "isNegated": false,
+            "min": 7,
+            "value": 7.5
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 7.9,
+                "min": 7,
+                "value": 7.59
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Drought",
+                  "tags": [
+                    "Mana",
+                    "Physical",
+                    "Attack"
+                  ],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": true,
+                      "max": 7.9,
+                      "min": 7,
+                      "unscalable": false,
+                      "value": 7.59
+                    },
+                    "stat": {
+                      "better": 1,
+                      "dp": true,
+                      "id": "local_mana_leech_from_physical_damage_permyriad",
+                      "matchers": [
+                        {
+                          "string": "Leeches #% of Physical Damage as Mana"
+                        }
+                      ],
+                      "ref": "Leeches #% of Physical Damage as Mana",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_669069897"
+                          ],
+                          "explicit": [
+                            "explicit.stat_669069897"
+                          ],
+                          "fractured": [
+                            "fractured.stat_669069897"
+                          ],
+                          "implicit": [
+                            "implicit.stat_669069897"
+                          ],
+                          "rune": [
+                            "rune.stat_669069897"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Leeches #% of Physical Damage as Mana"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": true,
+                  "max": 7.9,
+                  "min": 7,
+                  "unscalable": false,
+                  "value": 7.59
+                },
+                "stat": {
+                  "better": 1,
+                  "dp": true,
+                  "id": "local_mana_leech_from_physical_damage_permyriad",
+                  "matchers": [
+                    {
+                      "string": "Leeches #% of Physical Damage as Mana"
+                    }
+                  ],
+                  "ref": "Leeches #% of Physical Damage as Mana",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_669069897"
+                      ],
+                      "explicit": [
+                        "explicit.stat_669069897"
+                      ],
+                      "fractured": [
+                        "fractured.stat_669069897"
+                      ],
+                      "implicit": [
+                        "implicit.stat_669069897"
+                      ],
+                      "rune": [
+                        "rune.stat_669069897"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Leeches #% of Physical Damage as Mana"
+                }
+              }
+            }
+          ],
+          "statRef": "Leeches #% of Physical Damage as Mana",
+          "tag": "explicit",
+          "text": "Leeches #% of Physical Damage as Mana",
+          "tradeId": [
+            "explicit.stat_669069897"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 24,
+              "min": 21
+            },
+            "dp": false,
+            "goodness": 0,
+            "isNegated": false,
+            "min": 21,
+            "value": 21
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 27,
+                "min": 21,
+                "value": 21
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Siphoning",
+                  "tags": [
+                    "Mana"
+                  ],
+                  "tier": 3,
+                  "type": "desecrated"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 27,
+                      "min": 21,
+                      "unscalable": false,
+                      "value": 21
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_mana_gained_on_enemy_death",
+                      "matchers": [
+                        {
+                          "string": "Gain # Mana per enemy killed"
+                        },
+                        {
+                          "negate": true,
+                          "string": "Lose # Mana per enemy killed"
+                        }
+                      ],
+                      "ref": "Gain # Mana per enemy killed",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1368271171"
+                          ],
+                          "enchant": [
+                            "enchant.stat_1368271171"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1368271171"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1368271171"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1368271171"
+                          ],
+                          "rune": [
+                            "rune.stat_1368271171"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Gain # Mana per enemy killed"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 27,
+                  "min": 21,
+                  "unscalable": false,
+                  "value": 21
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_mana_gained_on_enemy_death",
+                  "matchers": [
+                    {
+                      "string": "Gain # Mana per enemy killed"
+                    },
+                    {
+                      "negate": true,
+                      "string": "Lose # Mana per enemy killed"
+                    }
+                  ],
+                  "ref": "Gain # Mana per enemy killed",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1368271171"
+                      ],
+                      "enchant": [
+                        "enchant.stat_1368271171"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1368271171"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1368271171"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1368271171"
+                      ],
+                      "rune": [
+                        "rune.stat_1368271171"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Gain # Mana per enemy killed"
+                }
+              }
+            }
+          ],
+          "statRef": "Gain # Mana per enemy killed",
+          "tag": "explicit",
+          "text": "Gain # Mana per enemy killed",
+          "tradeId": [
+            "explicit.stat_1368271171"
+          ]
+        }
+      ]
+    }
+  ]
+}

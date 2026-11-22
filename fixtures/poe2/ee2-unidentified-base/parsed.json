@@ -1,0 +1,195 @@
+{
+  "augmentSockets": {
+    "augments": [
+      null
+    ],
+    "current": 0,
+    "empty": 1,
+    "normal": 1
+  },
+  "category": "Wand",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Wand"
+    },
+    "h": 3,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9PbmVIYW5kV2VhcG9ucy9XYW5kcy9CYXNldHlwZXMvV2FuZDA1IiwidyI6MSwiaCI6Mywic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/5682626ab6/Wand05.png",
+    "name": "Volatile Wand",
+    "namespace": "ITEM",
+    "refName": "Volatile Wand",
+    "tags": [
+      "no_cold_spell_mods",
+      "no_lightning_spell_mods",
+      "no_chaos_spell_mods",
+      "no_physical_spell_mods",
+      "fire_implicit_skill"
+    ],
+    "w": 1
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Wand"
+      },
+      "h": 3,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9PbmVIYW5kV2VhcG9ucy9XYW5kcy9CYXNldHlwZXMvV2FuZDA1IiwidyI6MSwiaCI6Mywic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/5682626ab6/Wand05.png",
+      "name": "Volatile Wand",
+      "namespace": "ITEM",
+      "refName": "Volatile Wand",
+      "tags": [
+        "no_cold_spell_mods",
+        "no_lightning_spell_mods",
+        "no_chaos_spell_mods",
+        "no_physical_spell_mods",
+        "fire_implicit_skill"
+      ],
+      "w": 1
+    }
+  ],
+  "isCorrupted": false,
+  "isUnidentified": true,
+  "itemLevel": 69,
+  "name": "Volatile Wand",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "skill"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 15,
+            "min": 15,
+            "unscalable": false,
+            "value": 15
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Grants Skill: Level # Volatile Dead"
+              }
+            ],
+            "ref": "Grants Skill: Level # Volatile Dead",
+            "trade": {
+              "ids": {
+                "skill": [
+                  "skill.volatile_dead"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Grants Skill: Level # Volatile Dead"
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Rare",
+  "rawText": "Item Class: Wands\nRarity: Rare\nVolatile Wand\n--------\nRequires: 113 Intelligence\n--------\nItem Level: 69\n--------\nGrants Skill: Level 15 Volatile Dead\n--------\nUnidentified\n",
+  "requires": {
+    "dex": 0,
+    "int": 113,
+    "level": 0,
+    "str": 0
+  },
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 15,
+            "min": 15,
+            "value": 15
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "skill"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 15,
+                  "min": 15,
+                  "unscalable": false,
+                  "value": 15
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Grants Skill: Level # Volatile Dead"
+                    }
+                  ],
+                  "ref": "Grants Skill: Level # Volatile Dead",
+                  "trade": {
+                    "ids": {
+                      "skill": [
+                        "skill.volatile_dead"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Grants Skill: Level # Volatile Dead"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 15,
+              "min": 15,
+              "unscalable": false,
+              "value": 15
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Grants Skill: Level # Volatile Dead"
+                }
+              ],
+              "ref": "Grants Skill: Level # Volatile Dead",
+              "trade": {
+                "ids": {
+                  "skill": [
+                    "skill.volatile_dead"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Grants Skill: Level # Volatile Dead"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Grants Skill: Level # Volatile Dead"
+          }
+        ],
+        "ref": "Grants Skill: Level # Volatile Dead",
+        "trade": {
+          "ids": {
+            "skill": [
+              "skill.volatile_dead"
+            ]
+          }
+        }
+      },
+      "type": "skill"
+    }
+  ],
+  "unknownModifiers": []
+}

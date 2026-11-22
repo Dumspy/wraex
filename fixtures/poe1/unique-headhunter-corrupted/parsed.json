@@ -1,0 +1,47 @@
+{
+  "baseType": "Leather Belt",
+  "category": "Belt",
+  "dustEquivalent": 2227900,
+  "influences": [],
+  "info": {
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvSGVhZGh1bnRlciIsInciOjIsImgiOjEsInNjYWxlIjoxfV0/e9542ec6ee/Headhunter.png",
+    "name": "Headhunter",
+    "namespace": "UNIQUE",
+    "refName": "Headhunter",
+    "unique": {
+      "base": "Leather Belt",
+      "disenchantValue": 891.16
+    }
+  },
+  "infoVariants": [
+    {
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvSGVhZGh1bnRlciIsInciOjIsImgiOjEsInNjYWxlIjoxfV0/e9542ec6ee/Headhunter.png",
+      "name": "Headhunter",
+      "namespace": "UNIQUE",
+      "refName": "Headhunter",
+      "unique": {
+        "base": "Leather Belt",
+        "disenchantValue": 891.16
+      }
+    }
+  ],
+  "isCorrupted": {},
+  "isUnidentified": false,
+  "itemLevel": 84,
+  "name": "Headhunter",
+  "newMods": [],
+  "rarity": "Unique",
+  "rawText": "Item Class: Belts\nRarity: Unique\nHeadhunter\nLeather Belt\n--------\nRequirements:\nLevel: 40\n--------\nItem Level: 84\n--------\n+33 to maximum Life (implicit)\n--------\n+48 to Strength\n+51 to Dexterity\n+56 to maximum Life\n21% increased Damage with Hits against Rare monsters\nWhen you Kill a Rare Monster, you gain its Modifiers for 60 seconds\n--------\n\"A man's soul rules from a cavern of bone, learns and\njudges through flesh-born windows. The heart is meat.\nThe head is where the Man is.\"\n- Lavianga, Advisor to Kaom\n--------\nCorrupted\n",
+  "statsByType": [],
+  "uniqueBase": {
+    "craftable": {
+      "category": "Belt"
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvQmVsdDMiLCJ3IjoyLCJoIjoxLCJzY2FsZSI6MX1d/93af17affd/Belt3.png",
+    "name": "Leather Belt",
+    "namespace": "ITEM",
+    "refName": "Leather Belt",
+    "w": 2
+  },
+  "unknownModifiers": []
+}

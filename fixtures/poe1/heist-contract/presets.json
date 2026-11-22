@@ -1,0 +1,79 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "areaLevel": {
+          "disabled": false,
+          "value": 83
+        },
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Contract: Bunker",
+          "baseTypeTrade": "Contract: Bunker"
+        },
+        "searchRelaxed": {
+          "category": "Heist Contract",
+          "disabled": false
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 9007199254740991,
+              "min": 0
+            },
+            "default": {
+              "max": 3,
+              "min": 3
+            },
+            "dp": false,
+            "goodness": 3.33066907387547e-16,
+            "isNegated": false,
+            "min": 3,
+            "value": 3
+          },
+          "sources": [],
+          "statRef": "item.heist_job_bruteforce",
+          "tag": "property",
+          "text": "item.heist_job_bruteforce",
+          "tradeId": [
+            "item.heist_job_bruteforce"
+          ]
+        }
+      ]
+    }
+  ]
+}

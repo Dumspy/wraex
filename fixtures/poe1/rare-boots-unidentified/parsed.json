@@ -1,0 +1,117 @@
+{
+  "armourAR": 109,
+  "armourES": 22,
+  "basePercentile": 0,
+  "category": "Boots",
+  "influences": [],
+  "info": {
+    "armour": {
+      "ar": [
+        126,
+        145
+      ],
+      "es": [
+        26,
+        30
+      ]
+    },
+    "craftable": {
+      "category": "Boots"
+    },
+    "disc": {
+      "propAR": true,
+      "propES": true
+    },
+    "h": 2,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9Ud29Ub25lZEJvb3RzM0IiLCJ3IjoyLCJoIjoyLCJzY2FsZSI6MX1d/e3271c5de1/TwoTonedBoots3B.png",
+    "name": "Two-Toned Boots",
+    "namespace": "ITEM",
+    "refName": "Two-Toned Boots",
+    "w": 2
+  },
+  "infoVariants": [
+    {
+      "armour": {
+        "es": [
+          26,
+          30
+        ],
+        "ev": [
+          126,
+          145
+        ]
+      },
+      "craftable": {
+        "category": "Boots"
+      },
+      "disc": {
+        "propES": true,
+        "propEV": true
+      },
+      "h": 2,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9Ud29Ub25lZEJvb3RzIiwidyI6MiwiaCI6Miwic2NhbGUiOjF9XQ/93a61b5672/TwoTonedBoots.png",
+      "name": "Two-Toned Boots",
+      "namespace": "ITEM",
+      "refName": "Two-Toned Boots",
+      "w": 2
+    },
+    {
+      "armour": {
+        "ar": [
+          126,
+          145
+        ],
+        "ev": [
+          126,
+          145
+        ]
+      },
+      "craftable": {
+        "category": "Boots"
+      },
+      "disc": {
+        "propAR": true,
+        "propEV": true
+      },
+      "h": 2,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9Ud29Ub25lZEJvb3RzMkIiLCJ3IjoyLCJoIjoyLCJzY2FsZSI6MX1d/c046f556ab/TwoTonedBoots2B.png",
+      "name": "Two-Toned Boots",
+      "namespace": "ITEM",
+      "refName": "Two-Toned Boots",
+      "w": 2
+    },
+    {
+      "armour": {
+        "ar": [
+          126,
+          145
+        ],
+        "es": [
+          26,
+          30
+        ]
+      },
+      "craftable": {
+        "category": "Boots"
+      },
+      "disc": {
+        "propAR": true,
+        "propES": true
+      },
+      "h": 2,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9Ud29Ub25lZEJvb3RzM0IiLCJ3IjoyLCJoIjoyLCJzY2FsZSI6MX1d/e3271c5de1/TwoTonedBoots3B.png",
+      "name": "Two-Toned Boots",
+      "namespace": "ITEM",
+      "refName": "Two-Toned Boots",
+      "w": 2
+    }
+  ],
+  "isUnidentified": true,
+  "itemLevel": 86,
+  "name": "Two-Toned Boots",
+  "newMods": [],
+  "rarity": "Rare",
+  "rawText": "Item Class: Boots\nRarity: Rare\nTwo-Toned Boots\n--------\nArmour: 109\nEnergy Shield: 22\n--------\nRequirements:\nLevel: 70\nStr: 62\nInt: 62\n--------\nItem Level: 86\n--------\n+15% to Fire and Cold Resistances (implicit)\n--------\nUnidentified\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

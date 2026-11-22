@@ -1,0 +1,19 @@
+Item Class: Skill Gems
+Rarity: Gem
+Vaal Grace
+--------
+Aura, Vaal, Spell, AoE, Duration
+Level: 20 (Max)
+Quality: +20% (augmented)
+--------
+Requirements:
+Level: 70
+Dex: 155
+--------
+Casts an aura that grants evasion to you and your allies.
+--------
+Experience: 9569465/9569465
+--------
+Place into an item socket of the right colour to gain this skill. Right click to remove from a socket.
+--------
+Corrupted

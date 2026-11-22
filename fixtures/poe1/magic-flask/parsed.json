@@ -1,0 +1,35 @@
+{
+  "category": "Flask",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Flask"
+    },
+    "h": 2,
+    "icon": "https://web.poecdn.com/gen/image/WzksMTQseyJmIjoiMkRJdGVtcy9GbGFza3Mvc3ByaW50IiwidyI6MSwiaCI6Miwic2NhbGUiOjEsImxldmVsIjoxfV0/aa66be180b/sprint.png",
+    "name": "Quicksilver Flask",
+    "namespace": "ITEM",
+    "refName": "Quicksilver Flask"
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Flask"
+      },
+      "h": 2,
+      "icon": "https://web.poecdn.com/gen/image/WzksMTQseyJmIjoiMkRJdGVtcy9GbGFza3Mvc3ByaW50IiwidyI6MSwiaCI6Miwic2NhbGUiOjEsImxldmVsIjoxfV0/aa66be180b/sprint.png",
+      "name": "Quicksilver Flask",
+      "namespace": "ITEM",
+      "refName": "Quicksilver Flask"
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 83,
+  "name": "Quicksilver Flask",
+  "newMods": [],
+  "quality": 20,
+  "rarity": "Magic",
+  "rawText": "Item Class: Utility Flasks\nRarity: Magic\nExperimenter's Quicksilver Flask of Adrenaline\n--------\nQuality: +20% (augmented)\nLasts 4.80 (augmented) Seconds\nConsumes 20 of 50 Charges on use\nCurrently has 0 Charges\n40% increased Movement Speed during Effect\n--------\nRequirements:\nLevel: 21\n--------\nItem Level: 83\n--------\n21% increased Duration\n25% increased Movement Speed during Effect\n--------\nRight click to drink. Can only hold charges while in belt. Refills as you kill monsters.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

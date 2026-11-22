@@ -1,0 +1,32 @@
+{
+  "category": "Currency",
+  "influences": [],
+  "info": {
+    "exchangeable": true,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvRXNzZW5jZS9HcmVlZDciLCJzY2FsZSI6MX1d/9d7e9a3b11/Greed7.png",
+    "name": "Deafening Essence of Greed",
+    "namespace": "ITEM",
+    "refName": "Deafening Essence of Greed",
+    "tradeTag": "deafening-essence-of-greed"
+  },
+  "infoVariants": [
+    {
+      "exchangeable": true,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvRXNzZW5jZS9HcmVlZDciLCJzY2FsZSI6MX1d/9d7e9a3b11/Greed7.png",
+      "name": "Deafening Essence of Greed",
+      "namespace": "ITEM",
+      "refName": "Deafening Essence of Greed",
+      "tradeTag": "deafening-essence-of-greed"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "Deafening Essence of Greed",
+  "newMods": [],
+  "rawText": "Item Class: Stackable Currency\nRarity: Currency\nDeafening Essence of Greed\n--------\nStack Size: 2/9\n--------\nUpgrades a normal item to rare with one guaranteed property\nProperties restricted to level 82 and below\n--------\nRight click this item then left click a normal item to apply it.\nShift click to unstack.\n",
+  "stackSize": {
+    "max": 9,
+    "value": 2
+  },
+  "statsByType": [],
+  "unknownModifiers": []
+}

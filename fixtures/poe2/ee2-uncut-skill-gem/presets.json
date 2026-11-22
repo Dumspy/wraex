@@ -1,0 +1,26 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "searchExact": {
+          "baseType": "Uncut Skill Gem (Level 19)",
+          "baseTypeTrade": "Uncut Skill Gem (Level 19)"
+        },
+        "stackSize": {
+          "disabled": true,
+          "value": 1
+        },
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": []
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "category": "Map",
+  "influences": [],
+  "info": {
+    "area": {},
+    "craftable": {
+      "category": "Map"
+    },
+    "icon": "/images/maps/normal.png",
+    "name": "Map",
+    "namespace": "ITEM",
+    "refName": "Map"
+  },
+  "infoVariants": [
+    {
+      "area": {},
+      "craftable": {
+        "category": "Map"
+      },
+      "icon": "/images/maps/normal.png",
+      "name": "Map",
+      "namespace": "ITEM",
+      "refName": "Map"
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 83,
+  "mapTier": 16,
+  "name": "Map",
+  "newMods": [],
+  "rarity": "Normal",
+  "rawText": "Item Class: Maps\nRarity: Normal\nMap (Tier 16)\n--------\nMap Tier: 16\n--------\nItem Level: 83\n--------\nTravel to this Map by using it in a personal Map Device. Maps can only be used once.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

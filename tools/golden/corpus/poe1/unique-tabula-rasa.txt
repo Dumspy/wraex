@@ -1,0 +1,12 @@
+Item Class: Body Armours
+Rarity: Unique
+Tabula Rasa
+Simple Robe
+--------
+Sockets: W-W-W-W-W-W 
+--------
+Item Level: 68
+--------
+Item has no Level requirement
+--------
+Shaper Items and Elder Items cannot be modified

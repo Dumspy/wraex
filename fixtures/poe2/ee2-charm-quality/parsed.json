@@ -1,0 +1,452 @@
+{
+  "category": "Charm",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Charm"
+    },
+    "h": 1,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ2hhcm1zL0Jhc2V0eXBlcy9TaWx2ZXJDaGFybSIsInciOjEsImgiOjEsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/be98ce2ba3/SilverCharm.png",
+    "name": "Silver Charm",
+    "namespace": "ITEM",
+    "refName": "Silver Charm",
+    "tags": [],
+    "w": 1
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Charm"
+      },
+      "h": 1,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ2hhcm1zL0Jhc2V0eXBlcy9TaWx2ZXJDaGFybSIsInciOjEsImgiOjEsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/be98ce2ba3/SilverCharm.png",
+      "name": "Silver Charm",
+      "namespace": "ITEM",
+      "refName": "Silver Charm",
+      "tags": [],
+      "w": 1
+    }
+  ],
+  "isCorrupted": false,
+  "isUnidentified": false,
+  "itemLevel": 80,
+  "name": "Silver Charm",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "id": "local_flask_use_on_affected_by_slow",
+            "matchers": [
+              {
+                "string": "Used when you are affected by a Slow"
+              }
+            ],
+            "ref": "Used when you are affected by a Slow",
+            "trade": {
+              "ids": {
+                "implicit": [
+                  "implicit.stat_2778646494"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Used when you are affected by a Slow"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Sprouting",
+        "tags": [
+          "Charm",
+          "Life"
+        ],
+        "tier": 5,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 130,
+            "min": 96,
+            "unscalable": false,
+            "value": 106
+          },
+          "stat": {
+            "better": 1,
+            "id": "charm_recover_X_life_when_used",
+            "matchers": [
+              {
+                "string": "Recover # Life when Used"
+              }
+            ],
+            "ref": "Recover # Life when Used",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_2365392475"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Recover # Life when Used"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of the Bountiful",
+        "tags": [],
+        "tier": 3,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 54,
+            "min": 47,
+            "unscalable": false,
+            "value": 51
+          },
+          "stat": {
+            "better": 1,
+            "id": "local_max_charges_+%",
+            "matchers": [
+              {
+                "string": "#% increased Charges"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Charges"
+              }
+            ],
+            "ref": "#% increased Charges",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_1366840608"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Charges"
+          }
+        }
+      ]
+    }
+  ],
+  "quality": 14,
+  "rarity": "Magic",
+  "rawText": "Item Class: Charms\nRarity: Magic\nSprouting Silver Charm of the Bountiful\n--------\nQuality: +14% (augmented)\nLasts 3.40 (augmented) Seconds\nConsumes 20 of 60 (augmented) Charges on use\nCurrently has 0 Charges\nYour speed is unaffected by Slows\n--------\nRequires: Level 37\n--------\nItem Level: 80\n--------\n{ Implicit Modifier }\nUsed when you are affected by a Slow — Unscalable Value\n--------\n{ Prefix Modifier \"Sprouting\" (Tier: 5) — Charm, Life }\nRecover 106(96-130) Life when Used\n{ Suffix Modifier \"of the Bountiful\" (Tier: 3) }\n51(47-54)% increased Charges\n--------\nUsed automatically when condition is met. Can only hold charges while in belt. Refill at Wells or by killing monsters.\n",
+  "requires": {
+    "dex": 0,
+    "int": 0,
+    "level": 37,
+    "str": 0
+  },
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "id": "local_flask_use_on_affected_by_slow",
+                  "matchers": [
+                    {
+                      "string": "Used when you are affected by a Slow"
+                    }
+                  ],
+                  "ref": "Used when you are affected by a Slow",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_2778646494"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Used when you are affected by a Slow"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "id": "local_flask_use_on_affected_by_slow",
+              "matchers": [
+                {
+                  "string": "Used when you are affected by a Slow"
+                }
+              ],
+              "ref": "Used when you are affected by a Slow",
+              "trade": {
+                "ids": {
+                  "implicit": [
+                    "implicit.stat_2778646494"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Used when you are affected by a Slow"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "local_flask_use_on_affected_by_slow",
+        "matchers": [
+          {
+            "string": "Used when you are affected by a Slow"
+          }
+        ],
+        "ref": "Used when you are affected by a Slow",
+        "trade": {
+          "ids": {
+            "implicit": [
+              "implicit.stat_2778646494"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 130,
+            "min": 96,
+            "value": 106
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Sprouting",
+              "tags": [
+                "Charm",
+                "Life"
+              ],
+              "tier": 5,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 130,
+                  "min": 96,
+                  "unscalable": false,
+                  "value": 106
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "charm_recover_X_life_when_used",
+                  "matchers": [
+                    {
+                      "string": "Recover # Life when Used"
+                    }
+                  ],
+                  "ref": "Recover # Life when Used",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_2365392475"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Recover # Life when Used"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 130,
+              "min": 96,
+              "unscalable": false,
+              "value": 106
+            },
+            "stat": {
+              "better": 1,
+              "id": "charm_recover_X_life_when_used",
+              "matchers": [
+                {
+                  "string": "Recover # Life when Used"
+                }
+              ],
+              "ref": "Recover # Life when Used",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_2365392475"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Recover # Life when Used"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "charm_recover_X_life_when_used",
+        "matchers": [
+          {
+            "string": "Recover # Life when Used"
+          }
+        ],
+        "ref": "Recover # Life when Used",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_2365392475"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 54,
+            "min": 47,
+            "value": 51
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of the Bountiful",
+              "tags": [],
+              "tier": 3,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 54,
+                  "min": 47,
+                  "unscalable": false,
+                  "value": 51
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_max_charges_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Charges"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Charges"
+                    }
+                  ],
+                  "ref": "#% increased Charges",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1366840608"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Charges"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 54,
+              "min": 47,
+              "unscalable": false,
+              "value": 51
+            },
+            "stat": {
+              "better": 1,
+              "id": "local_max_charges_+%",
+              "matchers": [
+                {
+                  "string": "#% increased Charges"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Charges"
+                }
+              ],
+              "ref": "#% increased Charges",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_1366840608"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Charges"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "local_max_charges_+%",
+        "matchers": [
+          {
+            "string": "#% increased Charges"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Charges"
+          }
+        ],
+        "ref": "#% increased Charges",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_1366840608"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": []
+}

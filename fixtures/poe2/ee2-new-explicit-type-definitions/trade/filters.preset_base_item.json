@@ -1,0 +1,72 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            },
+            "sanctified": {
+              "option": "false"
+            }
+          }
+        },
+        "trade_filters": {
+          "filters": {
+            "collapse": {
+              "option": "true"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "ilvl": {
+              "min": 81
+            },
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "enchant.stat_2954116742|56776",
+              "value": {}
+            },
+            {
+              "disabled": false,
+              "id": "fractured.stat_4220027924",
+              "value": {
+                "min": 36
+              }
+            },
+            {
+              "disabled": false,
+              "id": "desecrated.stat_378817135",
+              "value": {
+                "min": 16
+              }
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Gold Amulet"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

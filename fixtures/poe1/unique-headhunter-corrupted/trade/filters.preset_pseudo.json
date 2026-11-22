@@ -1,0 +1,39 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "foulborn_item": {
+              "option": "false"
+            },
+            "quality": {
+              "max": 0
+            },
+            "twice_corrupted": {
+              "option": "false"
+            },
+            "vestigial": {
+              "option": "false"
+            }
+          }
+        }
+      },
+      "name": "Headhunter",
+      "stats": [
+        {
+          "filters": [],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Leather Belt"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

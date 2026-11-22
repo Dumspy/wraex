@@ -4238,6 +4238,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "wraex-golden"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "wraex-core",
+]
+
+[[package]]
 name = "wraex-platform"
 version = "0.1.0"
 

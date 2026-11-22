@@ -1,0 +1,58 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            }
+          }
+        },
+        "socket_filters": {
+          "filters": {
+            "links": {
+              "min": 6
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "category": {
+              "option": "weapon.twosword"
+            },
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        },
+        "weapon_filters": {
+          "filters": {
+            "pdps": {
+              "min": 388
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_has_shaper_influence",
+              "value": {}
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      }
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

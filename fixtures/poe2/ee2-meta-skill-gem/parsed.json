@@ -1,0 +1,50 @@
+{
+  "category": "Gem",
+  "gemLevel": 14,
+  "gemSockets": {
+    "number": 4,
+    "white": 0
+  },
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "MetaSkillGem"
+    },
+    "gem": {
+      "awakened": false,
+      "transfigured": false
+    },
+    "h": 1,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9OZXcvTGluZ2VyaW5nTWlyYWdlU2tpbGxHZW0iLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/e8d75b6e9f/LingeringMirageSkillGem.png",
+    "name": "Mirage Archer",
+    "namespace": "GEM",
+    "refName": "Mirage Archer",
+    "tags": [],
+    "w": 1
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "MetaSkillGem"
+      },
+      "gem": {
+        "awakened": false,
+        "transfigured": false
+      },
+      "h": 1,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9OZXcvTGluZ2VyaW5nTWlyYWdlU2tpbGxHZW0iLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/e8d75b6e9f/LingeringMirageSkillGem.png",
+      "name": "Mirage Archer",
+      "namespace": "GEM",
+      "refName": "Mirage Archer",
+      "tags": [],
+      "w": 1
+    }
+  ],
+  "isCorrupted": false,
+  "isUnidentified": false,
+  "name": "Mirage Archer",
+  "newMods": [],
+  "rawText": "Rarity: Gem\nMirage Archer\n--------\nBuff, Persistent, Trigger, Duration, Meta\nLevel: 14\nReservation: 60 Spirit\n--------\nRequires: Level 58, 103 Dex\nRequires: Spear, Bow, Crossbow\n--------\nSockets: G G G G\n--------\nWhile active, dodge rolling will create a Mirage that uses socketed ranged Attacks for a short duration, then vanish.\n--------\nSupport\n--------\nMirages deal 30% less Damage\nSocketed Skills cannot consume Charges\n--------\nMirage\n--------\nCooldown Time: 10.00s\n--------\nMirage duration is 5.7 seconds\n--------\nPlace one or more Skill Gems into this Meta Gem's sockets in the Skills Panel. The socketed Skills will be incorporated into the Meta Gem's effect.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

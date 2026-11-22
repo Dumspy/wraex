@@ -1,0 +1,39 @@
+{
+  "category": "Currency",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "UncutSkillGem"
+    },
+    "h": 1,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9VbmN1dFN1cHBvcnRHZW0iLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/d1ffe1c951/UncutSupportGem.png",
+    "name": "Uncut Support Gem (Level 5)",
+    "namespace": "ITEM",
+    "refName": "Uncut Support Gem (Level 5)",
+    "tags": [],
+    "tradeTag": "uncut-support-gem-5",
+    "w": 1
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "UncutSkillGem"
+      },
+      "h": 1,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9VbmN1dFN1cHBvcnRHZW0iLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/d1ffe1c951/UncutSupportGem.png",
+      "name": "Uncut Support Gem (Level 5)",
+      "namespace": "ITEM",
+      "refName": "Uncut Support Gem (Level 5)",
+      "tags": [],
+      "tradeTag": "uncut-support-gem-5",
+      "w": 1
+    }
+  ],
+  "isCorrupted": false,
+  "isUnidentified": false,
+  "name": "Uncut Support Gem (Level 5)",
+  "newMods": [],
+  "rawText": "Item Class: Uncut Support Gems\nRarity: Currency\nUncut Support Gem (Level 5)\n--------\nCreates a Support Gem\n--------\nRight Click to engrave a Support Gem.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

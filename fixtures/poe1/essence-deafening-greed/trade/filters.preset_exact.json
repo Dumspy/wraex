@@ -1,0 +1,21 @@
+{
+  "api": "bulk",
+  "request": {
+    "engine": "new",
+    "query": {
+      "have": [
+        "divine",
+        "chaos"
+      ],
+      "status": {
+        "option": "online"
+      },
+      "want": [
+        "deafening-essence-of-greed"
+      ]
+    },
+    "sort": {
+      "have": "asc"
+    }
+  }
+}

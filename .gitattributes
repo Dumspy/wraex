@@ -1,0 +1,4 @@
+# Fixtures compare byte for byte (input.txt is the item's rawText); keep LF on
+# every checkout, including Windows runners with core.autocrlf.
+fixtures/** text eol=lf
+tools/golden/corpus/** text eol=lf

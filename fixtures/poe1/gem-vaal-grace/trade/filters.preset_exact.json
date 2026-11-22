@@ -1,0 +1,48 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "gem_imbued": {
+              "option": "false"
+            },
+            "gem_level": {
+              "min": 20
+            },
+            "quality": {
+              "min": 20
+            },
+            "twice_corrupted": {
+              "option": "false"
+            }
+          }
+        },
+        "trade_filters": {
+          "filters": {
+            "collapse": {
+              "option": "true"
+            },
+            "price": {
+              "option": "chaos_divine"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Vaal Grace"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "foulborn": {
+          "value": false
+        },
+        "linkedSockets": {
+          "disabled": false,
+          "value": 6
+        },
+        "searchExact": {
+          "baseTypeTrade": "Simple Robe",
+          "name": "Tabula Rasa",
+          "nameTrade": "Tabula Rasa"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        },
+        "vestigial": {
+          "value": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": []
+    }
+  ]
+}

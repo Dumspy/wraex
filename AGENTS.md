@@ -50,7 +50,8 @@ npm ci && npm run make-index-files && npx vitest run   # 527 pass / 2 skip at v0
 The index files are generated, not committed; without `make-index-files` the suite
 reports dozens of bogus failures. Use `npm ci` (never `npm install`, which rewrites
 the reference's lockfile), and Node 24, matching EE2's own CI. PoE1 has no tests
-beyond `main/build/apprun-patch.test.mjs`, and no npm script for its indexes.
+beyond `main/build/apprun-patch.test.mjs`, and no npm script for its indexes
+(`node src/assets/make-index-files.mjs` builds them; `golden:prepare` does both).
 
 ## Layout
 
@@ -59,8 +60,9 @@ beyond `main/build/apprun-patch.test.mjs`, and no npm script for its indexes.
 - `rust/crates/poe1`, `rust/crates/poe2` — per-game parsers, data and filters.
 - `rust/crates/platform` — window tracking, overlay, hotkeys, clipboard, logs.
 - `rust/crates/app` — the Rune UI shell.
-- `tools/golden` — the fixture harness contract (phase 1); fixtures live in
-  `fixtures/<game>/<case>/`.
+- `rust/crates/golden` — loads fixtures and compares Rust output with them.
+- `tools/golden` — the fixture harness (vitest, runs the references); its README is
+  the contract. Corpus in `tools/golden/corpus/`, fixtures in `fixtures/<game>/<case>/`.
 
 Item names and serialisation follow upstream's `ParsedItem` (`rawText`, `"Rare"`).
 Add fields only with the module that produces them; do not guess at the shape.
@@ -69,5 +71,7 @@ Add fields only with the module that produces them; do not guess at the shape.
 
 - `cargo fmt` / `cargo clippy -D warnings` / `cargo test`.
 - Rune pin: `devenv tasks run check:rune-pin`.
-- Fixture diff: `npm run regen` in `tools/golden` then `git diff fixtures/` (phase 1+).
+- Fixture diff: `devenv tasks run golden:prepare` once, then
+  `devenv tasks run check:fixtures` (regenerates, fails on any change in `fixtures/`).
+  Never edit a fixture by hand; add corpus cases instead.
 - UI: render headless with `--snap` and inspect the PNG and element tree (phase 5).

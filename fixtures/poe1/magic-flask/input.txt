@@ -1,0 +1,19 @@
+Item Class: Utility Flasks
+Rarity: Magic
+Experimenter's Quicksilver Flask of Adrenaline
+--------
+Quality: +20% (augmented)
+Lasts 4.80 (augmented) Seconds
+Consumes 20 of 50 Charges on use
+Currently has 0 Charges
+40% increased Movement Speed during Effect
+--------
+Requirements:
+Level: 21
+--------
+Item Level: 83
+--------
+21% increased Duration
+25% increased Movement Speed during Effect
+--------
+Right click to drink. Can only hold charges while in belt. Refills as you kill monsters.

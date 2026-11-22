@@ -1,0 +1,83 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "itemLevel": {
+          "disabled": false,
+          "value": 86
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Two-Toned Boots",
+          "baseTypeTrade": "Two-Toned Boots"
+        },
+        "searchRelaxed": {
+          "category": "Boots",
+          "disabled": true
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        },
+        "unidentified": {
+          "disabled": true,
+          "value": true
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": [
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 100,
+              "min": 0
+            },
+            "default": {
+              "max": 1,
+              "min": 0
+            },
+            "dp": false,
+            "goodness": 0,
+            "isNegated": false,
+            "min": 0,
+            "value": 0
+          },
+          "sources": [],
+          "statRef": "Base Percentile: #%",
+          "tag": "property",
+          "text": "Base Percentile: #%",
+          "tradeId": [
+            "item.base_percentile"
+          ]
+        }
+      ]
+    }
+  ]
+}

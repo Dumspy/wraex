@@ -1,0 +1,45 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "itemEditorSelection": {
+          "disabled": true,
+          "editing": false,
+          "value": "None"
+        },
+        "itemLevel": {
+          "disabled": false,
+          "value": 81
+        },
+        "rarity": {
+          "value": "normal"
+        },
+        "searchExact": {
+          "baseType": "Divine Crown",
+          "baseTypeTrade": "Divine Crown"
+        },
+        "searchRelaxed": {
+          "category": "Helmet",
+          "disabled": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": []
+    }
+  ]
+}

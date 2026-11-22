@@ -1,0 +1,686 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "value": false
+        },
+        "itemEditorSelection": {
+          "disabled": true,
+          "editing": false,
+          "value": "None"
+        },
+        "searchExact": {
+          "baseTypeTrade": "Crystal Focus",
+          "name": "The Eternal Spark",
+          "nameTrade": "The Eternal Spark"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 70,
+              "min": 50
+            },
+            "default": {
+              "max": 58,
+              "min": 54
+            },
+            "dp": false,
+            "goodness": 0.3,
+            "isNegated": false,
+            "min": 54,
+            "value": 56
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 70,
+                "min": 50,
+                "value": 56
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Defences"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 70,
+                      "min": 50,
+                      "unscalable": false,
+                      "value": 56
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "local_energy_shield_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Energy Shield"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Energy Shield"
+                        }
+                      ],
+                      "ref": "#% increased Energy Shield",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_4015621042"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_4015621042"
+                          ],
+                          "enchant": [
+                            "enchant.stat_4015621042"
+                          ],
+                          "explicit": [
+                            "explicit.stat_4015621042"
+                          ],
+                          "fractured": [
+                            "fractured.stat_4015621042"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Energy Shield"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 70,
+                  "min": 50,
+                  "unscalable": false,
+                  "value": 56
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_energy_shield_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Energy Shield"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Energy Shield"
+                    }
+                  ],
+                  "ref": "#% increased Energy Shield",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4015621042"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_4015621042"
+                      ],
+                      "enchant": [
+                        "enchant.stat_4015621042"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4015621042"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4015621042"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Energy Shield"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Energy Shield",
+          "tag": "explicit",
+          "text": "#% increased Energy Shield",
+          "tradeId": [
+            "explicit.stat_4015621042"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_const_roll",
+          "roll": {
+            "default": {
+              "max": 40,
+              "min": 40
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "value": 40
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 40,
+                "min": 40,
+                "value": 40
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Mana"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 40,
+                      "min": 40,
+                      "unscalable": false,
+                      "value": 40
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "mana_regeneration_rate_+%_while_stationary",
+                      "matchers": [
+                        {
+                          "string": "#% increased Mana Regeneration Rate while stationary"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Mana Regeneration Rate while stationary"
+                        }
+                      ],
+                      "ref": "#% increased Mana Regeneration Rate while stationary",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_3308030688"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3308030688"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Mana Regeneration Rate while stationary"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 40,
+                  "min": 40,
+                  "unscalable": false,
+                  "value": 40
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "mana_regeneration_rate_+%_while_stationary",
+                  "matchers": [
+                    {
+                      "string": "#% increased Mana Regeneration Rate while stationary"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Mana Regeneration Rate while stationary"
+                    }
+                  ],
+                  "ref": "#% increased Mana Regeneration Rate while stationary",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_3308030688"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3308030688"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Mana Regeneration Rate while stationary"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Mana Regeneration Rate while stationary",
+          "tag": "explicit",
+          "text": "#% increased Mana Regeneration Rate while stationary",
+          "tradeId": [
+            "explicit.stat_3308030688"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 30,
+              "min": 20
+            },
+            "default": {
+              "max": 27,
+              "min": 25
+            },
+            "dp": false,
+            "goodness": 0.6,
+            "isNegated": false,
+            "min": 25,
+            "value": 26
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 30,
+                "min": 20,
+                "value": 26
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Elemental",
+                    "Lightning",
+                    "Resistance"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 30,
+                      "min": 20,
+                      "unscalable": false,
+                      "value": 26
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_lightning_damage_resistance_%",
+                      "matchers": [
+                        {
+                          "string": "#% to Lightning Resistance"
+                        }
+                      ],
+                      "ref": "#% to Lightning Resistance",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1671376347"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_1671376347"
+                          ],
+                          "enchant": [
+                            "enchant.stat_1671376347"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1671376347"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1671376347"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1671376347"
+                          ],
+                          "rune": [
+                            "rune.stat_1671376347"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Lightning Resistance"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 20,
+                  "unscalable": false,
+                  "value": 26
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_lightning_damage_resistance_%",
+                  "matchers": [
+                    {
+                      "string": "#% to Lightning Resistance"
+                    }
+                  ],
+                  "ref": "#% to Lightning Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1671376347"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_1671376347"
+                      ],
+                      "enchant": [
+                        "enchant.stat_1671376347"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1671376347"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1671376347"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1671376347"
+                      ],
+                      "rune": [
+                        "rune.stat_1671376347"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Lightning Resistance"
+                }
+              }
+            }
+          ],
+          "statRef": "#% to Lightning Resistance",
+          "tag": "explicit",
+          "text": "#% to Lightning Resistance",
+          "tradeId": [
+            "explicit.stat_1671376347"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_const_roll",
+          "roll": {
+            "default": {
+              "max": 5,
+              "min": 5
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "value": 5
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 5,
+                "min": 5,
+                "value": 5
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Elemental",
+                    "Lightning",
+                    "Resistance"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 5,
+                      "min": 5,
+                      "unscalable": false,
+                      "value": 5
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_maximum_lightning_damage_resistance_%",
+                      "matchers": [
+                        {
+                          "string": "#% to Maximum Lightning Resistance"
+                        }
+                      ],
+                      "ref": "#% to Maximum Lightning Resistance",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1011760251"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_1011760251"
+                          ],
+                          "enchant": [
+                            "enchant.stat_1011760251"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1011760251"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1011760251"
+                          ],
+                          "rune": [
+                            "rune.stat_1011760251"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Maximum Lightning Resistance"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 5,
+                  "min": 5,
+                  "unscalable": false,
+                  "value": 5
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_maximum_lightning_damage_resistance_%",
+                  "matchers": [
+                    {
+                      "string": "#% to Maximum Lightning Resistance"
+                    }
+                  ],
+                  "ref": "#% to Maximum Lightning Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1011760251"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_1011760251"
+                      ],
+                      "enchant": [
+                        "enchant.stat_1011760251"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1011760251"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1011760251"
+                      ],
+                      "rune": [
+                        "rune.stat_1011760251"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Maximum Lightning Resistance"
+                }
+              }
+            }
+          ],
+          "statRef": "#% to Maximum Lightning Resistance",
+          "tag": "explicit",
+          "text": "#% to Maximum Lightning Resistance",
+          "tradeId": [
+            "explicit.stat_1011760251"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_const_roll",
+          "roll": {
+            "default": {
+              "max": 40,
+              "min": 40
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "value": 40
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 40,
+                "min": 40,
+                "value": 40
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Mana"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 40,
+                      "min": 40,
+                      "unscalable": false,
+                      "value": 40
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "mana_regeneration_rate_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Mana Regeneration Rate"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Mana Regeneration Rate"
+                        }
+                      ],
+                      "ref": "#% increased Mana Regeneration Rate",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_789117908"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_789117908"
+                          ],
+                          "enchant": [
+                            "enchant.stat_789117908"
+                          ],
+                          "explicit": [
+                            "explicit.stat_789117908"
+                          ],
+                          "fractured": [
+                            "fractured.stat_789117908"
+                          ],
+                          "implicit": [
+                            "implicit.stat_789117908"
+                          ],
+                          "rune": [
+                            "rune.stat_789117908"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Mana Regeneration Rate"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 40,
+                  "min": 40,
+                  "unscalable": false,
+                  "value": 40
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "mana_regeneration_rate_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Mana Regeneration Rate"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Mana Regeneration Rate"
+                    }
+                  ],
+                  "ref": "#% increased Mana Regeneration Rate",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_789117908"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_789117908"
+                      ],
+                      "enchant": [
+                        "enchant.stat_789117908"
+                      ],
+                      "explicit": [
+                        "explicit.stat_789117908"
+                      ],
+                      "fractured": [
+                        "fractured.stat_789117908"
+                      ],
+                      "implicit": [
+                        "implicit.stat_789117908"
+                      ],
+                      "rune": [
+                        "rune.stat_789117908"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Mana Regeneration Rate"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Mana Regeneration Rate",
+          "tag": "explicit",
+          "text": "#% increased Mana Regeneration Rate",
+          "tradeId": [
+            "explicit.stat_789117908"
+          ]
+        }
+      ]
+    }
+  ]
+}

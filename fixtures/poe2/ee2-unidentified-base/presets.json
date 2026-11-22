@@ -1,0 +1,144 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "itemEditorSelection": {
+          "disabled": true,
+          "editing": false,
+          "value": "None"
+        },
+        "itemLevel": {
+          "disabled": false,
+          "value": 69
+        },
+        "rarity": {
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Volatile Wand",
+          "baseTypeTrade": "Volatile Wand"
+        },
+        "searchRelaxed": {
+          "category": "Wand",
+          "disabled": true
+        },
+        "tempAugmentStorage": [],
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        },
+        "unidentified": {
+          "disabled": true,
+          "value": true
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 15,
+              "min": 15
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 15,
+            "value": 15
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 15,
+                "min": 15,
+                "value": 15
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "skill"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 15,
+                      "min": 15,
+                      "unscalable": false,
+                      "value": 15
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Grants Skill: Level # Volatile Dead"
+                        }
+                      ],
+                      "ref": "Grants Skill: Level # Volatile Dead",
+                      "trade": {
+                        "ids": {
+                          "skill": [
+                            "skill.volatile_dead"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Grants Skill: Level # Volatile Dead"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 15,
+                  "min": 15,
+                  "unscalable": false,
+                  "value": 15
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Grants Skill: Level # Volatile Dead"
+                    }
+                  ],
+                  "ref": "Grants Skill: Level # Volatile Dead",
+                  "trade": {
+                    "ids": {
+                      "skill": [
+                        "skill.volatile_dead"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Grants Skill: Level # Volatile Dead"
+                }
+              }
+            }
+          ],
+          "statRef": "Grants Skill: Level # Volatile Dead",
+          "tag": "skill",
+          "text": "Grants Skill: Level # Volatile Dead",
+          "tradeId": [
+            "skill.volatile_dead"
+          ]
+        }
+      ]
+    }
+  ]
+}

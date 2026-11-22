@@ -1,0 +1,22 @@
+{
+  "api": "bulk",
+  "request": {
+    "engine": "new",
+    "query": {
+      "have": [
+        "divine",
+        "exalted",
+        "chaos"
+      ],
+      "status": {
+        "option": "online"
+      },
+      "want": [
+        "uncut-support-gem-5"
+      ]
+    },
+    "sort": {
+      "have": "asc"
+    }
+  }
+}

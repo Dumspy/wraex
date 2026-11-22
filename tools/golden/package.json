@@ -1,0 +1,15 @@
+{
+  "name": "wraex-golden",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare-refs": "node scripts/prepare-refs.mjs",
+    "regen": "vitest run",
+    "regen:poe1": "vitest run --project poe1",
+    "regen:poe2": "vitest run --project poe2",
+    "seed:poe2": "node scripts/seed-poe2.mjs"
+  },
+  "devDependencies": {
+    "vitest": "4.1.11"
+  }
+}

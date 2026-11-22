@@ -1,0 +1,40 @@
+{
+  "areaItemQuantity": 77,
+  "areaItemRarity": 41,
+  "areaPackSize": 27,
+  "baseType": "Map",
+  "category": "Map",
+  "influences": [],
+  "info": {
+    "area": {},
+    "craftable": {
+      "category": "Map"
+    },
+    "icon": "/images/maps/normal.png",
+    "name": "Map",
+    "namespace": "ITEM",
+    "refName": "Map"
+  },
+  "infoVariants": [
+    {
+      "area": {},
+      "craftable": {
+        "category": "Map"
+      },
+      "icon": "/images/maps/normal.png",
+      "name": "Map",
+      "namespace": "ITEM",
+      "refName": "Map"
+    }
+  ],
+  "isCorrupted": {},
+  "isUnidentified": false,
+  "itemLevel": 83,
+  "mapTier": 16,
+  "name": "Grim Haven",
+  "newMods": [],
+  "rarity": "Rare",
+  "rawText": "Item Class: Maps\nRarity: Rare\nGrim Haven\nMap (Tier 16)\n--------\nMap Tier: 16\nItem Quantity: +77% (augmented)\nItem Rarity: +41% (augmented)\nMonster Pack Size: +27% (augmented)\n--------\nItem Level: 83\n--------\nMonster Level: 83\n--------\nMonsters have 70% increased Area of Effect\nPlayers are Cursed with Elemental Weakness\nMonsters reflect 18% of Elemental Damage\nMonsters gain 40% of Maximum Life as Extra Maximum Energy Shield\nArea has patches of Burning Ground\n--------\nTravel to this Map by using it in a personal Map Device. Maps can only be used once.\n--------\nCorrupted\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

@@ -1,0 +1,1281 @@
+{
+  "augmentSockets": {
+    "augments": [
+      null
+    ],
+    "current": 0,
+    "empty": 1,
+    "normal": 1
+  },
+  "baseType": "Withered Wand",
+  "category": "Wand",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Wand"
+    },
+    "h": 3,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9PbmVIYW5kV2VhcG9ucy9XYW5kcy9CYXNldHlwZXMvV2FuZDAxIiwidyI6MSwiaCI6Mywic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/8b127e7050/Wand01.png",
+    "name": "Withered Wand",
+    "namespace": "ITEM",
+    "refName": "Withered Wand",
+    "tags": [
+      "no_fire_spell_mods",
+      "no_cold_spell_mods",
+      "no_lightning_spell_mods",
+      "no_physical_spell_mods",
+      "chaos_implicit_skill"
+    ],
+    "w": 1
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Wand"
+      },
+      "h": 3,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9PbmVIYW5kV2VhcG9ucy9XYW5kcy9CYXNldHlwZXMvV2FuZDAxIiwidyI6MSwiaCI6Mywic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/8b127e7050/Wand01.png",
+      "name": "Withered Wand",
+      "namespace": "ITEM",
+      "refName": "Withered Wand",
+      "tags": [
+        "no_fire_spell_mods",
+        "no_cold_spell_mods",
+        "no_lightning_spell_mods",
+        "no_physical_spell_mods",
+        "chaos_implicit_skill"
+      ],
+      "w": 1
+    }
+  ],
+  "isCorrupted": false,
+  "isUnidentified": false,
+  "itemLevel": 82,
+  "name": "Doom Bite",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "skill"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 20,
+            "min": 20,
+            "unscalable": false,
+            "value": 20
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Grants Skill: Level # Chaos Bolt"
+              }
+            ],
+            "ref": "Grants Skill: Level # Chaos Bolt",
+            "trade": {
+              "ids": {
+                "skill": [
+                  "skill.chaosbolt"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Grants Skill: Level # Chaos Bolt"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Malignant",
+        "tags": [
+          "Damage",
+          "Chaos"
+        ],
+        "tier": 4,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 74,
+            "min": 65,
+            "unscalable": false,
+            "value": 71
+          },
+          "stat": {
+            "better": 1,
+            "id": "chaos_damage_+%",
+            "matchers": [
+              {
+                "string": "#% increased Chaos Damage"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Chaos Damage"
+              }
+            ],
+            "ref": "#% increased Chaos Damage",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_736967255"
+                ],
+                "desecrated": [
+                  "desecrated.stat_736967255"
+                ],
+                "explicit": [
+                  "explicit.stat_736967255"
+                ],
+                "fractured": [
+                  "fractured.stat_736967255"
+                ],
+                "implicit": [
+                  "implicit.stat_736967255"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Chaos Damage"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Frostbound",
+        "tags": [
+          "Damage",
+          "Elemental",
+          "Cold"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 30,
+            "min": 28,
+            "unscalable": false,
+            "value": 28
+          },
+          "stat": {
+            "better": 1,
+            "id": "non_skill_base_all_damage_%_to_gain_as_cold",
+            "matchers": [
+              {
+                "string": "Gain #% of Damage as Extra Cold Damage"
+              }
+            ],
+            "ref": "Gain #% of Damage as Extra Cold Damage",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_2505884597"
+                ],
+                "desecrated": [
+                  "desecrated.stat_2505884597"
+                ],
+                "explicit": [
+                  "explicit.stat_2505884597"
+                ],
+                "fractured": [
+                  "fractured.stat_2505884597"
+                ],
+                "rune": [
+                  "rune.stat_2505884597"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Gain #% of Damage as Extra Cold Damage"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of the Hearth",
+        "tags": [
+          "Mana"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 22,
+            "min": 18,
+            "unscalable": false,
+            "value": 22
+          },
+          "stat": {
+            "better": 1,
+            "id": "mana_regeneration_rate_+%",
+            "matchers": [
+              {
+                "string": "#% increased Mana Regeneration Rate"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Mana Regeneration Rate"
+              }
+            ],
+            "ref": "#% increased Mana Regeneration Rate",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_789117908"
+                ],
+                "desecrated": [
+                  "desecrated.stat_789117908"
+                ],
+                "enchant": [
+                  "enchant.stat_789117908"
+                ],
+                "explicit": [
+                  "explicit.stat_789117908"
+                ],
+                "fractured": [
+                  "fractured.stat_789117908"
+                ],
+                "implicit": [
+                  "implicit.stat_789117908"
+                ],
+                "rune": [
+                  "rune.stat_789117908"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Mana Regeneration Rate"
+          }
+        },
+        {
+          "roll": {
+            "dp": false,
+            "max": 15,
+            "min": 15,
+            "unscalable": false,
+            "value": 15
+          },
+          "stat": {
+            "better": 1,
+            "id": "light_radius_+%",
+            "matchers": [
+              {
+                "string": "#% increased Light Radius"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Light Radius"
+              }
+            ],
+            "ref": "#% increased Light Radius",
+            "trade": {
+              "ids": {
+                "desecrated": [
+                  "desecrated.stat_1263695895"
+                ],
+                "explicit": [
+                  "explicit.stat_1263695895"
+                ],
+                "fractured": [
+                  "fractured.stat_1263695895"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Light Radius"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of the Apt",
+        "tags": [],
+        "tier": 4,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": -20,
+            "min": -20,
+            "unscalable": false,
+            "value": -20
+          },
+          "stat": {
+            "better": -1,
+            "id": "local_attribute_requirements_+%",
+            "matchers": [
+              {
+                "string": "#% increased Attribute Requirements"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Attribute Requirements"
+              }
+            ],
+            "ref": "#% increased Attribute Requirements",
+            "trade": {
+              "ids": {
+                "desecrated": [
+                  "desecrated.stat_3639275092"
+                ],
+                "enchant": [
+                  "enchant.stat_3639275092"
+                ],
+                "explicit": [
+                  "explicit.stat_3639275092"
+                ],
+                "fractured": [
+                  "fractured.stat_3639275092"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "negate": true,
+            "string": "#% reduced Attribute Requirements"
+          }
+        }
+      ]
+    }
+  ],
+  "note": "~b/o 5 exalted",
+  "rarity": "Rare",
+  "rawText": "Item Class: Wands\nRarity: Rare\nDoom Bite\nWithered Wand\n--------\nRequires: Level 90 (unmet), 125 (augmented) Int\n--------\nItem Level: 82\n--------\nGrants Skill: Level 20 Chaos Bolt\n--------\n{ Prefix Modifier \"Malignant\" (Tier: 4) — Damage, Chaos }\n71(65-74)% increased Chaos Damage\n{ Prefix Modifier \"Frostbound\" (Tier: 1) — Damage, Elemental, Cold }\nGain 28(28-30)% of Damage as Extra Cold Damage\n{ Suffix Modifier \"of the Hearth\" (Tier: 1) — Mana }\n22(18-22)% increased Mana Regeneration Rate\n15% increased Light Radius\n{ Suffix Modifier \"of the Apt\" (Tier: 4) }\n20% reduced Attribute Requirements\n--------\nNote: ~b/o 5 exalted\n",
+  "requires": {
+    "dex": 0,
+    "int": 125,
+    "level": 90,
+    "str": 0
+  },
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 20,
+            "min": 20,
+            "value": 20
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "skill"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 20,
+                  "min": 20,
+                  "unscalable": false,
+                  "value": 20
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Grants Skill: Level # Chaos Bolt"
+                    }
+                  ],
+                  "ref": "Grants Skill: Level # Chaos Bolt",
+                  "trade": {
+                    "ids": {
+                      "skill": [
+                        "skill.chaosbolt"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Grants Skill: Level # Chaos Bolt"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 20,
+              "min": 20,
+              "unscalable": false,
+              "value": 20
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Grants Skill: Level # Chaos Bolt"
+                }
+              ],
+              "ref": "Grants Skill: Level # Chaos Bolt",
+              "trade": {
+                "ids": {
+                  "skill": [
+                    "skill.chaosbolt"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Grants Skill: Level # Chaos Bolt"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Grants Skill: Level # Chaos Bolt"
+          }
+        ],
+        "ref": "Grants Skill: Level # Chaos Bolt",
+        "trade": {
+          "ids": {
+            "skill": [
+              "skill.chaosbolt"
+            ]
+          }
+        }
+      },
+      "type": "skill"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 74,
+            "min": 65,
+            "value": 71
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Malignant",
+              "tags": [
+                "Damage",
+                "Chaos"
+              ],
+              "tier": 4,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 74,
+                  "min": 65,
+                  "unscalable": false,
+                  "value": 71
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "chaos_damage_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Chaos Damage"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Chaos Damage"
+                    }
+                  ],
+                  "ref": "#% increased Chaos Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_736967255"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_736967255"
+                      ],
+                      "explicit": [
+                        "explicit.stat_736967255"
+                      ],
+                      "fractured": [
+                        "fractured.stat_736967255"
+                      ],
+                      "implicit": [
+                        "implicit.stat_736967255"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Chaos Damage"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 74,
+              "min": 65,
+              "unscalable": false,
+              "value": 71
+            },
+            "stat": {
+              "better": 1,
+              "id": "chaos_damage_+%",
+              "matchers": [
+                {
+                  "string": "#% increased Chaos Damage"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Chaos Damage"
+                }
+              ],
+              "ref": "#% increased Chaos Damage",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_736967255"
+                  ],
+                  "desecrated": [
+                    "desecrated.stat_736967255"
+                  ],
+                  "explicit": [
+                    "explicit.stat_736967255"
+                  ],
+                  "fractured": [
+                    "fractured.stat_736967255"
+                  ],
+                  "implicit": [
+                    "implicit.stat_736967255"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Chaos Damage"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "chaos_damage_+%",
+        "matchers": [
+          {
+            "string": "#% increased Chaos Damage"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Chaos Damage"
+          }
+        ],
+        "ref": "#% increased Chaos Damage",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_736967255"
+            ],
+            "desecrated": [
+              "desecrated.stat_736967255"
+            ],
+            "explicit": [
+              "explicit.stat_736967255"
+            ],
+            "fractured": [
+              "fractured.stat_736967255"
+            ],
+            "implicit": [
+              "implicit.stat_736967255"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 30,
+            "min": 28,
+            "value": 28
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Frostbound",
+              "tags": [
+                "Damage",
+                "Elemental",
+                "Cold"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 28,
+                  "unscalable": false,
+                  "value": 28
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "non_skill_base_all_damage_%_to_gain_as_cold",
+                  "matchers": [
+                    {
+                      "string": "Gain #% of Damage as Extra Cold Damage"
+                    }
+                  ],
+                  "ref": "Gain #% of Damage as Extra Cold Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_2505884597"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_2505884597"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2505884597"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2505884597"
+                      ],
+                      "rune": [
+                        "rune.stat_2505884597"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Gain #% of Damage as Extra Cold Damage"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 30,
+              "min": 28,
+              "unscalable": false,
+              "value": 28
+            },
+            "stat": {
+              "better": 1,
+              "id": "non_skill_base_all_damage_%_to_gain_as_cold",
+              "matchers": [
+                {
+                  "string": "Gain #% of Damage as Extra Cold Damage"
+                }
+              ],
+              "ref": "Gain #% of Damage as Extra Cold Damage",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_2505884597"
+                  ],
+                  "desecrated": [
+                    "desecrated.stat_2505884597"
+                  ],
+                  "explicit": [
+                    "explicit.stat_2505884597"
+                  ],
+                  "fractured": [
+                    "fractured.stat_2505884597"
+                  ],
+                  "rune": [
+                    "rune.stat_2505884597"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Gain #% of Damage as Extra Cold Damage"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "non_skill_base_all_damage_%_to_gain_as_cold",
+        "matchers": [
+          {
+            "string": "Gain #% of Damage as Extra Cold Damage"
+          }
+        ],
+        "ref": "Gain #% of Damage as Extra Cold Damage",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_2505884597"
+            ],
+            "desecrated": [
+              "desecrated.stat_2505884597"
+            ],
+            "explicit": [
+              "explicit.stat_2505884597"
+            ],
+            "fractured": [
+              "fractured.stat_2505884597"
+            ],
+            "rune": [
+              "rune.stat_2505884597"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 22,
+            "min": 18,
+            "value": 22
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of the Hearth",
+              "tags": [
+                "Mana"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 22,
+                  "min": 18,
+                  "unscalable": false,
+                  "value": 22
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "mana_regeneration_rate_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Mana Regeneration Rate"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Mana Regeneration Rate"
+                    }
+                  ],
+                  "ref": "#% increased Mana Regeneration Rate",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_789117908"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_789117908"
+                      ],
+                      "enchant": [
+                        "enchant.stat_789117908"
+                      ],
+                      "explicit": [
+                        "explicit.stat_789117908"
+                      ],
+                      "fractured": [
+                        "fractured.stat_789117908"
+                      ],
+                      "implicit": [
+                        "implicit.stat_789117908"
+                      ],
+                      "rune": [
+                        "rune.stat_789117908"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Mana Regeneration Rate"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 15,
+                  "min": 15,
+                  "unscalable": false,
+                  "value": 15
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "light_radius_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Light Radius"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Light Radius"
+                    }
+                  ],
+                  "ref": "#% increased Light Radius",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1263695895"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1263695895"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1263695895"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Light Radius"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 22,
+              "min": 18,
+              "unscalable": false,
+              "value": 22
+            },
+            "stat": {
+              "better": 1,
+              "id": "mana_regeneration_rate_+%",
+              "matchers": [
+                {
+                  "string": "#% increased Mana Regeneration Rate"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Mana Regeneration Rate"
+                }
+              ],
+              "ref": "#% increased Mana Regeneration Rate",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_789117908"
+                  ],
+                  "desecrated": [
+                    "desecrated.stat_789117908"
+                  ],
+                  "enchant": [
+                    "enchant.stat_789117908"
+                  ],
+                  "explicit": [
+                    "explicit.stat_789117908"
+                  ],
+                  "fractured": [
+                    "fractured.stat_789117908"
+                  ],
+                  "implicit": [
+                    "implicit.stat_789117908"
+                  ],
+                  "rune": [
+                    "rune.stat_789117908"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Mana Regeneration Rate"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "mana_regeneration_rate_+%",
+        "matchers": [
+          {
+            "string": "#% increased Mana Regeneration Rate"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Mana Regeneration Rate"
+          }
+        ],
+        "ref": "#% increased Mana Regeneration Rate",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_789117908"
+            ],
+            "desecrated": [
+              "desecrated.stat_789117908"
+            ],
+            "enchant": [
+              "enchant.stat_789117908"
+            ],
+            "explicit": [
+              "explicit.stat_789117908"
+            ],
+            "fractured": [
+              "fractured.stat_789117908"
+            ],
+            "implicit": [
+              "implicit.stat_789117908"
+            ],
+            "rune": [
+              "rune.stat_789117908"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 15,
+            "min": 15,
+            "value": 15
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of the Hearth",
+              "tags": [
+                "Mana"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 22,
+                  "min": 18,
+                  "unscalable": false,
+                  "value": 22
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "mana_regeneration_rate_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Mana Regeneration Rate"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Mana Regeneration Rate"
+                    }
+                  ],
+                  "ref": "#% increased Mana Regeneration Rate",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_789117908"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_789117908"
+                      ],
+                      "enchant": [
+                        "enchant.stat_789117908"
+                      ],
+                      "explicit": [
+                        "explicit.stat_789117908"
+                      ],
+                      "fractured": [
+                        "fractured.stat_789117908"
+                      ],
+                      "implicit": [
+                        "implicit.stat_789117908"
+                      ],
+                      "rune": [
+                        "rune.stat_789117908"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Mana Regeneration Rate"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 15,
+                  "min": 15,
+                  "unscalable": false,
+                  "value": 15
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "light_radius_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Light Radius"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Light Radius"
+                    }
+                  ],
+                  "ref": "#% increased Light Radius",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1263695895"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1263695895"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1263695895"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Light Radius"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 15,
+              "min": 15,
+              "unscalable": false,
+              "value": 15
+            },
+            "stat": {
+              "better": 1,
+              "id": "light_radius_+%",
+              "matchers": [
+                {
+                  "string": "#% increased Light Radius"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Light Radius"
+                }
+              ],
+              "ref": "#% increased Light Radius",
+              "trade": {
+                "ids": {
+                  "desecrated": [
+                    "desecrated.stat_1263695895"
+                  ],
+                  "explicit": [
+                    "explicit.stat_1263695895"
+                  ],
+                  "fractured": [
+                    "fractured.stat_1263695895"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Light Radius"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "light_radius_+%",
+        "matchers": [
+          {
+            "string": "#% increased Light Radius"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Light Radius"
+          }
+        ],
+        "ref": "#% increased Light Radius",
+        "trade": {
+          "ids": {
+            "desecrated": [
+              "desecrated.stat_1263695895"
+            ],
+            "explicit": [
+              "explicit.stat_1263695895"
+            ],
+            "fractured": [
+              "fractured.stat_1263695895"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": -20,
+            "min": -20,
+            "value": -20
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of the Apt",
+              "tags": [],
+              "tier": 4,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": -20,
+                  "min": -20,
+                  "unscalable": false,
+                  "value": -20
+                },
+                "stat": {
+                  "better": -1,
+                  "id": "local_attribute_requirements_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Attribute Requirements"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Attribute Requirements"
+                    }
+                  ],
+                  "ref": "#% increased Attribute Requirements",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_3639275092"
+                      ],
+                      "enchant": [
+                        "enchant.stat_3639275092"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3639275092"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3639275092"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "negate": true,
+                  "string": "#% reduced Attribute Requirements"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": -20,
+              "min": -20,
+              "unscalable": false,
+              "value": -20
+            },
+            "stat": {
+              "better": -1,
+              "id": "local_attribute_requirements_+%",
+              "matchers": [
+                {
+                  "string": "#% increased Attribute Requirements"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Attribute Requirements"
+                }
+              ],
+              "ref": "#% increased Attribute Requirements",
+              "trade": {
+                "ids": {
+                  "desecrated": [
+                    "desecrated.stat_3639275092"
+                  ],
+                  "enchant": [
+                    "enchant.stat_3639275092"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3639275092"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3639275092"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "negate": true,
+              "string": "#% reduced Attribute Requirements"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": -1,
+        "id": "local_attribute_requirements_+%",
+        "matchers": [
+          {
+            "string": "#% increased Attribute Requirements"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Attribute Requirements"
+          }
+        ],
+        "ref": "#% increased Attribute Requirements",
+        "trade": {
+          "ids": {
+            "desecrated": [
+              "desecrated.stat_3639275092"
+            ],
+            "enchant": [
+              "enchant.stat_3639275092"
+            ],
+            "explicit": [
+              "explicit.stat_3639275092"
+            ],
+            "fractured": [
+              "fractured.stat_3639275092"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": []
+}

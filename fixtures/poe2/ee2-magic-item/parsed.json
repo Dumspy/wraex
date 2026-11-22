@@ -1,0 +1,487 @@
+{
+  "augmentSockets": {
+    "augments": [
+      null,
+      null
+    ],
+    "current": 0,
+    "empty": 2,
+    "normal": 2
+  },
+  "category": "Two Hand Mace",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Two Hand Mace"
+    },
+    "h": 4,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9Ud29IYW5kV2VhcG9ucy9Ud29IYW5kTWFjZXMvQmFzZXR5cGVzLzJITWFjZTA2IiwidyI6MiwiaCI6NCwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/cde79f403c/2HMace06.png",
+    "name": "Temple Maul",
+    "namespace": "ITEM",
+    "refName": "Temple Maul",
+    "tags": [
+      "maraketh_basetype"
+    ],
+    "w": 2
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Two Hand Mace"
+      },
+      "h": 4,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9Ud29IYW5kV2VhcG9ucy9Ud29IYW5kTWFjZXMvQmFzZXR5cGVzLzJITWFjZTA2IiwidyI6MiwiaCI6NCwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/cde79f403c/2HMace06.png",
+      "name": "Temple Maul",
+      "namespace": "ITEM",
+      "refName": "Temple Maul",
+      "tags": [
+        "maraketh_basetype"
+      ],
+      "w": 2
+    }
+  ],
+  "isCorrupted": false,
+  "isUnidentified": false,
+  "itemLevel": 32,
+  "name": "Temple Maul",
+  "newMods": [
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Crackling",
+        "tags": [
+          "Damage",
+          "Elemental",
+          "Lightning",
+          "Attack"
+        ],
+        "tier": 7,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 35,
+            "min": 23.5,
+            "unscalable": false,
+            "value": 25.5
+          },
+          "stat": {
+            "better": 1,
+            "id": "local_minimum_added_lightning_damage",
+            "matchers": [
+              {
+                "string": "Adds # to # Lightning Damage"
+              }
+            ],
+            "ref": "Adds # to # Lightning Damage",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3336890334"
+                ],
+                "desecrated": [
+                  "desecrated.stat_3336890334"
+                ],
+                "enchant": [
+                  "enchant.stat_3336890334"
+                ],
+                "explicit": [
+                  "explicit.stat_3336890334"
+                ],
+                "fractured": [
+                  "fractured.stat_3336890334"
+                ],
+                "rune": [
+                  "rune.stat_3336890334"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Adds # to # Lightning Damage"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of the Brute",
+        "tags": [
+          "Attribute"
+        ],
+        "tier": 8,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 8,
+            "min": 5,
+            "unscalable": false,
+            "value": 8
+          },
+          "stat": {
+            "better": 1,
+            "id": "additional_strength",
+            "matchers": [
+              {
+                "string": "# to Strength"
+              }
+            ],
+            "ref": "# to Strength",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_4080418644"
+                ],
+                "desecrated": [
+                  "desecrated.stat_4080418644"
+                ],
+                "enchant": [
+                  "enchant.stat_4080418644"
+                ],
+                "explicit": [
+                  "explicit.stat_4080418644"
+                ],
+                "fractured": [
+                  "fractured.stat_4080418644"
+                ],
+                "implicit": [
+                  "implicit.stat_4080418644"
+                ],
+                "rune": [
+                  "rune.stat_4080418644"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to Strength"
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Magic",
+  "rawText": "Item Class: Two Hand Maces\nRarity: Magic\nCrackling Temple Maul of the Brute\n--------\nPhysical Damage: 35-72\nLightning Damage: 1-50 (lightning)\nCritical Hit Chance: 5.00%\nAttacks per Second: 1.20\n--------\nRequires: Level 28, 57 (augmented) Str\n--------\nItem Level: 32\n--------\n{ Prefix Modifier \"Crackling\" (Tier: 7) — Damage, Elemental, Lightning, Attack }\nAdds 1(1-4) to 50(46-66) Lightning Damage\n{ Suffix Modifier \"of the Brute\" (Tier: 8) — Attribute }\n+8(5-8) to Strength\n",
+  "requires": {
+    "dex": 0,
+    "int": 0,
+    "level": 28,
+    "str": 57
+  },
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 35,
+            "min": 23.5,
+            "value": 25.5
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Crackling",
+              "tags": [
+                "Damage",
+                "Elemental",
+                "Lightning",
+                "Attack"
+              ],
+              "tier": 7,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 35,
+                  "min": 23.5,
+                  "unscalable": false,
+                  "value": 25.5
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_minimum_added_lightning_damage",
+                  "matchers": [
+                    {
+                      "string": "Adds # to # Lightning Damage"
+                    }
+                  ],
+                  "ref": "Adds # to # Lightning Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3336890334"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_3336890334"
+                      ],
+                      "enchant": [
+                        "enchant.stat_3336890334"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3336890334"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3336890334"
+                      ],
+                      "rune": [
+                        "rune.stat_3336890334"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Adds # to # Lightning Damage"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 35,
+              "min": 23.5,
+              "unscalable": false,
+              "value": 25.5
+            },
+            "stat": {
+              "better": 1,
+              "id": "local_minimum_added_lightning_damage",
+              "matchers": [
+                {
+                  "string": "Adds # to # Lightning Damage"
+                }
+              ],
+              "ref": "Adds # to # Lightning Damage",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3336890334"
+                  ],
+                  "desecrated": [
+                    "desecrated.stat_3336890334"
+                  ],
+                  "enchant": [
+                    "enchant.stat_3336890334"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3336890334"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3336890334"
+                  ],
+                  "rune": [
+                    "rune.stat_3336890334"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Adds # to # Lightning Damage"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "local_minimum_added_lightning_damage",
+        "matchers": [
+          {
+            "string": "Adds # to # Lightning Damage"
+          }
+        ],
+        "ref": "Adds # to # Lightning Damage",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_3336890334"
+            ],
+            "desecrated": [
+              "desecrated.stat_3336890334"
+            ],
+            "enchant": [
+              "enchant.stat_3336890334"
+            ],
+            "explicit": [
+              "explicit.stat_3336890334"
+            ],
+            "fractured": [
+              "fractured.stat_3336890334"
+            ],
+            "rune": [
+              "rune.stat_3336890334"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 8,
+            "min": 5,
+            "value": 8
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of the Brute",
+              "tags": [
+                "Attribute"
+              ],
+              "tier": 8,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 8,
+                  "min": 5,
+                  "unscalable": false,
+                  "value": 8
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "additional_strength",
+                  "matchers": [
+                    {
+                      "string": "# to Strength"
+                    }
+                  ],
+                  "ref": "# to Strength",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4080418644"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_4080418644"
+                      ],
+                      "enchant": [
+                        "enchant.stat_4080418644"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4080418644"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4080418644"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4080418644"
+                      ],
+                      "rune": [
+                        "rune.stat_4080418644"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Strength"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 8,
+              "min": 5,
+              "unscalable": false,
+              "value": 8
+            },
+            "stat": {
+              "better": 1,
+              "id": "additional_strength",
+              "matchers": [
+                {
+                  "string": "# to Strength"
+                }
+              ],
+              "ref": "# to Strength",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_4080418644"
+                  ],
+                  "desecrated": [
+                    "desecrated.stat_4080418644"
+                  ],
+                  "enchant": [
+                    "enchant.stat_4080418644"
+                  ],
+                  "explicit": [
+                    "explicit.stat_4080418644"
+                  ],
+                  "fractured": [
+                    "fractured.stat_4080418644"
+                  ],
+                  "implicit": [
+                    "implicit.stat_4080418644"
+                  ],
+                  "rune": [
+                    "rune.stat_4080418644"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to Strength"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "additional_strength",
+        "matchers": [
+          {
+            "string": "# to Strength"
+          }
+        ],
+        "ref": "# to Strength",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_4080418644"
+            ],
+            "desecrated": [
+              "desecrated.stat_4080418644"
+            ],
+            "enchant": [
+              "enchant.stat_4080418644"
+            ],
+            "explicit": [
+              "explicit.stat_4080418644"
+            ],
+            "fractured": [
+              "fractured.stat_4080418644"
+            ],
+            "implicit": [
+              "implicit.stat_4080418644"
+            ],
+            "rune": [
+              "rune.stat_4080418644"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": [],
+  "weaponAS": 1.2,
+  "weaponCRIT": 5,
+  "weaponELEMENTAL": 25.5,
+  "weaponLIGHTNING": 25.5,
+  "weaponPHYSICAL": 53.5
+}

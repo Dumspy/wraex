@@ -1,0 +1,33 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "value": false
+        },
+        "gemLevel": {
+          "disabled": true,
+          "value": 14
+        },
+        "searchExact": {
+          "baseType": "Mirage Archer",
+          "baseTypeTrade": "Mirage Archer"
+        },
+        "socketNumber": {
+          "disabled": false,
+          "value": 4
+        },
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": []
+    }
+  ]
+}

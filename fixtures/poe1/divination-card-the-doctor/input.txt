@@ -1,0 +1,10 @@
+Item Class: Divination Cards
+Rarity: Divination Card
+The Doctor
+--------
+Stack Size: 1/8
+--------
+Headhunter
+Leather Belt
+--------
+A doctor's skill is measured by the lives he saves; this one has no patients.

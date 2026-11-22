@@ -1,0 +1,22 @@
+{
+  "api": "bulk",
+  "request": {
+    "engine": "new",
+    "query": {
+      "have": [
+        "divine",
+        "exalted",
+        "chaos"
+      ],
+      "status": {
+        "option": "online"
+      },
+      "want": [
+        "uncut-skill-gem-19"
+      ]
+    },
+    "sort": {
+      "have": "asc"
+    }
+  }
+}

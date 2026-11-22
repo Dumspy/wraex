@@ -1,0 +1,37 @@
+{
+  "areaLevel": 83,
+  "category": "Heist Contract",
+  "heistContract": {
+    "jobLevel": 3,
+    "requiredJob": "Brute Force"
+  },
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Heist Contract"
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvSGVpc3QvQ29udHJhY3RJdGVtIiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/8262f2ca0e/ContractItem.png",
+    "name": "Contract: Bunker",
+    "namespace": "ITEM",
+    "refName": "Contract: Bunker"
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Heist Contract"
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvSGVpc3QvQ29udHJhY3RJdGVtIiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/8262f2ca0e/ContractItem.png",
+      "name": "Contract: Bunker",
+      "namespace": "ITEM",
+      "refName": "Contract: Bunker"
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 83,
+  "name": "Contract: Bunker",
+  "newMods": [],
+  "rarity": "Normal",
+  "rawText": "Item Class: Contracts\nRarity: Normal\nContract: Bunker\n--------\nClient: Hjalmar the Seeker\nHeist Target: Bloodbound Assegai (Moderate Value)\nArea Level: 83\nRequires Brute Force (Level 3)\n--------\nItem Level: 83\n--------\nGive this item to Faustus, the Fixer at the Heist Hideout to begin a Heist.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

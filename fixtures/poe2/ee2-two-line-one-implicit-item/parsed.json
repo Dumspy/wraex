@@ -1,0 +1,1008 @@
+{
+  "baseType": "Delirium Precursor Tablet",
+  "category": "Unknown",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Unknown"
+    },
+    "icon": "%NOT_FOUND%",
+    "name": "Delirium Precursor Tablet",
+    "namespace": "ITEM",
+    "refName": "Delirium Precursor Tablet",
+    "tags": []
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Unknown"
+      },
+      "icon": "%NOT_FOUND%",
+      "name": "Delirium Precursor Tablet",
+      "namespace": "ITEM",
+      "refName": "Delirium Precursor Tablet",
+      "tags": []
+    }
+  ],
+  "isCorrupted": true,
+  "isUnidentified": false,
+  "itemLevel": 84,
+  "name": "Planar Challenge",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 17,
+            "min": 17,
+            "unscalable": false,
+            "value": 17
+          },
+          "stat": {
+            "better": 1,
+            "id": "tower_add_delirium_to_X_maps",
+            "matchers": [
+              {
+                "string": "Adds a Mirror of Delirium to a Map\n# uses remaining"
+              },
+              {
+                "string": "Adds a Mirror of Delirium to a Map\n# use remaining",
+                "value": 1
+              }
+            ],
+            "ref": "Adds a Mirror of Delirium to a Map \n# use remaining",
+            "trade": {
+              "ids": {
+                "implicit": [
+                  "implicit.stat_3879011313"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Adds a Mirror of Delirium to a Map\n# uses remaining"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Breeding",
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 10,
+            "min": 4,
+            "unscalable": false,
+            "value": 7
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": true,
+            "id": "map_pack_size_+%",
+            "matchers": [
+              {
+                "string": "#% increased Pack Size"
+              },
+              {
+                "string": "#% reduced Pack Size in Map"
+              },
+              {
+                "string": "#% increased Pack Size in Map"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Pack Size"
+              }
+            ],
+            "ref": "#% increased Pack Size in Map",
+            "trade": {
+              "ids": {
+                "enchant": [
+                  "enchant.stat_2017682521"
+                ],
+                "explicit": [
+                  "explicit.stat_2017682521"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Pack Size in Map"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Teeming",
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "legacy": true,
+            "max": 70,
+            "min": 16,
+            "unscalable": false,
+            "value": 16
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": true,
+            "id": "map_number_of_magic_packs_+%",
+            "matchers": [
+              {
+                "string": "#% increased Magic Monsters"
+              },
+              {
+                "string": "Map has #% increased Magic Monsters"
+              }
+            ],
+            "ref": "Map has #% increased Magic Monsters",
+            "trade": {
+              "ids": {
+                "desecrated": [
+                  "desecrated.stat_3873704640"
+                ],
+                "enchant": [
+                  "enchant.stat_3873704640"
+                ],
+                "explicit": [
+                  "explicit.stat_3873704640"
+                ],
+                "fractured": [
+                  "fractured.stat_3873704640"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Map has #% increased Magic Monsters"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of the Simulacrum",
+        "tags": [],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "legacy": true,
+            "max": 30,
+            "min": 6,
+            "unscalable": false,
+            "value": 6
+          },
+          "stat": {
+            "better": 1,
+            "id": "map_delirium_splinter_stack_size_+%",
+            "matchers": [
+              {
+                "string": "#% increased Stack size of Simulacrum Splinters found in Map"
+              },
+              {
+                "string": "#% increased Stack size of Simulacrum Splinters found in Area"
+              },
+              {
+                "string": "#% increased Stack size of Simulacrum Splinters found in your Maps"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Stack size of Simulacrum Splinters found in Map"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Stack size of Simulacrum Splinters found in Area"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Stack size of Simulacrum Splinters found in your Maps"
+              }
+            ],
+            "ref": "#% increased Stack size of Simulacrum Splinters found in Map",
+            "trade": {
+              "ids": {
+                "enchant": [
+                  "enchant.stat_3836551197"
+                ],
+                "explicit": [
+                  "explicit.stat_3836551197"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Stack size of Simulacrum Splinters found in Map"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Phobia",
+        "tags": [],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "legacy": true,
+            "max": 30,
+            "min": 5,
+            "unscalable": false,
+            "value": 5
+          },
+          "stat": {
+            "better": 1,
+            "id": "map_affliction_encounter_boss_chance_+%",
+            "matchers": [
+              {
+                "string": "Delirium Encounters in Map are #% more likely to spawn Unique Bosses"
+              },
+              {
+                "string": "Delirium Encounters in Area are #% more likely to spawn Unique Bosses"
+              },
+              {
+                "string": "#% increased chance to manifest additional Unique Boss Shards within Delirium Fog"
+              },
+              {
+                "negate": true,
+                "string": "Delirium Encounters in Map are #% less likely to spawn Unique Bosses"
+              },
+              {
+                "negate": true,
+                "string": "Delirium Encounters in Area are #% less likely to spawn Unique Bosses"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced chance to manifest additional Unique Boss Shards within Delirium Fog"
+              }
+            ],
+            "ref": "Delirium Encounters in Map are #% more likely to spawn Unique Bosses",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_3962960008"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Delirium Encounters in Map are #% more likely to spawn Unique Bosses"
+          }
+        }
+      ]
+    }
+  ],
+  "note": "~b/o 1 exalted",
+  "rarity": "Rare",
+  "rawText": "Item Class: Tablet\nRarity: Rare\nPlanar Challenge\nDelirium Precursor Tablet\n--------\nItem Level: 84\n--------\n{ Implicit Modifier }\nAdds a Mirror of Delirium to a Map\n17 uses remaining\n--------\n{ Prefix Modifier \"Breeding\" }\n7(4-10)% increased Pack Size in Map\n{ Prefix Modifier \"Teeming\" }\nMap has 16(25-70)% increased Magic Monsters\n{ Suffix Modifier \"of the Simulacrum\" (Tier: 1) }\n6(10-30)% increased Stack size of Simulacrum Splinters found in Map\n{ Suffix Modifier \"of Phobia\" (Tier: 1) }\nDelirium Encounters in Map are 5(10-30)% more likely to spawn Unique Bosses\n--------\nCan be used in a personal Map Device to add modifiers to a Map.\n--------\nCorrupted\n--------\nNote: ~b/o 1 exalted\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 17,
+            "min": 17,
+            "value": 17
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 17,
+                  "min": 17,
+                  "unscalable": false,
+                  "value": 17
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "tower_add_delirium_to_X_maps",
+                  "matchers": [
+                    {
+                      "string": "Adds a Mirror of Delirium to a Map\n# uses remaining"
+                    },
+                    {
+                      "string": "Adds a Mirror of Delirium to a Map\n# use remaining",
+                      "value": 1
+                    }
+                  ],
+                  "ref": "Adds a Mirror of Delirium to a Map \n# use remaining",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_3879011313"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Adds a Mirror of Delirium to a Map\n# uses remaining"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 17,
+              "min": 17,
+              "unscalable": false,
+              "value": 17
+            },
+            "stat": {
+              "better": 1,
+              "id": "tower_add_delirium_to_X_maps",
+              "matchers": [
+                {
+                  "string": "Adds a Mirror of Delirium to a Map\n# uses remaining"
+                },
+                {
+                  "string": "Adds a Mirror of Delirium to a Map\n# use remaining",
+                  "value": 1
+                }
+              ],
+              "ref": "Adds a Mirror of Delirium to a Map \n# use remaining",
+              "trade": {
+                "ids": {
+                  "implicit": [
+                    "implicit.stat_3879011313"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Adds a Mirror of Delirium to a Map\n# uses remaining"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "tower_add_delirium_to_X_maps",
+        "matchers": [
+          {
+            "string": "Adds a Mirror of Delirium to a Map\n# uses remaining"
+          },
+          {
+            "string": "Adds a Mirror of Delirium to a Map\n# use remaining",
+            "value": 1
+          }
+        ],
+        "ref": "Adds a Mirror of Delirium to a Map \n# use remaining",
+        "trade": {
+          "ids": {
+            "implicit": [
+              "implicit.stat_3879011313"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 10,
+            "min": 4,
+            "value": 7
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Breeding",
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 10,
+                  "min": 4,
+                  "unscalable": false,
+                  "value": 7
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": true,
+                  "id": "map_pack_size_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Pack Size"
+                    },
+                    {
+                      "string": "#% reduced Pack Size in Map"
+                    },
+                    {
+                      "string": "#% increased Pack Size in Map"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Pack Size"
+                    }
+                  ],
+                  "ref": "#% increased Pack Size in Map",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_2017682521"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2017682521"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Pack Size in Map"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 10,
+              "min": 4,
+              "unscalable": false,
+              "value": 7
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": true,
+              "id": "map_pack_size_+%",
+              "matchers": [
+                {
+                  "string": "#% increased Pack Size"
+                },
+                {
+                  "string": "#% reduced Pack Size in Map"
+                },
+                {
+                  "string": "#% increased Pack Size in Map"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Pack Size"
+                }
+              ],
+              "ref": "#% increased Pack Size in Map",
+              "trade": {
+                "ids": {
+                  "enchant": [
+                    "enchant.stat_2017682521"
+                  ],
+                  "explicit": [
+                    "explicit.stat_2017682521"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Pack Size in Map"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": true,
+        "id": "map_pack_size_+%",
+        "matchers": [
+          {
+            "string": "#% increased Pack Size"
+          },
+          {
+            "string": "#% reduced Pack Size in Map"
+          },
+          {
+            "string": "#% increased Pack Size in Map"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Pack Size"
+          }
+        ],
+        "ref": "#% increased Pack Size in Map",
+        "trade": {
+          "ids": {
+            "enchant": [
+              "enchant.stat_2017682521"
+            ],
+            "explicit": [
+              "explicit.stat_2017682521"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 70,
+            "min": 16,
+            "value": 16
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Teeming",
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "legacy": true,
+                  "max": 70,
+                  "min": 16,
+                  "unscalable": false,
+                  "value": 16
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": true,
+                  "id": "map_number_of_magic_packs_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Magic Monsters"
+                    },
+                    {
+                      "string": "Map has #% increased Magic Monsters"
+                    }
+                  ],
+                  "ref": "Map has #% increased Magic Monsters",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_3873704640"
+                      ],
+                      "enchant": [
+                        "enchant.stat_3873704640"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3873704640"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3873704640"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Map has #% increased Magic Monsters"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "legacy": true,
+              "max": 70,
+              "min": 16,
+              "unscalable": false,
+              "value": 16
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": true,
+              "id": "map_number_of_magic_packs_+%",
+              "matchers": [
+                {
+                  "string": "#% increased Magic Monsters"
+                },
+                {
+                  "string": "Map has #% increased Magic Monsters"
+                }
+              ],
+              "ref": "Map has #% increased Magic Monsters",
+              "trade": {
+                "ids": {
+                  "desecrated": [
+                    "desecrated.stat_3873704640"
+                  ],
+                  "enchant": [
+                    "enchant.stat_3873704640"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3873704640"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3873704640"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Map has #% increased Magic Monsters"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": true,
+        "id": "map_number_of_magic_packs_+%",
+        "matchers": [
+          {
+            "string": "#% increased Magic Monsters"
+          },
+          {
+            "string": "Map has #% increased Magic Monsters"
+          }
+        ],
+        "ref": "Map has #% increased Magic Monsters",
+        "trade": {
+          "ids": {
+            "desecrated": [
+              "desecrated.stat_3873704640"
+            ],
+            "enchant": [
+              "enchant.stat_3873704640"
+            ],
+            "explicit": [
+              "explicit.stat_3873704640"
+            ],
+            "fractured": [
+              "fractured.stat_3873704640"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 30,
+            "min": 6,
+            "value": 6
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of the Simulacrum",
+              "tags": [],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "legacy": true,
+                  "max": 30,
+                  "min": 6,
+                  "unscalable": false,
+                  "value": 6
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "map_delirium_splinter_stack_size_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Stack size of Simulacrum Splinters found in Map"
+                    },
+                    {
+                      "string": "#% increased Stack size of Simulacrum Splinters found in Area"
+                    },
+                    {
+                      "string": "#% increased Stack size of Simulacrum Splinters found in your Maps"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Stack size of Simulacrum Splinters found in Map"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Stack size of Simulacrum Splinters found in Area"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Stack size of Simulacrum Splinters found in your Maps"
+                    }
+                  ],
+                  "ref": "#% increased Stack size of Simulacrum Splinters found in Map",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_3836551197"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3836551197"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Stack size of Simulacrum Splinters found in Map"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "legacy": true,
+              "max": 30,
+              "min": 6,
+              "unscalable": false,
+              "value": 6
+            },
+            "stat": {
+              "better": 1,
+              "id": "map_delirium_splinter_stack_size_+%",
+              "matchers": [
+                {
+                  "string": "#% increased Stack size of Simulacrum Splinters found in Map"
+                },
+                {
+                  "string": "#% increased Stack size of Simulacrum Splinters found in Area"
+                },
+                {
+                  "string": "#% increased Stack size of Simulacrum Splinters found in your Maps"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Stack size of Simulacrum Splinters found in Map"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Stack size of Simulacrum Splinters found in Area"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Stack size of Simulacrum Splinters found in your Maps"
+                }
+              ],
+              "ref": "#% increased Stack size of Simulacrum Splinters found in Map",
+              "trade": {
+                "ids": {
+                  "enchant": [
+                    "enchant.stat_3836551197"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3836551197"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Stack size of Simulacrum Splinters found in Map"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "map_delirium_splinter_stack_size_+%",
+        "matchers": [
+          {
+            "string": "#% increased Stack size of Simulacrum Splinters found in Map"
+          },
+          {
+            "string": "#% increased Stack size of Simulacrum Splinters found in Area"
+          },
+          {
+            "string": "#% increased Stack size of Simulacrum Splinters found in your Maps"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Stack size of Simulacrum Splinters found in Map"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Stack size of Simulacrum Splinters found in Area"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Stack size of Simulacrum Splinters found in your Maps"
+          }
+        ],
+        "ref": "#% increased Stack size of Simulacrum Splinters found in Map",
+        "trade": {
+          "ids": {
+            "enchant": [
+              "enchant.stat_3836551197"
+            ],
+            "explicit": [
+              "explicit.stat_3836551197"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 30,
+            "min": 5,
+            "value": 5
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Phobia",
+              "tags": [],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "legacy": true,
+                  "max": 30,
+                  "min": 5,
+                  "unscalable": false,
+                  "value": 5
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "map_affliction_encounter_boss_chance_+%",
+                  "matchers": [
+                    {
+                      "string": "Delirium Encounters in Map are #% more likely to spawn Unique Bosses"
+                    },
+                    {
+                      "string": "Delirium Encounters in Area are #% more likely to spawn Unique Bosses"
+                    },
+                    {
+                      "string": "#% increased chance to manifest additional Unique Boss Shards within Delirium Fog"
+                    },
+                    {
+                      "negate": true,
+                      "string": "Delirium Encounters in Map are #% less likely to spawn Unique Bosses"
+                    },
+                    {
+                      "negate": true,
+                      "string": "Delirium Encounters in Area are #% less likely to spawn Unique Bosses"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced chance to manifest additional Unique Boss Shards within Delirium Fog"
+                    }
+                  ],
+                  "ref": "Delirium Encounters in Map are #% more likely to spawn Unique Bosses",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3962960008"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Delirium Encounters in Map are #% more likely to spawn Unique Bosses"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "legacy": true,
+              "max": 30,
+              "min": 5,
+              "unscalable": false,
+              "value": 5
+            },
+            "stat": {
+              "better": 1,
+              "id": "map_affliction_encounter_boss_chance_+%",
+              "matchers": [
+                {
+                  "string": "Delirium Encounters in Map are #% more likely to spawn Unique Bosses"
+                },
+                {
+                  "string": "Delirium Encounters in Area are #% more likely to spawn Unique Bosses"
+                },
+                {
+                  "string": "#% increased chance to manifest additional Unique Boss Shards within Delirium Fog"
+                },
+                {
+                  "negate": true,
+                  "string": "Delirium Encounters in Map are #% less likely to spawn Unique Bosses"
+                },
+                {
+                  "negate": true,
+                  "string": "Delirium Encounters in Area are #% less likely to spawn Unique Bosses"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced chance to manifest additional Unique Boss Shards within Delirium Fog"
+                }
+              ],
+              "ref": "Delirium Encounters in Map are #% more likely to spawn Unique Bosses",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_3962960008"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Delirium Encounters in Map are #% more likely to spawn Unique Bosses"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "map_affliction_encounter_boss_chance_+%",
+        "matchers": [
+          {
+            "string": "Delirium Encounters in Map are #% more likely to spawn Unique Bosses"
+          },
+          {
+            "string": "Delirium Encounters in Area are #% more likely to spawn Unique Bosses"
+          },
+          {
+            "string": "#% increased chance to manifest additional Unique Boss Shards within Delirium Fog"
+          },
+          {
+            "negate": true,
+            "string": "Delirium Encounters in Map are #% less likely to spawn Unique Bosses"
+          },
+          {
+            "negate": true,
+            "string": "Delirium Encounters in Area are #% less likely to spawn Unique Bosses"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced chance to manifest additional Unique Boss Shards within Delirium Fog"
+          }
+        ],
+        "ref": "Delirium Encounters in Map are #% more likely to spawn Unique Bosses",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_3962960008"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": []
+}

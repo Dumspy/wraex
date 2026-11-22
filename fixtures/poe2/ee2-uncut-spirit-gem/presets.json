@@ -1,0 +1,26 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "searchExact": {
+          "baseType": "Uncut Spirit Gem (Level 16)",
+          "baseTypeTrade": "Uncut Spirit Gem (Level 16)"
+        },
+        "stackSize": {
+          "disabled": true,
+          "value": 1
+        },
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": []
+    }
+  ]
+}

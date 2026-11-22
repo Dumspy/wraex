@@ -1,0 +1,787 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "itemEditorSelection": {
+          "disabled": true,
+          "editing": false,
+          "value": "None"
+        },
+        "mapTier": {
+          "disabled": false,
+          "value": 14
+        },
+        "rarity": {
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Waystone (Tier 14)",
+          "baseTypeTrade": "Waystone (Tier 14)"
+        },
+        "searchRelaxed": {
+          "category": "Map",
+          "disabled": false
+        },
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": true,
+          "hidden": "filters.hide_revives",
+          "roll": {
+            "default": {
+              "max": 2,
+              "min": 2
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 2,
+            "value": 2
+          },
+          "sources": [],
+          "statRef": "Revives Available: #",
+          "tag": "property",
+          "text": "Revives Available: #",
+          "tradeId": [
+            "item.map_revives"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 34,
+              "min": 34
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 34,
+            "value": 34
+          },
+          "sources": [],
+          "statRef": "Monster Pack Size: #",
+          "tag": "property",
+          "text": "Monster Pack Size: #",
+          "tradeId": [
+            "item.map_pack_size"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 28,
+              "min": 28
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 28,
+            "value": 28
+          },
+          "sources": [],
+          "statRef": "Rare Monsters: #",
+          "tag": "property",
+          "text": "Rare Monsters: #",
+          "tradeId": [
+            "item.map_rare_monsters"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 75,
+              "min": 75
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 75,
+            "value": 75
+          },
+          "sources": [],
+          "statRef": "Waystone Drop Chance: #%",
+          "tag": "property",
+          "text": "Waystone Drop Chance: #%",
+          "tradeId": [
+            "item.map_drop_chance"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_for_map",
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Shocking",
+                  "tags": [],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": true,
+                      "id": "map_ground_lightning",
+                      "matchers": [
+                        {
+                          "string": "Area has patches of Shocked Ground"
+                        }
+                      ],
+                      "ref": "Area has patches of Shocked Ground",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_3477720557"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3477720557"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3477720557"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Area has patches of Shocked Ground"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": true,
+                  "id": "map_ground_lightning",
+                  "matchers": [
+                    {
+                      "string": "Area has patches of Shocked Ground"
+                    }
+                  ],
+                  "ref": "Area has patches of Shocked Ground",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_3477720557"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3477720557"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3477720557"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Area has patches of Shocked Ground"
+                }
+              }
+            }
+          ],
+          "statRef": "Area has patches of Shocked Ground",
+          "tag": "explicit",
+          "text": "Area has patches of Shocked Ground",
+          "tradeId": [
+            "explicit.stat_3477720557"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_for_map",
+          "roll": {
+            "default": {
+              "max": 30,
+              "min": 26
+            },
+            "dp": false,
+            "goodness": 0.5,
+            "isNegated": false,
+            "min": 26,
+            "value": 28
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 30,
+                "min": 26,
+                "value": 28
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Painful",
+                  "tags": [],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 30,
+                      "min": 26,
+                      "unscalable": false,
+                      "value": 28
+                    },
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": true,
+                      "id": "map_monsters_damage_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Monster Damage"
+                        }
+                      ],
+                      "ref": "#% increased Monster Damage",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1890519597"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1890519597"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1890519597"
+                          ],
+                          "sanctum": [
+                            "sanctum.stat_1890519597"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Monster Damage"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 26,
+                  "unscalable": false,
+                  "value": 28
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": true,
+                  "id": "map_monsters_damage_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Monster Damage"
+                    }
+                  ],
+                  "ref": "#% increased Monster Damage",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1890519597"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1890519597"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1890519597"
+                      ],
+                      "sanctum": [
+                        "sanctum.stat_1890519597"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Monster Damage"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Monster Damage",
+          "tag": "explicit",
+          "text": "#% increased Monster Damage",
+          "tradeId": [
+            "explicit.stat_1890519597"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_for_map",
+          "roll": {
+            "default": {
+              "max": 2,
+              "min": 2
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 2,
+            "value": 2
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 2,
+                "min": 2,
+                "value": 2
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Splitting",
+                  "tags": [],
+                  "tier": 2,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 2,
+                      "min": 2,
+                      "unscalable": false,
+                      "value": 2
+                    },
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": true,
+                      "id": "map_monsters_additional_number_of_projecitles",
+                      "matchers": [
+                        {
+                          "string": "Monsters fire # additional Projectiles"
+                        },
+                        {
+                          "string": "Players and Monsters fire # additional Projectiles"
+                        },
+                        {
+                          "string": "Players fire # additional Projectiles",
+                          "value": 0
+                        }
+                      ],
+                      "ref": "Monsters fire # additional Projectiles",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1309819744"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1309819744"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Monsters fire # additional Projectiles"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 2,
+                  "min": 2,
+                  "unscalable": false,
+                  "value": 2
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": true,
+                  "id": "map_monsters_additional_number_of_projecitles",
+                  "matchers": [
+                    {
+                      "string": "Monsters fire # additional Projectiles"
+                    },
+                    {
+                      "string": "Players and Monsters fire # additional Projectiles"
+                    },
+                    {
+                      "string": "Players fire # additional Projectiles",
+                      "value": 0
+                    }
+                  ],
+                  "ref": "Monsters fire # additional Projectiles",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1309819744"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1309819744"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Monsters fire # additional Projectiles"
+                }
+              }
+            }
+          ],
+          "statRef": "Monsters fire # additional Projectiles",
+          "tag": "explicit",
+          "text": "Monsters fire # additional Projectiles",
+          "tradeId": [
+            "explicit.stat_1309819744"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_for_map",
+          "roll": {
+            "default": {
+              "max": 300,
+              "min": 263
+            },
+            "dp": false,
+            "goodness": 0.825,
+            "isNegated": false,
+            "min": 263,
+            "value": 293
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 300,
+                "min": 260,
+                "value": 293
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Destruction",
+                  "tags": [],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 300,
+                      "min": 260,
+                      "unscalable": false,
+                      "value": 293
+                    },
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": true,
+                      "id": "map_monsters_critical_strike_chance_+%",
+                      "matchers": [
+                        {
+                          "string": "Monsters have #% increased Critical Hit Chance"
+                        },
+                        {
+                          "negate": true,
+                          "string": "Monsters have #% reduced Critical Hit Chance"
+                        }
+                      ],
+                      "ref": "Monsters have #% increased Critical Hit Chance",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_2753083623"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2753083623"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2753083623"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Monsters have #% increased Critical Hit Chance"
+                    }
+                  },
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 30,
+                      "min": 26,
+                      "unscalable": false,
+                      "value": 26
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% to Monster Critical Damage Bonus"
+                        }
+                      ],
+                      "ref": "#% to Monster Critical Damage Bonus",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_57326096"
+                          ],
+                          "explicit": [
+                            "explicit.stat_57326096"
+                          ],
+                          "fractured": [
+                            "fractured.stat_57326096"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Monster Critical Damage Bonus"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 300,
+                  "min": 260,
+                  "unscalable": false,
+                  "value": 293
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": true,
+                  "id": "map_monsters_critical_strike_chance_+%",
+                  "matchers": [
+                    {
+                      "string": "Monsters have #% increased Critical Hit Chance"
+                    },
+                    {
+                      "negate": true,
+                      "string": "Monsters have #% reduced Critical Hit Chance"
+                    }
+                  ],
+                  "ref": "Monsters have #% increased Critical Hit Chance",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_2753083623"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2753083623"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2753083623"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Monsters have #% increased Critical Hit Chance"
+                }
+              }
+            }
+          ],
+          "statRef": "Monsters have #% increased Critical Hit Chance",
+          "tag": "explicit",
+          "text": "Monsters have #% increased Critical Hit Chance",
+          "tradeId": [
+            "explicit.stat_2753083623"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_for_map",
+          "roll": {
+            "default": {
+              "max": 29,
+              "min": 26
+            },
+            "dp": false,
+            "goodness": 0,
+            "isNegated": false,
+            "min": 26,
+            "value": 26
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 30,
+                "min": 26,
+                "value": 26
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Destruction",
+                  "tags": [],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 300,
+                      "min": 260,
+                      "unscalable": false,
+                      "value": 293
+                    },
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": true,
+                      "id": "map_monsters_critical_strike_chance_+%",
+                      "matchers": [
+                        {
+                          "string": "Monsters have #% increased Critical Hit Chance"
+                        },
+                        {
+                          "negate": true,
+                          "string": "Monsters have #% reduced Critical Hit Chance"
+                        }
+                      ],
+                      "ref": "Monsters have #% increased Critical Hit Chance",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_2753083623"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2753083623"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2753083623"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Monsters have #% increased Critical Hit Chance"
+                    }
+                  },
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 30,
+                      "min": 26,
+                      "unscalable": false,
+                      "value": 26
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% to Monster Critical Damage Bonus"
+                        }
+                      ],
+                      "ref": "#% to Monster Critical Damage Bonus",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_57326096"
+                          ],
+                          "explicit": [
+                            "explicit.stat_57326096"
+                          ],
+                          "fractured": [
+                            "fractured.stat_57326096"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Monster Critical Damage Bonus"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 26,
+                  "unscalable": false,
+                  "value": 26
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% to Monster Critical Damage Bonus"
+                    }
+                  ],
+                  "ref": "#% to Monster Critical Damage Bonus",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_57326096"
+                      ],
+                      "explicit": [
+                        "explicit.stat_57326096"
+                      ],
+                      "fractured": [
+                        "fractured.stat_57326096"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Monster Critical Damage Bonus"
+                }
+              }
+            }
+          ],
+          "statRef": "#% to Monster Critical Damage Bonus",
+          "tag": "explicit",
+          "text": "#% to Monster Critical Damage Bonus",
+          "tradeId": [
+            "explicit.stat_57326096"
+          ]
+        }
+      ]
+    },
+    {
+      "filters": {
+        "fractured": {
+          "value": false
+        },
+        "itemEditorSelection": {
+          "disabled": true,
+          "editing": false,
+          "value": "None"
+        },
+        "mapTier": {
+          "disabled": false,
+          "value": 14
+        },
+        "rarity": {
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Waystone (Tier 14)",
+          "baseTypeTrade": "Waystone (Tier 14)"
+        },
+        "searchRelaxed": {
+          "category": "Map",
+          "disabled": false
+        },
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_base_item",
+      "stats": []
+    }
+  ]
+}

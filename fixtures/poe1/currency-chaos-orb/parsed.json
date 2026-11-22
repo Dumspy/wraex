@@ -1,0 +1,32 @@
+{
+  "category": "Currency",
+  "influences": [],
+  "info": {
+    "exchangeable": true,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQ3VycmVuY3lSZXJvbGxSYXJlIiwic2NhbGUiOjF9XQ/46a2347805/CurrencyRerollRare.png",
+    "name": "Chaos Orb",
+    "namespace": "ITEM",
+    "refName": "Chaos Orb",
+    "tradeTag": "chaos"
+  },
+  "infoVariants": [
+    {
+      "exchangeable": true,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQ3VycmVuY3lSZXJvbGxSYXJlIiwic2NhbGUiOjF9XQ/46a2347805/CurrencyRerollRare.png",
+      "name": "Chaos Orb",
+      "namespace": "ITEM",
+      "refName": "Chaos Orb",
+      "tradeTag": "chaos"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "Chaos Orb",
+  "newMods": [],
+  "rawText": "Item Class: Stackable Currency\nRarity: Currency\nChaos Orb\n--------\nStack Size: 7/20\n--------\nReforges a rare item with new random modifiers\n--------\nRight click this item then left click a rare item to apply it.\nShift click to unstack.\n",
+  "stackSize": {
+    "max": 20,
+    "value": 7
+  },
+  "statsByType": [],
+  "unknownModifiers": []
+}

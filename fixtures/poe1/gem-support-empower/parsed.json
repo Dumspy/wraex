@@ -1,0 +1,31 @@
+{
+  "category": "Gem",
+  "gemLevel": 3,
+  "influences": [],
+  "info": {
+    "gem": {
+      "maxLevel": 3
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9TdXBwb3J0L0VtcG93ZXIiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MX1d/c2b1b38b15/Empower.png",
+    "name": "Empower Support",
+    "namespace": "GEM",
+    "refName": "Empower Support"
+  },
+  "infoVariants": [
+    {
+      "gem": {
+        "maxLevel": 3
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9TdXBwb3J0L0VtcG93ZXIiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MX1d/c2b1b38b15/Empower.png",
+      "name": "Empower Support",
+      "namespace": "GEM",
+      "refName": "Empower Support"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "Empower Support",
+  "newMods": [],
+  "rawText": "Item Class: Support Gems\nRarity: Gem\nEmpower Support\n--------\nSupport\nLevel: 3 (Max)\n--------\nRequirements:\nLevel: 72\nStr: 85\nDex: 85\nInt: 85\n--------\nSupports any skill gem. Once this gem reaches level 2 or above, will raise the level of supported gems. Cannot support skills that don't come from gems.\n--------\nExperience: 1/1\n--------\nThis is a Support Gem. It does not grant a bonus to your character, but to skills in sockets connected to it. Place into an item socket connected to a socket containing the Skill Gem you wish to augment. Right click to remove from a socket.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

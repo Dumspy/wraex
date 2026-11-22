@@ -1,0 +1,92 @@
+{
+  "armourAR": 71,
+  "armourBLOCK": 25,
+  "armourEV": 64,
+  "augmentSockets": {
+    "augments": [
+      null
+    ],
+    "current": 0,
+    "empty": 1,
+    "normal": 1
+  },
+  "basePercentile": 0,
+  "category": "Shield",
+  "influences": [],
+  "info": {
+    "armour": {
+      "ar": [
+        94,
+        94
+      ],
+      "ev": [
+        85,
+        85
+      ]
+    },
+    "craftable": {
+      "category": "Shield"
+    },
+    "h": 3,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvT2ZmaGFuZC9TaGllbGRzL1NoaWVsZDA0IiwidyI6MiwiaCI6Mywic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/b38b1a21b7/Shield04.png",
+    "name": "Polished Targe",
+    "namespace": "ITEM",
+    "refName": "Polished Targe",
+    "tags": [
+      "str_dex_armour",
+      "str_dex_shield"
+    ],
+    "w": 2
+  },
+  "infoVariants": [
+    {
+      "armour": {
+        "ar": [
+          94,
+          94
+        ],
+        "ev": [
+          85,
+          85
+        ]
+      },
+      "craftable": {
+        "category": "Shield"
+      },
+      "h": 3,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvT2ZmaGFuZC9TaGllbGRzL1NoaWVsZDA0IiwidyI6MiwiaCI6Mywic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/b38b1a21b7/Shield04.png",
+      "name": "Polished Targe",
+      "namespace": "ITEM",
+      "refName": "Polished Targe",
+      "tags": [
+        "str_dex_armour",
+        "str_dex_shield"
+      ],
+      "w": 2
+    }
+  ],
+  "isCorrupted": false,
+  "isUnidentified": false,
+  "itemLevel": 54,
+  "name": "Polished Targe",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "skill"
+      },
+      "stats": []
+    }
+  ],
+  "note": "~b/o 1 aug",
+  "rarity": "Normal",
+  "rawText": "Item Class: Shields\nRarity: Normal\nPolished Targe\n--------\nBlock chance: 25%\nArmour: 71\nEvasion Rating: 64\n--------\nRequires: Level 54, 42 Str, 42 Dex\n--------\nItem Level: 54\n--------\nGrants Skill: Raise Shield\n--------\nNote: ~b/o 1 aug\n",
+  "requires": {
+    "dex": 42,
+    "int": 0,
+    "level": 54,
+    "str": 42
+  },
+  "statsByType": [],
+  "unknownModifiers": []
+}

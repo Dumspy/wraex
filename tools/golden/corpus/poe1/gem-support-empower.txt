@@ -1,0 +1,18 @@
+Item Class: Support Gems
+Rarity: Gem
+Empower Support
+--------
+Support
+Level: 3 (Max)
+--------
+Requirements:
+Level: 72
+Str: 85
+Dex: 85
+Int: 85
+--------
+Supports any skill gem. Once this gem reaches level 2 or above, will raise the level of supported gems. Cannot support skills that don't come from gems.
+--------
+Experience: 1/1
+--------
+This is a Support Gem. It does not grant a bonus to your character, but to skills in sockets connected to it. Place into an item socket connected to a socket containing the Skill Gem you wish to augment. Right click to remove from a socket.

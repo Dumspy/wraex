@@ -1,0 +1,124 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            },
+            "sanctified": {
+              "option": "false"
+            }
+          }
+        },
+        "trade_filters": {
+          "filters": {
+            "collapse": {
+              "option": "true"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "ilvl": {
+              "min": 80
+            },
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": true,
+              "id": "explicit.stat_3336890334",
+              "value": {
+                "min": 42
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_709508406",
+              "value": {
+                "min": 30
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_1037193709",
+              "value": {
+                "min": 10
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_1263695895",
+              "value": {
+                "min": 15
+              }
+            }
+          ],
+          "type": "and"
+        },
+        {
+          "disabled": false,
+          "filters": [
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_number_of_empty_suffix_mods",
+              "value": {
+                "min": 2
+              }
+            }
+          ],
+          "type": "count",
+          "value": {
+            "max": 1,
+            "min": 1
+          }
+        },
+        {
+          "disabled": false,
+          "filters": [
+            {
+              "disabled": false,
+              "id": "explicit.stat_691932474",
+              "value": {
+                "min": 55
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_803737631",
+              "value": {
+                "min": 55
+              }
+            }
+          ],
+          "type": "count",
+          "value": {
+            "min": 1
+          }
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Rider Bow"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

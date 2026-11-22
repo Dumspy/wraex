@@ -72,6 +72,23 @@ in
         exit 1
       fi
     '';
+    # Golden fixtures (tools/golden). `golden:prepare` once per reference bump:
+    # it installs the references' npm deps and builds their index files.
+    "golden:prepare".exec = "cd ${root}/tools/golden && npm ci --no-audit --no-fund && npm run prepare-refs";
+    "golden:regen".exec = "cd ${root}/tools/golden && npm run regen";
+    # Not part of check:all: it needs golden:prepare first. CI runs it.
+    "check:fixtures" = {
+      after = [ "golden:regen" ];
+      exec = ''
+        cd ${root}
+        # Against the index, so staged fixtures count as expected.
+        if ! git diff --quiet -- fixtures || [ -n "$(git ls-files --others --exclude-standard -- fixtures)" ]; then
+          git status --short -- fixtures
+          echo "fixtures differ from what the references produce (see git diff fixtures/)"
+          exit 1
+        fi
+      '';
+    };
     "check:all" = {
       after = [ "check:fmt" "check:clippy" "check:test" "check:rune-pin" ];
       exec = "echo 'All checks passed'";

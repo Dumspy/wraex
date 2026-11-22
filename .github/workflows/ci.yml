@@ -95,5 +95,35 @@ jobs:
         if: runner.os == 'macOS'
         run: test -s "$RUNNER_TEMP/wraex.png"
 
-  # Phase 1 adds a fixture job: regenerate fixtures from the pinned TypeScript
-  # references and fail on any diff.
+  # Regenerates the fixtures from the pinned TypeScript references and fails on
+  # any diff: committed fixtures must be exactly what the references produce.
+  fixtures:
+    name: fixtures
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: actions/setup-node@v7
+        with:
+          # EE2's CI version.
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            tools/golden/package-lock.json
+            ref/apt/renderer/package-lock.json
+            ref/ee2/renderer/package-lock.json
+      - run: npm ci --no-audit --no-fund
+        working-directory: tools/golden
+      - run: npm run prepare-refs
+        working-directory: tools/golden
+      - run: npm run regen
+        working-directory: tools/golden
+      - name: Fixtures match the references
+        run: |
+          git status --short -- fixtures
+          git diff --quiet -- fixtures
+          test -z "$(git ls-files --others --exclude-standard -- fixtures)"
+      - name: References left untouched
+        run: test -z "$(git submodule foreach --quiet git status --porcelain)"

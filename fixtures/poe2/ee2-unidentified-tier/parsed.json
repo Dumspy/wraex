@@ -1,0 +1,254 @@
+{
+  "category": "Ring",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Ring"
+    },
+    "h": 1,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvUmluZ3MvQmFzZXR5cGVzL1NhcHBoaXJlUmluZyIsInciOjEsImgiOjEsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/14608c24b1/SapphireRing.png",
+    "name": "Sapphire Ring",
+    "namespace": "ITEM",
+    "refName": "Sapphire Ring",
+    "tags": [],
+    "w": 1
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Ring"
+      },
+      "h": 1,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvUmluZ3MvQmFzZXR5cGVzL1NhcHBoaXJlUmluZyIsInciOjEsImgiOjEsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/14608c24b1/SapphireRing.png",
+      "name": "Sapphire Ring",
+      "namespace": "ITEM",
+      "refName": "Sapphire Ring",
+      "tags": [],
+      "w": 1
+    }
+  ],
+  "isCorrupted": false,
+  "isUnidentified": true,
+  "itemLevel": 54,
+  "name": "Sapphire Ring",
+  "newMods": [
+    {
+      "info": {
+        "tags": [
+          "Elemental",
+          "Cold",
+          "Resistance"
+        ],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 30,
+            "min": 20,
+            "unscalable": false,
+            "value": 23
+          },
+          "stat": {
+            "better": 1,
+            "id": "base_cold_damage_resistance_%",
+            "matchers": [
+              {
+                "string": "#% to Cold Resistance"
+              }
+            ],
+            "ref": "#% to Cold Resistance",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_4220027924"
+                ],
+                "desecrated": [
+                  "desecrated.stat_4220027924"
+                ],
+                "enchant": [
+                  "enchant.stat_4220027924"
+                ],
+                "explicit": [
+                  "explicit.stat_4220027924"
+                ],
+                "fractured": [
+                  "fractured.stat_4220027924"
+                ],
+                "implicit": [
+                  "implicit.stat_4220027924"
+                ],
+                "rune": [
+                  "rune.stat_4220027924"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% to Cold Resistance"
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Magic",
+  "rawText": "Item Class: Rings\nRarity: Magic\nSapphire Ring\n--------\nItem Level: 54\n--------\n{ Implicit Modifier — Elemental, Cold, Resistance }\n+23(20-30)% to Cold Resistance\n--------\nUnidentified (Tier 4)\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 30,
+            "min": 20,
+            "value": 23
+          },
+          "modifier": {
+            "info": {
+              "tags": [
+                "Elemental",
+                "Cold",
+                "Resistance"
+              ],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 20,
+                  "unscalable": false,
+                  "value": 23
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_cold_damage_resistance_%",
+                  "matchers": [
+                    {
+                      "string": "#% to Cold Resistance"
+                    }
+                  ],
+                  "ref": "#% to Cold Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4220027924"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_4220027924"
+                      ],
+                      "enchant": [
+                        "enchant.stat_4220027924"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4220027924"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4220027924"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4220027924"
+                      ],
+                      "rune": [
+                        "rune.stat_4220027924"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Cold Resistance"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 30,
+              "min": 20,
+              "unscalable": false,
+              "value": 23
+            },
+            "stat": {
+              "better": 1,
+              "id": "base_cold_damage_resistance_%",
+              "matchers": [
+                {
+                  "string": "#% to Cold Resistance"
+                }
+              ],
+              "ref": "#% to Cold Resistance",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_4220027924"
+                  ],
+                  "desecrated": [
+                    "desecrated.stat_4220027924"
+                  ],
+                  "enchant": [
+                    "enchant.stat_4220027924"
+                  ],
+                  "explicit": [
+                    "explicit.stat_4220027924"
+                  ],
+                  "fractured": [
+                    "fractured.stat_4220027924"
+                  ],
+                  "implicit": [
+                    "implicit.stat_4220027924"
+                  ],
+                  "rune": [
+                    "rune.stat_4220027924"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% to Cold Resistance"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "base_cold_damage_resistance_%",
+        "matchers": [
+          {
+            "string": "#% to Cold Resistance"
+          }
+        ],
+        "ref": "#% to Cold Resistance",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_4220027924"
+            ],
+            "desecrated": [
+              "desecrated.stat_4220027924"
+            ],
+            "enchant": [
+              "enchant.stat_4220027924"
+            ],
+            "explicit": [
+              "explicit.stat_4220027924"
+            ],
+            "fractured": [
+              "fractured.stat_4220027924"
+            ],
+            "implicit": [
+              "implicit.stat_4220027924"
+            ],
+            "rune": [
+              "rune.stat_4220027924"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    }
+  ],
+  "unidentifiedTier": 4,
+  "unknownModifiers": []
+}

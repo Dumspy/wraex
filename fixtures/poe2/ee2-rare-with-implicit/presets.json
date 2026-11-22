@@ -1,0 +1,2386 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "value": false
+        },
+        "itemEditorSelection": {
+          "disabled": true,
+          "editing": false,
+          "value": "None"
+        },
+        "itemLevel": {
+          "disabled": true,
+          "value": 79
+        },
+        "rarity": {
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Prismatic Ring",
+          "baseTypeTrade": "Prismatic Ring"
+        },
+        "searchRelaxed": {
+          "category": "Ring",
+          "disabled": false
+        },
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": true,
+          "hidden": "filters.hide_total_all_res",
+          "roll": {
+            "default": {
+              "max": 9,
+              "min": 7
+            },
+            "dp": false,
+            "isNegated": false,
+            "min": 7,
+            "value": 8
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 10,
+                "min": 7,
+                "value": 8
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Elemental",
+                    "Fire",
+                    "Cold",
+                    "Lightning",
+                    "Resistance"
+                  ],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 10,
+                      "min": 7,
+                      "unscalable": false,
+                      "value": 8
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_resist_all_elements_%",
+                      "matchers": [
+                        {
+                          "string": "#% to all Elemental Resistances"
+                        }
+                      ],
+                      "ref": "#% to all Elemental Resistances",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_2901986750"
+                          ],
+                          "enchant": [
+                            "enchant.stat_2901986750"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2901986750"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2901986750"
+                          ],
+                          "implicit": [
+                            "implicit.stat_2901986750"
+                          ],
+                          "rune": [
+                            "rune.stat_2901986750"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to all Elemental Resistances"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 10,
+                  "min": 7,
+                  "unscalable": false,
+                  "value": 8
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_resist_all_elements_%",
+                  "matchers": [
+                    {
+                      "string": "#% to all Elemental Resistances"
+                    }
+                  ],
+                  "ref": "#% to all Elemental Resistances",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_2901986750"
+                      ],
+                      "enchant": [
+                        "enchant.stat_2901986750"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2901986750"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2901986750"
+                      ],
+                      "implicit": [
+                        "implicit.stat_2901986750"
+                      ],
+                      "rune": [
+                        "rune.stat_2901986750"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to all Elemental Resistances"
+                }
+              }
+            },
+            {
+              "contributes": {
+                "max": 15,
+                "min": 11,
+                "value": 15
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Penguin",
+                  "tags": [
+                    "Elemental",
+                    "Cold",
+                    "Resistance"
+                  ],
+                  "tier": 7,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 15,
+                      "min": 11,
+                      "unscalable": false,
+                      "value": 15
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_cold_damage_resistance_%",
+                      "matchers": [
+                        {
+                          "string": "#% to Cold Resistance"
+                        }
+                      ],
+                      "ref": "#% to Cold Resistance",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_4220027924"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_4220027924"
+                          ],
+                          "enchant": [
+                            "enchant.stat_4220027924"
+                          ],
+                          "explicit": [
+                            "explicit.stat_4220027924"
+                          ],
+                          "fractured": [
+                            "fractured.stat_4220027924"
+                          ],
+                          "implicit": [
+                            "implicit.stat_4220027924"
+                          ],
+                          "rune": [
+                            "rune.stat_4220027924"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Cold Resistance"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 15,
+                  "min": 11,
+                  "unscalable": false,
+                  "value": 15
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_cold_damage_resistance_%",
+                  "matchers": [
+                    {
+                      "string": "#% to Cold Resistance"
+                    }
+                  ],
+                  "ref": "#% to Cold Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4220027924"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_4220027924"
+                      ],
+                      "enchant": [
+                        "enchant.stat_4220027924"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4220027924"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4220027924"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4220027924"
+                      ],
+                      "rune": [
+                        "rune.stat_4220027924"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Cold Resistance"
+                }
+              }
+            }
+          ],
+          "statRef": "#% total to all Elemental Resistances",
+          "tag": "pseudo",
+          "text": "#% total to all Elemental Resistances ",
+          "tradeId": [
+            "pseudo.pseudo_total_all_elemental_resistances"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 43,
+              "min": 35
+            },
+            "dp": false,
+            "goodness": 0.5384615384615384,
+            "isNegated": false,
+            "min": 35,
+            "value": 39
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 30,
+                "min": 21,
+                "value": 24
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Elemental",
+                    "Fire",
+                    "Cold",
+                    "Lightning",
+                    "Resistance"
+                  ],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 10,
+                      "min": 7,
+                      "unscalable": false,
+                      "value": 8
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_resist_all_elements_%",
+                      "matchers": [
+                        {
+                          "string": "#% to all Elemental Resistances"
+                        }
+                      ],
+                      "ref": "#% to all Elemental Resistances",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_2901986750"
+                          ],
+                          "enchant": [
+                            "enchant.stat_2901986750"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2901986750"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2901986750"
+                          ],
+                          "implicit": [
+                            "implicit.stat_2901986750"
+                          ],
+                          "rune": [
+                            "rune.stat_2901986750"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to all Elemental Resistances"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 10,
+                  "min": 7,
+                  "unscalable": false,
+                  "value": 8
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_resist_all_elements_%",
+                  "matchers": [
+                    {
+                      "string": "#% to all Elemental Resistances"
+                    }
+                  ],
+                  "ref": "#% to all Elemental Resistances",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_2901986750"
+                      ],
+                      "enchant": [
+                        "enchant.stat_2901986750"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2901986750"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2901986750"
+                      ],
+                      "implicit": [
+                        "implicit.stat_2901986750"
+                      ],
+                      "rune": [
+                        "rune.stat_2901986750"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to all Elemental Resistances"
+                }
+              }
+            },
+            {
+              "contributes": {
+                "max": 15,
+                "min": 11,
+                "value": 15
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Penguin",
+                  "tags": [
+                    "Elemental",
+                    "Cold",
+                    "Resistance"
+                  ],
+                  "tier": 7,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 15,
+                      "min": 11,
+                      "unscalable": false,
+                      "value": 15
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_cold_damage_resistance_%",
+                      "matchers": [
+                        {
+                          "string": "#% to Cold Resistance"
+                        }
+                      ],
+                      "ref": "#% to Cold Resistance",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_4220027924"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_4220027924"
+                          ],
+                          "enchant": [
+                            "enchant.stat_4220027924"
+                          ],
+                          "explicit": [
+                            "explicit.stat_4220027924"
+                          ],
+                          "fractured": [
+                            "fractured.stat_4220027924"
+                          ],
+                          "implicit": [
+                            "implicit.stat_4220027924"
+                          ],
+                          "rune": [
+                            "rune.stat_4220027924"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Cold Resistance"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 15,
+                  "min": 11,
+                  "unscalable": false,
+                  "value": 15
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_cold_damage_resistance_%",
+                  "matchers": [
+                    {
+                      "string": "#% to Cold Resistance"
+                    }
+                  ],
+                  "ref": "#% to Cold Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4220027924"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_4220027924"
+                      ],
+                      "enchant": [
+                        "enchant.stat_4220027924"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4220027924"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4220027924"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4220027924"
+                      ],
+                      "rune": [
+                        "rune.stat_4220027924"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Cold Resistance"
+                }
+              }
+            }
+          ],
+          "statRef": "#% total Elemental Resistance",
+          "tag": "pseudo",
+          "text": "#% total Elemental Resistance ",
+          "tradeId": [
+            "pseudo.pseudo_total_elemental_resistance"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_ele_res",
+          "roll": {
+            "default": {
+              "max": 25,
+              "min": 20
+            },
+            "dp": false,
+            "goodness": 0.7142857142857143,
+            "isNegated": false,
+            "min": 20,
+            "value": 23
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 10,
+                "min": 7,
+                "value": 8
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Elemental",
+                    "Fire",
+                    "Cold",
+                    "Lightning",
+                    "Resistance"
+                  ],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 10,
+                      "min": 7,
+                      "unscalable": false,
+                      "value": 8
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_resist_all_elements_%",
+                      "matchers": [
+                        {
+                          "string": "#% to all Elemental Resistances"
+                        }
+                      ],
+                      "ref": "#% to all Elemental Resistances",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_2901986750"
+                          ],
+                          "enchant": [
+                            "enchant.stat_2901986750"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2901986750"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2901986750"
+                          ],
+                          "implicit": [
+                            "implicit.stat_2901986750"
+                          ],
+                          "rune": [
+                            "rune.stat_2901986750"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to all Elemental Resistances"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 10,
+                  "min": 7,
+                  "unscalable": false,
+                  "value": 8
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_resist_all_elements_%",
+                  "matchers": [
+                    {
+                      "string": "#% to all Elemental Resistances"
+                    }
+                  ],
+                  "ref": "#% to all Elemental Resistances",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_2901986750"
+                      ],
+                      "enchant": [
+                        "enchant.stat_2901986750"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2901986750"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2901986750"
+                      ],
+                      "implicit": [
+                        "implicit.stat_2901986750"
+                      ],
+                      "rune": [
+                        "rune.stat_2901986750"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to all Elemental Resistances"
+                }
+              }
+            },
+            {
+              "contributes": {
+                "max": 15,
+                "min": 11,
+                "value": 15
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Penguin",
+                  "tags": [
+                    "Elemental",
+                    "Cold",
+                    "Resistance"
+                  ],
+                  "tier": 7,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 15,
+                      "min": 11,
+                      "unscalable": false,
+                      "value": 15
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_cold_damage_resistance_%",
+                      "matchers": [
+                        {
+                          "string": "#% to Cold Resistance"
+                        }
+                      ],
+                      "ref": "#% to Cold Resistance",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_4220027924"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_4220027924"
+                          ],
+                          "enchant": [
+                            "enchant.stat_4220027924"
+                          ],
+                          "explicit": [
+                            "explicit.stat_4220027924"
+                          ],
+                          "fractured": [
+                            "fractured.stat_4220027924"
+                          ],
+                          "implicit": [
+                            "implicit.stat_4220027924"
+                          ],
+                          "rune": [
+                            "rune.stat_4220027924"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Cold Resistance"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 15,
+                  "min": 11,
+                  "unscalable": false,
+                  "value": 15
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_cold_damage_resistance_%",
+                  "matchers": [
+                    {
+                      "string": "#% to Cold Resistance"
+                    }
+                  ],
+                  "ref": "#% to Cold Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4220027924"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_4220027924"
+                      ],
+                      "enchant": [
+                        "enchant.stat_4220027924"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4220027924"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4220027924"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4220027924"
+                      ],
+                      "rune": [
+                        "rune.stat_4220027924"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Cold Resistance"
+                }
+              }
+            }
+          ],
+          "statRef": "#% total to Cold Resistance",
+          "tag": "pseudo",
+          "text": "#% total to Cold Resistance ",
+          "tradeId": [
+            "pseudo.pseudo_total_cold_resistance"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 12,
+              "min": 10
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 10,
+            "value": 12
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 12,
+                "min": 9,
+                "value": 12
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Wrestler",
+                  "tags": [
+                    "Attribute"
+                  ],
+                  "tier": 7,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 12,
+                      "min": 9,
+                      "unscalable": false,
+                      "value": 12
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "additional_strength",
+                      "matchers": [
+                        {
+                          "string": "# to Strength"
+                        }
+                      ],
+                      "ref": "# to Strength",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_4080418644"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_4080418644"
+                          ],
+                          "enchant": [
+                            "enchant.stat_4080418644"
+                          ],
+                          "explicit": [
+                            "explicit.stat_4080418644"
+                          ],
+                          "fractured": [
+                            "fractured.stat_4080418644"
+                          ],
+                          "implicit": [
+                            "implicit.stat_4080418644"
+                          ],
+                          "rune": [
+                            "rune.stat_4080418644"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to Strength"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 12,
+                  "min": 9,
+                  "unscalable": false,
+                  "value": 12
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "additional_strength",
+                  "matchers": [
+                    {
+                      "string": "# to Strength"
+                    }
+                  ],
+                  "ref": "# to Strength",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4080418644"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_4080418644"
+                      ],
+                      "enchant": [
+                        "enchant.stat_4080418644"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4080418644"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4080418644"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4080418644"
+                      ],
+                      "rune": [
+                        "rune.stat_4080418644"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Strength"
+                }
+              }
+            }
+          ],
+          "statRef": "+# total to Strength",
+          "tag": "pseudo",
+          "text": "+# total to Strength ",
+          "tradeId": [
+            "pseudo.pseudo_total_strength"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 151,
+              "min": 128
+            },
+            "dp": false,
+            "goodness": 0.7037037037037037,
+            "isNegated": false,
+            "min": 128,
+            "value": 143
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 151,
+                "min": 124,
+                "value": 143
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Vaporous",
+                  "tags": [
+                    "Defences"
+                  ],
+                  "tier": 3,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 151,
+                      "min": 124,
+                      "unscalable": false,
+                      "value": 143
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "local_base_evasion_rating",
+                      "matchers": [
+                        {
+                          "string": "# to Evasion Rating"
+                        }
+                      ],
+                      "ref": "# to Evasion Rating",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_2144192055",
+                            "desecrated.stat_53045048"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2144192055",
+                            "explicit.stat_53045048"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2144192055",
+                            "fractured.stat_53045048"
+                          ],
+                          "rune": [
+                            "rune.stat_53045048"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to Evasion Rating"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 151,
+                  "min": 124,
+                  "unscalable": false,
+                  "value": 143
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_base_evasion_rating",
+                  "matchers": [
+                    {
+                      "string": "# to Evasion Rating"
+                    }
+                  ],
+                  "ref": "# to Evasion Rating",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_2144192055",
+                        "desecrated.stat_53045048"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2144192055",
+                        "explicit.stat_53045048"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2144192055",
+                        "fractured.stat_53045048"
+                      ],
+                      "rune": [
+                        "rune.stat_53045048"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Evasion Rating"
+                }
+              }
+            }
+          ],
+          "statRef": "# to Evasion Rating",
+          "tag": "explicit",
+          "text": "# to Evasion Rating",
+          "tradeId": [
+            "explicit.stat_2144192055",
+            "explicit.stat_53045048"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 9,
+              "min": 8
+            },
+            "dp": false,
+            "goodness": 0,
+            "isNegated": false,
+            "min": 8,
+            "value": 8
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 12,
+                "min": 8,
+                "value": 8
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Warmth",
+                  "tags": [
+                    "Mana"
+                  ],
+                  "tier": 3,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 12,
+                      "min": 8,
+                      "unscalable": false,
+                      "value": 8
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "mana_regeneration_rate_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Mana Regeneration Rate"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Mana Regeneration Rate"
+                        }
+                      ],
+                      "ref": "#% increased Mana Regeneration Rate",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_789117908"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_789117908"
+                          ],
+                          "enchant": [
+                            "enchant.stat_789117908"
+                          ],
+                          "explicit": [
+                            "explicit.stat_789117908"
+                          ],
+                          "fractured": [
+                            "fractured.stat_789117908"
+                          ],
+                          "implicit": [
+                            "implicit.stat_789117908"
+                          ],
+                          "rune": [
+                            "rune.stat_789117908"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Mana Regeneration Rate"
+                    }
+                  },
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 5,
+                      "min": 5,
+                      "unscalable": false,
+                      "value": 5
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "light_radius_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Light Radius"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Light Radius"
+                        }
+                      ],
+                      "ref": "#% increased Light Radius",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1263695895"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1263695895"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1263695895"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Light Radius"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 12,
+                  "min": 8,
+                  "unscalable": false,
+                  "value": 8
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "mana_regeneration_rate_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Mana Regeneration Rate"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Mana Regeneration Rate"
+                    }
+                  ],
+                  "ref": "#% increased Mana Regeneration Rate",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_789117908"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_789117908"
+                      ],
+                      "enchant": [
+                        "enchant.stat_789117908"
+                      ],
+                      "explicit": [
+                        "explicit.stat_789117908"
+                      ],
+                      "fractured": [
+                        "fractured.stat_789117908"
+                      ],
+                      "implicit": [
+                        "implicit.stat_789117908"
+                      ],
+                      "rune": [
+                        "rune.stat_789117908"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Mana Regeneration Rate"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Mana Regeneration Rate",
+          "tag": "explicit",
+          "text": "#% increased Mana Regeneration Rate",
+          "tradeId": [
+            "explicit.stat_789117908"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 5,
+              "min": 5
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 5,
+            "value": 5
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 5,
+                "min": 5,
+                "value": 5
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Warmth",
+                  "tags": [
+                    "Mana"
+                  ],
+                  "tier": 3,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 12,
+                      "min": 8,
+                      "unscalable": false,
+                      "value": 8
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "mana_regeneration_rate_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Mana Regeneration Rate"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Mana Regeneration Rate"
+                        }
+                      ],
+                      "ref": "#% increased Mana Regeneration Rate",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_789117908"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_789117908"
+                          ],
+                          "enchant": [
+                            "enchant.stat_789117908"
+                          ],
+                          "explicit": [
+                            "explicit.stat_789117908"
+                          ],
+                          "fractured": [
+                            "fractured.stat_789117908"
+                          ],
+                          "implicit": [
+                            "implicit.stat_789117908"
+                          ],
+                          "rune": [
+                            "rune.stat_789117908"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Mana Regeneration Rate"
+                    }
+                  },
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 5,
+                      "min": 5,
+                      "unscalable": false,
+                      "value": 5
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "light_radius_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Light Radius"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Light Radius"
+                        }
+                      ],
+                      "ref": "#% increased Light Radius",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1263695895"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1263695895"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1263695895"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Light Radius"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 5,
+                  "min": 5,
+                  "unscalable": false,
+                  "value": 5
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "light_radius_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Light Radius"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Light Radius"
+                    }
+                  ],
+                  "ref": "#% increased Light Radius",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1263695895"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1263695895"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1263695895"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Light Radius"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Light Radius",
+          "tag": "explicit",
+          "text": "#% increased Light Radius",
+          "tradeId": [
+            "explicit.stat_1263695895"
+          ]
+        },
+        {
+          "additionalInfo": {
+            "emptyModifierInfo": {
+              "0": 2,
+              "1": 2,
+              "2": 0
+            }
+          },
+          "disabled": true,
+          "hidden": "filters.hide_empty_mod",
+          "option": {
+            "value": 1
+          },
+          "roll": {
+            "default": {
+              "max": 2,
+              "min": 2
+            },
+            "dp": false,
+            "isNegated": false,
+            "min": 2,
+            "value": 2
+          },
+          "sources": [],
+          "statRef": "# Empty Modifier",
+          "tag": "pseudo",
+          "text": "# Empty Modifier",
+          "tradeId": [
+            "item.has_empty_modifier"
+          ]
+        }
+      ]
+    },
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "itemEditorSelection": {
+          "disabled": true,
+          "editing": false,
+          "value": "None"
+        },
+        "itemLevel": {
+          "disabled": false,
+          "value": 79
+        },
+        "rarity": {
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Prismatic Ring",
+          "baseTypeTrade": "Prismatic Ring"
+        },
+        "searchRelaxed": {
+          "category": "Ring",
+          "disabled": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_base_item",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 9,
+              "min": 7
+            },
+            "dp": false,
+            "goodness": 0.3333333333333333,
+            "isNegated": false,
+            "min": 7,
+            "value": 8
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 10,
+                "min": 7,
+                "value": 8
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Elemental",
+                    "Fire",
+                    "Cold",
+                    "Lightning",
+                    "Resistance"
+                  ],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 10,
+                      "min": 7,
+                      "unscalable": false,
+                      "value": 8
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_resist_all_elements_%",
+                      "matchers": [
+                        {
+                          "string": "#% to all Elemental Resistances"
+                        }
+                      ],
+                      "ref": "#% to all Elemental Resistances",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_2901986750"
+                          ],
+                          "enchant": [
+                            "enchant.stat_2901986750"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2901986750"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2901986750"
+                          ],
+                          "implicit": [
+                            "implicit.stat_2901986750"
+                          ],
+                          "rune": [
+                            "rune.stat_2901986750"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to all Elemental Resistances"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 10,
+                  "min": 7,
+                  "unscalable": false,
+                  "value": 8
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_resist_all_elements_%",
+                  "matchers": [
+                    {
+                      "string": "#% to all Elemental Resistances"
+                    }
+                  ],
+                  "ref": "#% to all Elemental Resistances",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_2901986750"
+                      ],
+                      "enchant": [
+                        "enchant.stat_2901986750"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2901986750"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2901986750"
+                      ],
+                      "implicit": [
+                        "implicit.stat_2901986750"
+                      ],
+                      "rune": [
+                        "rune.stat_2901986750"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to all Elemental Resistances"
+                }
+              }
+            }
+          ],
+          "statRef": "#% to all Elemental Resistances",
+          "tag": "implicit",
+          "text": "#% to all Elemental Resistances",
+          "tradeId": [
+            "implicit.stat_2901986750"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 146,
+              "min": 140
+            },
+            "dp": false,
+            "goodness": 0.7037037037037037,
+            "isNegated": false,
+            "min": 140,
+            "value": 143
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 151,
+                "min": 124,
+                "value": 143
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Vaporous",
+                  "tags": [
+                    "Defences"
+                  ],
+                  "tier": 3,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 151,
+                      "min": 124,
+                      "unscalable": false,
+                      "value": 143
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "local_base_evasion_rating",
+                      "matchers": [
+                        {
+                          "string": "# to Evasion Rating"
+                        }
+                      ],
+                      "ref": "# to Evasion Rating",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_2144192055",
+                            "desecrated.stat_53045048"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2144192055",
+                            "explicit.stat_53045048"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2144192055",
+                            "fractured.stat_53045048"
+                          ],
+                          "rune": [
+                            "rune.stat_53045048"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to Evasion Rating"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 151,
+                  "min": 124,
+                  "unscalable": false,
+                  "value": 143
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_base_evasion_rating",
+                  "matchers": [
+                    {
+                      "string": "# to Evasion Rating"
+                    }
+                  ],
+                  "ref": "# to Evasion Rating",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_2144192055",
+                        "desecrated.stat_53045048"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2144192055",
+                        "explicit.stat_53045048"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2144192055",
+                        "fractured.stat_53045048"
+                      ],
+                      "rune": [
+                        "rune.stat_53045048"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Evasion Rating"
+                }
+              }
+            }
+          ],
+          "statRef": "# to Evasion Rating",
+          "tag": "explicit",
+          "text": "# to Evasion Rating",
+          "tradeId": [
+            "explicit.stat_2144192055",
+            "explicit.stat_53045048"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 12,
+              "min": 11
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 11,
+            "value": 12
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 12,
+                "min": 9,
+                "value": 12
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Wrestler",
+                  "tags": [
+                    "Attribute"
+                  ],
+                  "tier": 7,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 12,
+                      "min": 9,
+                      "unscalable": false,
+                      "value": 12
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "additional_strength",
+                      "matchers": [
+                        {
+                          "string": "# to Strength"
+                        }
+                      ],
+                      "ref": "# to Strength",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_4080418644"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_4080418644"
+                          ],
+                          "enchant": [
+                            "enchant.stat_4080418644"
+                          ],
+                          "explicit": [
+                            "explicit.stat_4080418644"
+                          ],
+                          "fractured": [
+                            "fractured.stat_4080418644"
+                          ],
+                          "implicit": [
+                            "implicit.stat_4080418644"
+                          ],
+                          "rune": [
+                            "rune.stat_4080418644"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to Strength"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 12,
+                  "min": 9,
+                  "unscalable": false,
+                  "value": 12
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "additional_strength",
+                  "matchers": [
+                    {
+                      "string": "# to Strength"
+                    }
+                  ],
+                  "ref": "# to Strength",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4080418644"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_4080418644"
+                      ],
+                      "enchant": [
+                        "enchant.stat_4080418644"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4080418644"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4080418644"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4080418644"
+                      ],
+                      "rune": [
+                        "rune.stat_4080418644"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Strength"
+                }
+              }
+            }
+          ],
+          "statRef": "# to Strength",
+          "tag": "explicit",
+          "text": "# to Strength",
+          "tradeId": [
+            "explicit.stat_4080418644"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 9,
+              "min": 8
+            },
+            "dp": false,
+            "goodness": 0,
+            "isNegated": false,
+            "min": 8,
+            "value": 8
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 12,
+                "min": 8,
+                "value": 8
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Warmth",
+                  "tags": [
+                    "Mana"
+                  ],
+                  "tier": 3,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 12,
+                      "min": 8,
+                      "unscalable": false,
+                      "value": 8
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "mana_regeneration_rate_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Mana Regeneration Rate"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Mana Regeneration Rate"
+                        }
+                      ],
+                      "ref": "#% increased Mana Regeneration Rate",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_789117908"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_789117908"
+                          ],
+                          "enchant": [
+                            "enchant.stat_789117908"
+                          ],
+                          "explicit": [
+                            "explicit.stat_789117908"
+                          ],
+                          "fractured": [
+                            "fractured.stat_789117908"
+                          ],
+                          "implicit": [
+                            "implicit.stat_789117908"
+                          ],
+                          "rune": [
+                            "rune.stat_789117908"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Mana Regeneration Rate"
+                    }
+                  },
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 5,
+                      "min": 5,
+                      "unscalable": false,
+                      "value": 5
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "light_radius_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Light Radius"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Light Radius"
+                        }
+                      ],
+                      "ref": "#% increased Light Radius",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1263695895"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1263695895"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1263695895"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Light Radius"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 12,
+                  "min": 8,
+                  "unscalable": false,
+                  "value": 8
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "mana_regeneration_rate_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Mana Regeneration Rate"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Mana Regeneration Rate"
+                    }
+                  ],
+                  "ref": "#% increased Mana Regeneration Rate",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_789117908"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_789117908"
+                      ],
+                      "enchant": [
+                        "enchant.stat_789117908"
+                      ],
+                      "explicit": [
+                        "explicit.stat_789117908"
+                      ],
+                      "fractured": [
+                        "fractured.stat_789117908"
+                      ],
+                      "implicit": [
+                        "implicit.stat_789117908"
+                      ],
+                      "rune": [
+                        "rune.stat_789117908"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Mana Regeneration Rate"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Mana Regeneration Rate",
+          "tag": "explicit",
+          "text": "#% increased Mana Regeneration Rate",
+          "tradeId": [
+            "explicit.stat_789117908"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 5,
+              "min": 5
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 5,
+            "value": 5
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 5,
+                "min": 5,
+                "value": 5
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Warmth",
+                  "tags": [
+                    "Mana"
+                  ],
+                  "tier": 3,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 12,
+                      "min": 8,
+                      "unscalable": false,
+                      "value": 8
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "mana_regeneration_rate_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Mana Regeneration Rate"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Mana Regeneration Rate"
+                        }
+                      ],
+                      "ref": "#% increased Mana Regeneration Rate",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_789117908"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_789117908"
+                          ],
+                          "enchant": [
+                            "enchant.stat_789117908"
+                          ],
+                          "explicit": [
+                            "explicit.stat_789117908"
+                          ],
+                          "fractured": [
+                            "fractured.stat_789117908"
+                          ],
+                          "implicit": [
+                            "implicit.stat_789117908"
+                          ],
+                          "rune": [
+                            "rune.stat_789117908"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Mana Regeneration Rate"
+                    }
+                  },
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 5,
+                      "min": 5,
+                      "unscalable": false,
+                      "value": 5
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "light_radius_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Light Radius"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Light Radius"
+                        }
+                      ],
+                      "ref": "#% increased Light Radius",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1263695895"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1263695895"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1263695895"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Light Radius"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 5,
+                  "min": 5,
+                  "unscalable": false,
+                  "value": 5
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "light_radius_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Light Radius"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Light Radius"
+                    }
+                  ],
+                  "ref": "#% increased Light Radius",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1263695895"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1263695895"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1263695895"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Light Radius"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Light Radius",
+          "tag": "explicit",
+          "text": "#% increased Light Radius",
+          "tradeId": [
+            "explicit.stat_1263695895"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 15,
+              "min": 14
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 14,
+            "value": 15
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 15,
+                "min": 11,
+                "value": 15
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Penguin",
+                  "tags": [
+                    "Elemental",
+                    "Cold",
+                    "Resistance"
+                  ],
+                  "tier": 7,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 15,
+                      "min": 11,
+                      "unscalable": false,
+                      "value": 15
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_cold_damage_resistance_%",
+                      "matchers": [
+                        {
+                          "string": "#% to Cold Resistance"
+                        }
+                      ],
+                      "ref": "#% to Cold Resistance",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_4220027924"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_4220027924"
+                          ],
+                          "enchant": [
+                            "enchant.stat_4220027924"
+                          ],
+                          "explicit": [
+                            "explicit.stat_4220027924"
+                          ],
+                          "fractured": [
+                            "fractured.stat_4220027924"
+                          ],
+                          "implicit": [
+                            "implicit.stat_4220027924"
+                          ],
+                          "rune": [
+                            "rune.stat_4220027924"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Cold Resistance"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 15,
+                  "min": 11,
+                  "unscalable": false,
+                  "value": 15
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_cold_damage_resistance_%",
+                  "matchers": [
+                    {
+                      "string": "#% to Cold Resistance"
+                    }
+                  ],
+                  "ref": "#% to Cold Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4220027924"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_4220027924"
+                      ],
+                      "enchant": [
+                        "enchant.stat_4220027924"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4220027924"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4220027924"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4220027924"
+                      ],
+                      "rune": [
+                        "rune.stat_4220027924"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Cold Resistance"
+                }
+              }
+            }
+          ],
+          "statRef": "#% to Cold Resistance",
+          "tag": "explicit",
+          "text": "#% to Cold Resistance",
+          "tradeId": [
+            "explicit.stat_4220027924"
+          ]
+        },
+        {
+          "additionalInfo": {
+            "emptyModifierInfo": {
+              "0": 2,
+              "1": 2,
+              "2": 0
+            }
+          },
+          "disabled": false,
+          "option": {
+            "value": 1
+          },
+          "roll": {
+            "default": {
+              "max": 2,
+              "min": 2
+            },
+            "dp": false,
+            "isNegated": false,
+            "min": 2,
+            "value": 2
+          },
+          "sources": [],
+          "statRef": "# Empty Modifier",
+          "tag": "pseudo",
+          "text": "# Empty Modifier",
+          "tradeId": [
+            "item.has_empty_modifier"
+          ]
+        }
+      ]
+    }
+  ]
+}

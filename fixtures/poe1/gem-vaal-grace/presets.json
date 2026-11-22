@@ -1,0 +1,40 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "twice": false,
+          "value": true
+        },
+        "gemLevel": {
+          "disabled": false,
+          "value": 20
+        },
+        "imbuedGem": {
+          "disabled": true
+        },
+        "quality": {
+          "disabled": false,
+          "value": 20
+        },
+        "searchExact": {
+          "baseType": "Vaal Grace",
+          "baseTypeTrade": "Vaal Grace"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": []
+    }
+  ]
+}

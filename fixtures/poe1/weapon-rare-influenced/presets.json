@@ -1,0 +1,120 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "influences": [
+          {
+            "disabled": true,
+            "value": "Shaper"
+          }
+        ],
+        "itemLevel": {
+          "disabled": true,
+          "value": 85
+        },
+        "linkedSockets": {
+          "disabled": false,
+          "value": 6
+        },
+        "mirrored": {
+          "disabled": false,
+          "hidden": false
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Reaver Sword",
+          "baseTypeTrade": "Reaver Sword"
+        },
+        "searchRelaxed": {
+          "category": "Two-Handed Sword",
+          "disabled": false
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 389,
+              "min": 388
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 388,
+            "value": 388
+          },
+          "sources": [],
+          "statRef": "Physical DPS: #",
+          "tag": "property",
+          "text": "Physical DPS: #",
+          "tradeId": [
+            "item.physical_dps"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 1.38,
+              "min": 1.38
+            },
+            "dp": true,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 1.38,
+            "value": 1.38
+          },
+          "sources": [],
+          "statRef": "Attacks per Second: #",
+          "tag": "property",
+          "text": "Attacks per Second: #",
+          "tradeId": [
+            "item.aps"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 5,
+              "min": 5
+            },
+            "dp": true,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 5,
+            "value": 5
+          },
+          "sources": [],
+          "statRef": "Critical Strike Chance: #%",
+          "tag": "property",
+          "text": "Critical Strike Chance: #%",
+          "tradeId": [
+            "item.crit"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "category": "Currency",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "UncutSkillGem"
+    },
+    "h": 1,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9VbmN1dFNraWxsR2VtIiwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/97f0ceba15/UncutSkillGem.png",
+    "name": "Uncut Skill Gem (Level 19)",
+    "namespace": "ITEM",
+    "refName": "Uncut Skill Gem (Level 19)",
+    "tags": [],
+    "tradeTag": "uncut-skill-gem-19",
+    "w": 1
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "UncutSkillGem"
+      },
+      "h": 1,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9VbmN1dFNraWxsR2VtIiwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/97f0ceba15/UncutSkillGem.png",
+      "name": "Uncut Skill Gem (Level 19)",
+      "namespace": "ITEM",
+      "refName": "Uncut Skill Gem (Level 19)",
+      "tags": [],
+      "tradeTag": "uncut-skill-gem-19",
+      "w": 1
+    }
+  ],
+  "isCorrupted": false,
+  "isUnidentified": false,
+  "name": "Uncut Skill Gem (Level 19)",
+  "newMods": [],
+  "rawText": "Item Class: Uncut Skill Gems\nRarity: Currency\nUncut Skill Gem (Level 19)\n--------\nCreates a Skill Gem or Level an existing gem to level 19\n--------\nRight Click to engrave a Skill Gem.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

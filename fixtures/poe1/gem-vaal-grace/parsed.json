@@ -1,0 +1,35 @@
+{
+  "category": "Gem",
+  "gemLevel": 20,
+  "influences": [],
+  "info": {
+    "gem": {
+      "maxLevel": 20,
+      "vaal": true
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9HcmFjZSIsInciOjEsImgiOjEsInNjYWxlIjoxfV0/e98082048a/Grace.png",
+    "name": "Vaal Grace",
+    "namespace": "GEM",
+    "refName": "Vaal Grace"
+  },
+  "infoVariants": [
+    {
+      "gem": {
+        "maxLevel": 20,
+        "vaal": true
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9HcmFjZSIsInciOjEsImgiOjEsInNjYWxlIjoxfV0/e98082048a/Grace.png",
+      "name": "Vaal Grace",
+      "namespace": "GEM",
+      "refName": "Vaal Grace"
+    }
+  ],
+  "isCorrupted": {},
+  "isUnidentified": false,
+  "name": "Vaal Grace",
+  "newMods": [],
+  "quality": 20,
+  "rawText": "Item Class: Skill Gems\nRarity: Gem\nVaal Grace\n--------\nAura, Vaal, Spell, AoE, Duration\nLevel: 20 (Max)\nQuality: +20% (augmented)\n--------\nRequirements:\nLevel: 70\nDex: 155\n--------\nCasts an aura that grants evasion to you and your allies.\n--------\nExperience: 9569465/9569465\n--------\nPlace into an item socket of the right colour to gain this skill. Right click to remove from a socket.\n--------\nCorrupted\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

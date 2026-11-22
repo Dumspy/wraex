@@ -1,0 +1,12 @@
+Item Class: Contracts
+Rarity: Normal
+Contract: Bunker
+--------
+Client: Hjalmar the Seeker
+Heist Target: Bloodbound Assegai (Moderate Value)
+Area Level: 83
+Requires Brute Force (Level 3)
+--------
+Item Level: 83
+--------
+Give this item to Faustus, the Fixer at the Heist Hideout to begin a Heist.

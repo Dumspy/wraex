@@ -1,0 +1,40 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": true
+        },
+        "foulborn": {
+          "value": false
+        },
+        "notCatalysed": {
+          "disabled": false
+        },
+        "searchExact": {
+          "baseTypeTrade": "Leather Belt",
+          "name": "Headhunter",
+          "nameTrade": "Headhunter"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        },
+        "vestigial": {
+          "value": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": []
+    }
+  ]
+}

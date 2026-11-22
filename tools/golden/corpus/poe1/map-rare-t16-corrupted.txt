@@ -1,0 +1,23 @@
+Item Class: Maps
+Rarity: Rare
+Grim Haven
+Map (Tier 16)
+--------
+Map Tier: 16
+Item Quantity: +77% (augmented)
+Item Rarity: +41% (augmented)
+Monster Pack Size: +27% (augmented)
+--------
+Item Level: 83
+--------
+Monster Level: 83
+--------
+Monsters have 70% increased Area of Effect
+Players are Cursed with Elemental Weakness
+Monsters reflect 18% of Elemental Damage
+Monsters gain 40% of Maximum Life as Extra Maximum Energy Shield
+Area has patches of Burning Ground
+--------
+Travel to this Map by using it in a personal Map Device. Maps can only be used once.
+--------
+Corrupted

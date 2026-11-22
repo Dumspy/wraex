@@ -1,0 +1,20 @@
+{
+  "api": "bulk",
+  "request": {
+    "engine": "new",
+    "query": {
+      "have": [
+        "divine"
+      ],
+      "status": {
+        "option": "online"
+      },
+      "want": [
+        "chaos"
+      ]
+    },
+    "sort": {
+      "have": "asc"
+    }
+  }
+}

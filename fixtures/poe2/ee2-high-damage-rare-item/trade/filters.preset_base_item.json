@@ -1,0 +1,83 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            },
+            "sanctified": {
+              "option": "false"
+            }
+          }
+        },
+        "trade_filters": {
+          "filters": {
+            "collapse": {
+              "option": "true"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "ilvl": {
+              "min": 82
+            },
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "desecrated.stat_1940865751",
+              "value": {
+                "min": 72
+              }
+            }
+          ],
+          "type": "and"
+        },
+        {
+          "disabled": false,
+          "filters": [
+            {
+              "disabled": false,
+              "id": "fractured.stat_210067635",
+              "value": {
+                "min": 24
+              }
+            },
+            {
+              "disabled": false,
+              "id": "fractured.stat_681332047",
+              "value": {
+                "min": 24
+              }
+            }
+          ],
+          "type": "count",
+          "value": {
+            "min": 1
+          }
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Siege Crossbow"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

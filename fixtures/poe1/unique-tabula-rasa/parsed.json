@@ -1,0 +1,57 @@
+{
+  "baseType": "Simple Robe",
+  "category": "Body Armour",
+  "dustEquivalent": 1060,
+  "influences": [],
+  "info": {
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb2R5QXJtb3Vycy9UYWJ1bGFSYXNhIiwidyI6MiwiaCI6Mywic2NhbGUiOjF9XQ/3bdbff0756/TabulaRasa.png",
+    "name": "Tabula Rasa",
+    "namespace": "UNIQUE",
+    "refName": "Tabula Rasa",
+    "unique": {
+      "base": "Simple Robe",
+      "disenchantValue": 2.12
+    }
+  },
+  "infoVariants": [
+    {
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb2R5QXJtb3Vycy9UYWJ1bGFSYXNhIiwidyI6MiwiaCI6Mywic2NhbGUiOjF9XQ/3bdbff0756/TabulaRasa.png",
+      "name": "Tabula Rasa",
+      "namespace": "UNIQUE",
+      "refName": "Tabula Rasa",
+      "unique": {
+        "base": "Simple Robe",
+        "disenchantValue": 2.12
+      }
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 68,
+  "name": "Tabula Rasa",
+  "newMods": [],
+  "rarity": "Unique",
+  "rawText": "Item Class: Body Armours\nRarity: Unique\nTabula Rasa\nSimple Robe\n--------\nSockets: W-W-W-W-W-W \n--------\nItem Level: 68\n--------\nItem has no Level requirement\n--------\nShaper Items and Elder Items cannot be modified\n",
+  "sockets": {
+    "linked": 6,
+    "white": 6
+  },
+  "statsByType": [],
+  "uniqueBase": {
+    "armour": {
+      "es": [
+        14,
+        20
+      ]
+    },
+    "craftable": {
+      "category": "Body Armour"
+    },
+    "h": 3,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb2R5QXJtb3Vycy9Cb2R5SW50MUEiLCJ3IjoyLCJoIjozLCJzY2FsZSI6MX1d/7c925b445f/BodyInt1A.png",
+    "name": "Simple Robe",
+    "namespace": "ITEM",
+    "refName": "Simple Robe",
+    "w": 2
+  },
+  "unknownModifiers": []
+}

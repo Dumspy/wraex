@@ -1,0 +1,1528 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "value": false
+        },
+        "itemEditorSelection": {
+          "disabled": true,
+          "editing": false,
+          "value": "None"
+        },
+        "itemLevel": {
+          "disabled": true,
+          "value": 80
+        },
+        "rarity": {
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Ornate Belt",
+          "baseTypeTrade": "Ornate Belt"
+        },
+        "searchRelaxed": {
+          "category": "Belt",
+          "disabled": false
+        },
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 35,
+              "min": 31
+            },
+            "dp": false,
+            "goodness": 0.25,
+            "isNegated": false,
+            "min": 31,
+            "value": 32
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 35,
+                "min": 31,
+                "value": 32
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Volcano",
+                  "tags": [
+                    "Elemental",
+                    "Fire",
+                    "Resistance"
+                  ],
+                  "tier": 3,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 35,
+                      "min": 31,
+                      "unscalable": false,
+                      "value": 32
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_fire_damage_resistance_%",
+                      "matchers": [
+                        {
+                          "string": "#% to Fire Resistance"
+                        }
+                      ],
+                      "ref": "#% to Fire Resistance",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_3372524247"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_3372524247"
+                          ],
+                          "enchant": [
+                            "enchant.stat_3372524247"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3372524247"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3372524247"
+                          ],
+                          "implicit": [
+                            "implicit.stat_3372524247"
+                          ],
+                          "rune": [
+                            "rune.stat_3372524247"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Fire Resistance"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 35,
+                  "min": 31,
+                  "unscalable": false,
+                  "value": 32
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_fire_damage_resistance_%",
+                  "matchers": [
+                    {
+                      "string": "#% to Fire Resistance"
+                    }
+                  ],
+                  "ref": "#% to Fire Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3372524247"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_3372524247"
+                      ],
+                      "enchant": [
+                        "enchant.stat_3372524247"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3372524247"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3372524247"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3372524247"
+                      ],
+                      "rune": [
+                        "rune.stat_3372524247"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Fire Resistance"
+                }
+              }
+            }
+          ],
+          "statRef": "#% total Elemental Resistance",
+          "tag": "pseudo",
+          "text": "#% total Elemental Resistance ",
+          "tradeId": [
+            "pseudo.pseudo_total_elemental_resistance"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_ele_res",
+          "roll": {
+            "default": {
+              "max": 35,
+              "min": 31
+            },
+            "dp": false,
+            "goodness": 0.25,
+            "isNegated": false,
+            "min": 31,
+            "value": 32
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 35,
+                "min": 31,
+                "value": 32
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Volcano",
+                  "tags": [
+                    "Elemental",
+                    "Fire",
+                    "Resistance"
+                  ],
+                  "tier": 3,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 35,
+                      "min": 31,
+                      "unscalable": false,
+                      "value": 32
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_fire_damage_resistance_%",
+                      "matchers": [
+                        {
+                          "string": "#% to Fire Resistance"
+                        }
+                      ],
+                      "ref": "#% to Fire Resistance",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_3372524247"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_3372524247"
+                          ],
+                          "enchant": [
+                            "enchant.stat_3372524247"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3372524247"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3372524247"
+                          ],
+                          "implicit": [
+                            "implicit.stat_3372524247"
+                          ],
+                          "rune": [
+                            "rune.stat_3372524247"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Fire Resistance"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 35,
+                  "min": 31,
+                  "unscalable": false,
+                  "value": 32
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_fire_damage_resistance_%",
+                  "matchers": [
+                    {
+                      "string": "#% to Fire Resistance"
+                    }
+                  ],
+                  "ref": "#% to Fire Resistance",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3372524247"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_3372524247"
+                      ],
+                      "enchant": [
+                        "enchant.stat_3372524247"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3372524247"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3372524247"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3372524247"
+                      ],
+                      "rune": [
+                        "rune.stat_3372524247"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Fire Resistance"
+                }
+              }
+            }
+          ],
+          "statRef": "#% total to Fire Resistance",
+          "tag": "pseudo",
+          "text": "#% total to Fire Resistance ",
+          "tradeId": [
+            "pseudo.pseudo_total_fire_resistance"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 33,
+              "min": 31
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 31,
+            "value": 33
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 33,
+                "min": 31,
+                "value": 33
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Titan",
+                  "tags": [
+                    "Attribute"
+                  ],
+                  "tier": 2,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 33,
+                      "min": 31,
+                      "unscalable": false,
+                      "value": 33
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "additional_strength",
+                      "matchers": [
+                        {
+                          "string": "# to Strength"
+                        }
+                      ],
+                      "ref": "# to Strength",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_4080418644"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_4080418644"
+                          ],
+                          "enchant": [
+                            "enchant.stat_4080418644"
+                          ],
+                          "explicit": [
+                            "explicit.stat_4080418644"
+                          ],
+                          "fractured": [
+                            "fractured.stat_4080418644"
+                          ],
+                          "implicit": [
+                            "implicit.stat_4080418644"
+                          ],
+                          "rune": [
+                            "rune.stat_4080418644"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to Strength"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 33,
+                  "min": 31,
+                  "unscalable": false,
+                  "value": 33
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "additional_strength",
+                  "matchers": [
+                    {
+                      "string": "# to Strength"
+                    }
+                  ],
+                  "ref": "# to Strength",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4080418644"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_4080418644"
+                      ],
+                      "enchant": [
+                        "enchant.stat_4080418644"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4080418644"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4080418644"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4080418644"
+                      ],
+                      "rune": [
+                        "rune.stat_4080418644"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Strength"
+                }
+              }
+            }
+          ],
+          "statRef": "+# total to Strength",
+          "tag": "pseudo",
+          "text": "+# total to Strength ",
+          "tradeId": [
+            "pseudo.pseudo_total_strength"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 240,
+              "min": 212
+            },
+            "dp": false,
+            "goodness": 0.5357142857142857,
+            "isNegated": false,
+            "min": 212,
+            "value": 227
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 174,
+                "min": 150,
+                "value": 161
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Fecund",
+                  "tags": [
+                    "Life"
+                  ],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 174,
+                      "min": 150,
+                      "unscalable": false,
+                      "value": 161
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "base_maximum_life",
+                      "matchers": [
+                        {
+                          "string": "# to maximum Life"
+                        }
+                      ],
+                      "ref": "# to maximum Life",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_3299347043"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_3299347043"
+                          ],
+                          "enchant": [
+                            "enchant.stat_3299347043"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3299347043"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3299347043"
+                          ],
+                          "implicit": [
+                            "implicit.stat_3299347043"
+                          ],
+                          "rune": [
+                            "rune.stat_3299347043"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to maximum Life"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 174,
+                  "min": 150,
+                  "unscalable": false,
+                  "value": 161
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "base_maximum_life",
+                  "matchers": [
+                    {
+                      "string": "# to maximum Life"
+                    }
+                  ],
+                  "ref": "# to maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3299347043"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_3299347043"
+                      ],
+                      "enchant": [
+                        "enchant.stat_3299347043"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3299347043"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3299347043"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3299347043"
+                      ],
+                      "rune": [
+                        "rune.stat_3299347043"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Life"
+                }
+              }
+            },
+            {
+              "contributes": {
+                "max": 66,
+                "min": 62,
+                "value": 66
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Titan",
+                  "tags": [
+                    "Attribute"
+                  ],
+                  "tier": 2,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 33,
+                      "min": 31,
+                      "unscalable": false,
+                      "value": 33
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "additional_strength",
+                      "matchers": [
+                        {
+                          "string": "# to Strength"
+                        }
+                      ],
+                      "ref": "# to Strength",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_4080418644"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_4080418644"
+                          ],
+                          "enchant": [
+                            "enchant.stat_4080418644"
+                          ],
+                          "explicit": [
+                            "explicit.stat_4080418644"
+                          ],
+                          "fractured": [
+                            "fractured.stat_4080418644"
+                          ],
+                          "implicit": [
+                            "implicit.stat_4080418644"
+                          ],
+                          "rune": [
+                            "rune.stat_4080418644"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to Strength"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 33,
+                  "min": 31,
+                  "unscalable": false,
+                  "value": 33
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "additional_strength",
+                  "matchers": [
+                    {
+                      "string": "# to Strength"
+                    }
+                  ],
+                  "ref": "# to Strength",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4080418644"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_4080418644"
+                      ],
+                      "enchant": [
+                        "enchant.stat_4080418644"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4080418644"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4080418644"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4080418644"
+                      ],
+                      "rune": [
+                        "rune.stat_4080418644"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Strength"
+                }
+              }
+            }
+          ],
+          "statRef": "+# total maximum Life",
+          "tag": "pseudo",
+          "text": "+# total maximum Life ",
+          "tradeId": [
+            "pseudo.pseudo_total_life"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 15,
+              "min": 12
+            },
+            "dp": false,
+            "goodness": 0.8,
+            "isNegated": true,
+            "min": 12,
+            "tradeInvert": false,
+            "value": 14
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": -10,
+                "min": -15,
+                "value": -14
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": -10,
+                      "min": -15,
+                      "unscalable": false,
+                      "value": -14
+                    },
+                    "stat": {
+                      "better": -1,
+                      "id": "charm_charges_used_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Charm Charges used"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Charm Charges used"
+                        }
+                      ],
+                      "ref": "#% reduced Charm Charges used",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1570770415"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1570770415"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1570770415"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1570770415"
+                          ]
+                        },
+                        "inverted": true
+                      }
+                    },
+                    "translation": {
+                      "negate": true,
+                      "string": "#% reduced Charm Charges used"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": -10,
+                  "min": -15,
+                  "unscalable": false,
+                  "value": -14
+                },
+                "stat": {
+                  "better": -1,
+                  "id": "charm_charges_used_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Charm Charges used"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Charm Charges used"
+                    }
+                  ],
+                  "ref": "#% reduced Charm Charges used",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1570770415"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1570770415"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1570770415"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1570770415"
+                      ]
+                    },
+                    "inverted": true
+                  }
+                },
+                "translation": {
+                  "negate": true,
+                  "string": "#% reduced Charm Charges used"
+                }
+              }
+            }
+          ],
+          "statRef": "#% reduced Charm Charges used",
+          "tag": "implicit",
+          "text": "#% reduced Charm Charges used",
+          "tradeId": [
+            "implicit.stat_1570770415"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 2,
+              "min": 2
+            },
+            "dp": false,
+            "goodness": 0.5,
+            "isNegated": false,
+            "min": 2,
+            "value": 2
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 3,
+                "min": 1,
+                "value": 2
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Charm"
+                  ],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 3,
+                      "min": 1,
+                      "unscalable": false,
+                      "value": 2
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "local_charm_slots",
+                      "matchers": [
+                        {
+                          "string": "Has # Charm Slots"
+                        },
+                        {
+                          "string": "Has # Charm Slot",
+                          "value": 1
+                        }
+                      ],
+                      "ref": "Has # Charm Slot",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_1416292992"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1416292992"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Has # Charm Slots"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 3,
+                  "min": 1,
+                  "unscalable": false,
+                  "value": 2
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_charm_slots",
+                  "matchers": [
+                    {
+                      "string": "Has # Charm Slots"
+                    },
+                    {
+                      "string": "Has # Charm Slot",
+                      "value": 1
+                    }
+                  ],
+                  "ref": "Has # Charm Slot",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1416292992"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1416292992"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Has # Charm Slots"
+                }
+              }
+            }
+          ],
+          "statRef": "Has # Charm Slot",
+          "tag": "implicit",
+          "text": "Has # Charm Slots",
+          "tradeId": [
+            "implicit.stat_1416292992"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 13,
+              "min": 10
+            },
+            "dp": false,
+            "goodness": 0.2,
+            "isNegated": false,
+            "min": 10,
+            "value": 11
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 15,
+                "min": 10,
+                "value": 11
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Transformative",
+                  "tags": [],
+                  "tier": 4,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 15,
+                      "min": 10,
+                      "unscalable": false,
+                      "value": 11
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "charm_duration_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Charm Effect Duration"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Charm Effect Duration"
+                        }
+                      ],
+                      "ref": "#% increased Charm Effect Duration",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1389754388"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1389754388"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1389754388"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1389754388"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Charm Effect Duration"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 15,
+                  "min": 10,
+                  "unscalable": false,
+                  "value": 11
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "charm_duration_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Charm Effect Duration"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Charm Effect Duration"
+                    }
+                  ],
+                  "ref": "#% increased Charm Effect Duration",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1389754388"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1389754388"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1389754388"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1389754388"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Charm Effect Duration"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Charm Effect Duration",
+          "tag": "explicit",
+          "text": "#% increased Charm Effect Duration",
+          "tradeId": [
+            "explicit.stat_1389754388"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 97,
+              "min": 84
+            },
+            "dp": false,
+            "goodness": 0.875,
+            "isNegated": false,
+            "min": 84,
+            "value": 94
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 97,
+                "min": 73,
+                "value": 94
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Steel Skin",
+                  "tags": [],
+                  "tier": 6,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 97,
+                      "min": 73,
+                      "unscalable": false,
+                      "value": 94
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "stun_threshold_+",
+                      "matchers": [
+                        {
+                          "string": "# to Stun Threshold"
+                        }
+                      ],
+                      "ref": "# to Stun Threshold",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_915769802"
+                          ],
+                          "desecrated": [
+                            "desecrated.stat_915769802"
+                          ],
+                          "explicit": [
+                            "explicit.stat_915769802"
+                          ],
+                          "fractured": [
+                            "fractured.stat_915769802"
+                          ],
+                          "rune": [
+                            "rune.stat_915769802"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to Stun Threshold"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 97,
+                  "min": 73,
+                  "unscalable": false,
+                  "value": 94
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "stun_threshold_+",
+                  "matchers": [
+                    {
+                      "string": "# to Stun Threshold"
+                    }
+                  ],
+                  "ref": "# to Stun Threshold",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_915769802"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_915769802"
+                      ],
+                      "explicit": [
+                        "explicit.stat_915769802"
+                      ],
+                      "fractured": [
+                        "fractured.stat_915769802"
+                      ],
+                      "rune": [
+                        "rune.stat_915769802"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Stun Threshold"
+                }
+              }
+            }
+          ],
+          "statRef": "# to Stun Threshold",
+          "tag": "explicit",
+          "text": "# to Stun Threshold",
+          "tradeId": [
+            "explicit.stat_915769802"
+          ]
+        },
+        {
+          "additionalInfo": {
+            "emptyModifierInfo": {
+              "0": 1,
+              "1": 1,
+              "2": 0
+            }
+          },
+          "disabled": true,
+          "hidden": "filters.hide_empty_mod",
+          "option": {
+            "value": 1
+          },
+          "roll": {
+            "default": {
+              "max": 1,
+              "min": 1
+            },
+            "dp": false,
+            "isNegated": false,
+            "min": 1,
+            "value": 1
+          },
+          "sources": [],
+          "statRef": "# Empty Modifier",
+          "tag": "pseudo",
+          "text": "# Empty Modifier",
+          "tradeId": [
+            "item.has_empty_modifier"
+          ]
+        }
+      ]
+    },
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "itemEditorSelection": {
+          "disabled": true,
+          "editing": false,
+          "value": "None"
+        },
+        "itemLevel": {
+          "disabled": false,
+          "value": 80
+        },
+        "rarity": {
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Ornate Belt",
+          "baseTypeTrade": "Ornate Belt"
+        },
+        "searchRelaxed": {
+          "category": "Belt",
+          "disabled": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_base_item",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 15,
+              "min": 13
+            },
+            "dp": false,
+            "goodness": 0.8,
+            "isNegated": true,
+            "min": 13,
+            "tradeInvert": false,
+            "value": 14
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": -10,
+                "min": -15,
+                "value": -14
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": -10,
+                      "min": -15,
+                      "unscalable": false,
+                      "value": -14
+                    },
+                    "stat": {
+                      "better": -1,
+                      "id": "charm_charges_used_+%",
+                      "matchers": [
+                        {
+                          "string": "#% increased Charm Charges used"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Charm Charges used"
+                        }
+                      ],
+                      "ref": "#% reduced Charm Charges used",
+                      "trade": {
+                        "ids": {
+                          "desecrated": [
+                            "desecrated.stat_1570770415"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1570770415"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1570770415"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1570770415"
+                          ]
+                        },
+                        "inverted": true
+                      }
+                    },
+                    "translation": {
+                      "negate": true,
+                      "string": "#% reduced Charm Charges used"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": -10,
+                  "min": -15,
+                  "unscalable": false,
+                  "value": -14
+                },
+                "stat": {
+                  "better": -1,
+                  "id": "charm_charges_used_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Charm Charges used"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Charm Charges used"
+                    }
+                  ],
+                  "ref": "#% reduced Charm Charges used",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1570770415"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1570770415"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1570770415"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1570770415"
+                      ]
+                    },
+                    "inverted": true
+                  }
+                },
+                "translation": {
+                  "negate": true,
+                  "string": "#% reduced Charm Charges used"
+                }
+              }
+            }
+          ],
+          "statRef": "#% reduced Charm Charges used",
+          "tag": "implicit",
+          "text": "#% reduced Charm Charges used",
+          "tradeId": [
+            "implicit.stat_1570770415"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 2,
+              "min": 2
+            },
+            "dp": false,
+            "goodness": 0.5,
+            "isNegated": false,
+            "min": 2,
+            "value": 2
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 3,
+                "min": 1,
+                "value": 2
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Charm"
+                  ],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 3,
+                      "min": 1,
+                      "unscalable": false,
+                      "value": 2
+                    },
+                    "stat": {
+                      "better": 1,
+                      "id": "local_charm_slots",
+                      "matchers": [
+                        {
+                          "string": "Has # Charm Slots"
+                        },
+                        {
+                          "string": "Has # Charm Slot",
+                          "value": 1
+                        }
+                      ],
+                      "ref": "Has # Charm Slot",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_1416292992"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1416292992"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Has # Charm Slots"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 3,
+                  "min": 1,
+                  "unscalable": false,
+                  "value": 2
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_charm_slots",
+                  "matchers": [
+                    {
+                      "string": "Has # Charm Slots"
+                    },
+                    {
+                      "string": "Has # Charm Slot",
+                      "value": 1
+                    }
+                  ],
+                  "ref": "Has # Charm Slot",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1416292992"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1416292992"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Has # Charm Slots"
+                }
+              }
+            }
+          ],
+          "statRef": "Has # Charm Slot",
+          "tag": "implicit",
+          "text": "Has # Charm Slots",
+          "tradeId": [
+            "implicit.stat_1416292992"
+          ]
+        },
+        {
+          "additionalInfo": {
+            "emptyModifierInfo": {
+              "0": 1,
+              "1": 1,
+              "2": 0
+            }
+          },
+          "disabled": false,
+          "option": {
+            "value": 1
+          },
+          "roll": {
+            "default": {
+              "max": 1,
+              "min": 1
+            },
+            "dp": false,
+            "isNegated": false,
+            "min": 1,
+            "value": 1
+          },
+          "sources": [],
+          "statRef": "# Empty Modifier",
+          "tag": "pseudo",
+          "text": "# Empty Modifier",
+          "tradeId": [
+            "item.has_empty_modifier"
+          ]
+        }
+      ]
+    }
+  ]
+}

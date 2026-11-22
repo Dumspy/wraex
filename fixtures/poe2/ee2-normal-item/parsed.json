@@ -1,0 +1,73 @@
+{
+  "armourAR": 174,
+  "armourES": 60,
+  "basePercentile": 0,
+  "category": "Helmet",
+  "influences": [],
+  "info": {
+    "armour": {
+      "ar": [
+        197,
+        197
+      ],
+      "es": [
+        55,
+        55
+      ]
+    },
+    "craftable": {
+      "category": "Helmet"
+    },
+    "h": 2,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL0Jhc2V0eXBlcy9IZWxtZXRJbnRTdHIwNSIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/2ded003789/HelmetIntStr05.png",
+    "name": "Divine Crown",
+    "namespace": "ITEM",
+    "refName": "Divine Crown",
+    "tags": [
+      "str_int_armour"
+    ],
+    "w": 2
+  },
+  "infoVariants": [
+    {
+      "armour": {
+        "ar": [
+          197,
+          197
+        ],
+        "es": [
+          55,
+          55
+        ]
+      },
+      "craftable": {
+        "category": "Helmet"
+      },
+      "h": 2,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL0Jhc2V0eXBlcy9IZWxtZXRJbnRTdHIwNSIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/2ded003789/HelmetIntStr05.png",
+      "name": "Divine Crown",
+      "namespace": "ITEM",
+      "refName": "Divine Crown",
+      "tags": [
+        "str_int_armour"
+      ],
+      "w": 2
+    }
+  ],
+  "isCorrupted": false,
+  "isUnidentified": false,
+  "itemLevel": 81,
+  "name": "Divine Crown",
+  "newMods": [],
+  "quality": 9,
+  "rarity": "Normal",
+  "rawText": "Item Class: Helmets\nRarity: Normal\nSuperior Divine Crown\n--------\nQuality: +9% (augmented)\nArmour: 174 (augmented)\nEnergy Shield: 60 (augmented)\n--------\nRequires: Level 75, 67 (augmented) Str, 67 (augmented) Int\n--------\nItem Level: 81\n",
+  "requires": {
+    "dex": 0,
+    "int": 67,
+    "level": 75,
+    "str": 67
+  },
+  "statsByType": [],
+  "unknownModifiers": []
+}

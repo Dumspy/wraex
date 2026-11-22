@@ -23,6 +23,7 @@ rust/                    Cargo workspace (all Rust code)
   crates/poe2/           PoE2 parser and data, ported from ref/ee2
   crates/platform/       window tracking, overlay, hotkeys, clipboard, logs
   crates/app/            the Rune desktop app (binary: `wraex`)
+  crates/golden/         loads the fixtures for Rust tests
 ref/apt/                 git submodule: SnosMe/awakened-poe-trade (PoE1 reference)
 ref/ee2/                 git submodule: Kvan7/Exiled-Exchange-2 (PoE2 reference)
 tools/golden/            fixture harness that runs the TypeScript reference code

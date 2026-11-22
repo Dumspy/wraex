@@ -1,0 +1,30 @@
+{
+  "category": "Divination Card",
+  "influences": [],
+  "info": {
+    "exchangeable": true,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvRGl2aW5hdGlvbi9JbnZlbnRvcnlJY29uIiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/f34bf8cbb5/InventoryIcon.png",
+    "name": "The Doctor",
+    "namespace": "DIVINATION_CARD",
+    "refName": "The Doctor"
+  },
+  "infoVariants": [
+    {
+      "exchangeable": true,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvRGl2aW5hdGlvbi9JbnZlbnRvcnlJY29uIiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/f34bf8cbb5/InventoryIcon.png",
+      "name": "The Doctor",
+      "namespace": "DIVINATION_CARD",
+      "refName": "The Doctor"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "The Doctor",
+  "newMods": [],
+  "rawText": "Item Class: Divination Cards\nRarity: Divination Card\nThe Doctor\n--------\nStack Size: 1/8\n--------\nHeadhunter\nLeather Belt\n--------\nA doctor's skill is measured by the lives he saves; this one has no patients.\n",
+  "stackSize": {
+    "max": 8,
+    "value": 1
+  },
+  "statsByType": [],
+  "unknownModifiers": []
+}

@@ -1,0 +1,71 @@
+{
+  "baseType": "Two-Stone Ring",
+  "category": "Ring",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Ring"
+    },
+    "disc": {
+      "hasImplicit": {
+        "ref": "+#% to Fire and Lightning Resistances"
+      }
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvUmluZ3MvVG9wYXpSdWJ5IiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/8878077651/TopazRuby.png",
+    "name": "Two-Stone Ring",
+    "namespace": "ITEM",
+    "refName": "Two-Stone Ring"
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Ring"
+      },
+      "disc": {
+        "hasImplicit": {
+          "ref": "+#% to Fire and Lightning Resistances"
+        }
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvUmluZ3MvVG9wYXpSdWJ5IiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/8878077651/TopazRuby.png",
+      "name": "Two-Stone Ring",
+      "namespace": "ITEM",
+      "refName": "Two-Stone Ring"
+    },
+    {
+      "craftable": {
+        "category": "Ring"
+      },
+      "disc": {
+        "hasImplicit": {
+          "ref": "+#% to Cold and Lightning Resistances"
+        }
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvUmluZ3MvVG9wYXpTYXBwaGlyZSIsInciOjEsImgiOjEsInNjYWxlIjoxfV0/0c211c12b4/TopazSapphire.png",
+      "name": "Two-Stone Ring",
+      "namespace": "ITEM",
+      "refName": "Two-Stone Ring"
+    },
+    {
+      "craftable": {
+        "category": "Ring"
+      },
+      "disc": {
+        "hasImplicit": {
+          "ref": "+#% to Fire and Cold Resistances"
+        }
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvUmluZ3MvU2FwcGhpcmVSdWJ5IiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/7df6d65dfd/SapphireRuby.png",
+      "name": "Two-Stone Ring",
+      "namespace": "ITEM",
+      "refName": "Two-Stone Ring"
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 84,
+  "name": "Storm Loop",
+  "newMods": [],
+  "rarity": "Rare",
+  "rawText": "Item Class: Rings\nRarity: Rare\nStorm Loop\nTwo-Stone Ring\n--------\nRequirements:\nLevel: 56\n--------\nItem Level: 84\n--------\n+14% to Fire and Lightning Resistances (implicit)\n--------\n+62 to maximum Life\n+41% to Cold Resistance\n+38% to Lightning Resistance\n+18 to Dexterity\nAdds 3 to 7 Physical Damage to Attacks\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}
