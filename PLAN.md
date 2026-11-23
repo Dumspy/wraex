@@ -249,6 +249,9 @@ Agent loop per step: port module → `golden check` → fix diffs → repeat.
   forwards (Cloudflare, a logged-in POESESSID).
 - `GameConfig.ts` (reads PoE's keybinds from `production_Config.ini`),
   `GameLogWatcher.ts` (Client.txt for zone/chat events).
+  **Done** (`core::game_files`, `core::keys`): default locations per game and
+  OS, the one-readable-candidate rule, the "show advanced item descriptions"
+  hotkey from the INI, and `Client.txt` tailing (EE2's re-read included).
 - Settings storage (`ConfigStore.ts`): read upstream's config format so users
   can switch over without losing settings.
 - Tray icon, auto-updater, logging.

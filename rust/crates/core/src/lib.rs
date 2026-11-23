@@ -7,8 +7,10 @@
 
 pub mod data;
 pub mod filters;
+pub mod game_files;
 pub mod js;
 pub mod js_regex;
+pub mod keys;
 pub mod leagues;
 pub mod parse;
 pub mod rarity;
