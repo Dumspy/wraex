@@ -1,0 +1,38 @@
+{
+  "areaLevel": 83,
+  "category": "Heist Blueprint",
+  "heistBlueprint": {
+    "target": "Gems",
+    "wingsRevealed": 2,
+    "wingsTotal": 4
+  },
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Heist Blueprint"
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvSGVpc3QvQmx1ZXByaW50Tm90QXBwcm92ZWQiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MX1d/03e0a85e57/BlueprintNotApproved.png",
+    "name": "Blueprint: Bunker",
+    "namespace": "ITEM",
+    "refName": "Blueprint: Bunker"
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Heist Blueprint"
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvSGVpc3QvQmx1ZXByaW50Tm90QXBwcm92ZWQiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MX1d/03e0a85e57/BlueprintNotApproved.png",
+      "name": "Blueprint: Bunker",
+      "namespace": "ITEM",
+      "refName": "Blueprint: Bunker"
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 83,
+  "name": "Blueprint: Bunker",
+  "newMods": [],
+  "rarity": "Normal",
+  "rawText": "Item Class: Blueprints\nRarity: Normal\nBlueprint: Bunker\n--------\nHeist Target: Unusual Gems\nArea Level: 83\nWings Revealed: 2/4\nEscape Routes Revealed: 3/8\nReward Rooms Revealed: 9/26\n--------\nRequires Lockpicking (Level 5)\nRequires Agility (Level 4)\n--------\nItem Level: 83\n--------\nTake this item to the Heist Board in your Hideout to plan a Heist.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

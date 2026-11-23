@@ -1,0 +1,85 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "map_filters": {
+          "filters": {
+            "area_level": {
+              "min": 78
+            }
+          }
+        },
+        "trade_filters": {
+          "filters": {
+            "collapse": {
+              "option": "true"
+            },
+            "price": {
+              "option": "chaos_divine"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_temple_apex",
+              "value": {
+                "option": 1
+              }
+            },
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_temple_corruption_room_3",
+              "value": {
+                "option": 1
+              }
+            },
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_temple_currency_vault_3",
+              "value": {
+                "option": 1
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_temple_weapon_room_3",
+              "value": {
+                "option": 1
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_temple_breeding_room_2",
+              "value": {
+                "option": 1
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_temple_healing_room_3",
+              "value": {}
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_temple_legion_3",
+              "value": {}
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Chronicle of Atzoatl"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

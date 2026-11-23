@@ -1,0 +1,95 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            },
+            "quality": {
+              "max": 0
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "category": {
+              "option": "accessory.amulet"
+            },
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_elemental_resistance",
+              "value": {
+                "min": 72
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_fire_resistance",
+              "value": {
+                "min": 42
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_strength",
+              "value": {
+                "min": 53
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_dexterity",
+              "value": {
+                "min": 12
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_intelligence",
+              "value": {
+                "min": 12
+              }
+            },
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_life",
+              "value": {
+                "min": 96
+              }
+            },
+            {
+              "disabled": true,
+              "id": "enchant.stat_2954116742|25970",
+              "value": {}
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      }
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

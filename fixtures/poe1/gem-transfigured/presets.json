@@ -1,0 +1,38 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "twice": false,
+          "value": false
+        },
+        "gemLevel": {
+          "disabled": false,
+          "value": 20
+        },
+        "quality": {
+          "disabled": false,
+          "value": 20
+        },
+        "searchExact": {
+          "baseType": "Kinetic Blast of Clustering",
+          "baseTypeTrade": "Kinetic Blast",
+          "discriminatorTrade": "alt_x"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": []
+    }
+  ]
+}

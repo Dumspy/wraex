@@ -1,0 +1,347 @@
+{
+  "active": "I",
+  "presets": [
+    {
+      "filters": {
+        "areaLevel": {
+          "disabled": false,
+          "value": 83
+        },
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Expedition Logbook",
+          "baseTypeTrade": "Expedition Logbook"
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "I",
+      "stats": [
+        {
+          "disabled": false,
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "pseudo"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Druids of the Broken Circle"
+                        }
+                      ],
+                      "ref": "Has Logbook Faction: Druids of the Broken Circle",
+                      "trade": {
+                        "ids": {
+                          "pseudo": [
+                            "pseudo.pseudo_logbook_faction_druids"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Druids of the Broken Circle"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Druids of the Broken Circle"
+                    }
+                  ],
+                  "ref": "Has Logbook Faction: Druids of the Broken Circle",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.pseudo_logbook_faction_druids"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Druids of the Broken Circle"
+                }
+              }
+            }
+          ],
+          "statRef": "Has Logbook Faction: Druids of the Broken Circle",
+          "tag": "variant",
+          "text": "Druids of the Broken Circle",
+          "tradeId": [
+            "pseudo.pseudo_logbook_faction_druids"
+          ]
+        },
+        {
+          "disabled": false,
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Area contains Medved, Feller of Heroes"
+                        }
+                      ],
+                      "ref": "Area contains Medved, Feller of Heroes",
+                      "trade": {
+                        "ids": {
+                          "implicit": [
+                            "implicit.stat_3159649981|1"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Area contains Medved, Feller of Heroes"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Area contains Medved, Feller of Heroes"
+                    }
+                  ],
+                  "ref": "Area contains Medved, Feller of Heroes",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_3159649981|1"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Area contains Medved, Feller of Heroes"
+                }
+              }
+            }
+          ],
+          "statRef": "Area contains Medved, Feller of Heroes",
+          "tag": "variant",
+          "text": "Area contains Medved, Feller of Heroes",
+          "tradeId": [
+            "implicit.stat_3159649981|1"
+          ]
+        }
+      ]
+    },
+    {
+      "filters": {
+        "areaLevel": {
+          "disabled": false,
+          "value": 83
+        },
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Expedition Logbook",
+          "baseTypeTrade": "Expedition Logbook"
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "II",
+      "stats": [
+        {
+          "disabled": false,
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "pseudo"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Black Scythe Mercenaries"
+                        }
+                      ],
+                      "ref": "Has Logbook Faction: Black Scythe Mercenaries",
+                      "trade": {
+                        "ids": {
+                          "pseudo": [
+                            "pseudo.pseudo_logbook_faction_mercenaries"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Black Scythe Mercenaries"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Black Scythe Mercenaries"
+                    }
+                  ],
+                  "ref": "Has Logbook Faction: Black Scythe Mercenaries",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.pseudo_logbook_faction_mercenaries"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Black Scythe Mercenaries"
+                }
+              }
+            }
+          ],
+          "statRef": "Has Logbook Faction: Black Scythe Mercenaries",
+          "tag": "variant",
+          "text": "Black Scythe Mercenaries",
+          "tradeId": [
+            "pseudo.pseudo_logbook_faction_mercenaries"
+          ]
+        },
+        {
+          "disabled": false,
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Area contains Olroth, Origin of the Fall"
+                        }
+                      ],
+                      "ref": "Area contains Olroth, Origin of the Fall",
+                      "trade": {
+                        "ids": {
+                          "implicit": [
+                            "implicit.stat_3159649981|4"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Area contains Olroth, Origin of the Fall"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Area contains Olroth, Origin of the Fall"
+                    }
+                  ],
+                  "ref": "Area contains Olroth, Origin of the Fall",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_3159649981|4"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Area contains Olroth, Origin of the Fall"
+                }
+              }
+            }
+          ],
+          "statRef": "Area contains Olroth, Origin of the Fall",
+          "tag": "variant",
+          "text": "Area contains Olroth, Origin of the Fall",
+          "tradeId": [
+            "implicit.stat_3159649981|4"
+          ]
+        }
+      ]
+    }
+  ]
+}

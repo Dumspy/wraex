@@ -1,0 +1,17 @@
+Item Class: Expedition Logbooks
+Rarity: Normal
+Expedition Logbook
+--------
+Area Level: 83
+--------
+Bluffs
+Druids of the Broken Circle
+Area contains Medved, Feller of Heroes (implicit)
+--------
+Cemetery
+Black Scythe Mercenaries
+Area contains Olroth, Origin of the Fall (implicit)
+--------
+Item Level: 83
+--------
+Take this item to Dannig in your Hideout to open portals to an expedition.

@@ -1,0 +1,87 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "map_filters": {
+          "filters": {
+            "area_level": {
+              "min": 83
+            }
+          }
+        },
+        "trade_filters": {
+          "filters": {
+            "collapse": {
+              "option": "true"
+            },
+            "price": {
+              "option": "chaos_divine"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "pseudo.lake_36591",
+              "value": {
+                "min": 10
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.lake_22138",
+              "value": {}
+            },
+            {
+              "disabled": false,
+              "id": "pseudo.lake_60034",
+              "value": {
+                "min": 6
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.lake_38892",
+              "value": {
+                "min": 9
+              }
+            },
+            {
+              "disabled": false,
+              "id": "pseudo.lake_50846",
+              "value": {
+                "min": 7
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.lake_42468",
+              "value": {
+                "min": 8
+              }
+            },
+            {
+              "disabled": false,
+              "id": "pseudo.lake_40794",
+              "value": {
+                "min": 2
+              }
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Mirrored Tablet"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

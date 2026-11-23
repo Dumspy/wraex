@@ -1,0 +1,70 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            },
+            "split": {
+              "option": "false"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "explicit.stat_3196823591",
+              "value": {
+                "min": 49
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_3182498570",
+              "value": {
+                "min": 24
+              }
+            }
+          ],
+          "type": "and"
+        },
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "explicit.stat_2448920197",
+              "value": {}
+            }
+          ],
+          "type": "not"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Quicksilver Flask"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

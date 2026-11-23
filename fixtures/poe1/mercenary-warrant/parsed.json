@@ -1,0 +1,330 @@
+{
+  "influences": [],
+  "info": {
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvTWVyY2VuYXJ5V2FycmFudCIsInciOjEsImgiOjEsInNjYWxlIjoxfV0/5cf435d2d3/MercenaryWarrant.png",
+    "name": "Mercenary Warrant",
+    "namespace": "ITEM",
+    "refName": "Mercenary Warrant",
+    "tradeDisc": "mercenary_warrant"
+  },
+  "infoVariants": [
+    {
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvTWVyY2VuYXJ5V2FycmFudCIsInciOjEsImgiOjEsInNjYWxlIjoxfV0/5cf435d2d3/MercenaryWarrant.png",
+      "name": "Mercenary Warrant",
+      "namespace": "ITEM",
+      "refName": "Mercenary Warrant",
+      "tradeDisc": "mercenary_warrant"
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 80,
+  "mercenaryBuild": {
+    "icon": "",
+    "mercenaryBuild": {
+      "skills": [
+        {
+          "name": "Elemental Weakness",
+          "type": "primary"
+        },
+        {
+          "name": "Flame Wall",
+          "type": "primary"
+        },
+        {
+          "name": "Kinetic Bolt",
+          "type": "secondary"
+        },
+        {
+          "name": "Barrage",
+          "type": "secondary"
+        },
+        {
+          "name": "Greater Kinetic Blast",
+          "type": "secondary"
+        },
+        {
+          "name": "Kinetic Blast of Clustering",
+          "type": "secondary"
+        },
+        {
+          "name": "Kinetic Rain of Impact",
+          "type": "secondary"
+        },
+        {
+          "name": "Flame Dash",
+          "type": "utility"
+        },
+        {
+          "name": "Frostblink",
+          "type": "utility"
+        },
+        {
+          "name": "Haste",
+          "type": "utility"
+        },
+        {
+          "name": "Inspiring Cry",
+          "type": "utility"
+        }
+      ]
+    },
+    "name": "Kineticist",
+    "namespace": "MERCENARY_BUILD",
+    "refName": "Kineticist"
+  },
+  "mercenarySkills": [
+    [
+      {
+        "stat": {
+          "better": 0,
+          "matchers": [
+            {
+              "string": "Elemental Weakness"
+            }
+          ],
+          "mercenary": {
+            "icon": "https://web.poecdn.com/gen/image/WzIxLDE0LHsiayI6IjJEQXJ0L1NraWxsSWNvbnMvZWxlbWVudGFsd2Vha25lc3MifV0/7d769ba813/elementalweakness.png"
+          },
+          "ref": "Elemental Weakness",
+          "trade": {
+            "ids": {
+              "pseudo": [
+                "mercenary.skill_5689"
+              ]
+            }
+          }
+        },
+        "translation": {
+          "string": "Elemental Weakness"
+        }
+      }
+    ],
+    [
+      {
+        "stat": {
+          "better": 0,
+          "matchers": [
+            {
+              "string": "Barrage"
+            }
+          ],
+          "mercenary": {
+            "icon": "https://web.poecdn.com/gen/image/WzIxLDE0LHsiayI6IjJEQXJ0L1NraWxsSWNvbnMvYmFycmFnZSJ9XQ/64580ed8c5/barrage.png",
+            "supports": [
+              "Faster Attacks",
+              "Multiple Projectiles",
+              "Faster Projectiles",
+              "Elemental Damage with Attacks",
+              "Critical Chance",
+              "Critical Damage",
+              "Added Cold",
+              "Added Lightning"
+            ]
+          },
+          "ref": "Barrage",
+          "trade": {
+            "ids": {
+              "pseudo": [
+                "mercenary.skill_1356"
+              ]
+            }
+          }
+        },
+        "translation": {
+          "string": "Barrage"
+        }
+      },
+      {
+        "stat": {
+          "better": 1,
+          "matchers": [
+            {
+              "advanced": "Faster Attacks (Tier: 2)",
+              "string": "Faster Attacks"
+            }
+          ],
+          "mercenary": {
+            "canonical": "Faster Attacks",
+            "tier": 2
+          },
+          "modFamily": [
+            "Lesser Faster Attacks",
+            "Faster Attacks",
+            "Greater Faster Attacks"
+          ],
+          "ref": "Faster Attacks",
+          "trade": {
+            "ids": {
+              "pseudo": [
+                "mercenary.support_987"
+              ]
+            }
+          }
+        },
+        "translation": {
+          "advanced": "Faster Attacks (Tier: 2)",
+          "string": "Faster Attacks"
+        }
+      },
+      {
+        "stat": {
+          "better": 1,
+          "matchers": [
+            {
+              "advanced": "Multiple Projectiles (Tier: 1)",
+              "string": "Multiple Projectiles"
+            }
+          ],
+          "mercenary": {
+            "canonical": "Multiple Projectiles",
+            "tier": 1
+          },
+          "modFamily": [
+            "Multiple Projectiles",
+            "Greater Multiple Projectiles"
+          ],
+          "ref": "Multiple Projectiles",
+          "trade": {
+            "ids": {
+              "pseudo": [
+                "mercenary.support_12054"
+              ]
+            }
+          }
+        },
+        "translation": {
+          "advanced": "Multiple Projectiles (Tier: 1)",
+          "string": "Multiple Projectiles"
+        }
+      },
+      {
+        "stat": {
+          "better": 1,
+          "matchers": [
+            {
+              "advanced": "Elemental Damage with Attacks (Tier: 2)",
+              "string": "Elemental Damage with Attacks"
+            }
+          ],
+          "mercenary": {
+            "canonical": "Elemental Damage with Attacks",
+            "tier": 2
+          },
+          "modFamily": [
+            "Lesser Elemental Damage with Attacks",
+            "Elemental Damage with Attacks",
+            "Greater Elemental Damage with Attacks"
+          ],
+          "ref": "Elemental Damage with Attacks",
+          "trade": {
+            "ids": {
+              "pseudo": [
+                "mercenary.support_44886"
+              ]
+            }
+          }
+        },
+        "translation": {
+          "advanced": "Elemental Damage with Attacks (Tier: 2)",
+          "string": "Elemental Damage with Attacks"
+        }
+      },
+      {
+        "stat": {
+          "better": 1,
+          "matchers": [
+            {
+              "advanced": "Added Cold (Tier: 2)",
+              "string": "Added Cold"
+            }
+          ],
+          "mercenary": {
+            "canonical": "Added Cold",
+            "tier": 2
+          },
+          "modFamily": [
+            "Lesser Added Cold",
+            "Added Cold",
+            "Greater Added Cold"
+          ],
+          "ref": "Added Cold",
+          "trade": {
+            "ids": {
+              "pseudo": [
+                "mercenary.support_52758"
+              ]
+            }
+          }
+        },
+        "translation": {
+          "advanced": "Added Cold (Tier: 2)",
+          "string": "Added Cold"
+        }
+      },
+      {
+        "stat": {
+          "better": 1,
+          "matchers": [
+            {
+              "advanced": "Pierce (Tier: 2)",
+              "string": "Pierce"
+            }
+          ],
+          "mercenary": {
+            "canonical": "Pierce",
+            "tier": 2
+          },
+          "modFamily": [
+            "Lesser Pierce",
+            "Pierce",
+            "Greater Pierce"
+          ],
+          "ref": "Pierce",
+          "trade": {
+            "ids": {
+              "pseudo": [
+                "mercenary.support_56267"
+              ]
+            }
+          }
+        },
+        "translation": {
+          "advanced": "Pierce (Tier: 2)",
+          "string": "Pierce"
+        }
+      }
+    ],
+    [
+      {
+        "stat": {
+          "better": 0,
+          "matchers": [
+            {
+              "string": "Haste"
+            }
+          ],
+          "mercenary": {
+            "icon": "https://web.poecdn.com/gen/image/WzIxLDE0LHsiayI6IjJEQXJ0L1NraWxsSWNvbnMvYXVyYXNwZWVkIn1d/4376406372/auraspeed.png"
+          },
+          "ref": "Haste",
+          "trade": {
+            "ids": {
+              "pseudo": [
+                "mercenary.skill_52155"
+              ]
+            }
+          }
+        },
+        "translation": {
+          "string": "Haste"
+        }
+      }
+    ]
+  ],
+  "name": "Mercenary Warrant",
+  "newMods": [],
+  "rarity": "Normal",
+  "rawText": "Item Class: Mercenary Warrants\nRarity: Normal\nMercenary Warrant\n--------\nMercenary Level: 80\nBuild: Kineticist\n--------\nElemental Weakness\n--------\nBarrage\nFaster Attacks (Tier: 2)\nMultiple Projectiles (Tier: 1)\nElemental Damage with Attacks (Tier: 2)\nAdded Cold (Tier: 2)\nPierce (Tier: 2)\n--------\nHaste\n--------\nItem Level: 80\n--------\nRight click this item then left click a location on the ground to summon a Mercenary.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

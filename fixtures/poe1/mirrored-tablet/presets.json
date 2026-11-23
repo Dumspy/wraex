@@ -1,0 +1,672 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "areaLevel": {
+          "disabled": false,
+          "value": 83
+        },
+        "searchExact": {
+          "baseType": "Mirrored Tablet",
+          "baseTypeTrade": "Mirrored Tablet"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 10,
+              "min": 10
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 10,
+            "value": 10
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 10,
+                "min": 10,
+                "value": 10
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "pseudo"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 10,
+                      "min": 10,
+                      "unscalable": true,
+                      "value": 10
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Reflection of Kalandra (Difficulty #)"
+                        }
+                      ],
+                      "ref": "Reflection of Kalandra (Difficulty #)",
+                      "trade": {
+                        "ids": {
+                          "pseudo": [
+                            "pseudo.lake_36591"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Reflection of Kalandra (Difficulty #)"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 10,
+                  "min": 10,
+                  "unscalable": true,
+                  "value": 10
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Reflection of Kalandra (Difficulty #)"
+                    }
+                  ],
+                  "ref": "Reflection of Kalandra (Difficulty #)",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.lake_36591"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Reflection of Kalandra (Difficulty #)"
+                }
+              }
+            }
+          ],
+          "statRef": "Reflection of Kalandra (Difficulty #)",
+          "tag": "pseudo",
+          "text": "Reflection of Kalandra (Difficulty #)",
+          "tradeId": [
+            "pseudo.lake_36591"
+          ]
+        },
+        {
+          "disabled": true,
+          "sources": [
+            {
+              "contributes": {
+                "max": 4,
+                "min": 4,
+                "value": 4
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "pseudo"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 4,
+                      "min": 4,
+                      "unscalable": true,
+                      "value": 4
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Reflection of Delirium (Difficulty #)"
+                        }
+                      ],
+                      "ref": "Reflection of Delirium (Difficulty #)",
+                      "trade": {
+                        "ids": {
+                          "pseudo": [
+                            "pseudo.lake_22138"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Reflection of Delirium (Difficulty #)"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 4,
+                  "min": 4,
+                  "unscalable": true,
+                  "value": 4
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Reflection of Delirium (Difficulty #)"
+                    }
+                  ],
+                  "ref": "Reflection of Delirium (Difficulty #)",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.lake_22138"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Reflection of Delirium (Difficulty #)"
+                }
+              }
+            }
+          ],
+          "statRef": "Reflection of Delirium (Difficulty #)",
+          "tag": "pseudo",
+          "text": "Reflection of Delirium (Difficulty #)",
+          "tradeId": [
+            "pseudo.lake_22138"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 6,
+              "min": 6
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 6,
+            "value": 6
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 6,
+                "min": 6,
+                "value": 6
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "pseudo"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 6,
+                      "min": 6,
+                      "unscalable": true,
+                      "value": 6
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Reflection of the Sun (Difficulty #)"
+                        }
+                      ],
+                      "ref": "Reflection of the Sun (Difficulty #)",
+                      "trade": {
+                        "ids": {
+                          "pseudo": [
+                            "pseudo.lake_60034"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Reflection of the Sun (Difficulty #)"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 6,
+                  "min": 6,
+                  "unscalable": true,
+                  "value": 6
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Reflection of the Sun (Difficulty #)"
+                    }
+                  ],
+                  "ref": "Reflection of the Sun (Difficulty #)",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.lake_60034"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Reflection of the Sun (Difficulty #)"
+                }
+              }
+            }
+          ],
+          "statRef": "Reflection of the Sun (Difficulty #)",
+          "tag": "pseudo",
+          "text": "Reflection of the Sun (Difficulty #)",
+          "tradeId": [
+            "pseudo.lake_60034"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "low_tier_reflection",
+          "roll": {
+            "default": {
+              "max": 9,
+              "min": 9
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 9,
+            "value": 9
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 9,
+                "min": 9,
+                "value": 9
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "pseudo"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 9,
+                      "min": 9,
+                      "unscalable": true,
+                      "value": 9
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Reflection of Abyss (Difficulty #)"
+                        }
+                      ],
+                      "ref": "Reflection of Abyss (Difficulty #)",
+                      "trade": {
+                        "ids": {
+                          "pseudo": [
+                            "pseudo.lake_38892"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Reflection of Abyss (Difficulty #)"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 9,
+                  "min": 9,
+                  "unscalable": true,
+                  "value": 9
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Reflection of Abyss (Difficulty #)"
+                    }
+                  ],
+                  "ref": "Reflection of Abyss (Difficulty #)",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.lake_38892"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Reflection of Abyss (Difficulty #)"
+                }
+              }
+            }
+          ],
+          "statRef": "Reflection of Abyss (Difficulty #)",
+          "tag": "pseudo",
+          "text": "Reflection of Abyss (Difficulty #)",
+          "tradeId": [
+            "pseudo.lake_38892"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 7,
+              "min": 7
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 7,
+            "value": 7
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 7,
+                "min": 7,
+                "value": 7
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "pseudo"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 7,
+                      "min": 7,
+                      "unscalable": true,
+                      "value": 7
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Reflection of Paradise (Difficulty #)"
+                        }
+                      ],
+                      "ref": "Reflection of Paradise (Difficulty #)",
+                      "trade": {
+                        "ids": {
+                          "pseudo": [
+                            "pseudo.lake_50846"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Reflection of Paradise (Difficulty #)"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 7,
+                  "min": 7,
+                  "unscalable": true,
+                  "value": 7
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Reflection of Paradise (Difficulty #)"
+                    }
+                  ],
+                  "ref": "Reflection of Paradise (Difficulty #)",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.lake_50846"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Reflection of Paradise (Difficulty #)"
+                }
+              }
+            }
+          ],
+          "statRef": "Reflection of Paradise (Difficulty #)",
+          "tag": "pseudo",
+          "text": "Reflection of Paradise (Difficulty #)",
+          "tradeId": [
+            "pseudo.lake_50846"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "low_tier_reflection",
+          "roll": {
+            "default": {
+              "max": 8,
+              "min": 8
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 8,
+            "value": 8
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 8,
+                "min": 8,
+                "value": 8
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "pseudo"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 8,
+                      "min": 8,
+                      "unscalable": true,
+                      "value": 8
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Reflection of Flame (Difficulty #)"
+                        }
+                      ],
+                      "ref": "Reflection of Flame (Difficulty #)",
+                      "trade": {
+                        "ids": {
+                          "pseudo": [
+                            "pseudo.lake_42468"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Reflection of Flame (Difficulty #)"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 8,
+                  "min": 8,
+                  "unscalable": true,
+                  "value": 8
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Reflection of Flame (Difficulty #)"
+                    }
+                  ],
+                  "ref": "Reflection of Flame (Difficulty #)",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.lake_42468"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Reflection of Flame (Difficulty #)"
+                }
+              }
+            }
+          ],
+          "statRef": "Reflection of Flame (Difficulty #)",
+          "tag": "pseudo",
+          "text": "Reflection of Flame (Difficulty #)",
+          "tradeId": [
+            "pseudo.lake_42468"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 2,
+              "min": 2
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 2,
+            "value": 2
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 2,
+                "min": 2,
+                "value": 2
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "pseudo"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 2,
+                      "min": 2,
+                      "unscalable": true,
+                      "value": 2
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Reflection of Angling (Difficulty #)"
+                        }
+                      ],
+                      "ref": "Reflection of Angling (Difficulty #)",
+                      "trade": {
+                        "ids": {
+                          "pseudo": [
+                            "pseudo.lake_40794"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Reflection of Angling (Difficulty #)"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 2,
+                  "min": 2,
+                  "unscalable": true,
+                  "value": 2
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Reflection of Angling (Difficulty #)"
+                    }
+                  ],
+                  "ref": "Reflection of Angling (Difficulty #)",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.lake_40794"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Reflection of Angling (Difficulty #)"
+                }
+              }
+            }
+          ],
+          "statRef": "Reflection of Angling (Difficulty #)",
+          "tag": "pseudo",
+          "text": "Reflection of Angling (Difficulty #)",
+          "tradeId": [
+            "pseudo.lake_40794"
+          ]
+        }
+      ]
+    }
+  ]
+}

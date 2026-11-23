@@ -1,0 +1,75 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "foulborn_item": {
+              "option": "false"
+            },
+            "vestigial": {
+              "option": "false"
+            }
+          }
+        }
+      },
+      "name": "Lethal Pride",
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": true,
+              "id": "explicit.stat_3787436548",
+              "value": {}
+            }
+          ],
+          "type": "and"
+        },
+        {
+          "disabled": false,
+          "filters": [
+            {
+              "disabled": false,
+              "id": "explicit.pseudo_timeless_jewel_kaom",
+              "value": {
+                "max": 12345,
+                "min": 12345
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.pseudo_timeless_jewel_rakiata",
+              "value": {
+                "max": 12345,
+                "min": 12345
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.pseudo_timeless_jewel_akoya",
+              "value": {
+                "max": 12345,
+                "min": 12345
+              }
+            }
+          ],
+          "type": "count",
+          "value": {
+            "min": 1
+          }
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Timeless Jewel"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

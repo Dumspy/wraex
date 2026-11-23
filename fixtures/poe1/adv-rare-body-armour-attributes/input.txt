@@ -1,0 +1,29 @@
+Item Class: Body Armours
+Rarity: Rare
+Golem Shell
+Saint's Hauberk
+--------
+Quality: +20% (augmented)
+Armour: 1123 (augmented)
+Energy Shield: 312 (augmented)
+--------
+Requirements:
+Level: 67
+Str: 109
+Int: 94
+--------
+Sockets: B-R-R-B-G-B 
+--------
+Item Level: 85
+--------
+{ Prefix Modifier "Rhino's" (Tier: 3) — Life, Defences }
++38(36-41) to maximum Life
+42(39-42)% increased Armour and Energy Shield
+{ Prefix Modifier "Fecund" (Tier: 3) — Life }
++95(90-99) to maximum Life
+{ Suffix Modifier "of the Gods" (Tier: 1) — Attribute }
++52(51-55) to Strength
+{ Suffix Modifier "of the Wind" (Tier: 4) — Attribute }
++29(28-32) to Dexterity
+{ Suffix Modifier "of the Genius" (Tier: 6) — Attribute }
++19(18-22) to Intelligence

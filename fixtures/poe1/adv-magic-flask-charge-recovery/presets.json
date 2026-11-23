@@ -1,0 +1,301 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "itemLevel": {
+          "disabled": true,
+          "value": 84
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Quicksilver Flask",
+          "baseTypeTrade": "Quicksilver Flask"
+        },
+        "searchRelaxed": {
+          "category": "Flask",
+          "disabled": true
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 51,
+              "min": 46
+            },
+            "default": {
+              "max": 51,
+              "min": 49
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 49,
+            "value": 51
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 51,
+                "min": 46,
+                "value": 51
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Perpetual",
+                  "tags": [
+                    "Flask"
+                  ],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 51,
+                      "min": 46,
+                      "unscalable": false,
+                      "value": 51
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased Charge Recovery"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Charge Recovery"
+                        }
+                      ],
+                      "ref": "#% increased Charge Recovery",
+                      "trade": {
+                        "ids": {
+                          "enchant": [
+                            "enchant.stat_3196823591"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3196823591"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3196823591"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Charge Recovery"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 51,
+                  "min": 46,
+                  "unscalable": false,
+                  "value": 51
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Charge Recovery"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Charge Recovery"
+                    }
+                  ],
+                  "ref": "#% increased Charge Recovery",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_3196823591"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3196823591"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3196823591"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Charge Recovery"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Charge Recovery",
+          "tag": "explicit",
+          "text": "#% increased Charge Recovery",
+          "tradeId": [
+            "explicit.stat_3196823591"
+          ]
+        },
+        {
+          "disabled": false,
+          "not": true,
+          "sources": [],
+          "statRef": "#% increased effect",
+          "tag": "explicit",
+          "text": "#% reduced effect",
+          "tradeId": [
+            "explicit.stat_2448920197"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 25,
+              "min": 22
+            },
+            "default": {
+              "max": 25,
+              "min": 24
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 24,
+            "value": 25
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 25,
+                "min": 22,
+                "value": 25
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Adrenaline",
+                  "tags": [
+                    "Speed"
+                  ],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 25,
+                      "min": 22,
+                      "unscalable": false,
+                      "value": 25
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased Movement Speed during Effect"
+                        }
+                      ],
+                      "ref": "#% increased Movement Speed during Effect",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_3182498570"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3182498570"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3182498570"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Movement Speed during Effect"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 25,
+                  "min": 22,
+                  "unscalable": false,
+                  "value": 25
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Movement Speed during Effect"
+                    }
+                  ],
+                  "ref": "#% increased Movement Speed during Effect",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3182498570"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3182498570"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3182498570"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Movement Speed during Effect"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Movement Speed during Effect",
+          "tag": "explicit",
+          "text": "#% increased Movement Speed during Effect",
+          "tradeId": [
+            "explicit.stat_3182498570"
+          ]
+        }
+      ]
+    }
+  ]
+}

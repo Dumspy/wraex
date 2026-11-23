@@ -1,0 +1,303 @@
+{
+  "baseType": "Timeless Jewel",
+  "category": "Jewel",
+  "dustEquivalent": 36225,
+  "influences": [],
+  "info": {
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvSmV3ZWxzL0thcnVpQ2l2aWxpemF0aW9uIiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/04aefd20e6/KaruiCivilization.png",
+    "name": "Lethal Pride",
+    "namespace": "UNIQUE",
+    "refName": "Lethal Pride",
+    "unique": {
+      "base": "Timeless Jewel",
+      "disenchantValue": 14.49,
+      "fixedStats": [
+        "Historic"
+      ]
+    }
+  },
+  "infoVariants": [
+    {
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvSmV3ZWxzL0thcnVpQ2l2aWxpemF0aW9uIiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/04aefd20e6/KaruiCivilization.png",
+      "name": "Lethal Pride",
+      "namespace": "UNIQUE",
+      "refName": "Lethal Pride",
+      "unique": {
+        "base": "Timeless Jewel",
+        "disenchantValue": 14.49,
+        "fixedStats": [
+          "Historic"
+        ]
+      }
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 84,
+  "name": "Lethal Pride",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 18000,
+            "min": 10000,
+            "unscalable": false,
+            "value": 12345
+          },
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Commanded leadership over # warriors under Kaom\nPassives in radius are Conquered by the Karui"
+              }
+            ],
+            "modFamily": [
+              "Commanded leadership over # warriors under Kaom",
+              "Commanded leadership over # warriors under Rakiata",
+              "Commanded leadership over # warriors under Akoya"
+            ],
+            "ref": "Commanded leadership over # warriors under Kaom",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.pseudo_timeless_jewel_kaom"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Commanded leadership over # warriors under Kaom\nPassives in radius are Conquered by the Karui"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Historic"
+              }
+            ],
+            "ref": "Historic",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_3787436548"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Historic"
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Unique",
+  "rawText": "Item Class: Jewels\nRarity: Unique\nLethal Pride\nTimeless Jewel\n--------\nLimited to: 1 Historic\nRadius: Large\n--------\nItem Level: 84\n--------\n{ Unique Modifier }\nCommanded leadership over 12345(10000-18000) warriors under Kaom\nPassives in radius are Conquered by the Karui\n{ Unique Modifier }\nHistoric\n--------\nThey believed that power was a gift\nfrom the gods, and that only the strong\nwere worthy of it.\n--------\nPlace into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 18000,
+            "min": 10000,
+            "value": 12345
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 18000,
+                  "min": 10000,
+                  "unscalable": false,
+                  "value": 12345
+                },
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Commanded leadership over # warriors under Kaom\nPassives in radius are Conquered by the Karui"
+                    }
+                  ],
+                  "modFamily": [
+                    "Commanded leadership over # warriors under Kaom",
+                    "Commanded leadership over # warriors under Rakiata",
+                    "Commanded leadership over # warriors under Akoya"
+                  ],
+                  "ref": "Commanded leadership over # warriors under Kaom",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.pseudo_timeless_jewel_kaom"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Commanded leadership over # warriors under Kaom\nPassives in radius are Conquered by the Karui"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 18000,
+              "min": 10000,
+              "unscalable": false,
+              "value": 12345
+            },
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Commanded leadership over # warriors under Kaom\nPassives in radius are Conquered by the Karui"
+                }
+              ],
+              "modFamily": [
+                "Commanded leadership over # warriors under Kaom",
+                "Commanded leadership over # warriors under Rakiata",
+                "Commanded leadership over # warriors under Akoya"
+              ],
+              "ref": "Commanded leadership over # warriors under Kaom",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.pseudo_timeless_jewel_kaom"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Commanded leadership over # warriors under Kaom\nPassives in radius are Conquered by the Karui"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Commanded leadership over # warriors under Kaom\nPassives in radius are Conquered by the Karui"
+          }
+        ],
+        "modFamily": [
+          "Commanded leadership over # warriors under Kaom",
+          "Commanded leadership over # warriors under Rakiata",
+          "Commanded leadership over # warriors under Akoya"
+        ],
+        "ref": "Commanded leadership over # warriors under Kaom",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.pseudo_timeless_jewel_kaom"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Historic"
+                    }
+                  ],
+                  "ref": "Historic",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3787436548"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Historic"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Historic"
+                }
+              ],
+              "ref": "Historic",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_3787436548"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Historic"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Historic"
+          }
+        ],
+        "ref": "Historic",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_3787436548"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "uniqueBase": {
+    "craftable": {
+      "category": "Jewel"
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvSmV3ZWxzL1RpbWVsZXNzIiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/2cc52f22d7/Timeless.png",
+    "name": "Timeless Jewel",
+    "namespace": "ITEM",
+    "refName": "Timeless Jewel"
+  },
+  "unknownModifiers": []
+}

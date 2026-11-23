@@ -1,0 +1,23 @@
+Item Class: Amulets
+Rarity: Rare
+Doom Beads
+Onyx Amulet
+--------
+Requirements:
+Level: 60
+--------
+Item Level: 84
+--------
+Allocates Acrimony (enchant)
+--------
+{ Implicit Modifier — Attribute }
++14(10-16) to all Attributes
+--------
+{ Prefix Modifier "Virile" (Tier: 3) — Life }
++72(70-79) to maximum Life
+{ Suffix Modifier "of the Lion" (Tier: 3) — Attribute }
++44(43-50) to Strength
+{ Suffix Modifier "of the Volcano" (Tier: 2) — Elemental, Fire, Resistance }
++44(42-45)% to Fire Resistance
+{ Suffix Modifier "of the Ice" (Tier: 4) — Elemental, Cold, Resistance }
++33(30-35)% to Cold Resistance

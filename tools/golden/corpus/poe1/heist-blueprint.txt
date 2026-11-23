@@ -1,0 +1,16 @@
+Item Class: Blueprints
+Rarity: Normal
+Blueprint: Bunker
+--------
+Heist Target: Unusual Gems
+Area Level: 83
+Wings Revealed: 2/4
+Escape Routes Revealed: 3/8
+Reward Rooms Revealed: 9/26
+--------
+Requires Lockpicking (Level 5)
+Requires Agility (Level 4)
+--------
+Item Level: 83
+--------
+Take this item to the Heist Board in your Hideout to plan a Heist.

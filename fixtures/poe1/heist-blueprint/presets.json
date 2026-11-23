@@ -1,0 +1,115 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "areaLevel": {
+          "disabled": false,
+          "value": 83
+        },
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Blueprint: Bunker",
+          "baseTypeTrade": "Blueprint: Bunker"
+        },
+        "searchRelaxed": {
+          "category": "Heist Blueprint",
+          "disabled": true
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": [
+        {
+          "disabled": false,
+          "not": true,
+          "sources": [],
+          "statRef": "# Enchant Modifiers",
+          "tag": "pseudo",
+          "text": "# Enchant Modifiers ",
+          "tradeId": [
+            "pseudo.pseudo_number_of_enchant_mods"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 9007199254740991,
+              "min": 0
+            },
+            "default": {
+              "max": 2,
+              "min": 2
+            },
+            "dp": false,
+            "goodness": 2.2204460492503136e-16,
+            "isNegated": false,
+            "min": 2,
+            "value": 2
+          },
+          "sources": [],
+          "statRef": "Wings Revealed: #",
+          "tag": "property",
+          "text": "Wings Revealed: #",
+          "tradeId": [
+            "item.heist_wings_revealed"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 9007199254740991,
+              "min": 0
+            },
+            "default": {
+              "max": 4,
+              "min": 4
+            },
+            "dp": false,
+            "goodness": 4.440892098500627e-16,
+            "isNegated": false,
+            "min": 4,
+            "value": 4
+          },
+          "sources": [],
+          "statRef": "Total Wings: #",
+          "tag": "property",
+          "text": "Total Wings: #",
+          "tradeId": [
+            "item.heist_wings_total"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+Item Class: Utility Flasks
+Rarity: Magic
+Perpetual Quicksilver Flask of Adrenaline
+--------
+Lasts 4.00 Seconds
+Consumes 20 of 50 Charges on use
+Currently has 50 Charges
+40% increased Movement Speed
+--------
+Requirements:
+Level: 4
+--------
+Item Level: 84
+--------
+{ Prefix Modifier "Perpetual" (Tier: 1) — Flask }
+51(46-51)% increased Charge Recovery
+{ Suffix Modifier "of Adrenaline" (Tier: 1) — Speed }
+25(22-25)% increased Movement Speed during Effect
+--------
+Right click to drink. Can only hold charges while in belt. Refills as you kill monsters.

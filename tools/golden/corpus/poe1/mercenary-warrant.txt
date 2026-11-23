@@ -1,0 +1,21 @@
+Item Class: Mercenary Warrants
+Rarity: Normal
+Mercenary Warrant
+--------
+Mercenary Level: 80
+Build: Kineticist
+--------
+Elemental Weakness
+--------
+Barrage
+Faster Attacks (Tier: 2)
+Multiple Projectiles (Tier: 1)
+Elemental Damage with Attacks (Tier: 2)
+Added Cold (Tier: 2)
+Pierce (Tier: 2)
+--------
+Haste
+--------
+Item Level: 80
+--------
+Right click this item then left click a location on the ground to summon a Mercenary.

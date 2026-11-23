@@ -1,0 +1,48 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "gem_level": {
+              "min": 20
+            },
+            "quality": {
+              "min": 20
+            }
+          }
+        },
+        "trade_filters": {
+          "filters": {
+            "collapse": {
+              "option": "true"
+            },
+            "price": {
+              "option": "chaos_divine"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": {
+        "discriminator": "alt_x",
+        "option": "Kinetic Blast"
+      }
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

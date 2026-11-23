@@ -1,0 +1,16 @@
+Item Class: Map Fragments
+Rarity: Currency
+Mirrored Tablet
+--------
+Area Level: 83
+--------
+Reflection of Kalandra (Difficulty 10)
+Reflection of Delirium (Difficulty 4)
+Reflection of the Sun (Difficulty 6)
+Reflection of Abyss (Difficulty 9)
+Reflection of Breach (Difficulty 3)
+Reflection of Paradise (Difficulty 7)
+Reflection of Flame (Difficulty 8)
+Reflection of Angling (Difficulty 2)
+--------
+Use this on the Kalandra Map Device to open a portal to the Lake of Kalandra.

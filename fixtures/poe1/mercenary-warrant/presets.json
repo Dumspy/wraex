@@ -1,0 +1,1054 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "itemLevel": {
+          "disabled": false,
+          "value": 80
+        },
+        "searchExact": {
+          "baseType": "Mercenary Warrant",
+          "baseTypeTrade": "Mercenary Warrant"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": [
+        {
+          "disabled": true,
+          "hidden": "filters.mercenary_primary_no_support",
+          "mercenary": {
+            "icon": "https://web.poecdn.com/gen/image/WzIxLDE0LHsiayI6IjJEQXJ0L1NraWxsSWNvbnMvZWxlbWVudGFsd2Vha25lc3MifV0/7d769ba813/elementalweakness.png"
+          },
+          "sources": [],
+          "statRef": "Elemental Weakness",
+          "tag": "mercenary-primary",
+          "text": "Elemental Weakness",
+          "tradeId": [
+            "mercenary.skill_5689"
+          ]
+        },
+        {
+          "expanded": false,
+          "group": "mercenary",
+          "meta": {
+            "disabled": true,
+            "mercenary": {
+              "icon": "https://web.poecdn.com/gen/image/WzIxLDE0LHsiayI6IjJEQXJ0L1NraWxsSWNvbnMvYmFycmFnZSJ9XQ/64580ed8c5/barrage.png"
+            },
+            "sources": [],
+            "statRef": "Barrage",
+            "tag": "mercenary-secondary",
+            "text": "Barrage",
+            "tradeId": [
+              "mercenary.skill_1356"
+            ]
+          },
+          "stats": [
+            {
+              "disabled": true,
+              "roll": {
+                "bounds": {
+                  "max": 5,
+                  "min": 0
+                },
+                "default": {
+                  "max": 1,
+                  "min": 0
+                },
+                "dp": false,
+                "goodness": 0,
+                "isNegated": false,
+                "min": 0,
+                "value": 0
+              },
+              "sources": [
+                {
+                  "modifier": {
+                    "stats": [
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Lesser Faster Attacks (Tier: 1)",
+                              "string": "Lesser Faster Attacks"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Faster Attacks",
+                            "tier": 1
+                          },
+                          "modFamily": [
+                            "Lesser Faster Attacks",
+                            "Faster Attacks",
+                            "Greater Faster Attacks"
+                          ],
+                          "ref": "Lesser Faster Attacks",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_52447"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Faster Attacks (Tier: 2)",
+                              "string": "Faster Attacks"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Faster Attacks",
+                            "tier": 2
+                          },
+                          "modFamily": [
+                            "Lesser Faster Attacks",
+                            "Faster Attacks",
+                            "Greater Faster Attacks"
+                          ],
+                          "ref": "Faster Attacks",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_987"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Greater Faster Attacks (Tier: 3)",
+                              "string": "Greater Faster Attacks"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Faster Attacks",
+                            "tier": 3
+                          },
+                          "modFamily": [
+                            "Lesser Faster Attacks",
+                            "Faster Attacks",
+                            "Greater Faster Attacks"
+                          ],
+                          "ref": "Greater Faster Attacks",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_50485"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "modifier": {
+                    "stats": [
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Multiple Projectiles (Tier: 1)",
+                              "string": "Multiple Projectiles"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Multiple Projectiles",
+                            "tier": 1
+                          },
+                          "modFamily": [
+                            "Multiple Projectiles",
+                            "Greater Multiple Projectiles"
+                          ],
+                          "ref": "Multiple Projectiles",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_12054"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Greater Multiple Projectiles (Tier: 3)",
+                              "string": "Greater Multiple Projectiles"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Multiple Projectiles",
+                            "tier": 3
+                          },
+                          "modFamily": [
+                            "Multiple Projectiles",
+                            "Greater Multiple Projectiles"
+                          ],
+                          "ref": "Greater Multiple Projectiles",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_49419"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "modifier": {
+                    "stats": [
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Lesser Faster Projectiles (Tier: 1)",
+                              "string": "Lesser Faster Projectiles"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Faster Projectiles",
+                            "tier": 1
+                          },
+                          "modFamily": [
+                            "Lesser Faster Projectiles",
+                            "Faster Projectiles",
+                            "Greater Faster Projectiles"
+                          ],
+                          "ref": "Lesser Faster Projectiles",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_25199"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Faster Projectiles (Tier: 2)",
+                              "string": "Faster Projectiles"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Faster Projectiles",
+                            "tier": 2
+                          },
+                          "modFamily": [
+                            "Lesser Faster Projectiles",
+                            "Faster Projectiles",
+                            "Greater Faster Projectiles"
+                          ],
+                          "ref": "Faster Projectiles",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_57644"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Greater Faster Projectiles (Tier: 3)",
+                              "string": "Greater Faster Projectiles"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Faster Projectiles",
+                            "tier": 3
+                          },
+                          "modFamily": [
+                            "Lesser Faster Projectiles",
+                            "Faster Projectiles",
+                            "Greater Faster Projectiles"
+                          ],
+                          "ref": "Greater Faster Projectiles",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_14517"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "modifier": {
+                    "stats": [
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Lesser Elemental Damage with Attacks (Tier: 1)",
+                              "string": "Lesser Elemental Damage with Attacks"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Elemental Damage with Attacks",
+                            "tier": 1
+                          },
+                          "modFamily": [
+                            "Lesser Elemental Damage with Attacks",
+                            "Elemental Damage with Attacks",
+                            "Greater Elemental Damage with Attacks"
+                          ],
+                          "ref": "Lesser Elemental Damage with Attacks",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_59712"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Elemental Damage with Attacks (Tier: 2)",
+                              "string": "Elemental Damage with Attacks"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Elemental Damage with Attacks",
+                            "tier": 2
+                          },
+                          "modFamily": [
+                            "Lesser Elemental Damage with Attacks",
+                            "Elemental Damage with Attacks",
+                            "Greater Elemental Damage with Attacks"
+                          ],
+                          "ref": "Elemental Damage with Attacks",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_44886"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Greater Elemental Damage with Attacks (Tier: 3)",
+                              "string": "Greater Elemental Damage with Attacks"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Elemental Damage with Attacks",
+                            "tier": 3
+                          },
+                          "modFamily": [
+                            "Lesser Elemental Damage with Attacks",
+                            "Elemental Damage with Attacks",
+                            "Greater Elemental Damage with Attacks"
+                          ],
+                          "ref": "Greater Elemental Damage with Attacks",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_28416"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "modifier": {
+                    "stats": [
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Lesser Critical Chance (Tier: 1)",
+                              "string": "Lesser Critical Chance"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Critical Chance",
+                            "tier": 1
+                          },
+                          "modFamily": [
+                            "Lesser Critical Chance",
+                            "Critical Chance",
+                            "Greater Critical Chance"
+                          ],
+                          "ref": "Lesser Critical Chance",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_23209"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Critical Chance (Tier: 2)",
+                              "string": "Critical Chance"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Critical Chance",
+                            "tier": 2
+                          },
+                          "modFamily": [
+                            "Lesser Critical Chance",
+                            "Critical Chance",
+                            "Greater Critical Chance"
+                          ],
+                          "ref": "Critical Chance",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_61471"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Greater Critical Chance (Tier: 3)",
+                              "string": "Greater Critical Chance"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Critical Chance",
+                            "tier": 3
+                          },
+                          "modFamily": [
+                            "Lesser Critical Chance",
+                            "Critical Chance",
+                            "Greater Critical Chance"
+                          ],
+                          "ref": "Greater Critical Chance",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_62220"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "modifier": {
+                    "stats": [
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Lesser Critical Damage (Tier: 1)",
+                              "string": "Lesser Critical Damage"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Critical Damage",
+                            "tier": 1
+                          },
+                          "modFamily": [
+                            "Lesser Critical Damage",
+                            "Critical Damage",
+                            "Greater Critical Damage"
+                          ],
+                          "ref": "Lesser Critical Damage",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_30688"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Critical Damage (Tier: 2)",
+                              "string": "Critical Damage"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Critical Damage",
+                            "tier": 2
+                          },
+                          "modFamily": [
+                            "Lesser Critical Damage",
+                            "Critical Damage",
+                            "Greater Critical Damage"
+                          ],
+                          "ref": "Critical Damage",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_32189"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Greater Critical Damage (Tier: 3)",
+                              "string": "Greater Critical Damage"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Critical Damage",
+                            "tier": 3
+                          },
+                          "modFamily": [
+                            "Lesser Critical Damage",
+                            "Critical Damage",
+                            "Greater Critical Damage"
+                          ],
+                          "ref": "Greater Critical Damage",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_55659"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "modifier": {
+                    "stats": [
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Lesser Added Cold (Tier: 1)",
+                              "string": "Lesser Added Cold"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Added Cold",
+                            "tier": 1
+                          },
+                          "modFamily": [
+                            "Lesser Added Cold",
+                            "Added Cold",
+                            "Greater Added Cold"
+                          ],
+                          "ref": "Lesser Added Cold",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_13069"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Added Cold (Tier: 2)",
+                              "string": "Added Cold"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Added Cold",
+                            "tier": 2
+                          },
+                          "modFamily": [
+                            "Lesser Added Cold",
+                            "Added Cold",
+                            "Greater Added Cold"
+                          ],
+                          "ref": "Added Cold",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_52758"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Greater Added Cold (Tier: 3)",
+                              "string": "Greater Added Cold"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Added Cold",
+                            "tier": 3
+                          },
+                          "modFamily": [
+                            "Lesser Added Cold",
+                            "Added Cold",
+                            "Greater Added Cold"
+                          ],
+                          "ref": "Greater Added Cold",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_60094"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "modifier": {
+                    "stats": [
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Lesser Added Lightning (Tier: 1)",
+                              "string": "Lesser Added Lightning"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Added Lightning",
+                            "tier": 1
+                          },
+                          "modFamily": [
+                            "Lesser Added Lightning",
+                            "Added Lightning",
+                            "Greater Added Lightning"
+                          ],
+                          "ref": "Lesser Added Lightning",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_36665"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Added Lightning (Tier: 2)",
+                              "string": "Added Lightning"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Added Lightning",
+                            "tier": 2
+                          },
+                          "modFamily": [
+                            "Lesser Added Lightning",
+                            "Added Lightning",
+                            "Greater Added Lightning"
+                          ],
+                          "ref": "Added Lightning",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_64283"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "stat": {
+                          "better": 1,
+                          "matchers": [
+                            {
+                              "advanced": "Greater Added Lightning (Tier: 3)",
+                              "string": "Greater Added Lightning"
+                            }
+                          ],
+                          "mercenary": {
+                            "canonical": "Added Lightning",
+                            "tier": 3
+                          },
+                          "modFamily": [
+                            "Lesser Added Lightning",
+                            "Added Lightning",
+                            "Greater Added Lightning"
+                          ],
+                          "ref": "Greater Added Lightning",
+                          "trade": {
+                            "ids": {
+                              "pseudo": [
+                                "mercenary.support_40533"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "statRef": "6-Link",
+              "tag": "property",
+              "text": "6-Link",
+              "tradeId": [
+                "item.mercenary_6link"
+              ]
+            },
+            {
+              "disabled": true,
+              "mercenary": {
+                "maxTier": false,
+                "tier": 2
+              },
+              "option": {
+                "value": 1
+              },
+              "sources": [],
+              "statRef": "Faster Attacks",
+              "tag": "mercenary-support",
+              "text": "Faster Attacks",
+              "tradeId": [
+                "mercenary.support_987",
+                "mercenary.support_50485"
+              ]
+            },
+            {
+              "disabled": true,
+              "mercenary": {
+                "maxTier": false,
+                "tier": 2
+              },
+              "option": {
+                "value": 1
+              },
+              "sources": [],
+              "statRef": "Elemental Damage with Attacks",
+              "tag": "mercenary-support",
+              "text": "Elemental Damage with Attacks",
+              "tradeId": [
+                "mercenary.support_44886",
+                "mercenary.support_28416"
+              ]
+            },
+            {
+              "disabled": true,
+              "mercenary": {
+                "maxTier": false,
+                "tier": 2
+              },
+              "option": {
+                "value": 1
+              },
+              "sources": [],
+              "statRef": "Added Cold",
+              "tag": "mercenary-support",
+              "text": "Added Cold",
+              "tradeId": [
+                "mercenary.support_52758",
+                "mercenary.support_60094"
+              ]
+            },
+            {
+              "disabled": true,
+              "mercenary": {
+                "maxTier": false,
+                "tier": 2
+              },
+              "option": {
+                "value": 1
+              },
+              "sources": [],
+              "statRef": "Pierce",
+              "tag": "mercenary-support",
+              "text": "Pierce",
+              "tradeId": [
+                "mercenary.support_56267",
+                "mercenary.support_27970"
+              ]
+            },
+            {
+              "disabled": true,
+              "mercenary": {
+                "maxTier": false,
+                "tier": 1
+              },
+              "option": {
+                "value": 1
+              },
+              "sources": [],
+              "statRef": "Multiple Projectiles",
+              "tag": "mercenary-support",
+              "text": "Multiple Projectiles",
+              "tradeId": [
+                "mercenary.support_12054",
+                "mercenary.support_49419"
+              ]
+            },
+            {
+              "disabled": true,
+              "not": true,
+              "sources": [],
+              "statRef": "Faster Projectiles",
+              "tag": "mercenary-support",
+              "text": "Faster Projectiles",
+              "tradeId": [
+                "mercenary.support_25199",
+                "mercenary.support_57644",
+                "mercenary.support_14517"
+              ]
+            },
+            {
+              "disabled": true,
+              "not": true,
+              "sources": [],
+              "statRef": "Critical Chance",
+              "tag": "mercenary-support",
+              "text": "Critical Chance",
+              "tradeId": [
+                "mercenary.support_23209",
+                "mercenary.support_61471",
+                "mercenary.support_62220"
+              ]
+            },
+            {
+              "disabled": true,
+              "not": true,
+              "sources": [],
+              "statRef": "Critical Damage",
+              "tag": "mercenary-support",
+              "text": "Critical Damage",
+              "tradeId": [
+                "mercenary.support_30688",
+                "mercenary.support_32189",
+                "mercenary.support_55659"
+              ]
+            },
+            {
+              "disabled": true,
+              "not": true,
+              "sources": [],
+              "statRef": "Added Lightning",
+              "tag": "mercenary-support",
+              "text": "Added Lightning",
+              "tradeId": [
+                "mercenary.support_36665",
+                "mercenary.support_64283",
+                "mercenary.support_40533"
+              ]
+            }
+          ]
+        },
+        {
+          "disabled": true,
+          "mercenary": {
+            "icon": "https://web.poecdn.com/gen/image/WzIxLDE0LHsiayI6IjJEQXJ0L1NraWxsSWNvbnMvYXVyYXNwZWVkIn1d/4376406372/auraspeed.png"
+          },
+          "sources": [],
+          "statRef": "Haste",
+          "tag": "mercenary-utility",
+          "text": "Haste",
+          "tradeId": [
+            "mercenary.skill_52155"
+          ]
+        },
+        {
+          "expanded": false,
+          "group": "not",
+          "meta": {
+            "disabled": false,
+            "sources": [],
+            "statRef": "Not",
+            "tag": "filter-group",
+            "text": "Not",
+            "tradeId": [
+              "item.not_group"
+            ]
+          },
+          "stats": [
+            {
+              "disabled": true,
+              "mercenary": {
+                "icon": "https://web.poecdn.com/gen/image/WzIxLDE0LHsiayI6IjJEQXJ0L1NraWxsSWNvbnMvRmlyZXdhbGwifV0/2c60a66cb6/Firewall.png"
+              },
+              "sources": [],
+              "statRef": "Flame Wall",
+              "tag": "mercenary-primary",
+              "text": "Flame Wall",
+              "tradeId": [
+                "mercenary.skill_57450"
+              ]
+            },
+            {
+              "disabled": false,
+              "mercenary": {
+                "icon": "https://web.poecdn.com/gen/image/WzIxLDE0LHsiayI6IjJEQXJ0L1NraWxsSWNvbnMvWmlnWmFnV2FuZCJ9XQ/c3a2e82f8b/ZigZagWand.png"
+              },
+              "sources": [],
+              "statRef": "Kinetic Bolt",
+              "tag": "brick",
+              "text": "Kinetic Bolt",
+              "tradeId": [
+                "mercenary.skill_12583"
+              ]
+            },
+            {
+              "disabled": true,
+              "mercenary": {
+                "icon": "https://web.poecdn.com/gen/image/WzIxLDE0LHsiayI6IjJEQXJ0L1NraWxsSWNvbnMvY2x1c3RlcmJ1cnN0In1d/6bf59249ac/clusterburst.png"
+              },
+              "sources": [],
+              "statRef": "Greater Kinetic Blast",
+              "tag": "mercenary-secondary",
+              "text": "Greater Kinetic Blast",
+              "tradeId": [
+                "mercenary.skill_44258"
+              ]
+            },
+            {
+              "disabled": true,
+              "mercenary": {
+                "icon": "https://web.poecdn.com/gen/image/WzIxLDE0LHsiayI6IjJEQXJ0L1NraWxsSWNvbnMvY2x1c3RlcmJ1cnN0In1d/6bf59249ac/clusterburst.png"
+              },
+              "sources": [],
+              "statRef": "Kinetic Blast of Clustering",
+              "tag": "mercenary-secondary",
+              "text": "Kinetic Blast of Clustering",
+              "tradeId": [
+                "mercenary.skill_16356"
+              ]
+            },
+            {
+              "disabled": true,
+              "mercenary": {
+                "icon": "https://web.poecdn.com/gen/image/WzIxLDE0LHsiayI6IjJEQXJ0L1NraWxsSWNvbnMvS2luZXRpY1JhaW4ifV0/d44538c8cd/KineticRain.png"
+              },
+              "sources": [],
+              "statRef": "Kinetic Rain of Impact",
+              "tag": "mercenary-secondary",
+              "text": "Kinetic Rain of Impact",
+              "tradeId": [
+                "mercenary.skill_32089"
+              ]
+            },
+            {
+              "disabled": true,
+              "mercenary": {
+                "icon": "https://web.poecdn.com/gen/image/WzIxLDE0LHsiayI6IjJEQXJ0L1NraWxsSWNvbnMvRmxhbWVEYXNoIn1d/48374ddd5e/FlameDash.png"
+              },
+              "sources": [],
+              "statRef": "Flame Dash",
+              "tag": "mercenary-utility",
+              "text": "Flame Dash",
+              "tradeId": [
+                "mercenary.skill_56180"
+              ]
+            },
+            {
+              "disabled": true,
+              "mercenary": {
+                "icon": "https://web.poecdn.com/gen/image/WzIxLDE0LHsiayI6IjJEQXJ0L1NraWxsSWNvbnMvRnJvc3RibGluayJ9XQ/74813da9e2/Frostblink.png"
+              },
+              "sources": [],
+              "statRef": "Frostblink",
+              "tag": "mercenary-utility",
+              "text": "Frostblink",
+              "tradeId": [
+                "mercenary.skill_40470"
+              ]
+            },
+            {
+              "disabled": true,
+              "mercenary": {
+                "icon": "https://web.poecdn.com/gen/image/WzIxLDE0LHsiayI6IjJEQXJ0L1NraWxsSWNvbnMvSW5zcGlyaW5nQ3J5In1d/d18a2118fd/InspiringCry.png"
+              },
+              "sources": [],
+              "statRef": "Inspiring Cry",
+              "tag": "mercenary-utility",
+              "text": "Inspiring Cry",
+              "tradeId": [
+                "mercenary.skill_65473"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

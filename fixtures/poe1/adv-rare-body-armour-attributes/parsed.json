@@ -1,0 +1,1150 @@
+{
+  "armourAR": 1123,
+  "armourES": 312,
+  "basePercentile": 100,
+  "baseType": "Saint's Hauberk",
+  "category": "Body Armour",
+  "influences": [],
+  "info": {
+    "armour": {
+      "ar": [
+        443,
+        496
+      ],
+      "es": [
+        76,
+        85
+      ]
+    },
+    "craftable": {
+      "category": "Body Armour"
+    },
+    "h": 3,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb2R5QXJtb3Vycy9Cb2R5U3RySW50MkMiLCJ3IjoyLCJoIjozLCJzY2FsZSI6MX1d/5a1804c81b/BodyStrInt2C.png",
+    "name": "Saint's Hauberk",
+    "namespace": "ITEM",
+    "refName": "Saint's Hauberk",
+    "w": 2
+  },
+  "infoVariants": [
+    {
+      "armour": {
+        "ar": [
+          443,
+          496
+        ],
+        "es": [
+          76,
+          85
+        ]
+      },
+      "craftable": {
+        "category": "Body Armour"
+      },
+      "h": 3,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb2R5QXJtb3Vycy9Cb2R5U3RySW50MkMiLCJ3IjoyLCJoIjozLCJzY2FsZSI6MX1d/5a1804c81b/BodyStrInt2C.png",
+      "name": "Saint's Hauberk",
+      "namespace": "ITEM",
+      "refName": "Saint's Hauberk",
+      "w": 2
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 85,
+  "name": "Golem Shell",
+  "newMods": [
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Rhino's",
+        "tags": [
+          "Life",
+          "Defences"
+        ],
+        "tier": 3,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 41,
+            "min": 36,
+            "unscalable": false,
+            "value": 38
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to maximum Life"
+              }
+            ],
+            "ref": "+# to maximum Life",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3299347043"
+                ],
+                "explicit": [
+                  "explicit.stat_3299347043"
+                ],
+                "fractured": [
+                  "fractured.stat_3299347043"
+                ],
+                "implicit": [
+                  "implicit.stat_3299347043"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to maximum Life"
+          }
+        },
+        {
+          "roll": {
+            "dp": false,
+            "max": 42,
+            "min": 39,
+            "unscalable": false,
+            "value": 42
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% increased Armour and Energy Shield"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Armour and Energy Shield"
+              }
+            ],
+            "ref": "#% increased Armour and Energy Shield",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3321629045"
+                ],
+                "explicit": [
+                  "explicit.stat_3321629045"
+                ],
+                "fractured": [
+                  "fractured.stat_3321629045"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Armour and Energy Shield"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Fecund",
+        "tags": [
+          "Life"
+        ],
+        "tier": 3,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 99,
+            "min": 90,
+            "unscalable": false,
+            "value": 95
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to maximum Life"
+              }
+            ],
+            "ref": "+# to maximum Life",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3299347043"
+                ],
+                "explicit": [
+                  "explicit.stat_3299347043"
+                ],
+                "fractured": [
+                  "fractured.stat_3299347043"
+                ],
+                "implicit": [
+                  "implicit.stat_3299347043"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to maximum Life"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of the Gods",
+        "tags": [
+          "Attribute"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 55,
+            "min": 51,
+            "unscalable": false,
+            "value": 52
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to Strength"
+              }
+            ],
+            "ref": "+# to Strength",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_4080418644"
+                ],
+                "explicit": [
+                  "explicit.stat_4080418644"
+                ],
+                "fractured": [
+                  "fractured.stat_4080418644"
+                ],
+                "implicit": [
+                  "implicit.stat_4080418644"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to Strength"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of the Wind",
+        "tags": [
+          "Attribute"
+        ],
+        "tier": 4,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 32,
+            "min": 28,
+            "unscalable": false,
+            "value": 29
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to Dexterity"
+              }
+            ],
+            "ref": "+# to Dexterity",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3261801346"
+                ],
+                "explicit": [
+                  "explicit.stat_3261801346"
+                ],
+                "fractured": [
+                  "fractured.stat_3261801346"
+                ],
+                "implicit": [
+                  "implicit.stat_3261801346"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to Dexterity"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of the Genius",
+        "tags": [
+          "Attribute"
+        ],
+        "tier": 6,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 22,
+            "min": 18,
+            "unscalable": false,
+            "value": 19
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to Intelligence"
+              }
+            ],
+            "ref": "+# to Intelligence",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_328541901"
+                ],
+                "explicit": [
+                  "explicit.stat_328541901"
+                ],
+                "fractured": [
+                  "fractured.stat_328541901"
+                ],
+                "implicit": [
+                  "implicit.stat_328541901"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to Intelligence"
+          }
+        }
+      ]
+    }
+  ],
+  "quality": 20,
+  "rarity": "Rare",
+  "rawText": "Item Class: Body Armours\nRarity: Rare\nGolem Shell\nSaint's Hauberk\n--------\nQuality: +20% (augmented)\nArmour: 1123 (augmented)\nEnergy Shield: 312 (augmented)\n--------\nRequirements:\nLevel: 67\nStr: 109\nInt: 94\n--------\nSockets: B-R-R-B-G-B \n--------\nItem Level: 85\n--------\n{ Prefix Modifier \"Rhino's\" (Tier: 3) — Life, Defences }\n+38(36-41) to maximum Life\n42(39-42)% increased Armour and Energy Shield\n{ Prefix Modifier \"Fecund\" (Tier: 3) — Life }\n+95(90-99) to maximum Life\n{ Suffix Modifier \"of the Gods\" (Tier: 1) — Attribute }\n+52(51-55) to Strength\n{ Suffix Modifier \"of the Wind\" (Tier: 4) — Attribute }\n+29(28-32) to Dexterity\n{ Suffix Modifier \"of the Genius\" (Tier: 6) — Attribute }\n+19(18-22) to Intelligence\n",
+  "sockets": {
+    "linked": 6,
+    "white": 0
+  },
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 41,
+            "min": 36,
+            "value": 38
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Rhino's",
+              "tags": [
+                "Life",
+                "Defences"
+              ],
+              "tier": 3,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 41,
+                  "min": 36,
+                  "unscalable": false,
+                  "value": 38
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Life"
+                    }
+                  ],
+                  "ref": "+# to maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3299347043"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3299347043"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3299347043"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3299347043"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Life"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 42,
+                  "min": 39,
+                  "unscalable": false,
+                  "value": 42
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Armour and Energy Shield"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Armour and Energy Shield"
+                    }
+                  ],
+                  "ref": "#% increased Armour and Energy Shield",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3321629045"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3321629045"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3321629045"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Armour and Energy Shield"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 41,
+              "min": 36,
+              "unscalable": false,
+              "value": 38
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to maximum Life"
+                }
+              ],
+              "ref": "+# to maximum Life",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3299347043"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3299347043"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3299347043"
+                  ],
+                  "implicit": [
+                    "implicit.stat_3299347043"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to maximum Life"
+            }
+          }
+        },
+        {
+          "contributes": {
+            "max": 99,
+            "min": 90,
+            "value": 95
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Fecund",
+              "tags": [
+                "Life"
+              ],
+              "tier": 3,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 99,
+                  "min": 90,
+                  "unscalable": false,
+                  "value": 95
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Life"
+                    }
+                  ],
+                  "ref": "+# to maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3299347043"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3299347043"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3299347043"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3299347043"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Life"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 99,
+              "min": 90,
+              "unscalable": false,
+              "value": 95
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to maximum Life"
+                }
+              ],
+              "ref": "+# to maximum Life",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3299347043"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3299347043"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3299347043"
+                  ],
+                  "implicit": [
+                    "implicit.stat_3299347043"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to maximum Life"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# to maximum Life"
+          }
+        ],
+        "ref": "+# to maximum Life",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_3299347043"
+            ],
+            "explicit": [
+              "explicit.stat_3299347043"
+            ],
+            "fractured": [
+              "fractured.stat_3299347043"
+            ],
+            "implicit": [
+              "implicit.stat_3299347043"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 42,
+            "min": 39,
+            "value": 42
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Rhino's",
+              "tags": [
+                "Life",
+                "Defences"
+              ],
+              "tier": 3,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 41,
+                  "min": 36,
+                  "unscalable": false,
+                  "value": 38
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to maximum Life"
+                    }
+                  ],
+                  "ref": "+# to maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3299347043"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3299347043"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3299347043"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3299347043"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to maximum Life"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 42,
+                  "min": 39,
+                  "unscalable": false,
+                  "value": 42
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Armour and Energy Shield"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Armour and Energy Shield"
+                    }
+                  ],
+                  "ref": "#% increased Armour and Energy Shield",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3321629045"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3321629045"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3321629045"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Armour and Energy Shield"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 42,
+              "min": 39,
+              "unscalable": false,
+              "value": 42
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% increased Armour and Energy Shield"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Armour and Energy Shield"
+                }
+              ],
+              "ref": "#% increased Armour and Energy Shield",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3321629045"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3321629045"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3321629045"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Armour and Energy Shield"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% increased Armour and Energy Shield"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Armour and Energy Shield"
+          }
+        ],
+        "ref": "#% increased Armour and Energy Shield",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_3321629045"
+            ],
+            "explicit": [
+              "explicit.stat_3321629045"
+            ],
+            "fractured": [
+              "fractured.stat_3321629045"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 55,
+            "min": 51,
+            "value": 52
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of the Gods",
+              "tags": [
+                "Attribute"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 55,
+                  "min": 51,
+                  "unscalable": false,
+                  "value": 52
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to Strength"
+                    }
+                  ],
+                  "ref": "+# to Strength",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_4080418644"
+                      ],
+                      "explicit": [
+                        "explicit.stat_4080418644"
+                      ],
+                      "fractured": [
+                        "fractured.stat_4080418644"
+                      ],
+                      "implicit": [
+                        "implicit.stat_4080418644"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Strength"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 55,
+              "min": 51,
+              "unscalable": false,
+              "value": 52
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to Strength"
+                }
+              ],
+              "ref": "+# to Strength",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_4080418644"
+                  ],
+                  "explicit": [
+                    "explicit.stat_4080418644"
+                  ],
+                  "fractured": [
+                    "fractured.stat_4080418644"
+                  ],
+                  "implicit": [
+                    "implicit.stat_4080418644"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to Strength"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# to Strength"
+          }
+        ],
+        "ref": "+# to Strength",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_4080418644"
+            ],
+            "explicit": [
+              "explicit.stat_4080418644"
+            ],
+            "fractured": [
+              "fractured.stat_4080418644"
+            ],
+            "implicit": [
+              "implicit.stat_4080418644"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 32,
+            "min": 28,
+            "value": 29
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of the Wind",
+              "tags": [
+                "Attribute"
+              ],
+              "tier": 4,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 32,
+                  "min": 28,
+                  "unscalable": false,
+                  "value": 29
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to Dexterity"
+                    }
+                  ],
+                  "ref": "+# to Dexterity",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3261801346"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3261801346"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3261801346"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3261801346"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Dexterity"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 32,
+              "min": 28,
+              "unscalable": false,
+              "value": 29
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to Dexterity"
+                }
+              ],
+              "ref": "+# to Dexterity",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3261801346"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3261801346"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3261801346"
+                  ],
+                  "implicit": [
+                    "implicit.stat_3261801346"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to Dexterity"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# to Dexterity"
+          }
+        ],
+        "ref": "+# to Dexterity",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_3261801346"
+            ],
+            "explicit": [
+              "explicit.stat_3261801346"
+            ],
+            "fractured": [
+              "fractured.stat_3261801346"
+            ],
+            "implicit": [
+              "implicit.stat_3261801346"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 22,
+            "min": 18,
+            "value": 19
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of the Genius",
+              "tags": [
+                "Attribute"
+              ],
+              "tier": 6,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 22,
+                  "min": 18,
+                  "unscalable": false,
+                  "value": 19
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to Intelligence"
+                    }
+                  ],
+                  "ref": "+# to Intelligence",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_328541901"
+                      ],
+                      "explicit": [
+                        "explicit.stat_328541901"
+                      ],
+                      "fractured": [
+                        "fractured.stat_328541901"
+                      ],
+                      "implicit": [
+                        "implicit.stat_328541901"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Intelligence"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 22,
+              "min": 18,
+              "unscalable": false,
+              "value": 19
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to Intelligence"
+                }
+              ],
+              "ref": "+# to Intelligence",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_328541901"
+                  ],
+                  "explicit": [
+                    "explicit.stat_328541901"
+                  ],
+                  "fractured": [
+                    "fractured.stat_328541901"
+                  ],
+                  "implicit": [
+                    "implicit.stat_328541901"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to Intelligence"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# to Intelligence"
+          }
+        ],
+        "ref": "+# to Intelligence",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_328541901"
+            ],
+            "explicit": [
+              "explicit.stat_328541901"
+            ],
+            "fractured": [
+              "fractured.stat_328541901"
+            ],
+            "implicit": [
+              "implicit.stat_328541901"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": []
+}

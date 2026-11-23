@@ -1,0 +1,64 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "ilvl": {
+              "min": 84
+            },
+            "mirrored": {
+              "option": "false"
+            },
+            "quality": {
+              "max": 0
+            },
+            "split": {
+              "option": "false"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "enchant.stat_2954116742|25970",
+              "value": {}
+            },
+            {
+              "disabled": false,
+              "id": "implicit.stat_1379411836",
+              "value": {
+                "min": 13
+              }
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Onyx Amulet"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

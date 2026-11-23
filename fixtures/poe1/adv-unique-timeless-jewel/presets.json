@@ -1,0 +1,427 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "foulborn": {
+          "value": false
+        },
+        "searchExact": {
+          "baseTypeTrade": "Timeless Jewel",
+          "name": "Lethal Pride",
+          "nameTrade": "Lethal Pride"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        },
+        "vestigial": {
+          "value": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": true,
+          "hidden": "filters.hide_const_roll",
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Historic"
+                        }
+                      ],
+                      "ref": "Historic",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_3787436548"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Historic"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Historic"
+                    }
+                  ],
+                  "ref": "Historic",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3787436548"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Historic"
+                }
+              }
+            }
+          ],
+          "statRef": "Historic",
+          "tag": "explicit",
+          "text": "Historic",
+          "tradeId": [
+            "explicit.stat_3787436548"
+          ]
+        },
+        {
+          "expanded": true,
+          "group": "one",
+          "meta": {
+            "disabled": false,
+            "sources": [],
+            "statRef": "Count (1)",
+            "tag": "filter-group",
+            "text": "Count (1)",
+            "tradeId": [
+              "item.count_one_group"
+            ]
+          },
+          "stats": [
+            {
+              "disabled": false,
+              "roll": {
+                "default": {
+                  "max": 12345,
+                  "min": 12345
+                },
+                "dp": false,
+                "isNegated": false,
+                "max": 12345,
+                "min": 12345,
+                "value": 12345
+              },
+              "sources": [
+                {
+                  "contributes": {
+                    "max": 18000,
+                    "min": 10000,
+                    "value": 12345
+                  },
+                  "modifier": {
+                    "info": {
+                      "tags": [],
+                      "type": "explicit"
+                    },
+                    "stats": [
+                      {
+                        "roll": {
+                          "dp": false,
+                          "max": 18000,
+                          "min": 10000,
+                          "unscalable": false,
+                          "value": 12345
+                        },
+                        "stat": {
+                          "better": 0,
+                          "matchers": [
+                            {
+                              "string": "Commanded leadership over # warriors under Kaom\nPassives in radius are Conquered by the Karui"
+                            }
+                          ],
+                          "modFamily": [
+                            "Commanded leadership over # warriors under Kaom",
+                            "Commanded leadership over # warriors under Rakiata",
+                            "Commanded leadership over # warriors under Akoya"
+                          ],
+                          "ref": "Commanded leadership over # warriors under Kaom",
+                          "trade": {
+                            "ids": {
+                              "explicit": [
+                                "explicit.pseudo_timeless_jewel_kaom"
+                              ]
+                            }
+                          }
+                        },
+                        "translation": {
+                          "string": "Commanded leadership over # warriors under Kaom\nPassives in radius are Conquered by the Karui"
+                        }
+                      }
+                    ]
+                  },
+                  "stat": {
+                    "roll": {
+                      "dp": false,
+                      "max": 18000,
+                      "min": 10000,
+                      "unscalable": false,
+                      "value": 12345
+                    },
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Commanded leadership over # warriors under Kaom\nPassives in radius are Conquered by the Karui"
+                        }
+                      ],
+                      "modFamily": [
+                        "Commanded leadership over # warriors under Kaom",
+                        "Commanded leadership over # warriors under Rakiata",
+                        "Commanded leadership over # warriors under Akoya"
+                      ],
+                      "ref": "Commanded leadership over # warriors under Kaom",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.pseudo_timeless_jewel_kaom"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Commanded leadership over # warriors under Kaom\nPassives in radius are Conquered by the Karui"
+                    }
+                  }
+                }
+              ],
+              "statRef": "Commanded leadership over # warriors under Kaom",
+              "tag": "variant",
+              "text": "Commanded leadership over # warriors under Kaom\nPassives in radius are Conquered by the Karui",
+              "tradeId": [
+                "explicit.pseudo_timeless_jewel_kaom"
+              ]
+            },
+            {
+              "disabled": true,
+              "roll": {
+                "default": {
+                  "max": 12345,
+                  "min": 12345
+                },
+                "dp": false,
+                "isNegated": false,
+                "max": 12345,
+                "min": 12345,
+                "value": 12345
+              },
+              "sources": [
+                {
+                  "contributes": {
+                    "max": 18000,
+                    "min": 10000,
+                    "value": 12345
+                  },
+                  "modifier": {
+                    "info": {
+                      "tags": [],
+                      "type": "explicit"
+                    },
+                    "stats": [
+                      {
+                        "roll": {
+                          "dp": false,
+                          "max": 18000,
+                          "min": 10000,
+                          "unscalable": false,
+                          "value": 12345
+                        },
+                        "stat": {
+                          "better": 0,
+                          "matchers": [
+                            {
+                              "string": "Commanded leadership over # warriors under Rakiata\nPassives in radius are Conquered by the Karui"
+                            }
+                          ],
+                          "modFamily": [
+                            "Commanded leadership over # warriors under Kaom",
+                            "Commanded leadership over # warriors under Rakiata",
+                            "Commanded leadership over # warriors under Akoya"
+                          ],
+                          "ref": "Commanded leadership over # warriors under Rakiata",
+                          "trade": {
+                            "ids": {
+                              "explicit": [
+                                "explicit.pseudo_timeless_jewel_rakiata"
+                              ]
+                            }
+                          }
+                        },
+                        "translation": {
+                          "string": "Commanded leadership over # warriors under Rakiata\nPassives in radius are Conquered by the Karui"
+                        }
+                      }
+                    ]
+                  },
+                  "stat": {
+                    "roll": {
+                      "dp": false,
+                      "max": 18000,
+                      "min": 10000,
+                      "unscalable": false,
+                      "value": 12345
+                    },
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Commanded leadership over # warriors under Rakiata\nPassives in radius are Conquered by the Karui"
+                        }
+                      ],
+                      "modFamily": [
+                        "Commanded leadership over # warriors under Kaom",
+                        "Commanded leadership over # warriors under Rakiata",
+                        "Commanded leadership over # warriors under Akoya"
+                      ],
+                      "ref": "Commanded leadership over # warriors under Rakiata",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.pseudo_timeless_jewel_rakiata"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Commanded leadership over # warriors under Rakiata\nPassives in radius are Conquered by the Karui"
+                    }
+                  }
+                }
+              ],
+              "statRef": "Commanded leadership over # warriors under Rakiata",
+              "tag": "pseudo",
+              "text": "Commanded leadership over # warriors under Rakiata\nPassives in radius are Conquered by the Karui",
+              "tradeId": [
+                "explicit.pseudo_timeless_jewel_rakiata"
+              ]
+            },
+            {
+              "disabled": true,
+              "roll": {
+                "default": {
+                  "max": 12345,
+                  "min": 12345
+                },
+                "dp": false,
+                "isNegated": false,
+                "max": 12345,
+                "min": 12345,
+                "value": 12345
+              },
+              "sources": [
+                {
+                  "contributes": {
+                    "max": 18000,
+                    "min": 10000,
+                    "value": 12345
+                  },
+                  "modifier": {
+                    "info": {
+                      "tags": [],
+                      "type": "explicit"
+                    },
+                    "stats": [
+                      {
+                        "roll": {
+                          "dp": false,
+                          "max": 18000,
+                          "min": 10000,
+                          "unscalable": false,
+                          "value": 12345
+                        },
+                        "stat": {
+                          "better": 0,
+                          "matchers": [
+                            {
+                              "string": "Commanded leadership over # warriors under Akoya\nPassives in radius are Conquered by the Karui"
+                            }
+                          ],
+                          "modFamily": [
+                            "Commanded leadership over # warriors under Kaom",
+                            "Commanded leadership over # warriors under Rakiata",
+                            "Commanded leadership over # warriors under Akoya"
+                          ],
+                          "ref": "Commanded leadership over # warriors under Akoya",
+                          "trade": {
+                            "ids": {
+                              "explicit": [
+                                "explicit.pseudo_timeless_jewel_akoya"
+                              ]
+                            }
+                          }
+                        },
+                        "translation": {
+                          "string": "Commanded leadership over # warriors under Akoya\nPassives in radius are Conquered by the Karui"
+                        }
+                      }
+                    ]
+                  },
+                  "stat": {
+                    "roll": {
+                      "dp": false,
+                      "max": 18000,
+                      "min": 10000,
+                      "unscalable": false,
+                      "value": 12345
+                    },
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Commanded leadership over # warriors under Akoya\nPassives in radius are Conquered by the Karui"
+                        }
+                      ],
+                      "modFamily": [
+                        "Commanded leadership over # warriors under Kaom",
+                        "Commanded leadership over # warriors under Rakiata",
+                        "Commanded leadership over # warriors under Akoya"
+                      ],
+                      "ref": "Commanded leadership over # warriors under Akoya",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.pseudo_timeless_jewel_akoya"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Commanded leadership over # warriors under Akoya\nPassives in radius are Conquered by the Karui"
+                    }
+                  }
+                }
+              ],
+              "statRef": "Commanded leadership over # warriors under Akoya",
+              "tag": "pseudo",
+              "text": "Commanded leadership over # warriors under Akoya\nPassives in radius are Conquered by the Karui",
+              "tradeId": [
+                "explicit.pseudo_timeless_jewel_akoya"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

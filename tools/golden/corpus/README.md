@@ -22,6 +22,14 @@ this list current when adding cases, so it is clear which ones are real copies.
   lines, stat groups, weapons, "cannot use" items, split and twice corrupted.
   Not real copies; the stat text is real, the combinations may not be.
 - `error-*`: texts the parser rejects (`item.parse_error`, `item.unknown`).
+- Filter branches (`createPresets`), hand-written like `adv-*`:
+  `adv-rare-amulet-anointed` (anointment oils), `adv-magic-flask-charge-recovery`
+  (the flask "not increased effect" filter), `adv-rare-body-armour-attributes`
+  (armour properties, attribute and life pseudo stats), `adv-unique-timeless-jewel`
+  (keystone group), `chronicle-of-atzoatl` (open, obstructed and explosives rooms),
+  `mirrored-tablet`, `expedition-logbook` (one preset per area), `heist-blueprint`,
+  `mercenary-warrant` (skill groups, 6-link, `not` group) and `gem-transfigured`.
+  Their layout follows the parser's section rules; they are not real copies.
 - Everything else: hand-written in the in-game clipboard format (Ctrl+C, not the
   advanced Ctrl+Alt+C), checked only in that the reference parses each one with no
   unknown modifiers. They exercise the pipeline per item class (currency, cards,

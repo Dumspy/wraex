@@ -1,0 +1,1387 @@
+{
+  "areaLevel": 79,
+  "category": "Currency",
+  "influences": [],
+  "info": {
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvTWFwcy9UZW1wbGVNYXAiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MX1d/9be10cc6b3/TempleMap.png",
+    "name": "Chronicle of Atzoatl",
+    "namespace": "ITEM",
+    "refName": "Chronicle of Atzoatl"
+  },
+  "infoVariants": [
+    {
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvTWFwcy9UZW1wbGVNYXAiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MX1d/9be10cc6b3/TempleMap.png",
+      "name": "Chronicle of Atzoatl",
+      "namespace": "ITEM",
+      "refName": "Chronicle of Atzoatl"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "Chronicle of Atzoatl",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "pseudo"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 1,
+            "min": 1,
+            "unscalable": true,
+            "value": 1
+          },
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Apex of Atzoatl"
+              }
+            ],
+            "ref": "Has Room: Apex of Atzoatl",
+            "reminderText": "",
+            "trade": {
+              "ids": {
+                "pseudo": [
+                  "pseudo.pseudo_temple_apex"
+                ]
+              },
+              "option": true
+            }
+          },
+          "translation": {
+            "string": "Apex of Atzoatl"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "pseudo"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 1,
+            "min": 1,
+            "unscalable": true,
+            "value": 1
+          },
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Locus of Corruption (Tier 3)"
+              }
+            ],
+            "ref": "Has Room: Locus of Corruption (Tier 3)",
+            "reminderText": "Reduces player maximum resistances throughout the Temple.\nContains an Altar of Corruption.",
+            "trade": {
+              "ids": {
+                "pseudo": [
+                  "pseudo.pseudo_temple_corruption_room_3"
+                ]
+              },
+              "option": true
+            }
+          },
+          "translation": {
+            "string": "Locus of Corruption (Tier 3)"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "pseudo"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 1,
+            "min": 1,
+            "unscalable": true,
+            "value": 1
+          },
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Wealth of the Vaal (Tier 3)"
+              }
+            ],
+            "ref": "Has Room: Wealth of the Vaal (Tier 3)",
+            "reminderText": "Contains chests full of currency items.",
+            "trade": {
+              "ids": {
+                "pseudo": [
+                  "pseudo.pseudo_temple_currency_vault_3"
+                ]
+              },
+              "option": true
+            }
+          },
+          "translation": {
+            "string": "Wealth of the Vaal (Tier 3)"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "pseudo"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 1,
+            "min": 1,
+            "unscalable": true,
+            "value": 1
+          },
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Explosives Room (Tier 1)"
+              }
+            ],
+            "ref": "Has Room: Explosives Room (Tier 1)",
+            "reminderText": "Contains an Explosive Charge.\nContains one Sealed Coffer.",
+            "trade": {
+              "ids": {
+                "pseudo": [
+                  "pseudo.pseudo_temple_explosives_room_1"
+                ]
+              },
+              "option": true
+            }
+          },
+          "translation": {
+            "string": "Explosives Room (Tier 1)"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "pseudo"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 1,
+            "min": 1,
+            "unscalable": true,
+            "value": 1
+          },
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Hall of Champions (Tier 3)"
+              }
+            ],
+            "ref": "Has Room: Hall of Champions (Tier 3)",
+            "reminderText": "Increases monster criticals throughout the Temple.\nContains chests full of weapons.",
+            "trade": {
+              "ids": {
+                "pseudo": [
+                  "pseudo.pseudo_temple_weapon_room_3"
+                ]
+              },
+              "option": true
+            }
+          },
+          "translation": {
+            "string": "Hall of Champions (Tier 3)"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "pseudo"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 1,
+            "min": 1,
+            "unscalable": true,
+            "value": 1
+          },
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Barracks (Tier 2)"
+              }
+            ],
+            "ref": "Has Room: Barracks (Tier 2)",
+            "reminderText": "Increases monster pack size throughout the Temple.",
+            "trade": {
+              "ids": {
+                "pseudo": [
+                  "pseudo.pseudo_temple_breeding_room_2"
+                ]
+              },
+              "option": true
+            }
+          },
+          "translation": {
+            "string": "Barracks (Tier 2)"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "pseudo"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 1,
+            "min": 1,
+            "unscalable": true,
+            "value": 1
+          },
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Banquet Hall"
+              }
+            ],
+            "ref": "Has Room: Banquet Hall",
+            "reminderText": "",
+            "trade": {
+              "ids": {
+                "pseudo": [
+                  "pseudo.pseudo_temple_banquet_hall"
+                ]
+              },
+              "option": true
+            }
+          },
+          "translation": {
+            "string": "Banquet Hall"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "pseudo"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 2,
+            "min": 2,
+            "unscalable": true,
+            "value": 2
+          },
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Sanctum of Immortality (Tier 3)"
+              }
+            ],
+            "ref": "Has Room: Sanctum of Immortality (Tier 3)",
+            "reminderText": "Heals monsters in the Temple.\nMay contain a Pools Coffer",
+            "trade": {
+              "ids": {
+                "pseudo": [
+                  "pseudo.pseudo_temple_healing_room_3"
+                ]
+              },
+              "option": true
+            }
+          },
+          "translation": {
+            "string": "Obstructed Rooms: Sanctum of Immortality (Tier 3)"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "pseudo"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 2,
+            "min": 2,
+            "unscalable": true,
+            "value": 2
+          },
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Armoury (Tier 2)"
+              }
+            ],
+            "ref": "Has Room: Armoury (Tier 2)",
+            "reminderText": "Monsters throughout the Temple have increased resistances.\nContains chests full of armour.",
+            "trade": {
+              "ids": {
+                "pseudo": [
+                  "pseudo.pseudo_temple_armour_room_2"
+                ]
+              },
+              "option": true
+            }
+          },
+          "translation": {
+            "string": "Obstructed Rooms: Armoury (Tier 2)"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "pseudo"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 2,
+            "min": 2,
+            "unscalable": true,
+            "value": 2
+          },
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Hall of Legends (Tier 3)"
+              }
+            ],
+            "ref": "Has Room: Hall of Legends (Tier 3)",
+            "reminderText": "Contains a Timeless Monolith that will reveal two Generals.",
+            "trade": {
+              "ids": {
+                "pseudo": [
+                  "pseudo.pseudo_temple_legion_3"
+                ]
+              },
+              "option": true
+            }
+          },
+          "translation": {
+            "string": "Obstructed Rooms: Hall of Legends (Tier 3)"
+          }
+        }
+      ]
+    }
+  ],
+  "rawText": "Item Class: Map Fragments\nRarity: Currency\nChronicle of Atzoatl\n--------\nArea Level: 79\n--------\nOpen Rooms:\nApex of Atzoatl\nLocus of Corruption (Tier 3)\nWealth of the Vaal (Tier 3)\nExplosives Room (Tier 1)\nHall of Champions (Tier 3)\nBarracks (Tier 2)\nBanquet Hall\nObstructed Rooms:\nSanctum of Immortality (Tier 3)\nArmoury (Tier 2)\nHall of Legends (Tier 3)\n--------\nTake this item to the Map Device in your Hideout to open portals to the Temple of Atzoatl.\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 1,
+            "min": 1,
+            "value": 1
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "pseudo"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 1,
+                  "min": 1,
+                  "unscalable": true,
+                  "value": 1
+                },
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Apex of Atzoatl"
+                    }
+                  ],
+                  "ref": "Has Room: Apex of Atzoatl",
+                  "reminderText": "",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.pseudo_temple_apex"
+                      ]
+                    },
+                    "option": true
+                  }
+                },
+                "translation": {
+                  "string": "Apex of Atzoatl"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 1,
+              "min": 1,
+              "unscalable": true,
+              "value": 1
+            },
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Apex of Atzoatl"
+                }
+              ],
+              "ref": "Has Room: Apex of Atzoatl",
+              "reminderText": "",
+              "trade": {
+                "ids": {
+                  "pseudo": [
+                    "pseudo.pseudo_temple_apex"
+                  ]
+                },
+                "option": true
+              }
+            },
+            "translation": {
+              "string": "Apex of Atzoatl"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Apex of Atzoatl"
+          }
+        ],
+        "ref": "Has Room: Apex of Atzoatl",
+        "reminderText": "",
+        "trade": {
+          "ids": {
+            "pseudo": [
+              "pseudo.pseudo_temple_apex"
+            ]
+          },
+          "option": true
+        }
+      },
+      "type": "pseudo"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 1,
+            "min": 1,
+            "value": 1
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "pseudo"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 1,
+                  "min": 1,
+                  "unscalable": true,
+                  "value": 1
+                },
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Locus of Corruption (Tier 3)"
+                    }
+                  ],
+                  "ref": "Has Room: Locus of Corruption (Tier 3)",
+                  "reminderText": "Reduces player maximum resistances throughout the Temple.\nContains an Altar of Corruption.",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.pseudo_temple_corruption_room_3"
+                      ]
+                    },
+                    "option": true
+                  }
+                },
+                "translation": {
+                  "string": "Locus of Corruption (Tier 3)"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 1,
+              "min": 1,
+              "unscalable": true,
+              "value": 1
+            },
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Locus of Corruption (Tier 3)"
+                }
+              ],
+              "ref": "Has Room: Locus of Corruption (Tier 3)",
+              "reminderText": "Reduces player maximum resistances throughout the Temple.\nContains an Altar of Corruption.",
+              "trade": {
+                "ids": {
+                  "pseudo": [
+                    "pseudo.pseudo_temple_corruption_room_3"
+                  ]
+                },
+                "option": true
+              }
+            },
+            "translation": {
+              "string": "Locus of Corruption (Tier 3)"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Locus of Corruption (Tier 3)"
+          }
+        ],
+        "ref": "Has Room: Locus of Corruption (Tier 3)",
+        "reminderText": "Reduces player maximum resistances throughout the Temple.\nContains an Altar of Corruption.",
+        "trade": {
+          "ids": {
+            "pseudo": [
+              "pseudo.pseudo_temple_corruption_room_3"
+            ]
+          },
+          "option": true
+        }
+      },
+      "type": "pseudo"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 1,
+            "min": 1,
+            "value": 1
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "pseudo"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 1,
+                  "min": 1,
+                  "unscalable": true,
+                  "value": 1
+                },
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Wealth of the Vaal (Tier 3)"
+                    }
+                  ],
+                  "ref": "Has Room: Wealth of the Vaal (Tier 3)",
+                  "reminderText": "Contains chests full of currency items.",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.pseudo_temple_currency_vault_3"
+                      ]
+                    },
+                    "option": true
+                  }
+                },
+                "translation": {
+                  "string": "Wealth of the Vaal (Tier 3)"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 1,
+              "min": 1,
+              "unscalable": true,
+              "value": 1
+            },
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Wealth of the Vaal (Tier 3)"
+                }
+              ],
+              "ref": "Has Room: Wealth of the Vaal (Tier 3)",
+              "reminderText": "Contains chests full of currency items.",
+              "trade": {
+                "ids": {
+                  "pseudo": [
+                    "pseudo.pseudo_temple_currency_vault_3"
+                  ]
+                },
+                "option": true
+              }
+            },
+            "translation": {
+              "string": "Wealth of the Vaal (Tier 3)"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Wealth of the Vaal (Tier 3)"
+          }
+        ],
+        "ref": "Has Room: Wealth of the Vaal (Tier 3)",
+        "reminderText": "Contains chests full of currency items.",
+        "trade": {
+          "ids": {
+            "pseudo": [
+              "pseudo.pseudo_temple_currency_vault_3"
+            ]
+          },
+          "option": true
+        }
+      },
+      "type": "pseudo"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 1,
+            "min": 1,
+            "value": 1
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "pseudo"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 1,
+                  "min": 1,
+                  "unscalable": true,
+                  "value": 1
+                },
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Explosives Room (Tier 1)"
+                    }
+                  ],
+                  "ref": "Has Room: Explosives Room (Tier 1)",
+                  "reminderText": "Contains an Explosive Charge.\nContains one Sealed Coffer.",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.pseudo_temple_explosives_room_1"
+                      ]
+                    },
+                    "option": true
+                  }
+                },
+                "translation": {
+                  "string": "Explosives Room (Tier 1)"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 1,
+              "min": 1,
+              "unscalable": true,
+              "value": 1
+            },
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Explosives Room (Tier 1)"
+                }
+              ],
+              "ref": "Has Room: Explosives Room (Tier 1)",
+              "reminderText": "Contains an Explosive Charge.\nContains one Sealed Coffer.",
+              "trade": {
+                "ids": {
+                  "pseudo": [
+                    "pseudo.pseudo_temple_explosives_room_1"
+                  ]
+                },
+                "option": true
+              }
+            },
+            "translation": {
+              "string": "Explosives Room (Tier 1)"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Explosives Room (Tier 1)"
+          }
+        ],
+        "ref": "Has Room: Explosives Room (Tier 1)",
+        "reminderText": "Contains an Explosive Charge.\nContains one Sealed Coffer.",
+        "trade": {
+          "ids": {
+            "pseudo": [
+              "pseudo.pseudo_temple_explosives_room_1"
+            ]
+          },
+          "option": true
+        }
+      },
+      "type": "pseudo"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 1,
+            "min": 1,
+            "value": 1
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "pseudo"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 1,
+                  "min": 1,
+                  "unscalable": true,
+                  "value": 1
+                },
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Hall of Champions (Tier 3)"
+                    }
+                  ],
+                  "ref": "Has Room: Hall of Champions (Tier 3)",
+                  "reminderText": "Increases monster criticals throughout the Temple.\nContains chests full of weapons.",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.pseudo_temple_weapon_room_3"
+                      ]
+                    },
+                    "option": true
+                  }
+                },
+                "translation": {
+                  "string": "Hall of Champions (Tier 3)"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 1,
+              "min": 1,
+              "unscalable": true,
+              "value": 1
+            },
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Hall of Champions (Tier 3)"
+                }
+              ],
+              "ref": "Has Room: Hall of Champions (Tier 3)",
+              "reminderText": "Increases monster criticals throughout the Temple.\nContains chests full of weapons.",
+              "trade": {
+                "ids": {
+                  "pseudo": [
+                    "pseudo.pseudo_temple_weapon_room_3"
+                  ]
+                },
+                "option": true
+              }
+            },
+            "translation": {
+              "string": "Hall of Champions (Tier 3)"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Hall of Champions (Tier 3)"
+          }
+        ],
+        "ref": "Has Room: Hall of Champions (Tier 3)",
+        "reminderText": "Increases monster criticals throughout the Temple.\nContains chests full of weapons.",
+        "trade": {
+          "ids": {
+            "pseudo": [
+              "pseudo.pseudo_temple_weapon_room_3"
+            ]
+          },
+          "option": true
+        }
+      },
+      "type": "pseudo"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 1,
+            "min": 1,
+            "value": 1
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "pseudo"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 1,
+                  "min": 1,
+                  "unscalable": true,
+                  "value": 1
+                },
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Barracks (Tier 2)"
+                    }
+                  ],
+                  "ref": "Has Room: Barracks (Tier 2)",
+                  "reminderText": "Increases monster pack size throughout the Temple.",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.pseudo_temple_breeding_room_2"
+                      ]
+                    },
+                    "option": true
+                  }
+                },
+                "translation": {
+                  "string": "Barracks (Tier 2)"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 1,
+              "min": 1,
+              "unscalable": true,
+              "value": 1
+            },
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Barracks (Tier 2)"
+                }
+              ],
+              "ref": "Has Room: Barracks (Tier 2)",
+              "reminderText": "Increases monster pack size throughout the Temple.",
+              "trade": {
+                "ids": {
+                  "pseudo": [
+                    "pseudo.pseudo_temple_breeding_room_2"
+                  ]
+                },
+                "option": true
+              }
+            },
+            "translation": {
+              "string": "Barracks (Tier 2)"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Barracks (Tier 2)"
+          }
+        ],
+        "ref": "Has Room: Barracks (Tier 2)",
+        "reminderText": "Increases monster pack size throughout the Temple.",
+        "trade": {
+          "ids": {
+            "pseudo": [
+              "pseudo.pseudo_temple_breeding_room_2"
+            ]
+          },
+          "option": true
+        }
+      },
+      "type": "pseudo"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 1,
+            "min": 1,
+            "value": 1
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "pseudo"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 1,
+                  "min": 1,
+                  "unscalable": true,
+                  "value": 1
+                },
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Banquet Hall"
+                    }
+                  ],
+                  "ref": "Has Room: Banquet Hall",
+                  "reminderText": "",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.pseudo_temple_banquet_hall"
+                      ]
+                    },
+                    "option": true
+                  }
+                },
+                "translation": {
+                  "string": "Banquet Hall"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 1,
+              "min": 1,
+              "unscalable": true,
+              "value": 1
+            },
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Banquet Hall"
+                }
+              ],
+              "ref": "Has Room: Banquet Hall",
+              "reminderText": "",
+              "trade": {
+                "ids": {
+                  "pseudo": [
+                    "pseudo.pseudo_temple_banquet_hall"
+                  ]
+                },
+                "option": true
+              }
+            },
+            "translation": {
+              "string": "Banquet Hall"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Banquet Hall"
+          }
+        ],
+        "ref": "Has Room: Banquet Hall",
+        "reminderText": "",
+        "trade": {
+          "ids": {
+            "pseudo": [
+              "pseudo.pseudo_temple_banquet_hall"
+            ]
+          },
+          "option": true
+        }
+      },
+      "type": "pseudo"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 2,
+            "min": 2,
+            "value": 2
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "pseudo"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 2,
+                  "min": 2,
+                  "unscalable": true,
+                  "value": 2
+                },
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Sanctum of Immortality (Tier 3)"
+                    }
+                  ],
+                  "ref": "Has Room: Sanctum of Immortality (Tier 3)",
+                  "reminderText": "Heals monsters in the Temple.\nMay contain a Pools Coffer",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.pseudo_temple_healing_room_3"
+                      ]
+                    },
+                    "option": true
+                  }
+                },
+                "translation": {
+                  "string": "Obstructed Rooms: Sanctum of Immortality (Tier 3)"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 2,
+              "min": 2,
+              "unscalable": true,
+              "value": 2
+            },
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Sanctum of Immortality (Tier 3)"
+                }
+              ],
+              "ref": "Has Room: Sanctum of Immortality (Tier 3)",
+              "reminderText": "Heals monsters in the Temple.\nMay contain a Pools Coffer",
+              "trade": {
+                "ids": {
+                  "pseudo": [
+                    "pseudo.pseudo_temple_healing_room_3"
+                  ]
+                },
+                "option": true
+              }
+            },
+            "translation": {
+              "string": "Obstructed Rooms: Sanctum of Immortality (Tier 3)"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Sanctum of Immortality (Tier 3)"
+          }
+        ],
+        "ref": "Has Room: Sanctum of Immortality (Tier 3)",
+        "reminderText": "Heals monsters in the Temple.\nMay contain a Pools Coffer",
+        "trade": {
+          "ids": {
+            "pseudo": [
+              "pseudo.pseudo_temple_healing_room_3"
+            ]
+          },
+          "option": true
+        }
+      },
+      "type": "pseudo"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 2,
+            "min": 2,
+            "value": 2
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "pseudo"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 2,
+                  "min": 2,
+                  "unscalable": true,
+                  "value": 2
+                },
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Armoury (Tier 2)"
+                    }
+                  ],
+                  "ref": "Has Room: Armoury (Tier 2)",
+                  "reminderText": "Monsters throughout the Temple have increased resistances.\nContains chests full of armour.",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.pseudo_temple_armour_room_2"
+                      ]
+                    },
+                    "option": true
+                  }
+                },
+                "translation": {
+                  "string": "Obstructed Rooms: Armoury (Tier 2)"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 2,
+              "min": 2,
+              "unscalable": true,
+              "value": 2
+            },
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Armoury (Tier 2)"
+                }
+              ],
+              "ref": "Has Room: Armoury (Tier 2)",
+              "reminderText": "Monsters throughout the Temple have increased resistances.\nContains chests full of armour.",
+              "trade": {
+                "ids": {
+                  "pseudo": [
+                    "pseudo.pseudo_temple_armour_room_2"
+                  ]
+                },
+                "option": true
+              }
+            },
+            "translation": {
+              "string": "Obstructed Rooms: Armoury (Tier 2)"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Armoury (Tier 2)"
+          }
+        ],
+        "ref": "Has Room: Armoury (Tier 2)",
+        "reminderText": "Monsters throughout the Temple have increased resistances.\nContains chests full of armour.",
+        "trade": {
+          "ids": {
+            "pseudo": [
+              "pseudo.pseudo_temple_armour_room_2"
+            ]
+          },
+          "option": true
+        }
+      },
+      "type": "pseudo"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 2,
+            "min": 2,
+            "value": 2
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "pseudo"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 2,
+                  "min": 2,
+                  "unscalable": true,
+                  "value": 2
+                },
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Hall of Legends (Tier 3)"
+                    }
+                  ],
+                  "ref": "Has Room: Hall of Legends (Tier 3)",
+                  "reminderText": "Contains a Timeless Monolith that will reveal two Generals.",
+                  "trade": {
+                    "ids": {
+                      "pseudo": [
+                        "pseudo.pseudo_temple_legion_3"
+                      ]
+                    },
+                    "option": true
+                  }
+                },
+                "translation": {
+                  "string": "Obstructed Rooms: Hall of Legends (Tier 3)"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 2,
+              "min": 2,
+              "unscalable": true,
+              "value": 2
+            },
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Hall of Legends (Tier 3)"
+                }
+              ],
+              "ref": "Has Room: Hall of Legends (Tier 3)",
+              "reminderText": "Contains a Timeless Monolith that will reveal two Generals.",
+              "trade": {
+                "ids": {
+                  "pseudo": [
+                    "pseudo.pseudo_temple_legion_3"
+                  ]
+                },
+                "option": true
+              }
+            },
+            "translation": {
+              "string": "Obstructed Rooms: Hall of Legends (Tier 3)"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Hall of Legends (Tier 3)"
+          }
+        ],
+        "ref": "Has Room: Hall of Legends (Tier 3)",
+        "reminderText": "Contains a Timeless Monolith that will reveal two Generals.",
+        "trade": {
+          "ids": {
+            "pseudo": [
+              "pseudo.pseudo_temple_legion_3"
+            ]
+          },
+          "option": true
+        }
+      },
+      "type": "pseudo"
+    }
+  ],
+  "unknownModifiers": []
+}

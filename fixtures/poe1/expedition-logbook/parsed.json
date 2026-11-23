@@ -1,0 +1,155 @@
+{
+  "areaLevel": 83,
+  "category": "Expedition Logbook",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Expedition Logbook"
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvTWFwcy9FeHBlZGl0aW9uQ2hyb25pY2xlMyIsInciOjEsImgiOjEsInNjYWxlIjoxfV0/2802fe605e/ExpeditionChronicle3.png",
+    "name": "Expedition Logbook",
+    "namespace": "ITEM",
+    "refName": "Expedition Logbook"
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Expedition Logbook"
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvTWFwcy9FeHBlZGl0aW9uQ2hyb25pY2xlMyIsInciOjEsImgiOjEsInNjYWxlIjoxfV0/2802fe605e/ExpeditionChronicle3.png",
+      "name": "Expedition Logbook",
+      "namespace": "ITEM",
+      "refName": "Expedition Logbook"
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 83,
+  "logbookAreaMods": [
+    [
+      {
+        "info": {
+          "tags": [],
+          "type": "pseudo"
+        },
+        "stats": [
+          {
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Druids of the Broken Circle"
+                }
+              ],
+              "ref": "Has Logbook Faction: Druids of the Broken Circle",
+              "trade": {
+                "ids": {
+                  "pseudo": [
+                    "pseudo.pseudo_logbook_faction_druids"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Druids of the Broken Circle"
+            }
+          }
+        ]
+      },
+      {
+        "info": {
+          "tags": [],
+          "type": "implicit"
+        },
+        "stats": [
+          {
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Area contains Medved, Feller of Heroes"
+                }
+              ],
+              "ref": "Area contains Medved, Feller of Heroes",
+              "trade": {
+                "ids": {
+                  "implicit": [
+                    "implicit.stat_3159649981|1"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Area contains Medved, Feller of Heroes"
+            }
+          }
+        ]
+      }
+    ],
+    [
+      {
+        "info": {
+          "tags": [],
+          "type": "pseudo"
+        },
+        "stats": [
+          {
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Black Scythe Mercenaries"
+                }
+              ],
+              "ref": "Has Logbook Faction: Black Scythe Mercenaries",
+              "trade": {
+                "ids": {
+                  "pseudo": [
+                    "pseudo.pseudo_logbook_faction_mercenaries"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Black Scythe Mercenaries"
+            }
+          }
+        ]
+      },
+      {
+        "info": {
+          "tags": [],
+          "type": "implicit"
+        },
+        "stats": [
+          {
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Area contains Olroth, Origin of the Fall"
+                }
+              ],
+              "ref": "Area contains Olroth, Origin of the Fall",
+              "trade": {
+                "ids": {
+                  "implicit": [
+                    "implicit.stat_3159649981|4"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Area contains Olroth, Origin of the Fall"
+            }
+          }
+        ]
+      }
+    ]
+  ],
+  "name": "Expedition Logbook",
+  "newMods": [],
+  "rarity": "Normal",
+  "rawText": "Item Class: Expedition Logbooks\nRarity: Normal\nExpedition Logbook\n--------\nArea Level: 83\n--------\nBluffs\nDruids of the Broken Circle\nArea contains Medved, Feller of Heroes (implicit)\n--------\nCemetery\nBlack Scythe Mercenaries\nArea contains Olroth, Origin of the Fall (implicit)\n--------\nItem Level: 83\n--------\nTake this item to Dannig in your Hideout to open portals to an expedition.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

@@ -1,0 +1,82 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "heist_filters": {
+          "filters": {
+            "heist_max_wings": {
+              "min": 4
+            },
+            "heist_wings": {
+              "min": 2
+            }
+          }
+        },
+        "map_filters": {
+          "filters": {
+            "area_level": {
+              "min": 83
+            }
+          }
+        },
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            },
+            "split": {
+              "option": "false"
+            }
+          }
+        },
+        "trade_filters": {
+          "filters": {
+            "collapse": {
+              "option": "true"
+            },
+            "price": {
+              "option": "chaos_divine"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [],
+          "type": "and"
+        },
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_number_of_enchant_mods",
+              "value": {}
+            }
+          ],
+          "type": "not"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Blueprint: Bunker"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            }
+          }
+        },
+        "socket_filters": {
+          "filters": {
+            "links": {
+              "min": 6
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "category": {
+              "option": "armour.chest"
+            },
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_strength",
+              "value": {
+                "min": 51
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_dexterity",
+              "value": {
+                "min": 28
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_intelligence",
+              "value": {
+                "min": 18
+              }
+            },
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_life",
+              "value": {
+                "min": 151
+              }
+            }
+          ],
+          "type": "and"
+        },
+        {
+          "disabled": true,
+          "filters": [
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_number_of_empty_prefix_mods",
+              "value": {
+                "max": 1,
+                "min": 1
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_number_of_crafted_prefix_mods",
+              "value": {
+                "min": 1
+              }
+            }
+          ],
+          "type": "count",
+          "value": {
+            "max": 1,
+            "min": 1
+          }
+        },
+        {
+          "disabled": true,
+          "filters": [
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_number_of_empty_prefix_mods",
+              "value": {
+                "max": 1,
+                "min": 1
+              }
+            },
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_number_of_affix_mods",
+              "value": {
+                "min": 6
+              }
+            }
+          ],
+          "type": "count",
+          "value": {
+            "max": 1,
+            "min": 1
+          }
+        }
+      ],
+      "status": {
+        "option": "securable"
+      }
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

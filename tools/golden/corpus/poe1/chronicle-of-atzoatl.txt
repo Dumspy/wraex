@@ -1,0 +1,20 @@
+Item Class: Map Fragments
+Rarity: Currency
+Chronicle of Atzoatl
+--------
+Area Level: 79
+--------
+Open Rooms:
+Apex of Atzoatl
+Locus of Corruption (Tier 3)
+Wealth of the Vaal (Tier 3)
+Explosives Room (Tier 1)
+Hall of Champions (Tier 3)
+Barracks (Tier 2)
+Banquet Hall
+Obstructed Rooms:
+Sanctum of Immortality (Tier 3)
+Armoury (Tier 2)
+Hall of Legends (Tier 3)
+--------
+Take this item to the Map Device in your Hideout to open portals to the Temple of Atzoatl.

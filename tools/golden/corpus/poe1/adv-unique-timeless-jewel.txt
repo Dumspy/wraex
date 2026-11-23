@@ -1,0 +1,21 @@
+Item Class: Jewels
+Rarity: Unique
+Lethal Pride
+Timeless Jewel
+--------
+Limited to: 1 Historic
+Radius: Large
+--------
+Item Level: 84
+--------
+{ Unique Modifier }
+Commanded leadership over 12345(10000-18000) warriors under Kaom
+Passives in radius are Conquered by the Karui
+{ Unique Modifier }
+Historic
+--------
+They believed that power was a gift
+from the gods, and that only the strong
+were worthy of it.
+--------
+Place into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.

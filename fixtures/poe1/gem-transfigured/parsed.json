@@ -1,0 +1,38 @@
+{
+  "category": "Gem",
+  "gemLevel": 20,
+  "influences": [],
+  "info": {
+    "gem": {
+      "maxLevel": 20,
+      "normalVariant": "Kinetic Blast",
+      "transfigured": true
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9DbHVzdGVyQnVyc3QiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MX1d/1b7aff0832/ClusterBurst.png",
+    "name": "Kinetic Blast of Clustering",
+    "namespace": "GEM",
+    "refName": "Kinetic Blast of Clustering",
+    "tradeDisc": "alt_x"
+  },
+  "infoVariants": [
+    {
+      "gem": {
+        "maxLevel": 20,
+        "normalVariant": "Kinetic Blast",
+        "transfigured": true
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9DbHVzdGVyQnVyc3QiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MX1d/1b7aff0832/ClusterBurst.png",
+      "name": "Kinetic Blast of Clustering",
+      "namespace": "GEM",
+      "refName": "Kinetic Blast of Clustering",
+      "tradeDisc": "alt_x"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "Kinetic Blast of Clustering",
+  "newMods": [],
+  "quality": 20,
+  "rawText": "Item Class: Skill Gems\nRarity: Gem\nKinetic Blast of Clustering\n--------\nProjectile, Spell, AoE\nLevel: 20 (Max)\nCost: 13 Mana\nCast Time: 1.00 sec\nQuality: +20% (augmented)\n--------\nRequirements:\nLevel: 70\nInt: 155\n--------\nExperience: 1/1\n--------\nPlace into an item socket of the right colour to gain this skill. Right click to remove from a socket.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}
