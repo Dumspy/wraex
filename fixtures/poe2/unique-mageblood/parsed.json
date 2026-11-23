@@ -1,0 +1,2057 @@
+{
+  "baseType": "Utility Belt",
+  "category": "Belt",
+  "influences": [],
+  "info": {
+    "h": 1,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvVW5pcXVlcy9NYWdlYmxvb2QiLCJ3IjoyLCJoIjoxLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/79ac3ce7d3/Mageblood.png",
+    "name": "Mageblood",
+    "namespace": "UNIQUE",
+    "refName": "Mageblood",
+    "tags": [],
+    "unique": {
+      "base": "Utility Belt"
+    },
+    "w": 2
+  },
+  "infoVariants": [
+    {
+      "h": 1,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvVW5pcXVlcy9NYWdlYmxvb2QiLCJ3IjoyLCJoIjoxLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/79ac3ce7d3/Mageblood.png",
+      "name": "Mageblood",
+      "namespace": "UNIQUE",
+      "refName": "Mageblood",
+      "tags": [],
+      "unique": {
+        "base": "Utility Belt"
+      },
+      "w": 2
+    }
+  ],
+  "isCorrupted": false,
+  "isUnidentified": false,
+  "itemLevel": 82,
+  "name": "Mageblood",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 20,
+            "min": 20,
+            "unscalable": false,
+            "value": 20
+          },
+          "stat": {
+            "better": 1,
+            "id": "flask_recovery_amount_%_to_recover_instantly",
+            "matchers": [
+              {
+                "string": "#% of Flask Recovery applied Instantly"
+              }
+            ],
+            "ref": "#% of Flask Recovery applied Instantly",
+            "trade": {
+              "ids": {
+                "implicit": [
+                  "implicit.stat_462041840"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% of Flask Recovery applied Instantly"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [
+          "Charm"
+        ],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 3,
+            "min": 1,
+            "unscalable": false,
+            "value": 3
+          },
+          "stat": {
+            "better": 1,
+            "id": "local_charm_slots",
+            "matchers": [
+              {
+                "string": "Has # Charm Slots"
+              },
+              {
+                "string": "Has # Charm Slot",
+                "value": 1
+              }
+            ],
+            "ref": "Has # Charm Slot",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_1416292992"
+                ],
+                "implicit": [
+                  "implicit.stat_1416292992"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Has # Charm Slots"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 14,
+            "min": 14,
+            "option": 14,
+            "unscalable": true,
+            "value": 14
+          },
+          "stat": {
+            "better": 1,
+            "id": "local_unique_mages_legacy_1",
+            "matchers": [
+              {
+                "advanced": "Legacy of Gold(Amethyst-Topaz)",
+                "string": "Legacy of Gold",
+                "value": 5
+              },
+              {
+                "advanced": "Legacy of Jade(Amethyst-Topaz)",
+                "string": "Legacy of Jade",
+                "value": 7
+              },
+              {
+                "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+                "string": "Legacy of Ruby",
+                "value": 9
+              },
+              {
+                "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+                "string": "Legacy of Topaz",
+                "value": 14
+              },
+              {
+                "advanced": "Legacy of Basalt(Amethyst-Topaz)",
+                "string": "Legacy of Basalt",
+                "value": 2
+              },
+              {
+                "advanced": "Legacy of Silver(Amethyst-Topaz)",
+                "string": "Legacy of Silver",
+                "value": 11
+              },
+              {
+                "advanced": "Legacy of Bismuth(Amethyst-Topaz)",
+                "string": "Legacy of Bismuth",
+                "value": 3
+              },
+              {
+                "advanced": "Legacy of Diamond(Amethyst-Topaz)",
+                "string": "Legacy of Diamond",
+                "value": 4
+              },
+              {
+                "advanced": "Legacy of Granite(Amethyst-Topaz)",
+                "string": "Legacy of Granite",
+                "value": 6
+              },
+              {
+                "advanced": "Legacy of Sulphur(Amethyst-Topaz)",
+                "string": "Legacy of Sulphur",
+                "value": 13
+              },
+              {
+                "advanced": "Legacy of Amethyst(Amethyst-Topaz)",
+                "string": "Legacy of Amethyst",
+                "value": 1
+              },
+              {
+                "advanced": "Legacy of Sapphire(Amethyst-Topaz)",
+                "string": "Legacy of Sapphire",
+                "value": 10
+              },
+              {
+                "advanced": "Legacy of Stibnite(Amethyst-Topaz)",
+                "string": "Legacy of Stibnite",
+                "value": 12
+              },
+              {
+                "advanced": "Legacy of Quicksilver(Amethyst-Topaz)",
+                "string": "Legacy of Quicksilver",
+                "value": 8
+              }
+            ],
+            "ref": "Legacy of #",
+            "trade": {
+              "count": true,
+              "ids": {
+                "explicit": [
+                  "explicit.stat_264262054"
+                ]
+              },
+              "option": true
+            }
+          },
+          "translation": {
+            "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+            "string": "Legacy of Topaz",
+            "value": 14
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 14,
+            "min": 14,
+            "option": 14,
+            "unscalable": true,
+            "value": 14
+          },
+          "stat": {
+            "better": 1,
+            "id": "local_unique_mages_legacy_1",
+            "matchers": [
+              {
+                "advanced": "Legacy of Gold(Amethyst-Topaz)",
+                "string": "Legacy of Gold",
+                "value": 5
+              },
+              {
+                "advanced": "Legacy of Jade(Amethyst-Topaz)",
+                "string": "Legacy of Jade",
+                "value": 7
+              },
+              {
+                "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+                "string": "Legacy of Ruby",
+                "value": 9
+              },
+              {
+                "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+                "string": "Legacy of Topaz",
+                "value": 14
+              },
+              {
+                "advanced": "Legacy of Basalt(Amethyst-Topaz)",
+                "string": "Legacy of Basalt",
+                "value": 2
+              },
+              {
+                "advanced": "Legacy of Silver(Amethyst-Topaz)",
+                "string": "Legacy of Silver",
+                "value": 11
+              },
+              {
+                "advanced": "Legacy of Bismuth(Amethyst-Topaz)",
+                "string": "Legacy of Bismuth",
+                "value": 3
+              },
+              {
+                "advanced": "Legacy of Diamond(Amethyst-Topaz)",
+                "string": "Legacy of Diamond",
+                "value": 4
+              },
+              {
+                "advanced": "Legacy of Granite(Amethyst-Topaz)",
+                "string": "Legacy of Granite",
+                "value": 6
+              },
+              {
+                "advanced": "Legacy of Sulphur(Amethyst-Topaz)",
+                "string": "Legacy of Sulphur",
+                "value": 13
+              },
+              {
+                "advanced": "Legacy of Amethyst(Amethyst-Topaz)",
+                "string": "Legacy of Amethyst",
+                "value": 1
+              },
+              {
+                "advanced": "Legacy of Sapphire(Amethyst-Topaz)",
+                "string": "Legacy of Sapphire",
+                "value": 10
+              },
+              {
+                "advanced": "Legacy of Stibnite(Amethyst-Topaz)",
+                "string": "Legacy of Stibnite",
+                "value": 12
+              },
+              {
+                "advanced": "Legacy of Quicksilver(Amethyst-Topaz)",
+                "string": "Legacy of Quicksilver",
+                "value": 8
+              }
+            ],
+            "ref": "Legacy of #",
+            "trade": {
+              "count": true,
+              "ids": {
+                "explicit": [
+                  "explicit.stat_264262054"
+                ]
+              },
+              "option": true
+            }
+          },
+          "translation": {
+            "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+            "string": "Legacy of Topaz",
+            "value": 14
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 5,
+            "min": 5,
+            "option": 5,
+            "unscalable": true,
+            "value": 5
+          },
+          "stat": {
+            "better": 1,
+            "id": "local_unique_mages_legacy_1",
+            "matchers": [
+              {
+                "advanced": "Legacy of Gold(Amethyst-Topaz)",
+                "string": "Legacy of Gold",
+                "value": 5
+              },
+              {
+                "advanced": "Legacy of Jade(Amethyst-Topaz)",
+                "string": "Legacy of Jade",
+                "value": 7
+              },
+              {
+                "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+                "string": "Legacy of Ruby",
+                "value": 9
+              },
+              {
+                "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+                "string": "Legacy of Topaz",
+                "value": 14
+              },
+              {
+                "advanced": "Legacy of Basalt(Amethyst-Topaz)",
+                "string": "Legacy of Basalt",
+                "value": 2
+              },
+              {
+                "advanced": "Legacy of Silver(Amethyst-Topaz)",
+                "string": "Legacy of Silver",
+                "value": 11
+              },
+              {
+                "advanced": "Legacy of Bismuth(Amethyst-Topaz)",
+                "string": "Legacy of Bismuth",
+                "value": 3
+              },
+              {
+                "advanced": "Legacy of Diamond(Amethyst-Topaz)",
+                "string": "Legacy of Diamond",
+                "value": 4
+              },
+              {
+                "advanced": "Legacy of Granite(Amethyst-Topaz)",
+                "string": "Legacy of Granite",
+                "value": 6
+              },
+              {
+                "advanced": "Legacy of Sulphur(Amethyst-Topaz)",
+                "string": "Legacy of Sulphur",
+                "value": 13
+              },
+              {
+                "advanced": "Legacy of Amethyst(Amethyst-Topaz)",
+                "string": "Legacy of Amethyst",
+                "value": 1
+              },
+              {
+                "advanced": "Legacy of Sapphire(Amethyst-Topaz)",
+                "string": "Legacy of Sapphire",
+                "value": 10
+              },
+              {
+                "advanced": "Legacy of Stibnite(Amethyst-Topaz)",
+                "string": "Legacy of Stibnite",
+                "value": 12
+              },
+              {
+                "advanced": "Legacy of Quicksilver(Amethyst-Topaz)",
+                "string": "Legacy of Quicksilver",
+                "value": 8
+              }
+            ],
+            "ref": "Legacy of #",
+            "trade": {
+              "count": true,
+              "ids": {
+                "explicit": [
+                  "explicit.stat_264262054"
+                ]
+              },
+              "option": true
+            }
+          },
+          "translation": {
+            "advanced": "Legacy of Gold(Amethyst-Topaz)",
+            "string": "Legacy of Gold",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 9,
+            "min": 9,
+            "option": 9,
+            "unscalable": true,
+            "value": 9
+          },
+          "stat": {
+            "better": 1,
+            "id": "local_unique_mages_legacy_1",
+            "matchers": [
+              {
+                "advanced": "Legacy of Gold(Amethyst-Topaz)",
+                "string": "Legacy of Gold",
+                "value": 5
+              },
+              {
+                "advanced": "Legacy of Jade(Amethyst-Topaz)",
+                "string": "Legacy of Jade",
+                "value": 7
+              },
+              {
+                "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+                "string": "Legacy of Ruby",
+                "value": 9
+              },
+              {
+                "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+                "string": "Legacy of Topaz",
+                "value": 14
+              },
+              {
+                "advanced": "Legacy of Basalt(Amethyst-Topaz)",
+                "string": "Legacy of Basalt",
+                "value": 2
+              },
+              {
+                "advanced": "Legacy of Silver(Amethyst-Topaz)",
+                "string": "Legacy of Silver",
+                "value": 11
+              },
+              {
+                "advanced": "Legacy of Bismuth(Amethyst-Topaz)",
+                "string": "Legacy of Bismuth",
+                "value": 3
+              },
+              {
+                "advanced": "Legacy of Diamond(Amethyst-Topaz)",
+                "string": "Legacy of Diamond",
+                "value": 4
+              },
+              {
+                "advanced": "Legacy of Granite(Amethyst-Topaz)",
+                "string": "Legacy of Granite",
+                "value": 6
+              },
+              {
+                "advanced": "Legacy of Sulphur(Amethyst-Topaz)",
+                "string": "Legacy of Sulphur",
+                "value": 13
+              },
+              {
+                "advanced": "Legacy of Amethyst(Amethyst-Topaz)",
+                "string": "Legacy of Amethyst",
+                "value": 1
+              },
+              {
+                "advanced": "Legacy of Sapphire(Amethyst-Topaz)",
+                "string": "Legacy of Sapphire",
+                "value": 10
+              },
+              {
+                "advanced": "Legacy of Stibnite(Amethyst-Topaz)",
+                "string": "Legacy of Stibnite",
+                "value": 12
+              },
+              {
+                "advanced": "Legacy of Quicksilver(Amethyst-Topaz)",
+                "string": "Legacy of Quicksilver",
+                "value": 8
+              }
+            ],
+            "ref": "Legacy of #",
+            "trade": {
+              "count": true,
+              "ids": {
+                "explicit": [
+                  "explicit.stat_264262054"
+                ]
+              },
+              "option": true
+            }
+          },
+          "translation": {
+            "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+            "string": "Legacy of Ruby",
+            "value": 9
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 50,
+            "min": 25,
+            "unscalable": false,
+            "value": 40
+          },
+          "stat": {
+            "better": 1,
+            "id": "local_unique_mages_legacy_effect_+%_per_duplicate_mages_legacy",
+            "matchers": [
+              {
+                "string": "All Mage's Legacies have #% increased effect per duplicate Mage's Legacy you have"
+              }
+            ],
+            "ref": "All Mage's Legacies have #% increased effect per duplicate Mage's Legacy you have",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_3874491706"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "All Mage's Legacies have #% increased effect per duplicate Mage's Legacy you have"
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Unique",
+  "rawText": "Item Class: Belts\nRarity: Unique\nMageblood\nUtility Belt\n--------\nRequires: Level 70\n--------\nItem Level: 82\n--------\n{ Implicit Modifier }\n20% of Flask Recovery applied Instantly\n{ Implicit Modifier — Charm }\nHas 3(1-3) Charm Slots\n--------\n{ Unique Modifier }\nLegacy of Topaz(Amethyst-Topaz) — Unscalable Value\n{ Unique Modifier }\nLegacy of Topaz(Amethyst-Topaz) — Unscalable Value\n{ Unique Modifier }\nLegacy of Gold(Amethyst-Topaz) — Unscalable Value\n{ Unique Modifier }\nLegacy of Ruby(Amethyst-Topaz) — Unscalable Value\n{ Unique Modifier }\nAll Mage's Legacies have 40(25-50)% increased effect per duplicate Mage's Legacy you have\n--------\nRivers of power course through your veins.\n",
+  "requires": {
+    "dex": 0,
+    "int": 0,
+    "level": 70,
+    "str": 0
+  },
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 20,
+            "min": 20,
+            "value": 20
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 20,
+                  "min": 20,
+                  "unscalable": false,
+                  "value": 20
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "flask_recovery_amount_%_to_recover_instantly",
+                  "matchers": [
+                    {
+                      "string": "#% of Flask Recovery applied Instantly"
+                    }
+                  ],
+                  "ref": "#% of Flask Recovery applied Instantly",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_462041840"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% of Flask Recovery applied Instantly"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 20,
+              "min": 20,
+              "unscalable": false,
+              "value": 20
+            },
+            "stat": {
+              "better": 1,
+              "id": "flask_recovery_amount_%_to_recover_instantly",
+              "matchers": [
+                {
+                  "string": "#% of Flask Recovery applied Instantly"
+                }
+              ],
+              "ref": "#% of Flask Recovery applied Instantly",
+              "trade": {
+                "ids": {
+                  "implicit": [
+                    "implicit.stat_462041840"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% of Flask Recovery applied Instantly"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "flask_recovery_amount_%_to_recover_instantly",
+        "matchers": [
+          {
+            "string": "#% of Flask Recovery applied Instantly"
+          }
+        ],
+        "ref": "#% of Flask Recovery applied Instantly",
+        "trade": {
+          "ids": {
+            "implicit": [
+              "implicit.stat_462041840"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 3,
+            "min": 1,
+            "value": 3
+          },
+          "modifier": {
+            "info": {
+              "tags": [
+                "Charm"
+              ],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 3,
+                  "min": 1,
+                  "unscalable": false,
+                  "value": 3
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_charm_slots",
+                  "matchers": [
+                    {
+                      "string": "Has # Charm Slots"
+                    },
+                    {
+                      "string": "Has # Charm Slot",
+                      "value": 1
+                    }
+                  ],
+                  "ref": "Has # Charm Slot",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1416292992"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1416292992"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Has # Charm Slots"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 3,
+              "min": 1,
+              "unscalable": false,
+              "value": 3
+            },
+            "stat": {
+              "better": 1,
+              "id": "local_charm_slots",
+              "matchers": [
+                {
+                  "string": "Has # Charm Slots"
+                },
+                {
+                  "string": "Has # Charm Slot",
+                  "value": 1
+                }
+              ],
+              "ref": "Has # Charm Slot",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_1416292992"
+                  ],
+                  "implicit": [
+                    "implicit.stat_1416292992"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Has # Charm Slots"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "local_charm_slots",
+        "matchers": [
+          {
+            "string": "Has # Charm Slots"
+          },
+          {
+            "string": "Has # Charm Slot",
+            "value": 1
+          }
+        ],
+        "ref": "Has # Charm Slot",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_1416292992"
+            ],
+            "implicit": [
+              "implicit.stat_1416292992"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 14,
+            "min": 14,
+            "option": 14,
+            "value": 14
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 14,
+                  "min": 14,
+                  "option": 14,
+                  "unscalable": true,
+                  "value": 14
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_unique_mages_legacy_1",
+                  "matchers": [
+                    {
+                      "advanced": "Legacy of Gold(Amethyst-Topaz)",
+                      "string": "Legacy of Gold",
+                      "value": 5
+                    },
+                    {
+                      "advanced": "Legacy of Jade(Amethyst-Topaz)",
+                      "string": "Legacy of Jade",
+                      "value": 7
+                    },
+                    {
+                      "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+                      "string": "Legacy of Ruby",
+                      "value": 9
+                    },
+                    {
+                      "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+                      "string": "Legacy of Topaz",
+                      "value": 14
+                    },
+                    {
+                      "advanced": "Legacy of Basalt(Amethyst-Topaz)",
+                      "string": "Legacy of Basalt",
+                      "value": 2
+                    },
+                    {
+                      "advanced": "Legacy of Silver(Amethyst-Topaz)",
+                      "string": "Legacy of Silver",
+                      "value": 11
+                    },
+                    {
+                      "advanced": "Legacy of Bismuth(Amethyst-Topaz)",
+                      "string": "Legacy of Bismuth",
+                      "value": 3
+                    },
+                    {
+                      "advanced": "Legacy of Diamond(Amethyst-Topaz)",
+                      "string": "Legacy of Diamond",
+                      "value": 4
+                    },
+                    {
+                      "advanced": "Legacy of Granite(Amethyst-Topaz)",
+                      "string": "Legacy of Granite",
+                      "value": 6
+                    },
+                    {
+                      "advanced": "Legacy of Sulphur(Amethyst-Topaz)",
+                      "string": "Legacy of Sulphur",
+                      "value": 13
+                    },
+                    {
+                      "advanced": "Legacy of Amethyst(Amethyst-Topaz)",
+                      "string": "Legacy of Amethyst",
+                      "value": 1
+                    },
+                    {
+                      "advanced": "Legacy of Sapphire(Amethyst-Topaz)",
+                      "string": "Legacy of Sapphire",
+                      "value": 10
+                    },
+                    {
+                      "advanced": "Legacy of Stibnite(Amethyst-Topaz)",
+                      "string": "Legacy of Stibnite",
+                      "value": 12
+                    },
+                    {
+                      "advanced": "Legacy of Quicksilver(Amethyst-Topaz)",
+                      "string": "Legacy of Quicksilver",
+                      "value": 8
+                    }
+                  ],
+                  "ref": "Legacy of #",
+                  "trade": {
+                    "count": true,
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_264262054"
+                      ]
+                    },
+                    "option": true
+                  }
+                },
+                "translation": {
+                  "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+                  "string": "Legacy of Topaz",
+                  "value": 14
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 14,
+              "min": 14,
+              "option": 14,
+              "unscalable": true,
+              "value": 14
+            },
+            "stat": {
+              "better": 1,
+              "id": "local_unique_mages_legacy_1",
+              "matchers": [
+                {
+                  "advanced": "Legacy of Gold(Amethyst-Topaz)",
+                  "string": "Legacy of Gold",
+                  "value": 5
+                },
+                {
+                  "advanced": "Legacy of Jade(Amethyst-Topaz)",
+                  "string": "Legacy of Jade",
+                  "value": 7
+                },
+                {
+                  "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+                  "string": "Legacy of Ruby",
+                  "value": 9
+                },
+                {
+                  "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+                  "string": "Legacy of Topaz",
+                  "value": 14
+                },
+                {
+                  "advanced": "Legacy of Basalt(Amethyst-Topaz)",
+                  "string": "Legacy of Basalt",
+                  "value": 2
+                },
+                {
+                  "advanced": "Legacy of Silver(Amethyst-Topaz)",
+                  "string": "Legacy of Silver",
+                  "value": 11
+                },
+                {
+                  "advanced": "Legacy of Bismuth(Amethyst-Topaz)",
+                  "string": "Legacy of Bismuth",
+                  "value": 3
+                },
+                {
+                  "advanced": "Legacy of Diamond(Amethyst-Topaz)",
+                  "string": "Legacy of Diamond",
+                  "value": 4
+                },
+                {
+                  "advanced": "Legacy of Granite(Amethyst-Topaz)",
+                  "string": "Legacy of Granite",
+                  "value": 6
+                },
+                {
+                  "advanced": "Legacy of Sulphur(Amethyst-Topaz)",
+                  "string": "Legacy of Sulphur",
+                  "value": 13
+                },
+                {
+                  "advanced": "Legacy of Amethyst(Amethyst-Topaz)",
+                  "string": "Legacy of Amethyst",
+                  "value": 1
+                },
+                {
+                  "advanced": "Legacy of Sapphire(Amethyst-Topaz)",
+                  "string": "Legacy of Sapphire",
+                  "value": 10
+                },
+                {
+                  "advanced": "Legacy of Stibnite(Amethyst-Topaz)",
+                  "string": "Legacy of Stibnite",
+                  "value": 12
+                },
+                {
+                  "advanced": "Legacy of Quicksilver(Amethyst-Topaz)",
+                  "string": "Legacy of Quicksilver",
+                  "value": 8
+                }
+              ],
+              "ref": "Legacy of #",
+              "trade": {
+                "count": true,
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_264262054"
+                  ]
+                },
+                "option": true
+              }
+            },
+            "translation": {
+              "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+              "string": "Legacy of Topaz",
+              "value": 14
+            }
+          }
+        },
+        {
+          "contributes": {
+            "max": 14,
+            "min": 14,
+            "option": 14,
+            "value": 14
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 14,
+                  "min": 14,
+                  "option": 14,
+                  "unscalable": true,
+                  "value": 14
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_unique_mages_legacy_1",
+                  "matchers": [
+                    {
+                      "advanced": "Legacy of Gold(Amethyst-Topaz)",
+                      "string": "Legacy of Gold",
+                      "value": 5
+                    },
+                    {
+                      "advanced": "Legacy of Jade(Amethyst-Topaz)",
+                      "string": "Legacy of Jade",
+                      "value": 7
+                    },
+                    {
+                      "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+                      "string": "Legacy of Ruby",
+                      "value": 9
+                    },
+                    {
+                      "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+                      "string": "Legacy of Topaz",
+                      "value": 14
+                    },
+                    {
+                      "advanced": "Legacy of Basalt(Amethyst-Topaz)",
+                      "string": "Legacy of Basalt",
+                      "value": 2
+                    },
+                    {
+                      "advanced": "Legacy of Silver(Amethyst-Topaz)",
+                      "string": "Legacy of Silver",
+                      "value": 11
+                    },
+                    {
+                      "advanced": "Legacy of Bismuth(Amethyst-Topaz)",
+                      "string": "Legacy of Bismuth",
+                      "value": 3
+                    },
+                    {
+                      "advanced": "Legacy of Diamond(Amethyst-Topaz)",
+                      "string": "Legacy of Diamond",
+                      "value": 4
+                    },
+                    {
+                      "advanced": "Legacy of Granite(Amethyst-Topaz)",
+                      "string": "Legacy of Granite",
+                      "value": 6
+                    },
+                    {
+                      "advanced": "Legacy of Sulphur(Amethyst-Topaz)",
+                      "string": "Legacy of Sulphur",
+                      "value": 13
+                    },
+                    {
+                      "advanced": "Legacy of Amethyst(Amethyst-Topaz)",
+                      "string": "Legacy of Amethyst",
+                      "value": 1
+                    },
+                    {
+                      "advanced": "Legacy of Sapphire(Amethyst-Topaz)",
+                      "string": "Legacy of Sapphire",
+                      "value": 10
+                    },
+                    {
+                      "advanced": "Legacy of Stibnite(Amethyst-Topaz)",
+                      "string": "Legacy of Stibnite",
+                      "value": 12
+                    },
+                    {
+                      "advanced": "Legacy of Quicksilver(Amethyst-Topaz)",
+                      "string": "Legacy of Quicksilver",
+                      "value": 8
+                    }
+                  ],
+                  "ref": "Legacy of #",
+                  "trade": {
+                    "count": true,
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_264262054"
+                      ]
+                    },
+                    "option": true
+                  }
+                },
+                "translation": {
+                  "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+                  "string": "Legacy of Topaz",
+                  "value": 14
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 14,
+              "min": 14,
+              "option": 14,
+              "unscalable": true,
+              "value": 14
+            },
+            "stat": {
+              "better": 1,
+              "id": "local_unique_mages_legacy_1",
+              "matchers": [
+                {
+                  "advanced": "Legacy of Gold(Amethyst-Topaz)",
+                  "string": "Legacy of Gold",
+                  "value": 5
+                },
+                {
+                  "advanced": "Legacy of Jade(Amethyst-Topaz)",
+                  "string": "Legacy of Jade",
+                  "value": 7
+                },
+                {
+                  "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+                  "string": "Legacy of Ruby",
+                  "value": 9
+                },
+                {
+                  "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+                  "string": "Legacy of Topaz",
+                  "value": 14
+                },
+                {
+                  "advanced": "Legacy of Basalt(Amethyst-Topaz)",
+                  "string": "Legacy of Basalt",
+                  "value": 2
+                },
+                {
+                  "advanced": "Legacy of Silver(Amethyst-Topaz)",
+                  "string": "Legacy of Silver",
+                  "value": 11
+                },
+                {
+                  "advanced": "Legacy of Bismuth(Amethyst-Topaz)",
+                  "string": "Legacy of Bismuth",
+                  "value": 3
+                },
+                {
+                  "advanced": "Legacy of Diamond(Amethyst-Topaz)",
+                  "string": "Legacy of Diamond",
+                  "value": 4
+                },
+                {
+                  "advanced": "Legacy of Granite(Amethyst-Topaz)",
+                  "string": "Legacy of Granite",
+                  "value": 6
+                },
+                {
+                  "advanced": "Legacy of Sulphur(Amethyst-Topaz)",
+                  "string": "Legacy of Sulphur",
+                  "value": 13
+                },
+                {
+                  "advanced": "Legacy of Amethyst(Amethyst-Topaz)",
+                  "string": "Legacy of Amethyst",
+                  "value": 1
+                },
+                {
+                  "advanced": "Legacy of Sapphire(Amethyst-Topaz)",
+                  "string": "Legacy of Sapphire",
+                  "value": 10
+                },
+                {
+                  "advanced": "Legacy of Stibnite(Amethyst-Topaz)",
+                  "string": "Legacy of Stibnite",
+                  "value": 12
+                },
+                {
+                  "advanced": "Legacy of Quicksilver(Amethyst-Topaz)",
+                  "string": "Legacy of Quicksilver",
+                  "value": 8
+                }
+              ],
+              "ref": "Legacy of #",
+              "trade": {
+                "count": true,
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_264262054"
+                  ]
+                },
+                "option": true
+              }
+            },
+            "translation": {
+              "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+              "string": "Legacy of Topaz",
+              "value": 14
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "local_unique_mages_legacy_1",
+        "matchers": [
+          {
+            "advanced": "Legacy of Gold(Amethyst-Topaz)",
+            "string": "Legacy of Gold",
+            "value": 5
+          },
+          {
+            "advanced": "Legacy of Jade(Amethyst-Topaz)",
+            "string": "Legacy of Jade",
+            "value": 7
+          },
+          {
+            "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+            "string": "Legacy of Ruby",
+            "value": 9
+          },
+          {
+            "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+            "string": "Legacy of Topaz",
+            "value": 14
+          },
+          {
+            "advanced": "Legacy of Basalt(Amethyst-Topaz)",
+            "string": "Legacy of Basalt",
+            "value": 2
+          },
+          {
+            "advanced": "Legacy of Silver(Amethyst-Topaz)",
+            "string": "Legacy of Silver",
+            "value": 11
+          },
+          {
+            "advanced": "Legacy of Bismuth(Amethyst-Topaz)",
+            "string": "Legacy of Bismuth",
+            "value": 3
+          },
+          {
+            "advanced": "Legacy of Diamond(Amethyst-Topaz)",
+            "string": "Legacy of Diamond",
+            "value": 4
+          },
+          {
+            "advanced": "Legacy of Granite(Amethyst-Topaz)",
+            "string": "Legacy of Granite",
+            "value": 6
+          },
+          {
+            "advanced": "Legacy of Sulphur(Amethyst-Topaz)",
+            "string": "Legacy of Sulphur",
+            "value": 13
+          },
+          {
+            "advanced": "Legacy of Amethyst(Amethyst-Topaz)",
+            "string": "Legacy of Amethyst",
+            "value": 1
+          },
+          {
+            "advanced": "Legacy of Sapphire(Amethyst-Topaz)",
+            "string": "Legacy of Sapphire",
+            "value": 10
+          },
+          {
+            "advanced": "Legacy of Stibnite(Amethyst-Topaz)",
+            "string": "Legacy of Stibnite",
+            "value": 12
+          },
+          {
+            "advanced": "Legacy of Quicksilver(Amethyst-Topaz)",
+            "string": "Legacy of Quicksilver",
+            "value": 8
+          }
+        ],
+        "ref": "Legacy of #",
+        "trade": {
+          "count": true,
+          "ids": {
+            "explicit": [
+              "explicit.stat_264262054"
+            ]
+          },
+          "option": true
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 5,
+            "min": 5,
+            "option": 5,
+            "value": 5
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 5,
+                  "min": 5,
+                  "option": 5,
+                  "unscalable": true,
+                  "value": 5
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_unique_mages_legacy_1",
+                  "matchers": [
+                    {
+                      "advanced": "Legacy of Gold(Amethyst-Topaz)",
+                      "string": "Legacy of Gold",
+                      "value": 5
+                    },
+                    {
+                      "advanced": "Legacy of Jade(Amethyst-Topaz)",
+                      "string": "Legacy of Jade",
+                      "value": 7
+                    },
+                    {
+                      "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+                      "string": "Legacy of Ruby",
+                      "value": 9
+                    },
+                    {
+                      "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+                      "string": "Legacy of Topaz",
+                      "value": 14
+                    },
+                    {
+                      "advanced": "Legacy of Basalt(Amethyst-Topaz)",
+                      "string": "Legacy of Basalt",
+                      "value": 2
+                    },
+                    {
+                      "advanced": "Legacy of Silver(Amethyst-Topaz)",
+                      "string": "Legacy of Silver",
+                      "value": 11
+                    },
+                    {
+                      "advanced": "Legacy of Bismuth(Amethyst-Topaz)",
+                      "string": "Legacy of Bismuth",
+                      "value": 3
+                    },
+                    {
+                      "advanced": "Legacy of Diamond(Amethyst-Topaz)",
+                      "string": "Legacy of Diamond",
+                      "value": 4
+                    },
+                    {
+                      "advanced": "Legacy of Granite(Amethyst-Topaz)",
+                      "string": "Legacy of Granite",
+                      "value": 6
+                    },
+                    {
+                      "advanced": "Legacy of Sulphur(Amethyst-Topaz)",
+                      "string": "Legacy of Sulphur",
+                      "value": 13
+                    },
+                    {
+                      "advanced": "Legacy of Amethyst(Amethyst-Topaz)",
+                      "string": "Legacy of Amethyst",
+                      "value": 1
+                    },
+                    {
+                      "advanced": "Legacy of Sapphire(Amethyst-Topaz)",
+                      "string": "Legacy of Sapphire",
+                      "value": 10
+                    },
+                    {
+                      "advanced": "Legacy of Stibnite(Amethyst-Topaz)",
+                      "string": "Legacy of Stibnite",
+                      "value": 12
+                    },
+                    {
+                      "advanced": "Legacy of Quicksilver(Amethyst-Topaz)",
+                      "string": "Legacy of Quicksilver",
+                      "value": 8
+                    }
+                  ],
+                  "ref": "Legacy of #",
+                  "trade": {
+                    "count": true,
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_264262054"
+                      ]
+                    },
+                    "option": true
+                  }
+                },
+                "translation": {
+                  "advanced": "Legacy of Gold(Amethyst-Topaz)",
+                  "string": "Legacy of Gold",
+                  "value": 5
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 5,
+              "min": 5,
+              "option": 5,
+              "unscalable": true,
+              "value": 5
+            },
+            "stat": {
+              "better": 1,
+              "id": "local_unique_mages_legacy_1",
+              "matchers": [
+                {
+                  "advanced": "Legacy of Gold(Amethyst-Topaz)",
+                  "string": "Legacy of Gold",
+                  "value": 5
+                },
+                {
+                  "advanced": "Legacy of Jade(Amethyst-Topaz)",
+                  "string": "Legacy of Jade",
+                  "value": 7
+                },
+                {
+                  "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+                  "string": "Legacy of Ruby",
+                  "value": 9
+                },
+                {
+                  "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+                  "string": "Legacy of Topaz",
+                  "value": 14
+                },
+                {
+                  "advanced": "Legacy of Basalt(Amethyst-Topaz)",
+                  "string": "Legacy of Basalt",
+                  "value": 2
+                },
+                {
+                  "advanced": "Legacy of Silver(Amethyst-Topaz)",
+                  "string": "Legacy of Silver",
+                  "value": 11
+                },
+                {
+                  "advanced": "Legacy of Bismuth(Amethyst-Topaz)",
+                  "string": "Legacy of Bismuth",
+                  "value": 3
+                },
+                {
+                  "advanced": "Legacy of Diamond(Amethyst-Topaz)",
+                  "string": "Legacy of Diamond",
+                  "value": 4
+                },
+                {
+                  "advanced": "Legacy of Granite(Amethyst-Topaz)",
+                  "string": "Legacy of Granite",
+                  "value": 6
+                },
+                {
+                  "advanced": "Legacy of Sulphur(Amethyst-Topaz)",
+                  "string": "Legacy of Sulphur",
+                  "value": 13
+                },
+                {
+                  "advanced": "Legacy of Amethyst(Amethyst-Topaz)",
+                  "string": "Legacy of Amethyst",
+                  "value": 1
+                },
+                {
+                  "advanced": "Legacy of Sapphire(Amethyst-Topaz)",
+                  "string": "Legacy of Sapphire",
+                  "value": 10
+                },
+                {
+                  "advanced": "Legacy of Stibnite(Amethyst-Topaz)",
+                  "string": "Legacy of Stibnite",
+                  "value": 12
+                },
+                {
+                  "advanced": "Legacy of Quicksilver(Amethyst-Topaz)",
+                  "string": "Legacy of Quicksilver",
+                  "value": 8
+                }
+              ],
+              "ref": "Legacy of #",
+              "trade": {
+                "count": true,
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_264262054"
+                  ]
+                },
+                "option": true
+              }
+            },
+            "translation": {
+              "advanced": "Legacy of Gold(Amethyst-Topaz)",
+              "string": "Legacy of Gold",
+              "value": 5
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "local_unique_mages_legacy_1",
+        "matchers": [
+          {
+            "advanced": "Legacy of Gold(Amethyst-Topaz)",
+            "string": "Legacy of Gold",
+            "value": 5
+          },
+          {
+            "advanced": "Legacy of Jade(Amethyst-Topaz)",
+            "string": "Legacy of Jade",
+            "value": 7
+          },
+          {
+            "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+            "string": "Legacy of Ruby",
+            "value": 9
+          },
+          {
+            "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+            "string": "Legacy of Topaz",
+            "value": 14
+          },
+          {
+            "advanced": "Legacy of Basalt(Amethyst-Topaz)",
+            "string": "Legacy of Basalt",
+            "value": 2
+          },
+          {
+            "advanced": "Legacy of Silver(Amethyst-Topaz)",
+            "string": "Legacy of Silver",
+            "value": 11
+          },
+          {
+            "advanced": "Legacy of Bismuth(Amethyst-Topaz)",
+            "string": "Legacy of Bismuth",
+            "value": 3
+          },
+          {
+            "advanced": "Legacy of Diamond(Amethyst-Topaz)",
+            "string": "Legacy of Diamond",
+            "value": 4
+          },
+          {
+            "advanced": "Legacy of Granite(Amethyst-Topaz)",
+            "string": "Legacy of Granite",
+            "value": 6
+          },
+          {
+            "advanced": "Legacy of Sulphur(Amethyst-Topaz)",
+            "string": "Legacy of Sulphur",
+            "value": 13
+          },
+          {
+            "advanced": "Legacy of Amethyst(Amethyst-Topaz)",
+            "string": "Legacy of Amethyst",
+            "value": 1
+          },
+          {
+            "advanced": "Legacy of Sapphire(Amethyst-Topaz)",
+            "string": "Legacy of Sapphire",
+            "value": 10
+          },
+          {
+            "advanced": "Legacy of Stibnite(Amethyst-Topaz)",
+            "string": "Legacy of Stibnite",
+            "value": 12
+          },
+          {
+            "advanced": "Legacy of Quicksilver(Amethyst-Topaz)",
+            "string": "Legacy of Quicksilver",
+            "value": 8
+          }
+        ],
+        "ref": "Legacy of #",
+        "trade": {
+          "count": true,
+          "ids": {
+            "explicit": [
+              "explicit.stat_264262054"
+            ]
+          },
+          "option": true
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 9,
+            "min": 9,
+            "option": 9,
+            "value": 9
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 9,
+                  "min": 9,
+                  "option": 9,
+                  "unscalable": true,
+                  "value": 9
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_unique_mages_legacy_1",
+                  "matchers": [
+                    {
+                      "advanced": "Legacy of Gold(Amethyst-Topaz)",
+                      "string": "Legacy of Gold",
+                      "value": 5
+                    },
+                    {
+                      "advanced": "Legacy of Jade(Amethyst-Topaz)",
+                      "string": "Legacy of Jade",
+                      "value": 7
+                    },
+                    {
+                      "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+                      "string": "Legacy of Ruby",
+                      "value": 9
+                    },
+                    {
+                      "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+                      "string": "Legacy of Topaz",
+                      "value": 14
+                    },
+                    {
+                      "advanced": "Legacy of Basalt(Amethyst-Topaz)",
+                      "string": "Legacy of Basalt",
+                      "value": 2
+                    },
+                    {
+                      "advanced": "Legacy of Silver(Amethyst-Topaz)",
+                      "string": "Legacy of Silver",
+                      "value": 11
+                    },
+                    {
+                      "advanced": "Legacy of Bismuth(Amethyst-Topaz)",
+                      "string": "Legacy of Bismuth",
+                      "value": 3
+                    },
+                    {
+                      "advanced": "Legacy of Diamond(Amethyst-Topaz)",
+                      "string": "Legacy of Diamond",
+                      "value": 4
+                    },
+                    {
+                      "advanced": "Legacy of Granite(Amethyst-Topaz)",
+                      "string": "Legacy of Granite",
+                      "value": 6
+                    },
+                    {
+                      "advanced": "Legacy of Sulphur(Amethyst-Topaz)",
+                      "string": "Legacy of Sulphur",
+                      "value": 13
+                    },
+                    {
+                      "advanced": "Legacy of Amethyst(Amethyst-Topaz)",
+                      "string": "Legacy of Amethyst",
+                      "value": 1
+                    },
+                    {
+                      "advanced": "Legacy of Sapphire(Amethyst-Topaz)",
+                      "string": "Legacy of Sapphire",
+                      "value": 10
+                    },
+                    {
+                      "advanced": "Legacy of Stibnite(Amethyst-Topaz)",
+                      "string": "Legacy of Stibnite",
+                      "value": 12
+                    },
+                    {
+                      "advanced": "Legacy of Quicksilver(Amethyst-Topaz)",
+                      "string": "Legacy of Quicksilver",
+                      "value": 8
+                    }
+                  ],
+                  "ref": "Legacy of #",
+                  "trade": {
+                    "count": true,
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_264262054"
+                      ]
+                    },
+                    "option": true
+                  }
+                },
+                "translation": {
+                  "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+                  "string": "Legacy of Ruby",
+                  "value": 9
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 9,
+              "min": 9,
+              "option": 9,
+              "unscalable": true,
+              "value": 9
+            },
+            "stat": {
+              "better": 1,
+              "id": "local_unique_mages_legacy_1",
+              "matchers": [
+                {
+                  "advanced": "Legacy of Gold(Amethyst-Topaz)",
+                  "string": "Legacy of Gold",
+                  "value": 5
+                },
+                {
+                  "advanced": "Legacy of Jade(Amethyst-Topaz)",
+                  "string": "Legacy of Jade",
+                  "value": 7
+                },
+                {
+                  "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+                  "string": "Legacy of Ruby",
+                  "value": 9
+                },
+                {
+                  "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+                  "string": "Legacy of Topaz",
+                  "value": 14
+                },
+                {
+                  "advanced": "Legacy of Basalt(Amethyst-Topaz)",
+                  "string": "Legacy of Basalt",
+                  "value": 2
+                },
+                {
+                  "advanced": "Legacy of Silver(Amethyst-Topaz)",
+                  "string": "Legacy of Silver",
+                  "value": 11
+                },
+                {
+                  "advanced": "Legacy of Bismuth(Amethyst-Topaz)",
+                  "string": "Legacy of Bismuth",
+                  "value": 3
+                },
+                {
+                  "advanced": "Legacy of Diamond(Amethyst-Topaz)",
+                  "string": "Legacy of Diamond",
+                  "value": 4
+                },
+                {
+                  "advanced": "Legacy of Granite(Amethyst-Topaz)",
+                  "string": "Legacy of Granite",
+                  "value": 6
+                },
+                {
+                  "advanced": "Legacy of Sulphur(Amethyst-Topaz)",
+                  "string": "Legacy of Sulphur",
+                  "value": 13
+                },
+                {
+                  "advanced": "Legacy of Amethyst(Amethyst-Topaz)",
+                  "string": "Legacy of Amethyst",
+                  "value": 1
+                },
+                {
+                  "advanced": "Legacy of Sapphire(Amethyst-Topaz)",
+                  "string": "Legacy of Sapphire",
+                  "value": 10
+                },
+                {
+                  "advanced": "Legacy of Stibnite(Amethyst-Topaz)",
+                  "string": "Legacy of Stibnite",
+                  "value": 12
+                },
+                {
+                  "advanced": "Legacy of Quicksilver(Amethyst-Topaz)",
+                  "string": "Legacy of Quicksilver",
+                  "value": 8
+                }
+              ],
+              "ref": "Legacy of #",
+              "trade": {
+                "count": true,
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_264262054"
+                  ]
+                },
+                "option": true
+              }
+            },
+            "translation": {
+              "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+              "string": "Legacy of Ruby",
+              "value": 9
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "local_unique_mages_legacy_1",
+        "matchers": [
+          {
+            "advanced": "Legacy of Gold(Amethyst-Topaz)",
+            "string": "Legacy of Gold",
+            "value": 5
+          },
+          {
+            "advanced": "Legacy of Jade(Amethyst-Topaz)",
+            "string": "Legacy of Jade",
+            "value": 7
+          },
+          {
+            "advanced": "Legacy of Ruby(Amethyst-Topaz)",
+            "string": "Legacy of Ruby",
+            "value": 9
+          },
+          {
+            "advanced": "Legacy of Topaz(Amethyst-Topaz)",
+            "string": "Legacy of Topaz",
+            "value": 14
+          },
+          {
+            "advanced": "Legacy of Basalt(Amethyst-Topaz)",
+            "string": "Legacy of Basalt",
+            "value": 2
+          },
+          {
+            "advanced": "Legacy of Silver(Amethyst-Topaz)",
+            "string": "Legacy of Silver",
+            "value": 11
+          },
+          {
+            "advanced": "Legacy of Bismuth(Amethyst-Topaz)",
+            "string": "Legacy of Bismuth",
+            "value": 3
+          },
+          {
+            "advanced": "Legacy of Diamond(Amethyst-Topaz)",
+            "string": "Legacy of Diamond",
+            "value": 4
+          },
+          {
+            "advanced": "Legacy of Granite(Amethyst-Topaz)",
+            "string": "Legacy of Granite",
+            "value": 6
+          },
+          {
+            "advanced": "Legacy of Sulphur(Amethyst-Topaz)",
+            "string": "Legacy of Sulphur",
+            "value": 13
+          },
+          {
+            "advanced": "Legacy of Amethyst(Amethyst-Topaz)",
+            "string": "Legacy of Amethyst",
+            "value": 1
+          },
+          {
+            "advanced": "Legacy of Sapphire(Amethyst-Topaz)",
+            "string": "Legacy of Sapphire",
+            "value": 10
+          },
+          {
+            "advanced": "Legacy of Stibnite(Amethyst-Topaz)",
+            "string": "Legacy of Stibnite",
+            "value": 12
+          },
+          {
+            "advanced": "Legacy of Quicksilver(Amethyst-Topaz)",
+            "string": "Legacy of Quicksilver",
+            "value": 8
+          }
+        ],
+        "ref": "Legacy of #",
+        "trade": {
+          "count": true,
+          "ids": {
+            "explicit": [
+              "explicit.stat_264262054"
+            ]
+          },
+          "option": true
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 50,
+            "min": 25,
+            "value": 40
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 50,
+                  "min": 25,
+                  "unscalable": false,
+                  "value": 40
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_unique_mages_legacy_effect_+%_per_duplicate_mages_legacy",
+                  "matchers": [
+                    {
+                      "string": "All Mage's Legacies have #% increased effect per duplicate Mage's Legacy you have"
+                    }
+                  ],
+                  "ref": "All Mage's Legacies have #% increased effect per duplicate Mage's Legacy you have",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3874491706"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "All Mage's Legacies have #% increased effect per duplicate Mage's Legacy you have"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 50,
+              "min": 25,
+              "unscalable": false,
+              "value": 40
+            },
+            "stat": {
+              "better": 1,
+              "id": "local_unique_mages_legacy_effect_+%_per_duplicate_mages_legacy",
+              "matchers": [
+                {
+                  "string": "All Mage's Legacies have #% increased effect per duplicate Mage's Legacy you have"
+                }
+              ],
+              "ref": "All Mage's Legacies have #% increased effect per duplicate Mage's Legacy you have",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_3874491706"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "All Mage's Legacies have #% increased effect per duplicate Mage's Legacy you have"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "local_unique_mages_legacy_effect_+%_per_duplicate_mages_legacy",
+        "matchers": [
+          {
+            "string": "All Mage's Legacies have #% increased effect per duplicate Mage's Legacy you have"
+          }
+        ],
+        "ref": "All Mage's Legacies have #% increased effect per duplicate Mage's Legacy you have",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_3874491706"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": []
+}

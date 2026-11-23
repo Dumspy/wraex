@@ -1,0 +1,30 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "areaLevel": {
+          "disabled": false,
+          "value": 65
+        },
+        "awardedAscendancyPoints": {
+          "disabled": false,
+          "value": 3
+        },
+        "searchExact": {
+          "baseType": "Djinn Barya",
+          "baseTypeTrade": "Djinn Barya"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "league": "Standard",
+          "listingType": "securable",
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": []
+    }
+  ]
+}

@@ -10,6 +10,9 @@ this list current when adding cases, so it is clear which ones are real copies.
 
 - `error-*`: texts the parser rejects (`item.parse_error`, `item.unknown`, and
   `item.wrong_language` for a Russian copy). Hand-written.
+- `unique-mageblood` (its own preset, after the example in EE2's
+  `create-unique-filters.ts`) and `currency-djinn-barya` (trial filters):
+  hand-written for filter branches EE2's items miss. Not real copies.
 
 ## poe1
 

@@ -1,0 +1,161 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            }
+          }
+        },
+        "trade_filters": {
+          "filters": {
+            "collapse": {
+              "option": "true"
+            }
+          }
+        }
+      },
+      "name": "Mageblood",
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "explicit.stat_264262054|14",
+              "value": {}
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_264262054|5",
+              "value": {}
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_264262054|9",
+              "value": {}
+            },
+            {
+              "disabled": true,
+              "id": "implicit.stat_462041840",
+              "value": {}
+            },
+            {
+              "disabled": false,
+              "id": "implicit.stat_1416292992",
+              "value": {
+                "min": 3
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_3874491706",
+              "value": {
+                "min": 39
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_264262054|14",
+              "value": {}
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_264262054|5",
+              "value": {}
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_264262054|9",
+              "value": {}
+            }
+          ],
+          "type": "and"
+        },
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "explicit.stat_264262054|14",
+              "value": {
+                "min": 1
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_264262054|14",
+              "value": {
+                "min": 2
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_264262054|14",
+              "value": {
+                "max": 2
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_264262054|5",
+              "value": {
+                "min": 1
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_264262054|5",
+              "value": {
+                "min": 2
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_264262054|5",
+              "value": {
+                "max": 2
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_264262054|9",
+              "value": {
+                "min": 1
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_264262054|9",
+              "value": {
+                "min": 2
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_264262054|9",
+              "value": {
+                "max": 2
+              }
+            }
+          ],
+          "type": "count",
+          "value": {
+            "min": 7
+          }
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Utility Belt"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

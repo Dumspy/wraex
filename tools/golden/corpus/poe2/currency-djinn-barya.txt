@@ -1,0 +1,8 @@
+Item Class: Trial Coins
+Rarity: Currency
+Djinn Barya
+--------
+Area Level: 65
+Number of Trials: 3
+--------
+Can be used at the Relic Altar in the Trial of the Sekhemas to begin a Trial.

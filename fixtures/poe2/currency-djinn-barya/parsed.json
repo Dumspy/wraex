@@ -1,0 +1,47 @@
+{
+  "areaLevel": 65,
+  "category": "Currency",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "MiscMapItem"
+    },
+    "h": 1,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvU2FuY3R1bS9CYWxiYWxhQ29pbjEiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/4fe253f6e7/BalbalaCoin1.png",
+    "name": "Djinn Barya",
+    "namespace": "ITEM",
+    "refName": "Djinn Barya",
+    "tags": [
+      "not_for_sale",
+      "sanctum_key"
+    ],
+    "w": 1
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "MiscMapItem"
+      },
+      "h": 1,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvU2FuY3R1bS9CYWxiYWxhQ29pbjEiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/4fe253f6e7/BalbalaCoin1.png",
+      "name": "Djinn Barya",
+      "namespace": "ITEM",
+      "refName": "Djinn Barya",
+      "tags": [
+        "not_for_sale",
+        "sanctum_key"
+      ],
+      "w": 1
+    }
+  ],
+  "isCorrupted": false,
+  "isUnidentified": false,
+  "name": "Djinn Barya",
+  "newMods": [],
+  "rawText": "Item Class: Trial Coins\nRarity: Currency\nDjinn Barya\n--------\nArea Level: 65\nNumber of Trials: 3\n--------\nCan be used at the Relic Altar in the Trial of the Sekhemas to begin a Trial.\n",
+  "statsByType": [],
+  "trials": {
+    "numberOfTrials": 3
+  },
+  "unknownModifiers": []
+}
