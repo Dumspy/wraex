@@ -3,6 +3,7 @@
 
 use serde::Serialize;
 use wraex_core::js;
+pub use wraex_core::parse::{group_lines_by_mod, incr_roll, is_mod_info_line};
 
 use super::Fail;
 use super::modifiers::{ModifierMechanic, ModifierType};
@@ -139,28 +140,6 @@ pub fn parse_mod_info_line(d: &Data, line: &str) -> Result<ModifierInfo, Fail> {
     Ok(info)
 }
 
-/// `isModInfoLine`
-pub fn is_mod_info_line(line: &str) -> bool {
-    line.starts_with('{') && line.ends_with('}')
-}
-
-/// `groupLinesByMod`: each mod info line with the stat lines after it. Nothing
-/// unless the first line is a mod info line.
-pub fn group_lines_by_mod(lines: &[String]) -> Vec<(String, Vec<String>)> {
-    if lines.first().is_none_or(|l| !is_mod_info_line(l)) {
-        return Vec::new();
-    }
-    let mut out: Vec<(String, Vec<String>)> = Vec::new();
-    for line in lines {
-        if is_mod_info_line(line) {
-            out.push((line.clone(), Vec::new()));
-        } else {
-            out.last_mut().expect("first line is a mod line").1.push(line.clone());
-        }
-    }
-    out
-}
-
 /// `parseModType`: the type from the ` (enchant)`-like suffix, and the lines
 /// without it. Throws if no line has one.
 pub fn parse_mod_type(lines: &[String]) -> Result<(ModifierType, Vec<String>), Fail> {
@@ -200,13 +179,6 @@ pub fn apply_incr(info: &ModifierInfo, parsed: &ParsedStat) -> Option<ParsedStat
             max: incr_roll(roll.max, incr, dp),
         }),
     })
-}
-
-/// `incrRoll`
-pub fn incr_roll(value: f64, p: f64, dp: i32) -> f64 {
-    let res = value + (value * p / 100.0);
-    let rounding = 10f64.powi(dp);
-    ((res + f64::EPSILON) * rounding).trunc() / rounding
 }
 
 /// `mechanicFromModName`: influence and league mechanics by affix name.
@@ -267,22 +239,9 @@ mod tests {
     }
 
     #[test]
-    fn groups_lines_and_reads_mod_types() {
-        let lines: Vec<String> = ["{ a }", "x", "y", "{ b }"].map(String::from).to_vec();
-        assert_eq!(
-            group_lines_by_mod(&lines),
-            vec![("{ a }".into(), vec!["x".into(), "y".into()]), ("{ b }".into(), vec![])]
-        );
-        assert!(group_lines_by_mod(&lines[1..]).is_empty());
+    fn reads_mod_types() {
         let (kind, rest) = parse_mod_type(&["a (enchant)".to_owned(), "b".to_owned()]).unwrap();
         assert_eq!((kind, rest), (ModifierType::Enchant, vec!["a".to_owned(), "b".to_owned()]));
         assert!(parse_mod_type(&["a".to_owned()]).is_err());
-    }
-
-    #[test]
-    fn incr_roll_truncates() {
-        assert_eq!(incr_roll(10.0, 20.0, 0), 12.0);
-        assert_eq!(incr_roll(1.55, 10.0, 2), 1.7);
-        assert_eq!(incr_roll(7.0, 15.0, 0), 8.0);
     }
 }

@@ -15,10 +15,9 @@ pub mod meta;
 pub mod modifiers;
 pub mod stat_translations;
 
-use std::sync::OnceLock;
-
 use wraex_core::js;
 use wraex_core::js_regex::Regex;
+use wraex_core::parse::{item_text_to_sections, lines_to_stat_strings, markup_condition_parser};
 use wraex_core::{Rarity, data::js_string};
 
 use crate::data::{BaseType, Data, MercenaryBuildRef, Namespace};
@@ -32,9 +31,7 @@ use item::{
 };
 use meta::{ItemCategory, JEWELLERY};
 use modifiers::{ModifierMechanic, ModifierType, sum_stats_by_mod_type};
-use stat_translations::{
-    ParsedStat, RollGeneration, StatRollInfo, StatString, lines_to_stat_strings, try_parse_translation,
-};
+use stat_translations::{ParsedStat, RollGeneration, StatRollInfo, StatString, try_parse_translation};
 
 /// Why parsing stopped: the reference's error key.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -169,23 +166,6 @@ pub fn parse_clipboard(d: &Data, clipboard: &str) -> Result<Item, Fail> {
         }
     }
     Ok(item)
-}
-
-fn item_text_to_sections(text: &str) -> Vec<Vec<String>> {
-    let mut lines: Vec<&str> = text.split('\n').map(|l| l.strip_suffix('\r').unwrap_or(l)).collect();
-    if lines.last() == Some(&"") {
-        lines.pop();
-    }
-    let mut sections: Vec<Vec<String>> = vec![Vec::new()];
-    for line in lines {
-        if line == "--------" {
-            sections.push(Vec::new());
-        } else {
-            sections.last_mut().unwrap().push(line.to_owned());
-        }
-    }
-    sections.retain(|s| !s.is_empty());
-    sections
 }
 
 /// `section[0]` where the reference calls a method on it: throws if missing.
@@ -1175,29 +1155,6 @@ fn parse_filled_coffin(section: &[String], item: &mut Item, d: &Data) -> R<Secti
     Ok(Parsed)
 }
 
-fn set_regex() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new("<<set:.+?>>", "g").unwrap())
-}
-
-fn condition_regex() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new("<(if:.+?|elif:.+?|else)>{(.+?)}", "g").unwrap())
-}
-
-/// `markupConditionParser`: ignores `<<set:__>>` state and always takes the first
-/// `<if:__>{...}` branch.
-fn markup_condition_parser(text: &str) -> String {
-    let text = set_regex().replace_all(text, |_| String::new());
-    condition_regex().replace_all(&text, |caps| {
-        if caps.get(1).is_some_and(|t| t.starts_with("if:")) {
-            caps.get(2).unwrap_or("").to_owned()
-        } else {
-            String::new()
-        }
-    })
-}
-
 /// `parseStatsFromMod`: adds the modifier with every stat its lines parse to.
 fn parse_stats_from_mod(d: &Data, lines: &[String], item: &mut Item, info: ModifierInfo) -> R<()> {
     let mut modifier = ParsedModifier { info, stats: Vec::new() };
@@ -1304,25 +1261,4 @@ fn calc_disenchant_dust(item: &mut Item, _: &Data) -> R<()> {
     let total_multi = 5.0 * (term1 + term2 + term3 + term4) * factors_multi;
     item.dust_equivalent = Some((value * total_multi).floor());
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn splits_sections() {
-        let sections = item_text_to_sections("a\r\nb\n--------\n--------\nc\n");
-        assert_eq!(sections, vec![vec!["a".to_owned(), "b".to_owned()], vec!["c".to_owned()]]);
-        assert!(item_text_to_sections("").is_empty());
-    }
-
-    #[test]
-    fn markup_conditions_take_the_first_branch() {
-        assert_eq!(
-            markup_condition_parser("<<set:MS>><if:MS>{Mother}<elif:FS>{Father} of Spirits"),
-            "Mother of Spirits"
-        );
-        assert_eq!(markup_condition_parser("Plain"), "Plain");
-    }
 }

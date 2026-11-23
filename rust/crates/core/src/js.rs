@@ -134,6 +134,39 @@ pub fn parse_int(s: &str) -> f64 {
     sign * rest[..end].parse::<f64>().expect("ASCII digits")
 }
 
+/// `Number.prototype.toString()` (and `String(x)`, template literals): the
+/// shortest round-trip digits, in exponent form below 1e-6 and from 1e21.
+pub fn number_to_string(x: f64) -> String {
+    if x.is_nan() {
+        return "NaN".into();
+    }
+    if x.is_infinite() {
+        return if x > 0.0 { "Infinity" } else { "-Infinity" }.into();
+    }
+    if x == 0.0 {
+        return "0".into();
+    }
+    // `{:e}` gives the shortest round-trip digits: "1.2345e3".
+    let sci = format!("{:e}", x.abs());
+    let (mantissa, exp) = sci.split_once('e').expect("`{:e}` has an exponent");
+    let digits: String = mantissa.chars().filter(|c| *c != '.').collect();
+    let k = digits.len() as i32;
+    let n = exp.parse::<i32>().expect("integer exponent") + 1;
+    let body = if k <= n && n <= 21 {
+        format!("{digits}{}", "0".repeat((n - k) as usize))
+    } else if 0 < n && n <= 21 {
+        format!("{}.{}", &digits[..n as usize], &digits[n as usize..])
+    } else if -6 < n && n <= 0 {
+        format!("0.{}{digits}", "0".repeat((-n) as usize))
+    } else {
+        let e = n - 1;
+        let sign = if e < 0 { '-' } else { '+' };
+        let rest = if k > 1 { format!(".{}", &digits[1..]) } else { String::new() };
+        format!("{}{rest}e{sign}{}", &digits[..1], e.abs())
+    };
+    if x < 0.0 { format!("-{body}") } else { body }
+}
+
 /// Serialises `value` and rewrites its numbers the way `JSON.stringify` writes
 /// them: integral doubles without a fraction (`9`, not `9.0`), `-0` as `0`,
 /// non-finite as `null`.
@@ -203,6 +236,27 @@ mod tests {
         assert_eq!(parse_float(".5e1x"), 5.0);
         assert_eq!(parse_float("1e"), 1.0);
         assert!(parse_float("e5").is_nan());
+    }
+
+    #[test]
+    fn numbers_print_like_javascript() {
+        for (x, expected) in [
+            (20.0, "20"),
+            (1.5, "1.5"),
+            (-0.0, "0"),
+            (0.1 + 0.2, "0.30000000000000004"),
+            (123456789.0, "123456789"),
+            (1e21, "1e+21"),
+            (1.5e21, "1.5e+21"),
+            (1e20, "100000000000000000000"),
+            (0.000001, "0.000001"),
+            (1e-7, "1e-7"),
+            (-2.5e-8, "-2.5e-8"),
+            (f64::NAN, "NaN"),
+            (f64::NEG_INFINITY, "-Infinity"),
+        ] {
+            assert_eq!(number_to_string(x), expected, "{x:?}");
+        }
     }
 
     #[test]

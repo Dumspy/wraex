@@ -6,6 +6,7 @@ use std::sync::OnceLock;
 use serde::Serialize;
 use wraex_core::js;
 use wraex_core::js_regex::Regex;
+pub use wraex_core::parse::StatString;
 
 use super::Fail;
 use super::meta::{ARMOUR, HEIST_EQUIPMENT, ItemCategory, WEAPON};
@@ -38,70 +39,6 @@ pub enum RollGeneration {
     Legacy,
     Volatile,
     Reflecting,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct StatString {
-    pub string: String,
-    pub unscalable: bool,
-}
-
-/// `LOCALIZED_PAREN_LEFT`: `/^\s*(?:\(|（)/`
-fn paren_left(line: &str) -> bool {
-    let t = js::trim_start(line);
-    t.starts_with('(') || t.starts_with('（')
-}
-
-/// `LOCALIZED_PAREN_RIGHT`: `/(?:\)|）)\s*$/`
-fn paren_right(line: &str) -> bool {
-    let t = js::trim_end(line);
-    t.ends_with(')') || t.ends_with('）')
-}
-
-/// `linesToStatStrings`. The reference is a generator the caller answers with
-/// whether each candidate parsed; here `try_parse` gives that answer. Returns the
-/// lines no candidate covered, without empty ones.
-pub fn lines_to_stat_strings(
-    lines: &[String],
-    unscalable_value: &str,
-    mut try_parse: impl FnMut(&StatString) -> Result<bool, Fail>,
-) -> Result<Vec<String>, Fail> {
-    let mut not_parsed = Vec::new();
-    let mut reminder_string = false;
-    let mut start = 0;
-    'outer: while start < lines.len() {
-        if paren_left(&lines[start]) {
-            reminder_string = true;
-        }
-        if reminder_string && paren_right(&lines[start]) {
-            reminder_string = false;
-            start += 1;
-            continue;
-        }
-        if reminder_string {
-            start += 1;
-            continue;
-        }
-        let mut parsed_until = None;
-        for end in start..lines.len() {
-            let mut string = lines[start..=end].join("\n");
-            let unscalable = string.ends_with(unscalable_value);
-            if unscalable {
-                string.truncate(string.len() - unscalable_value.len());
-            }
-            if try_parse(&StatString { string, unscalable })? {
-                parsed_until = Some(end);
-                break;
-            }
-        }
-        if let Some(end) = parsed_until {
-            start = end + 1;
-            continue 'outer;
-        }
-        not_parsed.push(lines[start].clone());
-        start += 1;
-    }
-    Ok(not_parsed.into_iter().filter(|l| !l.is_empty()).collect())
 }
 
 /// Which of the found numbers stay as `#` placeholders, by count of numbers.
@@ -409,26 +346,6 @@ fn test_item_category(actual: Option<&ItemCategory>, expected: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn stat_strings(lines: &[&str], parses: &[&str]) -> (Vec<String>, Vec<String>) {
-        let lines: Vec<String> = lines.iter().map(|s| s.to_string()).collect();
-        let mut tried = Vec::new();
-        let rest = lines_to_stat_strings(&lines, " — Unscalable Value", |s| {
-            tried.push(s.string.clone());
-            Ok(parses.contains(&s.string.as_str()))
-        })
-        .unwrap();
-        (tried, rest)
-    }
-
-    #[test]
-    fn groups_lines_into_candidates_and_skips_reminders() {
-        let (tried, rest) = stat_strings(&["a", "b", "(reminder", "text)", "c"], &["a\nb"]);
-        assert_eq!(tried, ["a", "a\nb", "c"]);
-        assert_eq!(rest, ["c"]);
-        let (_, rest) = stat_strings(&["x — Unscalable Value", ""], &["x"]);
-        assert!(rest.is_empty());
-    }
 
     #[test]
     fn placeholder_combinations_follow_the_map() {

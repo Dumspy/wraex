@@ -8,6 +8,7 @@
 pub mod data;
 pub mod js;
 pub mod js_regex;
+pub mod parse;
 pub mod rarity;
 
 use serde::{Deserialize, Serialize};
