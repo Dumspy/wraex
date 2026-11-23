@@ -243,8 +243,9 @@ Agent loop per step: port module → `golden check` → fix diffs → repeat.
   EE2's own `specs/docs/fetchResponses.json`) and PoE1's poe.ninja prices
   (`poe1::prices`) are ported, and so are EE2's prices (`poe2::prices`) and
   result rows. EE2 downloads its price data from its own server
-  (`api.exiledexchange2.dev`); `poe2::prices` takes the data's text, and where
-  Wraex gets it is still open. Not yet: the session cookies upstream's proxy
+  (`api.exiledexchange2.dev`); Wraex asks poe.ninja's PoE2 exchange overviews
+  directly instead (decided 2026-11-24), one request per category, and looks
+  items up by name. Other sources (EE2's server, by agreement) can come later. Not yet: the session cookies upstream's proxy
   forwards (Cloudflare, a logged-in POESESSID).
 - `GameConfig.ts` (reads PoE's keybinds from `production_Config.ini`),
   `GameLogWatcher.ts` (Client.txt for zone/chat events).

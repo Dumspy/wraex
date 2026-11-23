@@ -1,18 +1,20 @@
 //! `ref/ee2/renderer/src/web/background/Prices.ts`: poe.ninja prices in
 //! divines, shown in the chosen core currency (exalted or chaos).
 //!
-//! Upstream downloads three files from its own server
-//! (`api.exiledexchange2.dev`: the overview blob, poe.ninja's namespace map and
-//! `item-drop.json`); where Wraex gets them is not decided, so this takes their
-//! text ([`Prices::loaded`]) and leaves the download out. Lookup works like
-//! PoE1's: the blob is searched as text for the start of an item's JSON
-//! object (`name`, `variant`, `primaryValue` come first, in that order).
+//! **Deviation:** upstream downloads a ready-made blob, poe.ninja's namespace
+//! map and `item-drop.json` from its own server (`api.exiledexchange2.dev`) and
+//! finds items in the blob by searching its text. Wraex asks poe.ninja
+//! directly, one exchange overview per [`NINJA_TYPES`] entry, and looks items
+//! up by name in the parsed answers. The prices, rates, currency choice and
+//! refresh timing follow upstream. poe.ninja has no PoE2 unique overview, so
+//! (as with upstream's data) uniques have no price here.
 
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use wraex_core::js::{json_string, number_to_string, to_fixed};
+use wraex_core::js::{number_to_string, to_fixed};
 use wraex_core::leagues::SelectedLeague;
+use wraex_core::trade::api::{HttpRequest, Method};
 
 use crate::data::{Data, Namespace};
 
@@ -20,50 +22,89 @@ pub const RETRY_INTERVAL_MS: u64 = 4 * 60 * 1000;
 pub const UPDATE_INTERVAL_MS: u64 = 31 * 60 * 1000;
 pub const INTEREST_SPAN_MS: u64 = 20 * 60 * 1000;
 
-/// `NinjaSchemaV1`: which overviews hold which namespace.
-#[derive(Debug, Clone, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct NinjaSchema {
-    pub schema_version: u32,
-    pub map: Vec<SchemaEntry>,
+/// poe.ninja's PoE2 exchange overviews (`type`), the namespace the app looks
+/// their items up in, and their page on poe.ninja. Upstream's namespace map
+/// comes from its server; this list is poe.ninja's non-empty types (checked
+/// 2026-11-24). The page slugs follow poe.ninja's naming but are unconfirmed:
+/// its site refuses scripted requests.
+pub const NINJA_TYPES: [(&str, &str, &str); 14] = [
+    ("Currency", "ITEM", "currency"),
+    ("Fragments", "ITEM", "fragments"),
+    ("Runes", "ITEM", "runes"),
+    ("Essences", "ITEM", "essences"),
+    ("SoulCores", "ITEM", "soul-cores"),
+    ("Idols", "ITEM", "idols"),
+    ("UncutGems", "ITEM", "uncut-gems"),
+    ("LineageSupportGems", "GEM", "lineage-support-gems"),
+    ("Expedition", "ITEM", "expedition"),
+    ("Ritual", "ITEM", "ritual"),
+    ("Breach", "ITEM", "breach"),
+    ("Delirium", "ITEM", "delirium"),
+    ("Abyss", "ITEM", "abyss"),
+    ("Verisium", "ITEM", "verisium"),
+];
+
+/// The request for one overview of `league`.
+pub fn overview_request(league: &str, kind: &str) -> HttpRequest {
+    let league: String = league.chars().map(|c| if c == ' ' { "%20".to_owned() } else { c.to_string() }).collect();
+    HttpRequest {
+        method: Method::Get,
+        url: format!("https://poe.ninja/poe2/api/economy/exchange/current/overview?league={league}&type={kind}"),
+        headers: Vec::new(),
+        body: None,
+    }
 }
 
+/// An exchange overview as poe.ninja answers it: prices by currency id, and
+/// the currencies' names.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct SchemaEntry {
-    /// `ITEM`, `GEM` or `UNIQUE`.
-    pub ns: String,
-    /// From the currency exchange.
-    pub cx: bool,
-    pub url: String,
-    #[serde(rename = "type")]
-    pub kind: String,
+pub struct ExchangeOverview {
+    pub core: OverviewCore,
+    pub lines: Vec<ExchangeLine>,
+    pub items: Vec<ExchangeItem>,
 }
 
-/// `NinjaXchgRates`: divines in each core currency.
+/// `core`: divines in each core currency (`NinjaXchgRates`).
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct NinjaXchgRates {
+pub struct OverviewCore {
     pub rates: HashMap<String, f64>,
     pub primary: String,
     pub secondary: String,
 }
 
-/// `NinjaDenseExchangeInfo | NinjaDenseStashInfo`, the fields both have.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct NinjaDenseInfo {
-    pub name: String,
-    #[serde(default)]
-    pub variant: Option<String>,
-    /// In divines.
+pub struct ExchangeLine {
+    pub id: String,
     pub primary_value: f64,
-    pub details_id: String,
-    #[serde(default)]
-    pub id: Option<String>,
     #[serde(default)]
     pub volume_primary_value: Option<f64>,
     #[serde(default)]
     pub max_volume_currency: Option<String>,
     #[serde(default)]
+    pub max_volume_rate: Option<f64>,
+    pub sparkline: Sparkline,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExchangeItem {
+    pub id: String,
+    pub name: String,
+    pub details_id: String,
+}
+
+/// `NinjaDenseExchangeInfo`: a line joined with its item.
+#[derive(Debug, Clone, PartialEq)]
+pub struct NinjaDenseInfo {
+    pub name: String,
+    pub variant: Option<String>,
+    /// In divines.
+    pub primary_value: f64,
+    pub details_id: String,
+    pub id: Option<String>,
+    pub volume_primary_value: Option<f64>,
+    pub max_volume_currency: Option<String>,
     pub max_volume_rate: Option<f64>,
     pub sparkline: Sparkline,
 }
@@ -141,51 +182,14 @@ fn available_core_currencies(d: &Data) -> Vec<CoreCurrency> {
         .collect()
 }
 
-/// One overview of the blob.
+/// One overview's prices (`PriceDatabase` entry).
 #[derive(Debug, Clone, PartialEq)]
 struct Overview {
-    ns: String,
+    ns: &'static str,
+    /// From the currency exchange.
     cx: bool,
-    url: String,
-    lines: String,
-}
-
-/// `parseXchg`: the `{"rates":...}` object at the start of the blob.
-pub fn parse_xchg(blob: &str) -> Option<NinjaXchgRates> {
-    const RATES: &str = r#"{"rates":"#;
-    const END_RATES: &str = "\"}";
-    let start = blob.find(RATES)?;
-    let end = blob[start..].find(END_RATES)? + start + END_RATES.len();
-    serde_json::from_str(&blob[start..end]).ok()
-}
-
-/// `splitJsonBlob`: the blob cut at each `{"type":"`, the schema's types kept.
-fn split_json_blob(blob: &str, schema: &NinjaSchema) -> Vec<Overview> {
-    const NINJA_OVERVIEW: &str = r#"{"type":""#;
-    let mut database = Vec::new();
-    if schema.schema_version != 1 {
-        return database;
-    }
-    let Some(mut start) = blob.find(NINJA_OVERVIEW) else { return database };
-    loop {
-        let end = blob[start + 1..].find(NINJA_OVERVIEW).map(|i| i + start + 1);
-        let type_start = start + NINJA_OVERVIEW.len();
-        let kind = blob[type_start..].find('"').map_or(&blob[type_start..], |i| &blob[type_start..type_start + i]);
-        let lines = &blob[start..end.unwrap_or(blob.len())];
-        if let Some(entry) = schema.map.iter().find(|e| e.kind == kind) {
-            database.push(Overview {
-                ns: entry.ns.clone(),
-                cx: entry.cx,
-                url: entry.url.clone(),
-                lines: lines.to_owned(),
-            });
-        }
-        match end {
-            Some(end) => start = end,
-            None => break,
-        }
-    }
-    database
+    url: &'static str,
+    entries: Vec<NinjaDenseInfo>,
 }
 
 /// `selectedLeagueToUrl(false)`: poe.ninja's name for a league.
@@ -287,20 +291,45 @@ impl Prices {
         self.last_interest = Some(now);
     }
 
-    /// Takes the downloaded schema and overview blob (`load` after the
-    /// requests). A preferred core currency the data lacks falls back to exalted.
-    pub fn loaded(&mut self, d: &Data, schema: &NinjaSchema, blob: &str, now: u64) {
+    /// Takes poe.ninja's answers: `(type, body)` per [`NINJA_TYPES`] entry
+    /// (`load` after the requests). Unparsable or unknown ones are skipped. A
+    /// preferred core currency the data lacks falls back to exalted.
+    pub fn loaded(&mut self, d: &Data, overviews: &[(&str, &str)], now: u64) {
         self.available_core_currencies = available_core_currencies(d);
         let selected_id = self.selected_core_currency_id();
         if !self.available_core_currencies.iter().any(|c| c.id == selected_id) {
             self.core_currency = Some("exalted".to_owned());
         }
 
-        let xchg = parse_xchg(blob);
-        self.database = split_json_blob(blob, schema);
+        let mut rates = None;
+        self.database.clear();
+        for (kind, body) in overviews {
+            let Some(&(_, ns, url)) = NINJA_TYPES.iter().find(|(t, _, _)| t == kind) else { continue };
+            let Ok(overview) = serde_json::from_str::<ExchangeOverview>(body) else { continue };
+            rates.get_or_insert(overview.core.rates.clone());
+            let entries = overview
+                .lines
+                .into_iter()
+                .filter_map(|line| {
+                    let item = overview.items.iter().find(|i| i.id == line.id)?;
+                    Some(NinjaDenseInfo {
+                        name: item.name.clone(),
+                        variant: None,
+                        primary_value: line.primary_value,
+                        details_id: item.details_id.clone(),
+                        id: Some(line.id),
+                        volume_primary_value: line.volume_primary_value,
+                        max_volume_currency: line.max_volume_currency,
+                        max_volume_rate: line.max_volume_rate,
+                        sparkline: line.sparkline,
+                    })
+                })
+                .collect();
+            self.database.push(Overview { ns, cx: true, url, entries });
+        }
 
         // TODO (upstream): search the requested currency instead of divine.
-        if let Some(rates) = xchg.map(|x| x.rates).filter(|r| r.values().any(|&v| v >= 10.0)) {
+        if let Some(rates) = rates.filter(|r| r.values().any(|&v| v >= 10.0)) {
             let preferred = self.selected_core_currency().map(|c| c.id);
             match preferred.filter(|&p| p != "div" && rates.get(p).is_some_and(|&r| r >= 5.0)) {
                 Some(id) => {
@@ -338,23 +367,16 @@ impl Prices {
         self.database.is_empty()
     }
 
-    /// `findPriceByQuery`
+    /// `findPriceByQuery`: the first overview of the namespace with the item.
     pub fn find_price(&self, query: &DbQuery) -> Option<NinjaPrice> {
-        // `JSON.stringify({ name, variant, primaryValue: 0 }).replace(':0}', ':')`
-        let mut search = format!("{{\"name\":{}", json_string(&query.name));
-        if let Some(v) = &query.variant {
-            search.push_str(&format!(",\"variant\":{}", json_string(v)));
-        }
-        search.push_str(",\"primaryValue\":");
-        const END: &str = "}}";
-
         for overview in self.database.iter().filter(|o| o.ns == query.ns) {
-            let Some(start) = overview.lines.find(&search) else { continue };
-            let end = overview.lines[start..].find(END).map(|i| start + i + END.len())?;
-            let info: NinjaDenseInfo = serde_json::from_str(&overview.lines[start..end]).ok()?;
+            let Some(info) = overview.entries.iter().find(|e| e.name == query.name && e.variant == query.variant)
+            else {
+                continue;
+            };
             let league = league_to_url(self.league_id.as_deref().unwrap_or_default());
             let url = format!("https://poe.ninja/poe2/economy/{league}/{}/{}", overview.url, info.details_id);
-            return Some(NinjaPrice { info, cx: overview.cx, url });
+            return Some(NinjaPrice { info: info.clone(), cx: overview.cx, url });
         }
         None
     }
@@ -463,67 +485,64 @@ mod tests {
     use super::*;
     use crate::data::tests::en;
 
-    /// EE2's `specs/web/prices.test.ts` inputs.
-    const XCHG_BLOB: &str = r#"{"core":{"rates":{"exalted":2312,"chaos":76.2},"primary":"divine","secondary":"chaos"},"itemOverviews":[{"type":"Currency","lines":[{"name":"Orb of Alchemy","detailsId":"orb-of-alchemy","id":"alch","primaryValue":0.00003575,"volumePrimaryValue":0.4008,"maxVolumeCurrency":"exalted","#;
-    const SPLIT_BLOB: &str = r#"chaos"},"itemOverviews":[{"type":"Currency","lines":[{"name":"Orb of Alchemy","detailsId":"orb-of-alchemy","id":"alch","primaryValue":0.00003575,"volumePrimaryValue":0.4008,"maxVolumeCurrency":"exalted","maxVolumeRate":12.05,"sparkline":{"totalChange":-40.89,"data":[-9.56,-69.14,-70.07,-20.05,-14.13,18.75,-40.89]}},{"name":"Exalted Orb","detailsId":"exalted-orb","id":"exalted","primaryValue":0.0004308,"volumePrimaryValue":449.7,"maxVolumeCurrency":"divine","maxVolumeRate":2321,"sparkline":{"totalChange":-20.32,"data":[-5.22,-15.82,-13.6,-15.2,-15.99,-21.78,-20.32]}}]}]"#;
-
-    fn schema() -> NinjaSchema {
-        NinjaSchema {
-            schema_version: 1,
-            map: vec![SchemaEntry { ns: "ITEM".into(), cx: true, url: "my-url".into(), kind: "Currency".into() }],
-        }
-    }
+    /// The shape of poe.ninja's answer (2026-11-24), cut down.
+    const CURRENCY: &str = r#"{"core":{"items":[],"rates":{"exalted":132.4,"chaos":1.86},"primary":"divine","secondary":"chaos"},
+        "lines":[{"id":"exalted","primaryValue":0.00755,"volumePrimaryValue":4.2,"maxVolumeCurrency":"divine","maxVolumeRate":132,
+                  "sparkline":{"totalChange":-1.5,"data":[-1,null]}},
+                 {"id":"lost","primaryValue":1,"sparkline":{"totalChange":0,"data":[]}}],
+        "items":[{"id":"exalted","name":"Exalted Orb","image":"/x.png","category":"Currency","detailsId":"exalted-orb"}]}"#;
+    const GEMS: &str = r#"{"core":{"items":[],"rates":{"exalted":132.4,"chaos":1.86},"primary":"divine","secondary":"chaos"},
+        "lines":[{"id":"chimes","primaryValue":2.5,"sparkline":{"totalChange":0,"data":[]}}],
+        "items":[{"id":"chimes","name":"Ailith's Chimes","image":"/y.png","category":"LineageSupportGems","detailsId":"ailiths-chimes"}]}"#;
 
     #[test]
-    fn parses_the_rates_like_ee2s_test() {
-        let x = parse_xchg(XCHG_BLOB).unwrap();
-        assert_eq!((x.rates["exalted"], x.rates["chaos"]), (2312.0, 76.2));
-        assert_eq!((x.primary.as_str(), x.secondary.as_str()), ("divine", "chaos"));
-        assert_eq!(split_json_blob(SPLIT_BLOB, &schema()).len(), 1);
+    fn requests_one_overview_per_type() {
+        let r = overview_request("Runes of Aldur", "SoulCores");
+        assert_eq!(
+            r.url,
+            "https://poe.ninja/poe2/api/economy/exchange/current/overview?league=Runes%20of%20Aldur&type=SoulCores"
+        );
     }
 
     #[test]
     fn prices_convert_through_the_core_currency() {
         let d = en();
         let mut prices = Prices { core_currency: Some("exalted".into()), ..Default::default() };
-        let league = SelectedLeague { id: "Dawn of the Hunt".into(), realm: "pc-ggg".into(), is_popular: true };
+        let league = SelectedLeague { id: "Runes of Aldur".into(), realm: "pc-ggg".into(), is_popular: true };
         assert!(prices.wants_load(Some(&league), false, 0));
-        // poe.ninja's own order (`name`, `detailsId`, ..., `primaryValue`) never
-        // matches the search; upstream relies on its server writing
-        // `primaryValue` right after `name`, as here.
-        assert!({
-            let mut p = prices.clone();
-            p.loaded(d, &schema(), &format!("{XCHG_BLOB}{SPLIT_BLOB}"), 0);
-            p.find_price(&DbQuery { ns: "ITEM".into(), name: "Exalted Orb".into(), variant: None }).is_none()
-        });
-        let blob = concat!(
-            r#"{"core":{"rates":{"exalted":2312,"chaos":76.2},"primary":"divine","secondary":"chaos"},"itemOverviews":["#,
-            r#"{"type":"Currency","lines":[{"name":"Exalted Orb","primaryValue":0.0004308,"detailsId":"exalted-orb","#,
-            r#""sparkline":{"totalChange":-20.32,"data":[-5.22,null]}}]}]}"#
-        );
-        prices.loaded(d, &schema(), blob, 0);
-        assert_eq!((prices.xchg_rate, prices.xchg_rate_currency), (Some(2312.0), Some("exalted")));
+        prices.loaded(d, &[("Currency", CURRENCY), ("LineageSupportGems", GEMS), ("Nonsense", "{}")], 0);
+        assert_eq!((prices.xchg_rate, prices.xchg_rate_currency), (Some(132.4), Some("exalted")));
 
-        let ex = prices.find_price(&DbQuery { ns: "ITEM".into(), name: "Exalted Orb".into(), variant: None }).unwrap();
-        assert_eq!(ex.url, "https://poe.ninja/poe2/economy/dawnofthehunt/my-url/exalted-orb");
+        let query = DbQuery { ns: "ITEM".into(), name: "Exalted Orb".into(), variant: None };
+        let ex = prices.find_price(&query).unwrap();
+        assert_eq!(ex.url, "https://poe.ninja/poe2/economy/runesofaldur/currency/exalted-orb");
         assert!(ex.cx);
+        // A line without an item has no name to be found by.
+        assert_eq!(prices.database[0].entries.len(), 1);
+        let gem = DbQuery { ns: "GEM".into(), name: "Ailith's Chimes".into(), variant: None };
+        assert_eq!(prices.find_price(&gem).unwrap().info.primary_value, 2.5);
 
         // 100 exalted orbs, in exalted.
-        let query = DbQuery { ns: "ITEM".into(), name: "Exalted Orb".into(), variant: None };
         let value = prices.cached_currency_by_query(&query, 100.0).unwrap();
         assert_eq!(value.currency, "exalted");
-        assert!((value.min - 0.0004308 * 100.0 * 2312.0).abs() < 1e-9);
+        assert!((value.min - 0.00755 * 100.0 * 132.4).abs() < 1e-9);
         // A divine's worth switches to divines.
         assert_eq!(prices.auto_currency(1.0, false), CurrencyValue { min: 1.0, max: 1.0, currency: "div" });
         assert_eq!(prices.auto_currency(3.0, false).currency, "div");
         assert_eq!(prices.auto_currency(3.0, true).currency, "exalted");
 
         let one_div = CurrencyValue { min: 1.0, max: 1.0, currency: "div" };
-        let half = CurrencyValue { min: 1156.0, max: 1156.0, currency: "exalted" };
+        let half = CurrencyValue { min: 66.2, max: 66.2, currency: "exalted" };
         assert_eq!(prices.add_price(one_div, half).unwrap().currency, "div");
         assert!(prices.compare_price(one_div, PriceOp::Gt, half).unwrap());
         let chaos = CurrencyValue { min: 1.0, max: 1.0, currency: "chaos" };
         assert!(prices.to_divine(chaos).is_err());
+
+        // Chaos as the core currency, when its rate is usable.
+        let mut chaos_prices = Prices { core_currency: Some("chaos".into()), ..Default::default() };
+        chaos_prices.loaded(d, &[("Currency", CURRENCY)], 0);
+        // 1.86 chaos per divine is below upstream's threshold of 5: exalted.
+        assert_eq!(chaos_prices.xchg_rate_currency, Some("exalted"));
     }
 
     #[test]
