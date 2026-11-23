@@ -44,6 +44,14 @@ impl Case {
     }
 }
 
+/// `fixtures/listings/<game>/<name>`: what the reference makes of a recorded
+/// trade site answer, with the path of that answer in the reference checkout.
+pub fn listing_fixture(game: GameId, name: &str) -> Value {
+    let file = fixtures_dir().join("listings").join(game.as_str()).join(name);
+    let text = fs::read_to_string(&file).unwrap_or_else(|e| panic!("{}: {e}", file.display()));
+    serde_json::from_str(&text).unwrap_or_else(|e| panic!("{}: {e}", file.display()))
+}
+
 /// Every case for `game`, sorted by slug.
 pub fn cases(game: GameId) -> Vec<Case> {
     let root = fixtures_dir().join(game.as_str());

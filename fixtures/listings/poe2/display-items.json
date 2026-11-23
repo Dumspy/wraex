@@ -1,0 +1,1499 @@
+[
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "14% increased Rarity of Items found",
+          "tier": "P2"
+        },
+        {
+          "color": 1,
+          "text": "Gain Deflection Rating equal to 17% of Evasion Rating",
+          "tier": "S3"
+        }
+      ],
+      "frameType": 1,
+      "grantSkill": [],
+      "icon": {
+        "h": 2,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL0Jhc2V0eXBlcy9IZWxtZXREZXgwNyIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/74f4fa374e/HelmetDex07.png",
+        "w": 2
+      },
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 50
+        },
+        {
+          "color": 0,
+          "text": "Level ",
+          "value": "45, 64 Dex"
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Helmet ",
+          "value": ""
+        },
+        {
+          "color": 1,
+          "text": "item.evasion_rating",
+          "value": 190
+        }
+      ],
+      "rarity": "Magic",
+      "title": [
+        "Collector's Corsair Cap of Curvation"
+      ]
+    },
+    "id": "65c7c4e8e6df387c2749f1c7b726b23b52f0400b945175939236711f628111bb"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "Adds 30 to 45 Cold Damage",
+          "tier": "P6"
+        },
+        {
+          "color": 1,
+          "text": "+16 to Strength",
+          "tier": "S6"
+        },
+        {
+          "color": 1,
+          "text": "Leeches 5.01% of Physical Damage as Mana",
+          "tier": "S4"
+        },
+        {
+          "color": 1,
+          "text": "16% increased Stun Duration",
+          "tier": "S5"
+        }
+      ],
+      "frameType": 2,
+      "grantSkill": [],
+      "icon": {
+        "h": 4,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9Ud29IYW5kV2VhcG9ucy9Ud29IYW5kTWFjZXMvQmFzZXR5cGVzLzJITWFjZTA4IiwidyI6MiwiaCI6NCwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/e76cbc3836/2HMace08.png",
+        "w": 2
+      },
+      "implicitMods": [
+        {
+          "color": 1,
+          "text": "Causes Enemies to Explode on Critical kill, for 10% of their Life as Physical Damage",
+          "tier": ""
+        }
+      ],
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 46
+        },
+        {
+          "color": 0,
+          "text": "Level ",
+          "value": "38, 68 Str"
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Two Hand Mace ",
+          "value": ""
+        },
+        {
+          "color": 1,
+          "text": "item.total_dps",
+          "value": 131.45
+        },
+        {
+          "color": 1,
+          "text": "item.physical_dps",
+          "value": 90.2
+        },
+        {
+          "color": 0,
+          "text": "item.elemental_dps",
+          "value": 41.25
+        },
+        {
+          "color": 0,
+          "text": "item.crit",
+          "value": "8.00%"
+        },
+        {
+          "color": 0,
+          "text": "item.aps",
+          "value": "1.10"
+        }
+      ],
+      "rarity": "Rare",
+      "title": [
+        "Phoenix Brand",
+        "Crumbling Maul"
+      ]
+    },
+    "id": "00d17082ebd44185326ad4c508c6d64a0705f42df846b3a2132cb96456e3d132"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "Adds 8 to 20 Physical Damage",
+          "tier": "P7"
+        },
+        {
+          "color": 1,
+          "text": "Adds 41 to 63 Cold Damage",
+          "tier": "P5"
+        },
+        {
+          "color": 1,
+          "text": "16% increased Attack Speed",
+          "tier": "S2"
+        },
+        {
+          "color": 1,
+          "text": "+8 to Strength",
+          "tier": "S8"
+        }
+      ],
+      "frameType": 2,
+      "grantSkill": [],
+      "icon": {
+        "h": 4,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9Ud29IYW5kV2VhcG9ucy9Dcm9zc2Jvd3MvMkhDcm9zc2JvdzA1IiwidyI6MiwiaCI6NCwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/28ab8c9744/2HCrossbow05.png",
+        "w": 2
+      },
+      "implicitMods": [
+        {
+          "color": 1,
+          "text": "Loads an additional bolt",
+          "tier": ""
+        }
+      ],
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 54
+        },
+        {
+          "color": 0,
+          "text": "Level ",
+          "value": "54, 53 Str, 53 Dex"
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Crossbow ",
+          "value": ""
+        },
+        {
+          "color": 1,
+          "text": "item.total_dps",
+          "value": 241.8
+        },
+        {
+          "color": 1,
+          "text": "item.physical_dps",
+          "value": 145.08
+        },
+        {
+          "color": 0,
+          "text": "item.elemental_dps",
+          "value": 96.72
+        },
+        {
+          "color": 0,
+          "text": "item.crit",
+          "value": "5.00%"
+        },
+        {
+          "color": 1,
+          "text": "item.aps",
+          "value": "1.86"
+        },
+        {
+          "color": 1,
+          "text": "item.reload_time",
+          "value": "0.95"
+        }
+      ],
+      "rarity": "Rare",
+      "title": [
+        "Fate Core",
+        "Twin Crossbow"
+      ]
+    },
+    "id": "288371ebfb40140ffb5269595000b1223c82b61c08620e148e343d0794bf0091"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "+61 to maximum Life",
+          "tier": "P6"
+        }
+      ],
+      "frameType": 1,
+      "grantSkill": [],
+      "icon": {
+        "h": 1,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvQmFzZXR5cGVzL0JlbHQwNSIsInciOjIsImgiOjEsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/510a304252/Belt05.png",
+        "w": 2
+      },
+      "implicitMods": [
+        {
+          "color": 1,
+          "text": "+101 to Armour",
+          "tier": ""
+        },
+        {
+          "color": 1,
+          "text": "Has 1 Charm Slot",
+          "tier": ""
+        }
+      ],
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 49
+        },
+        {
+          "color": 0,
+          "text": "Level ",
+          "value": "26"
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Belt ",
+          "value": ""
+        }
+      ],
+      "rarity": "Magic",
+      "title": [
+        "Stout Plate Belt"
+      ]
+    },
+    "id": "b8505bb6759874df7d0ce3e89883a92eab301990c97e08de89be131f95dfec46"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "Adds 12 to 20 Fire Damage",
+          "tier": "P8"
+        },
+        {
+          "color": 1,
+          "text": "Adds 2 to 5 Cold Damage",
+          "tier": "P10"
+        },
+        {
+          "color": 1,
+          "text": "+42 to Accuracy Rating",
+          "tier": "P9"
+        },
+        {
+          "color": 1,
+          "text": "Leeches 6.04% of Physical Damage as Mana",
+          "tier": "S2"
+        }
+      ],
+      "frameType": 2,
+      "grantSkill": [],
+      "icon": {
+        "h": 4,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9Ud29IYW5kV2VhcG9ucy9Dcm9zc2Jvd3MvMkhDcm9zc2JvdzA3IiwidyI6MiwiaCI6NCwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/7153259b14/2HCrossbow07.png",
+        "w": 2
+      },
+      "implicitMods": [
+        {
+          "color": 1,
+          "text": "Grenade Skills Fire an additional Projectile",
+          "tier": ""
+        }
+      ],
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 68
+        },
+        {
+          "color": 0,
+          "text": "Level ",
+          "value": "59, 58 Str, 58 Dex"
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Crossbow ",
+          "value": ""
+        },
+        {
+          "color": 1,
+          "text": "item.total_dps",
+          "value": 144.38
+        },
+        {
+          "color": 1,
+          "text": "item.physical_dps",
+          "value": 112.2
+        },
+        {
+          "color": 0,
+          "text": "item.elemental_dps",
+          "value": 32.18
+        },
+        {
+          "color": 0,
+          "text": "item.crit",
+          "value": "5.00%"
+        },
+        {
+          "color": 0,
+          "text": "item.aps",
+          "value": "1.65"
+        },
+        {
+          "color": 0,
+          "text": "item.reload_time",
+          "value": "0.75"
+        }
+      ],
+      "rarity": "Rare",
+      "title": [
+        "Hate Core",
+        "Cannonade Crossbow"
+      ]
+    },
+    "id": "8882d2873a3b886bba9be506ff3c1f28d4a9f3c467a6da2ba54b0903a17f4c0f"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "Adds 21 to 33 Physical Damage",
+          "tier": "P5"
+        },
+        {
+          "color": 1,
+          "text": "+13% to Critical Damage Bonus",
+          "tier": "S5"
+        },
+        {
+          "color": 1,
+          "text": "5% increased Attack Speed",
+          "tier": "S8"
+        },
+        {
+          "color": 1,
+          "text": "+20 to Strength",
+          "tier": "S5"
+        }
+      ],
+      "frameType": 2,
+      "grantSkill": [],
+      "icon": {
+        "h": 4,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9Ud29IYW5kV2VhcG9ucy9Ud29IYW5kTWFjZXMvQmFzZXR5cGVzLzJITWFjZTA3IiwidyI6MiwiaCI6NCwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/e7ae9f768b/2HMace07.png",
+        "w": 2
+      },
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 63
+        },
+        {
+          "color": 0,
+          "text": "Level ",
+          "value": "59, 104 Str"
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Two Hand Mace ",
+          "value": ""
+        },
+        {
+          "color": 1,
+          "text": "item.total_dps",
+          "value": 191.4
+        },
+        {
+          "color": 1,
+          "text": "item.physical_dps",
+          "value": 191.4
+        },
+        {
+          "color": 0,
+          "text": "item.crit",
+          "value": "5.00%"
+        },
+        {
+          "color": 1,
+          "text": "item.aps",
+          "value": "1.16"
+        }
+      ],
+      "rarity": "Rare",
+      "title": [
+        "Horror Ram",
+        "Heavy Greathammer"
+      ]
+    },
+    "id": "ed1e4577bcbee0f79819f4dd79fcf20ad7336c9a4fe2d9d8fe67fc3ee29115ad"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "22% increased Physical Damage",
+          "tier": "P7"
+        },
+        {
+          "color": 1,
+          "text": "+36 to Accuracy Rating",
+          "tier": "P7"
+        },
+        {
+          "color": 1,
+          "text": "51% increased Elemental Damage with Attacks",
+          "tier": "P5"
+        },
+        {
+          "color": 1,
+          "text": "+12% to Critical Damage Bonus",
+          "tier": "S5"
+        },
+        {
+          "color": 1,
+          "text": "13% increased Stun Duration",
+          "tier": "S6"
+        }
+      ],
+      "frameType": 2,
+      "grantSkill": [],
+      "icon": {
+        "h": 4,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9Ud29IYW5kV2VhcG9ucy9XYXJTdGF2ZXMvV2Fyc3RhZmYxMCIsInciOjIsImgiOjQsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/d836b3566d/Warstaff10.png",
+        "w": 2
+      },
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 51
+        },
+        {
+          "color": 0,
+          "text": "Level ",
+          "value": "49, 68 Dex, 28 Int"
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Quarterstaff ",
+          "value": ""
+        },
+        {
+          "color": 1,
+          "text": "item.total_dps",
+          "value": 151.5
+        },
+        {
+          "color": 1,
+          "text": "item.physical_dps",
+          "value": 151.5
+        },
+        {
+          "color": 0,
+          "text": "item.crit",
+          "value": "0.00%"
+        },
+        {
+          "color": 0,
+          "text": "item.aps",
+          "value": "1.50"
+        }
+      ],
+      "rarity": "Rare",
+      "title": [
+        "Phoenix Song",
+        "Smooth Quarterstaff"
+      ]
+    },
+    "id": "ece06af2da11af250fdaf2ebc01bc9baf78fe9718568551a4c7be6e96ec0136b"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "20% increased Physical Damage",
+          "tier": "P7"
+        },
+        {
+          "color": 1,
+          "text": "+36 to Accuracy Rating",
+          "tier": "P7"
+        },
+        {
+          "color": 1,
+          "text": "13% increased Attack Speed",
+          "tier": "S6"
+        },
+        {
+          "color": 1,
+          "text": "Causes 23% increased Stun Buildup",
+          "tier": "S6"
+        },
+        {
+          "color": 1,
+          "text": "11% increased Stun Duration",
+          "tier": "S6"
+        }
+      ],
+      "frameType": 2,
+      "grantSkill": [],
+      "icon": {
+        "h": 4,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9Ud29IYW5kV2VhcG9ucy9Ud29IYW5kTWFjZXMvQmFzZXR5cGVzLzJITWFjZTA5IiwidyI6MiwiaCI6NCwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/74817e8b14/2HMace09.png",
+        "w": 2
+      },
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 46
+        },
+        {
+          "color": 0,
+          "text": "Level ",
+          "value": "45, 80 Str"
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Two Hand Mace ",
+          "value": ""
+        },
+        {
+          "color": 1,
+          "text": "item.total_dps",
+          "value": 151.9
+        },
+        {
+          "color": 1,
+          "text": "item.physical_dps",
+          "value": 151.9
+        },
+        {
+          "color": 0,
+          "text": "item.crit",
+          "value": "6.50%"
+        },
+        {
+          "color": 1,
+          "text": "item.aps",
+          "value": "1.24"
+        }
+      ],
+      "rarity": "Rare",
+      "title": [
+        "Eagle Breaker",
+        "Pointed Maul"
+      ]
+    },
+    "id": "03d11f820e96e16d195fc6100d841c21ad89800d4137e80f0ac160282a7681c5"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "Adds 1 to 26 Lightning damage to Attacks",
+          "tier": "P6"
+        },
+        {
+          "color": 1,
+          "text": "+11 to Dexterity",
+          "tier": "S8"
+        }
+      ],
+      "frameType": 1,
+      "grantSkill": [],
+      "icon": {
+        "h": 2,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9HbG92ZXMvQmFzZXR5cGVzL0dsb3Zlc0ludDA1IiwidyI6MiwiaCI6Miwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/b273510d40/GlovesInt05.png",
+        "w": 2
+      },
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 67
+        },
+        {
+          "color": 0,
+          "text": "Level ",
+          "value": "59, 73 Int"
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Gloves ",
+          "value": ""
+        },
+        {
+          "color": 1,
+          "text": "item.energy_shield",
+          "value": 47
+        }
+      ],
+      "rarity": "Magic",
+      "sockets": [
+        {
+          "group": 0,
+          "type": "rune"
+        }
+      ],
+      "title": [
+        "Crackling Gold Gloves of the Lynx"
+      ]
+    },
+    "id": "8cf987de8e7875e3217a12f8e4690186effc2c3d63123d5132c45d8ffbbd8e0f"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "8% increased Flask Life Recovery rate",
+          "tier": "P6"
+        },
+        {
+          "color": 1,
+          "text": "+19 to Strength",
+          "tier": "S6"
+        },
+        {
+          "color": 1,
+          "text": "2.3 Life Regeneration per second",
+          "tier": "S8"
+        },
+        {
+          "color": 1,
+          "text": "24% increased Flask Charges gained",
+          "tier": "S3"
+        }
+      ],
+      "frameType": 2,
+      "grantSkill": [],
+      "icon": {
+        "h": 1,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvQmFzZXR5cGVzL0JlbHQwMyIsInciOjIsImgiOjEsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/3dcd330357/Belt03.png",
+        "w": 2
+      },
+      "implicitMods": [
+        {
+          "color": 1,
+          "text": "Has 1 Charm Slot",
+          "tier": ""
+        },
+        {
+          "color": 1,
+          "text": "20% increased Flask Charges gained",
+          "tier": ""
+        }
+      ],
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 53
+        },
+        {
+          "color": 0,
+          "text": "Level ",
+          "value": "38"
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Belt ",
+          "value": ""
+        }
+      ],
+      "rarity": "Rare",
+      "title": [
+        "Vortex Tether",
+        "Wide Belt"
+      ]
+    },
+    "id": "79aebac88476ca53dc5b87e084a3daf56ecae77d88b85835f9ea199476a9c2d4"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "+53 to maximum Life",
+          "tier": ""
+        },
+        {
+          "color": 1,
+          "text": "26% increased Flask Life Recovery rate",
+          "tier": ""
+        },
+        {
+          "color": 1,
+          "text": "Life Flasks gain 0.23 charges per Second",
+          "tier": ""
+        }
+      ],
+      "frameType": 3,
+      "grantSkill": [],
+      "icon": {
+        "h": 1,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQW11bGV0cy9VbmlxdWVzL1JldmVyZWRSZXNpbiIsInciOjEsImgiOjEsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/6139c327c5/ReveredResin.png",
+        "w": 1
+      },
+      "implicitMods": [
+        {
+          "color": 1,
+          "text": "+15 to Strength",
+          "tier": ""
+        }
+      ],
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 79
+        },
+        {
+          "color": 0,
+          "text": "Level ",
+          "value": "8"
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Amulet ",
+          "value": ""
+        }
+      ],
+      "rarity": "Unique",
+      "title": [
+        "Revered Resin",
+        "Amber Amulet"
+      ]
+    },
+    "id": "4ac2e3ccfcb4e5519f8c1b7e38798e0c1101d41372021a6eced96eb7f6b3b396"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "+120 to maximum Mana",
+          "tier": "P3"
+        },
+        {
+          "color": 1,
+          "text": "Allies in your Presence deal 59% increased Damage",
+          "tier": "P5"
+        },
+        {
+          "color": 1,
+          "text": "Allies in your Presence deal 2 to 41 added Attack Lightning Damage",
+          "tier": "P3"
+        },
+        {
+          "color": 1,
+          "text": "Allies in your Presence have 13% increased Attack Speed",
+          "tier": "S2"
+        }
+      ],
+      "frameType": 2,
+      "grantSkill": [
+        {
+          "color": 25,
+          "text": "Grants Skill: ",
+          "value": "Level 16 Fulmination"
+        }
+      ],
+      "icon": {
+        "h": 3,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9PbmVIYW5kV2VhcG9ucy9TY2VwdGVycy9CYXNldHlwZXMvU2NlcHRyZTEwIiwidyI6MiwiaCI6Mywic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/3b3845420a/Sceptre10.png",
+        "w": 2
+      },
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 74
+        },
+        {
+          "color": 0,
+          "text": "Level ",
+          "value": "66, 116 Int"
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Sceptre ",
+          "value": ""
+        },
+        {
+          "color": 0,
+          "text": "item.spirit",
+          "value": "100"
+        }
+      ],
+      "rarity": "Rare",
+      "sockets": [],
+      "title": [
+        "Loath Ram",
+        "Wrath Sceptre"
+      ]
+    },
+    "id": "4ec60fea5bde7aecf563083e8a8eb79171ea32a86bd17a268c1c92123d08a927"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "Monsters deal 7% reduced Damage"
+        },
+        {
+          "color": 1,
+          "text": "7% chance to Avoid gaining an Affliction"
+        }
+      ],
+      "frameType": 1,
+      "grantSkill": [],
+      "icon": {
+        "h": 4,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvUmVsaWNzL1JlbGljQmFzZTF4NCIsInciOjEsImgiOjQsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/9b2fc780e6/RelicBase1x4.png",
+        "w": 1
+      },
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 81
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Relic ",
+          "value": ""
+        }
+      ],
+      "rarity": "Magic",
+      "title": [
+        "Fortified Vase Relic of Dignity"
+      ]
+    },
+    "id": "42a9dd4276a3b139af99cf0a34350025420593a5d78f6aae0056c9682e26db75"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "Monsters have 10% increased Effectiveness",
+          "tier": "P1"
+        },
+        {
+          "color": 1,
+          "text": "39% increased Quantity of Waystones found in Map",
+          "tier": "S1"
+        },
+        {
+          "color": 1,
+          "text": "Map has 85% increased chance to contain Essences",
+          "tier": "S1"
+        },
+        {
+          "color": 1,
+          "text": "34% increased Gold found in Map",
+          "tier": "P1"
+        }
+      ],
+      "frameType": 2,
+      "grantSkill": [],
+      "icon": {
+        "h": 1,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvUHJlY3Vyc29yVGFibGV0cy9QcmVjdXJzb3JUYWJsZXRHZW5lcmljIiwidyI6MSwiaCI6MSwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/4fbc73f060/PrecursorTabletGeneric.png",
+        "w": 1
+      },
+      "implicitMods": [
+        {
+          "color": 1,
+          "text": "Adds Irradiated to a Map \n10 uses remaining",
+          "tier": ""
+        }
+      ],
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 66
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Tablet ",
+          "value": ""
+        }
+      ],
+      "rarity": "Rare",
+      "title": [
+        "Phoenix Edict",
+        "Precursor Tablet"
+      ]
+    },
+    "id": "03d44656941a7772508f393fd2e99086c1939b6379fba7691a40427f8fdb7863"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "Sacrifice up to 10 Vaal Orbs to receive double on Trial completion",
+          "tier": "P19"
+        },
+        {
+          "color": 1,
+          "text": "Players are Cursed with Enfeeble",
+          "tier": "S1"
+        },
+        {
+          "color": 1,
+          "text": "Players are Cursed with Temporal Chains",
+          "tier": "S1"
+        },
+        {
+          "color": 1,
+          "text": "Players are Cursed with Elemental Weakness",
+          "tier": "S1"
+        }
+      ],
+      "frameType": 1,
+      "grantSkill": [],
+      "icon": {
+        "h": 1,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvTWFwcy9VbHRpbWF0dW1UcmlhbEl0ZW0iLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/ca16daf7d4/UltimatumTrialItem.png",
+        "w": 1
+      },
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 82
+        }
+      ],
+      "itemTags": [
+        {
+          "color": 2,
+          "text": "Corrupted"
+        }
+      ],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Area Level ",
+          "value": "80"
+        },
+        {
+          "color": 0,
+          "text": "Number of Trials ",
+          "value": "10"
+        },
+        {
+          "color": 0,
+          "text": " ",
+          "value": "Cowardly"
+        }
+      ],
+      "rarity": "Magic",
+      "title": [
+        "Vaal Inscribed Ultimatum of Hexing"
+      ]
+    },
+    "id": "91c9f13daee68fea664995d95a51a8bc866bd73b776f596bbfa288c97870a5b6"
+  },
+  {
+    "displayItem": {
+      "frameType": 5,
+      "grantSkill": [],
+      "icon": {
+        "h": 1,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvU2FuY3R1bS9CYWxiYWxhQ29pbjEiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/4fe253f6e7/BalbalaCoin1.png",
+        "w": 1
+      },
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 79
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Area Level ",
+          "value": "79"
+        },
+        {
+          "color": 0,
+          "text": "Number of Trials ",
+          "value": "4"
+        }
+      ],
+      "title": [
+        "Djinn Barya"
+      ]
+    },
+    "id": "11de0eee2f907978bb930f7d803209025f8f262d385fc9da90e99a57dd67ffce"
+  },
+  {
+    "displayItem": {
+      "frameType": 0,
+      "grantSkill": [],
+      "icon": {
+        "h": 1,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvTWFwcy9FeHBlZGl0aW9uQ2hyb25pY2xlMyIsInciOjEsImgiOjEsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/f9b0f4c115/ExpeditionChronicle3.png",
+        "w": 1
+      },
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 80
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Expedition Logbook ",
+          "value": ""
+        },
+        {
+          "color": 0,
+          "text": "Area Level ",
+          "value": "81"
+        }
+      ],
+      "rarity": "Normal",
+      "title": [
+        "Expedition Logbook"
+      ]
+    },
+    "id": "ae5ce7896b053ecfd6dc4e080fea89ad216d6eeb4af494badddb66b6a1ecf2bf"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "Area contains 12 additional packs of Faridun Monsters",
+          "tier": "P1"
+        },
+        {
+          "color": 1,
+          "text": "22% increased number of Rare Monsters",
+          "tier": "P1"
+        },
+        {
+          "color": 1,
+          "text": "Monsters have 11% increased Attack, Cast and Movement Speed",
+          "tier": "S1"
+        },
+        {
+          "color": 1,
+          "text": "Monsters have 40% increased Accuracy Rating",
+          "tier": "P1"
+        },
+        {
+          "color": 1,
+          "text": "Monsters are Armoured",
+          "tier": "P1"
+        },
+        {
+          "color": 1,
+          "text": "Monsters have 125% increased Freeze Buildup",
+          "tier": "S1"
+        },
+        {
+          "color": 1,
+          "text": "Monsters inflict 125% increased Flammability Magnitude",
+          "tier": "S1"
+        },
+        {
+          "color": 1,
+          "text": "Monster Damage Penetrates 14% Elemental Resistances",
+          "tier": "S1"
+        },
+        {
+          "color": 1,
+          "text": "Monsters have 125% increased Shock Chance",
+          "tier": "S1"
+        }
+      ],
+      "frameType": 2,
+      "grantSkill": [],
+      "icon": {
+        "h": 1,
+        "url": "https://web.poecdn.com/gen/image/WzI4LDE0LHsiZiI6IjJESXRlbXMvTWFwcy9FbmRnYW1lTWFwcy9FbmRnYW1lTWFwMTYiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/c0f4423d40/EndgameMap16.png",
+        "w": 1
+      },
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 82
+        }
+      ],
+      "itemTags": [
+        {
+          "color": 2,
+          "text": "Corrupted"
+        }
+      ],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Waystone ",
+          "value": ""
+        },
+        {
+          "color": 0,
+          "text": "item.map_tier",
+          "value": "16"
+        },
+        {
+          "color": 1,
+          "text": "item.map_revives",
+          "value": "0"
+        },
+        {
+          "color": 1,
+          "text": "item.map_pack_size",
+          "value": "+19%"
+        },
+        {
+          "color": 1,
+          "text": "item.map_rare_monsters",
+          "value": "+22%"
+        },
+        {
+          "color": 1,
+          "text": "item.map_item_rarity",
+          "value": "+53%"
+        },
+        {
+          "color": 1,
+          "text": "item.map_drop_chance",
+          "value": "+95%"
+        }
+      ],
+      "rarity": "Rare",
+      "title": [
+        "Desecrated Navigation",
+        "Waystone (Tier 16)"
+      ]
+    },
+    "id": "0c8eb03c18823786ca850f71acccce85941da58c673c78fa42e78a0dce685334"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "Also grants 240 Guard",
+          "tier": "P3"
+        },
+        {
+          "color": 1,
+          "text": "31% increased Charges gained",
+          "tier": "S5"
+        }
+      ],
+      "frameType": 1,
+      "grantSkill": [],
+      "icon": {
+        "h": 1,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ2hhcm1zL0Jhc2V0eXBlcy9TYXBwaGlyZUNoYXJtIiwidyI6MSwiaCI6MSwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/b2d6e7a108/SapphireCharm.png",
+        "w": 1
+      },
+      "implicitMods": [
+        {
+          "color": 1,
+          "text": "Used when you take Cold damage from a Hit",
+          "tier": ""
+        }
+      ],
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 73
+        },
+        {
+          "color": 0,
+          "text": "Level ",
+          "value": "38"
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Charm ",
+          "value": ""
+        },
+        {
+          "color": 0,
+          "text": "Lasts {0} Seconds ",
+          "value": "4"
+        },
+        {
+          "color": 0,
+          "text": "Consumes {0} of {1} Charges on use ",
+          "value": "20"
+        },
+        {
+          "color": 0,
+          "text": "Currently has {0} Charges ",
+          "value": "0"
+        }
+      ],
+      "rarity": "Magic",
+      "title": [
+        "Vibrant Sapphire Charm of the Continuous"
+      ]
+    },
+    "id": "65665041b6727dfe4a00ae3a3c1b73d51e9c7216bf42ed133e41c47832907cc6"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "Grants 54% of Life Recovery to Minions",
+          "tier": "P5"
+        }
+      ],
+      "frameType": 1,
+      "grantSkill": [],
+      "icon": {
+        "h": 2,
+        "url": "https://web.poecdn.com/gen/image/WzksMTQseyJmIjoiMkRJdGVtcy9GbGFza3MvQmFzZXR5cGVzL0ZsYXNrTGlmZTA4IiwidyI6MSwiaCI6Miwic2NhbGUiOjEsInJlYWxtIjoicG9lMiIsImxldmVsIjoxfV0/7c702cdd32/FlaskLife08.png",
+        "w": 1
+      },
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 50
+        },
+        {
+          "color": 0,
+          "text": "Level ",
+          "value": "50"
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Flask ",
+          "value": ""
+        },
+        {
+          "color": 0,
+          "text": "Recovers {0} Life over {1} Seconds ",
+          "value": "840"
+        },
+        {
+          "color": 0,
+          "text": "Consumes {0} of {1} Charges on use ",
+          "value": "10"
+        },
+        {
+          "color": 0,
+          "text": "Currently has {0} Charges ",
+          "value": "0"
+        }
+      ],
+      "rarity": "Magic",
+      "title": [
+        "Novice's Transcendent Life Flask"
+      ]
+    },
+    "id": "4e84249df7f7742fd2cdb3c8dd43410c5e98c3ade6814869d2f5d872348c7bc8"
+  },
+  {
+    "displayItem": {
+      "explicitMods": [
+        {
+          "color": 1,
+          "text": "199% increased Physical Damage",
+          "tier": "P2 + P5"
+        },
+        {
+          "color": 1,
+          "text": "Adds 14 to 26 Physical Damage",
+          "tier": "P6"
+        },
+        {
+          "color": 1,
+          "text": "+77 to Accuracy Rating",
+          "tier": "P5"
+        },
+        {
+          "color": 1,
+          "text": "Gain 35 Life per enemy killed",
+          "tier": "S4"
+        },
+        {
+          "color": 1,
+          "text": "Causes 43% increased Stun Buildup",
+          "tier": "S4"
+        },
+        {
+          "color": 1,
+          "text": "18% increased Stun Duration",
+          "tier": "S4"
+        }
+      ],
+      "frameType": 2,
+      "grantSkill": [],
+      "icon": {
+        "h": 4,
+        "url": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9Ud29IYW5kV2VhcG9ucy9XYXJTdGF2ZXMvV2Fyc3RhZmYxMCIsInciOjIsImgiOjQsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/d836b3566d/Warstaff10.png",
+        "w": 2
+      },
+      "itemProps": [
+        {
+          "color": 0,
+          "text": "item.item_level",
+          "value": 81
+        },
+        {
+          "color": 0,
+          "text": "Level ",
+          "value": "78, 127 Dex, 50 Int"
+        }
+      ],
+      "itemTags": [],
+      "nameBlock": [
+        {
+          "color": 0,
+          "text": "Quarterstaff ",
+          "value": ""
+        },
+        {
+          "color": 1,
+          "text": "Quality: {0}",
+          "value": "+20%"
+        },
+        {
+          "color": 0,
+          "text": "item.total_dps",
+          "value": 819.75
+        },
+        {
+          "color": 0,
+          "text": "item.physical_dps",
+          "value": 819.75
+        },
+        {
+          "color": 0,
+          "text": "item.crit",
+          "value": "0.00%"
+        },
+        {
+          "color": 0,
+          "text": "item.aps",
+          "value": "1.50"
+        }
+      ],
+      "rarity": "Rare",
+      "runeMods": [
+        {
+          "color": 8729,
+          "text": "36% increased Physical Damage"
+        },
+        {
+          "color": 8729,
+          "text": "Bonded: 40% increased effect of Fully Broken Armour"
+        }
+      ],
+      "sockets": [
+        {
+          "group": 0,
+          "type": "rune"
+        },
+        {
+          "group": 1,
+          "type": "rune"
+        }
+      ],
+      "title": [
+        "Brood Pillar",
+        "Dreaming Quarterstaff"
+      ]
+    },
+    "id": "2fa2f1ee71c3ed3e396180c3b5ef60a8948e1d09a76dbb3e3a7d85651a88cc43"
+  }
+]

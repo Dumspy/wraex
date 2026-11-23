@@ -112,3 +112,10 @@ export function captureOutput (action: () => void): unknown {
   if (out.length > 1) throw new Error('golden: an action produced more than one output')
   return out[0]
 }
+
+/** Writes `fixtures/listings/<game>/<name>`: results of the trade site's answers. */
+export function writeListingFixture (game: Game, name: string, content: string) {
+  const file = path.join(ROOT, 'fixtures', 'listings', game, name)
+  fs.mkdirSync(path.dirname(file), { recursive: true })
+  fs.writeFileSync(file, content)
+}

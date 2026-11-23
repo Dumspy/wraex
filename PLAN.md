@@ -241,9 +241,11 @@ Agent loop per step: port module → `golden check` → fix diffs → repeat.
   short relative dates in `core::relative_time`), EE2's listing display items
   (`poe2::results`, matched against `fixtures/listings/poe2/`, recorded from
   EE2's own `specs/docs/fetchResponses.json`) and PoE1's poe.ninja prices
-  (`poe1::prices`) are ported. Not yet: EE2's prices (`Prices.ts`) and the rest
-  of its result rows, which normalise prices through them; the session cookies
-  upstream's proxy forwards (Cloudflare, a logged-in POESESSID).
+  (`poe1::prices`) are ported, and so are EE2's prices (`poe2::prices`) and
+  result rows. EE2 downloads its price data from its own server
+  (`api.exiledexchange2.dev`); `poe2::prices` takes the data's text, and where
+  Wraex gets it is still open. Not yet: the session cookies upstream's proxy
+  forwards (Cloudflare, a logged-in POESESSID).
 - `GameConfig.ts` (reads PoE's keybinds from `production_Config.ini`),
   `GameLogWatcher.ts` (Client.txt for zone/chat events).
 - Settings storage (`ConfigStore.ts`): read upstream's config format so users

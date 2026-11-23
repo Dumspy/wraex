@@ -9,6 +9,8 @@ pub mod filters;
 pub mod item_check;
 pub mod map_check;
 pub mod parser;
+pub mod prices;
+pub mod results;
 pub mod trade;
 
 use wraex_core::GameId;
@@ -210,5 +212,27 @@ mod tests {
         }
         assert!(compared > 0);
         assert!(failures.is_empty(), "{} of {compared} cases differ:\n\n{}", failures.len(), failures.join("\n\n"));
+    }
+
+    /// `parseFetchResult` of each listing in EE2's recorded fetch answer
+    /// (`specs/docs/fetchResponses.json`) equals `listings/poe2/display-items.json`.
+    #[test]
+    fn display_items_match_the_fixtures() {
+        let data = data::Data::load(&data::reference_source(), "en", Some(data::reference_trade_data())).unwrap();
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/ee2/renderer/specs/docs/fetchResponses.json");
+        let answer: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let actual: Vec<serde_json::Value> = answer["result"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|result| match results::parse_fetch_result(&data, result) {
+                Ok(item) => serde_json::json!({ "id": result["id"], "displayItem": item }),
+                Err(e) => serde_json::json!({ "id": result["id"], "error": e.0 }),
+            })
+            .collect();
+        let expected = wraex_golden::listing_fixture(GameId::Poe2, "display-items.json");
+        if let Some(diff) = wraex_golden::diff(&expected, &wraex_core::js::json_value(&actual)) {
+            panic!("display items differ: {diff}");
+        }
     }
 }

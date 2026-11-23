@@ -7,7 +7,10 @@ import { apiToSatisfySearch } from '@/web/price-check/trade/common'
 import { createTradeRequest } from '@/web/price-check/trade/pathofexile-trade'
 import { createTradeRequest as createBulkRequest } from '@/web/price-check/trade/pathofexile-bulk'
 import { prepareMapStats } from '@/web/map-check/prepare-map-stats'
-import { byLang, canonical, captureOutput, loadCases, pruneFixtures, writeFixture } from './fixtures'
+import fs from 'node:fs'
+import path from 'node:path'
+import { byLang, canonical, captureOutput, loadCases, pruneFixtures, writeFixture, writeListingFixture } from './fixtures'
+import { __testExports as tradeTestExports } from '@/web/price-check/trade/pathofexile-trade'
 import * as itemCheck from '@/web/item-check/hotkeyable-actions'
 
 // bulk-api.ts search: the first exchange request a check sends.
@@ -126,4 +129,26 @@ for (const [lang, group] of byLang(cases)) {
 
 it('prunes fixtures without a corpus case', () => {
   pruneFixtures('poe2', cases.map(c => c.slug))
+})
+
+// The trade site's fetch answer EE2 keeps for its own tests: the display item
+// parseFetchResult builds for each listing (CheckedItem's result rows).
+describe('poe2 listings', () => {
+  beforeAll(async () => {
+    globalThis.__GOLDEN_CONFIG__ = cases[0].inputs.config as typeof globalThis.__GOLDEN_CONFIG__
+    await init('en')
+  })
+
+  it('records display items', () => {
+    const file = path.join(process.env.GOLDEN_REF!, 'specs/docs/fetchResponses.json')
+    const data = JSON.parse(fs.readFileSync(file, 'utf8')) as { result: Array<{ id: string }> }
+    const items = data.result.map(result => {
+      try {
+        return { id: result.id, displayItem: tradeTestExports.parseFetchResult(result as never) }
+      } catch (e) {
+        return { id: result.id, error: (e as Error).message }
+      }
+    })
+    writeListingFixture('poe2', 'display-items.json', canonical(items))
+  })
 })
