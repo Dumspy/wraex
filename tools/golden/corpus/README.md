@@ -18,7 +18,8 @@ this list current when adding cases, so it is clear which ones are real copies.
 
 - `real-*`: real in-game copies (advanced format, Ctrl+Alt+C), from the
   maintainer's own play: fractured and eldritch-implicit rares, a Foulborn unique
-  and a six-socket unique.
+  a six-socket unique, and three maps (a rare T16, a foil Valdo map with its
+  reward, a corrupted blighted map).
 - `adv-*`: hand-written in the advanced format, aimed at parser branches the
   real copies miss: magic names, legacy rolls (volatile, reflecting), negated
   rolls, catalyst quality, veiled and synthesised mods, enchant and scourge
