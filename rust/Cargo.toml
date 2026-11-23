@@ -30,6 +30,9 @@ thiserror = "2"
 indexmap = { version = "2", features = ["serde"] }
 # JavaScript regexes need look-behind and back-references (`wraex_core::js_regex`).
 fancy-regex = "0.20"
+# Blocking HTTP with rustls for the trade API (`wraex_platform::http`): a few
+# requests per second on a worker thread need no async runtime.
+ureq = "3"
 
 # Cargo doesn't inherit patches from a dependency. Rune vendors these six crates at
 # the rev above and needs them patched, or the build fails (`parley_engine` has no
