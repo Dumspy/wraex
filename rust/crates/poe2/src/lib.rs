@@ -6,6 +6,8 @@
 
 pub mod data;
 pub mod filters;
+pub mod item_check;
+pub mod map_check;
 pub mod parser;
 pub mod trade;
 
@@ -156,5 +158,57 @@ mod tests {
         }
         assert!(compared > 0);
         assert!(failures.is_empty(), "{} of {compared} requests differ:\n\n{}", failures.len(), failures.join("\n\n"));
+    }
+
+    /// The map check's stats equal `map-check.json`, recorded for map-like items.
+    #[test]
+    fn map_checks_match_the_fixtures() {
+        let data = data::Data::load(&data::reference_source(), "en", Some(data::reference_trade_data())).unwrap();
+        let mut failures = Vec::new();
+        let mut compared = 0;
+        for case in &wraex_golden::cases(GameId::Poe2) {
+            if case.parse_error().is_some() {
+                continue;
+            }
+            let item = parser::parse_clipboard(&data, &case.input).unwrap();
+            assert_eq!(map_check::is_map_like(&item), case.map_check.is_some(), "{}: isMapLike", case.slug);
+            let Some(expected) = &case.map_check else { continue };
+            compared += 1;
+            let actual = wraex_core::js::json_value(&map_check::prepare_map_stats(&item));
+            if let Some(diff) = wraex_golden::diff(expected, &actual) {
+                failures.push(format!("{}: {diff}", case.slug));
+            }
+        }
+        assert!(compared > 0);
+        assert!(failures.is_empty(), "{} of {compared} cases differ:\n\n{}", failures.len(), failures.join("\n\n"));
+    }
+
+    /// What the item check's actions open or send equals `item-check.json`.
+    #[test]
+    fn item_checks_match_the_fixtures() {
+        let data = data::Data::load(&data::reference_source(), "en", Some(data::reference_trade_data())).unwrap();
+        let mut failures = Vec::new();
+        let mut compared = 0;
+        for case in &wraex_golden::cases(GameId::Poe2) {
+            let Some(expected) = &case.item_check else { continue };
+            let language = case.options["config"]["language"].as_str().unwrap();
+            let item = parser::parse_clipboard(&data, &case.input).unwrap();
+            let mut actual = serde_json::json!({
+                "wiki": item_check::open_wiki(&item),
+                "poedb": item_check::open_poedb(&item, language),
+                "craftOfExile": item_check::open_coe(&item),
+                "similar": item_check::find_similar_items(&item),
+            });
+            let same_priced = item_check::find_same_priced_items(&item, item_check::SamePricedType::Both);
+            if let Some(action) = same_priced {
+                actual["samePriced"] = serde_json::to_value(action).unwrap();
+            }
+            compared += 1;
+            if let Some(diff) = wraex_golden::diff(expected, &actual) {
+                failures.push(format!("{}: {diff}", case.slug));
+            }
+        }
+        assert!(compared > 0);
+        assert!(failures.is_empty(), "{} of {compared} cases differ:\n\n{}", failures.len(), failures.join("\n\n"));
     }
 }

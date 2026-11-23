@@ -1,11 +1,14 @@
 //! Path of Exile 1: parser, data loading and game-specific filters.
 //!
 //! Ported from `ref/apt` (Awakened PoE Trade). Ported so far: the data layer
-//! ([`data`]), the parser ([`parser`]), the default filters ([`filters`]) and
-//! trade request building ([`trade`]).
+//! ([`data`]), the parser ([`parser`]), the default filters ([`filters`]),
+//! trade request building ([`trade`]), the map check ([`map_check`]) and the
+//! item check's actions ([`item_check`]).
 
 pub mod data;
 pub mod filters;
+pub mod item_check;
+pub mod map_check;
 pub mod parser;
 pub mod trade;
 
@@ -148,5 +151,53 @@ mod tests {
         }
         assert!(compared > 0);
         assert!(failures.is_empty(), "{} of {compared} requests differ:\n\n{}", failures.len(), failures.join("\n\n"));
+    }
+
+    /// The map check's stats equal `map-check.json`, recorded for map-like items.
+    #[test]
+    fn map_checks_match_the_fixtures() {
+        let data = data::Data::load(&data::reference_source(), "en").unwrap();
+        let mut failures = Vec::new();
+        let mut compared = 0;
+        for case in &wraex_golden::cases(GameId::Poe1) {
+            if case.parse_error().is_some() {
+                continue;
+            }
+            let item = parser::parse_clipboard(&data, &case.input).unwrap();
+            assert_eq!(map_check::is_map_like(&item), case.map_check.is_some(), "{}: isMapLike", case.slug);
+            let Some(expected) = &case.map_check else { continue };
+            compared += 1;
+            let actual = wraex_core::js::json_value(&map_check::map_stats(&item));
+            if let Some(diff) = wraex_golden::diff(expected, &actual) {
+                failures.push(format!("{}: {diff}", case.slug));
+            }
+        }
+        assert!(compared > 0);
+        assert!(failures.is_empty(), "{} of {compared} cases differ:\n\n{}", failures.len(), failures.join("\n\n"));
+    }
+
+    /// What the item check's actions open or send equals `item-check.json`.
+    #[test]
+    fn item_checks_match_the_fixtures() {
+        let data = data::Data::load(&data::reference_source(), "en").unwrap();
+        let mut failures = Vec::new();
+        let mut compared = 0;
+        for case in &wraex_golden::cases(GameId::Poe1) {
+            let Some(expected) = &case.item_check else { continue };
+            let language = case.options["config"]["language"].as_str().unwrap();
+            let item = parser::parse_clipboard(&data, &case.input).unwrap();
+            let actual = serde_json::json!({
+                "wiki": item_check::open_wiki(&item),
+                "poedb": item_check::open_poedb(&item, language),
+                "craftOfExile": item_check::open_coe(&item),
+                "similar": item_check::find_similar_items(&item),
+            });
+            compared += 1;
+            if let Some(diff) = wraex_golden::diff(expected, &actual) {
+                failures.push(format!("{}: {diff}", case.slug));
+            }
+        }
+        assert!(compared > 0);
+        assert!(failures.is_empty(), "{} of {compared} cases differ:\n\n{}", failures.len(), failures.join("\n\n"));
     }
 }

@@ -218,7 +218,12 @@ In order, each step done when its fixtures pass (for each game):
    and `dot-prop`'s `setProperty` are in `core::trade`, the bulk status chosen
    per game. Every `trade/<id>.json` matches (47 PoE1, 40 PoE2 requests).
    Sending, rate limits and result parsing are phase 4.
-6. Map-check and item-check logic
+6. Map-check and item-check logic. **Done for both games**: the harness also
+   records `map-check.json` (prepared map stats, for map-like items) and
+   `item-check.json` (the URLs and stash searches of the item check's hotkey
+   actions); `poe1`/`poe2::map_check` (with `common.ts`' per-profile
+   decisions) and `::item_check` match them. More real PoE2 waystones are
+   wanted: https://github.com/Dumspy/wraex/issues/2
 
 Agent loop per step: port module → `golden check` → fix diffs → repeat.
 

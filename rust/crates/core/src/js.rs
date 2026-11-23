@@ -167,6 +167,25 @@ pub fn number_to_string(x: f64) -> String {
     if x < 0.0 { format!("-{body}") } else { body }
 }
 
+/// `encodeURIComponent`: UTF-8 percent-encoding of everything but
+/// `A-Z a-z 0-9 - _ . ! ~ * ' ( )`, with upper-case hex.
+pub fn encode_uri_component(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    for byte in text.bytes() {
+        if byte.is_ascii_alphanumeric() || b"-_.!~*'()".contains(&byte) {
+            out.push(byte as char);
+        } else {
+            out.push_str(&format!("%{byte:02X}"));
+        }
+    }
+    out
+}
+
+/// `JSON.stringify(text)` for a string: quoted, with JSON escapes.
+pub fn json_string(text: &str) -> String {
+    serde_json::to_string(text).expect("strings serialise")
+}
+
 /// Serialises `value` and rewrites its numbers the way `JSON.stringify` writes
 /// them: integral doubles without a fraction (`9`, not `9.0`), `-0` as `0`,
 /// non-finite as `null`.
@@ -197,6 +216,14 @@ mod tests {
 
     fn same(a: f64, b: f64) -> bool {
         (a.is_nan() && b.is_nan()) || a == b
+    }
+
+    #[test]
+    fn uri_components_encode_like_javascript() {
+        assert_eq!(encode_uri_component("Two-Stone Ring"), "Two-Stone%20Ring");
+        assert_eq!(encode_uri_component("+14% (a)\n{x}"), "%2B14%25%20(a)%0A%7Bx%7D");
+        assert_eq!(encode_uri_component("—'*~!"), "%E2%80%94'*~!");
+        assert_eq!(json_string("\"a\" b"), r#""\"a\" b""#);
     }
 
     #[test]
