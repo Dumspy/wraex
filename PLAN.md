@@ -231,6 +231,14 @@ Agent loop per step: port module → `golden check` → fix diffs → repeat.
 
 - Trade API client with GGG's rate-limit headers and required User-Agent
   (`main/src/proxy.ts` today), leagues, price data (`background/Prices.ts`).
+  **Client done** (2026-11-23): `core::trade::rate_limit` ports `RateLimiter.ts`,
+  `adjustRateLimits` and `preventQueueCreation` as clock-free state;
+  `core::trade::api::TradeClient` sends search, fetch and exchange requests
+  within those limits and caches results for 5 minutes, over a `Transport`
+  (`wraex_platform::http`, blocking `ureq`, upstream's proxy host allowlist,
+  User-Agent `wraex/<version> (+repo URL)`). Not yet: turning fetched listings
+  into price-check results (per game), leagues, poe.ninja prices, and the
+  session cookies upstream's proxy forwards (Cloudflare, a logged-in POESESSID).
 - `GameConfig.ts` (reads PoE's keybinds from `production_Config.ini`),
   `GameLogWatcher.ts` (Client.txt for zone/chat events).
 - Settings storage (`ConfigStore.ts`): read upstream's config format so users
