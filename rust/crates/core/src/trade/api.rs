@@ -10,9 +10,9 @@
 
 use std::collections::HashMap;
 
-use serde::Deserialize;
+use indexmap::IndexMap;
 use serde::de::DeserializeOwned;
-use serde_json::Value;
+use serde::{Deserialize, Serialize};
 
 use super::rate_limit::{Millis, RateLimits, RetryAfter, prevent_queue_creation};
 
@@ -148,28 +148,46 @@ impl std::fmt::Display for TradeError {
 
 impl std::error::Error for TradeError {}
 
-/// `SearchResult` of a search or exchange request (`result` is ids for a
-/// search, listings for an exchange; both stay JSON here).
+/// `SearchResult` of a search: the query id and the matching listing ids.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct SearchResult {
     pub id: String,
-    pub result: Value,
+    pub result: Vec<String>,
     pub total: f64,
     #[serde(default)]
     pub inexact: Option<bool>,
 }
 
+/// `SearchResult` of an exchange: listings by id, in the order the site sent
+/// them (`Object.values` keeps it; `serde_json::Value` would sort the keys).
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(bound = "L: Deserialize<'de>")]
+pub struct ExchangeResult<L> {
+    pub id: String,
+    pub result: IndexMap<String, L>,
+    pub total: f64,
+}
+
 /// `TradeResponse<T>`: the site answers errors as `{ error: { code, message } }`.
-fn parse_response<T: DeserializeOwned>(response: &HttpResponse) -> Result<T, TradeError> {
-    let value: Value = serde_json::from_str(&response.body)
-        .map_err(|e| TradeError::Transport(format!("HTTP {}: {e}", response.status)))?;
-    if let Some(error) = value.get("error").filter(|e| !e.is_null()) {
-        return Err(TradeError::Api {
-            code: error.get("code").and_then(Value::as_i64).unwrap_or(0),
-            message: error.get("message").and_then(Value::as_str).unwrap_or_default().to_owned(),
-        });
+fn parse_body<T: DeserializeOwned>(body: &str, status: u16) -> Result<T, TradeError> {
+    #[derive(Deserialize)]
+    struct ApiError {
+        #[serde(default)]
+        code: Option<i64>,
+        #[serde(default)]
+        message: Option<String>,
     }
-    serde_json::from_value(value).map_err(|e| TradeError::Transport(e.to_string()))
+    #[derive(Deserialize)]
+    struct MaybeError {
+        #[serde(default)]
+        error: Option<ApiError>,
+    }
+    let probe: MaybeError =
+        serde_json::from_str(body).map_err(|e| TradeError::Transport(format!("HTTP {status}: {e}")))?;
+    if let Some(error) = probe.error {
+        return Err(TradeError::Api { code: error.code.unwrap_or(0), message: error.message.unwrap_or_default() });
+    }
+    serde_json::from_str(body).map_err(|e| TradeError::Transport(e.to_string()))
 }
 
 /// Percent-encodes a path segment like the WHATWG URL parser does with the
@@ -186,12 +204,12 @@ fn encode_path(segment: &str) -> String {
     out
 }
 
-fn json_post(url: String, body: &Value) -> HttpRequest {
+fn json_post(url: String, body: String) -> HttpRequest {
     HttpRequest {
         method: Method::Post,
         url,
         headers: vec![("accept", "application/json".to_owned()), ("content-type", "application/json".to_owned())],
-        body: Some(body.to_string()),
+        body: Some(body),
     }
 }
 
@@ -209,19 +227,20 @@ impl Default for Limits {
     }
 }
 
-/// A result cache with a time to live (`Cache.ts`), keyed by the request.
+/// A result cache with a time to live (`Cache.ts`), keyed by the request,
+/// holding the response bodies.
 #[derive(Debug, Clone, Default)]
 struct Cache {
-    entries: HashMap<String, (Millis, Value)>,
+    entries: HashMap<String, (Millis, String)>,
 }
 
 impl Cache {
-    fn get(&mut self, key: &str, now: Millis) -> Option<Value> {
+    fn get(&mut self, key: &str, now: Millis) -> Option<String> {
         self.entries.retain(|_, (expires, _)| *expires > now);
         self.entries.get(key).map(|(_, v)| v.clone())
     }
 
-    fn set(&mut self, key: String, value: Value, ttl_seconds: u64, now: Millis) {
+    fn set(&mut self, key: String, value: String, ttl_seconds: u64, now: Millis) {
         self.entries.insert(key, (now + ttl_seconds * 1000, value));
     }
 }
@@ -279,10 +298,11 @@ impl<T: Transport, C: Clock> TradeClient<T, C> {
     }
 
     /// `requestTradeResultList`: a search, `POST /api/trade[2]/search/{league}`.
-    pub fn search(&mut self, body: &Value, league: &str) -> Result<SearchResult, TradeError> {
+    pub fn search(&mut self, body: &impl Serialize, league: &str) -> Result<SearchResult, TradeError> {
+        let body = serde_json::to_string(body).map_err(|e| TradeError::Transport(e.to_string()))?;
         let key = serde_json::json!(["search", body, league]).to_string();
         if let Some(cached) = self.cache.get(&key, self.clock.now()) {
-            return serde_json::from_value(cached).map_err(|e| TradeError::Transport(e.to_string()));
+            return parse_body(&cached, 200);
         }
 
         let now = self.clock.now();
@@ -291,18 +311,24 @@ impl<T: Transport, C: Clock> TradeClient<T, C> {
 
         let request = json_post(self.api_url(&format!("search/{}", encode_path(league))), body);
         let response = self.send(|l| &mut l.search, &request)?;
-        let value: Value = parse_response(&response)?;
-        let result = serde_json::from_value(value.clone()).map_err(|e| TradeError::Transport(e.to_string()))?;
-        self.cache.set(key, value, CACHE_TTL_SECONDS, self.clock.now());
+        let result = parse_body(&response.body, response.status)?;
+        self.cache.set(key, response.body, CACHE_TTL_SECONDS, self.clock.now());
         Ok(result)
     }
 
     /// `requestResults`' request: listings by id, `GET /api/trade[2]/fetch/{ids}?query={id}`.
     /// Missing listings (`null`) are left out.
-    pub fn fetch(&mut self, query_id: &str, result_ids: &[String]) -> Result<Vec<Value>, TradeError> {
+    pub fn fetch<L: DeserializeOwned>(&mut self, query_id: &str, result_ids: &[String]) -> Result<Vec<L>, TradeError> {
+        #[derive(Deserialize)]
+        #[serde(bound = "L: Deserialize<'de>")]
+        struct Fetched<L> {
+            result: Vec<Option<L>>,
+        }
+        let listings = |f: Fetched<L>| f.result.into_iter().flatten().collect();
+
         let key = serde_json::json!(["fetch", result_ids]).to_string();
         if let Some(cached) = self.cache.get(&key, self.clock.now()) {
-            return Ok(serde_json::from_value(cached).unwrap_or_default());
+            return parse_body(&cached, 200).map(listings);
         }
 
         let request = HttpRequest {
@@ -312,22 +338,21 @@ impl<T: Transport, C: Clock> TradeClient<T, C> {
             body: None,
         };
         let response = self.send(|l| &mut l.fetch, &request)?;
-
-        #[derive(Deserialize)]
-        struct Fetched {
-            result: Vec<Value>,
-        }
-        let fetched: Fetched = parse_response(&response)?;
-        let listings: Vec<Value> = fetched.result.into_iter().filter(|r| !r.is_null()).collect();
-        self.cache.set(key, Value::Array(listings.clone()), CACHE_TTL_SECONDS, self.clock.now());
-        Ok(listings)
+        let fetched: Fetched<L> = parse_body(&response.body, response.status)?;
+        self.cache.set(key, response.body, CACHE_TTL_SECONDS, self.clock.now());
+        Ok(listings(fetched))
     }
 
     /// The bulk exchange search, `POST /api/trade[2]/exchange/{league}`.
-    pub fn exchange(&mut self, body: &Value, league: &str) -> Result<SearchResult, TradeError> {
+    pub fn exchange<L: DeserializeOwned>(
+        &mut self,
+        body: &impl Serialize,
+        league: &str,
+    ) -> Result<ExchangeResult<L>, TradeError> {
+        let body = serde_json::to_string(body).map_err(|e| TradeError::Transport(e.to_string()))?;
         let key = serde_json::json!(["exchange", body, league]).to_string();
         if let Some(cached) = self.cache.get(&key, self.clock.now()) {
-            return serde_json::from_value(cached).map_err(|e| TradeError::Transport(e.to_string()));
+            return parse_body(&cached, 200);
         }
 
         let now = self.clock.now();
@@ -335,9 +360,8 @@ impl<T: Transport, C: Clock> TradeClient<T, C> {
 
         let request = json_post(self.api_url(&format!("exchange/{}", encode_path(league))), body);
         let response = self.send(|l| &mut l.exchange, &request)?;
-        let value: Value = parse_response(&response)?;
-        let result = serde_json::from_value(value.clone()).map_err(|e| TradeError::Transport(e.to_string()))?;
-        self.cache.set(key, value, CACHE_TTL_SECONDS, self.clock.now());
+        let result = parse_body(&response.body, response.status)?;
+        self.cache.set(key, response.body, CACHE_TTL_SECONDS, self.clock.now());
         Ok(result)
     }
 }
@@ -381,7 +405,7 @@ mod tests {
         }
     }
 
-    fn site(body: Value) -> FakeSite {
+    fn site(body: serde_json::Value) -> FakeSite {
         FakeSite {
             body: body.to_string(),
             headers: vec![
@@ -443,9 +467,9 @@ mod tests {
             vec![("x-rate-limit-rules", "Ip"), ("x-rate-limit-ip", "1:1:60"), ("x-rate-limit-ip-state", "1:1:0")];
         let clock = FakeClock::default();
         let mut client = TradeClient::new(&site, &clock, "www.pathofexile.com", TradeSite::Trade, 0.0);
-        client.fetch("q", &["1".to_owned()]).unwrap();
+        client.fetch::<serde_json::Value>("q", &["1".to_owned()]).unwrap();
         (&clock).sleep(200);
-        client.fetch("q", &["2".to_owned()]).unwrap();
+        client.fetch::<serde_json::Value>("q", &["2".to_owned()]).unwrap();
         // The second fetch waited for the one-second window to pass.
         assert_eq!((&clock).now(), 1000);
         assert_eq!(site.sent.borrow().len(), 2);
@@ -457,7 +481,7 @@ mod tests {
         let clock = FakeClock::default();
         let mut client = TradeClient::new(&site, &clock, "www.pathofexile.com", TradeSite::Trade, 2.0);
         let ids = ["1".to_owned(), "2".to_owned(), "3".to_owned()];
-        let listings = client.fetch("abc", &ids).unwrap();
+        let listings: Vec<serde_json::Value> = client.fetch("abc", &ids).unwrap();
         assert_eq!(listings, [json!({ "id": "1" }), json!({ "id": "3" })]);
         assert_eq!(site.sent.borrow()[0].url, "https://www.pathofexile.com/api/trade/fetch/1,2,3?query=abc");
     }
@@ -467,9 +491,18 @@ mod tests {
         let site = site(json!({ "error": { "code": 2, "message": "Invalid query" } }));
         let clock = FakeClock::default();
         let mut client = TradeClient::new(&site, &clock, "www.pathofexile.com", TradeSite::Trade, 2.0);
-        let err = client.exchange(&json!({}), "Standard").unwrap_err();
+        let err = client.exchange::<serde_json::Value>(&json!({}), "Standard").unwrap_err();
         assert_eq!(err, TradeError::Api { code: 2, message: "Invalid query".into() });
         assert_eq!(site.sent.borrow()[0].url, "https://www.pathofexile.com/api/trade/exchange/Standard");
+    }
+
+    #[test]
+    fn exchange_listings_keep_the_site_order() {
+        let site = FakeSite { body: r#"{"id":"q","total":2,"result":{"zz":1,"aa":2}}"#.into(), ..Default::default() };
+        let clock = FakeClock::default();
+        let mut client = TradeClient::new(&site, &clock, "www.pathofexile.com", TradeSite::Trade, 2.0);
+        let result: ExchangeResult<u32> = client.exchange(&json!({}), "Standard").unwrap();
+        assert_eq!(result.result.keys().collect::<Vec<_>>(), ["zz", "aa"]);
     }
 
     #[test]

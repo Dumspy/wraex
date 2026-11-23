@@ -10,6 +10,8 @@ pub mod filters;
 pub mod item_check;
 pub mod map_check;
 pub mod parser;
+pub mod prices;
+pub mod results;
 pub mod trade;
 
 use wraex_core::GameId;

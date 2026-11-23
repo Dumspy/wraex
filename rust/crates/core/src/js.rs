@@ -181,6 +181,50 @@ pub fn encode_uri_component(text: &str) -> String {
     out
 }
 
+/// `x.toFixed(digits)`: rounds the exact binary value, ties away from zero
+/// ("pick the larger n"), unlike Rust's ties-to-even formatting.
+pub fn to_fixed(x: f64, digits: usize) -> String {
+    if !x.is_finite() {
+        return number_to_string(x);
+    }
+    if x.abs() >= 1e21 {
+        return number_to_string(x);
+    }
+    // The exact decimal expansion: an f64 has at most 1074 fractional digits.
+    let exact = format!("{:.1100}", x.abs());
+    let (int_part, frac) = exact.split_once('.').expect("a fraction was asked for");
+    let mut digits_vec: Vec<u8> = int_part.bytes().chain(frac.bytes().take(digits)).map(|b| b - b'0').collect();
+    let rest = &frac[digits..];
+    let round_up = rest.as_bytes().first().is_some_and(|&b| b >= b'5');
+    if round_up {
+        let mut i = digits_vec.len();
+        loop {
+            if i == 0 {
+                digits_vec.insert(0, 1);
+                break;
+            }
+            i -= 1;
+            if digits_vec[i] == 9 {
+                digits_vec[i] = 0;
+            } else {
+                digits_vec[i] += 1;
+                break;
+            }
+        }
+    }
+    let text: String = digits_vec.iter().map(|d| char::from(b'0' + d)).collect();
+    let (int_digits, frac_digits) = text.split_at(text.len() - digits);
+    let body = if digits == 0 { int_digits.to_owned() } else { format!("{int_digits}.{frac_digits}") };
+    // `(-0.04).toFixed(1)` is `"-0.0"`: the sign stays.
+    if x.is_sign_negative() && x != 0.0 { format!("-{body}") } else { body }
+}
+
+/// `text.normalize('NFKD')`
+pub fn normalize_nfkd(text: &str) -> String {
+    use unicode_normalization::UnicodeNormalization;
+    text.nfkd().collect()
+}
+
 /// `JSON.stringify(text)` for a string: quoted, with JSON escapes.
 pub fn json_string(text: &str) -> String {
     serde_json::to_string(text).expect("strings serialise")
@@ -216,6 +260,16 @@ mod tests {
 
     fn same(a: f64, b: f64) -> bool {
         (a.is_nan() && b.is_nan()) || a == b
+    }
+
+    #[test]
+    fn to_fixed_rounds_ties_up() {
+        assert_eq!(to_fixed(0.25, 1), "0.3");
+        assert_eq!(to_fixed(0.35, 1), "0.3"); // 0.34999... in binary
+        assert_eq!(to_fixed(9.96, 1), "10.0");
+        assert_eq!(to_fixed(-1.25, 1), "-1.3");
+        assert_eq!(to_fixed(2.0, 1), "2.0");
+        assert_eq!(normalize_nfkd("é"), "e\u{301}");
     }
 
     #[test]

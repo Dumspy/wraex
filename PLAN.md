@@ -236,9 +236,14 @@ Agent loop per step: port module → `golden check` → fix diffs → repeat.
   `core::trade::api::TradeClient` sends search, fetch and exchange requests
   within those limits and caches results for 5 minutes, over a `Transport`
   (`wraex_platform::http`, blocking `ureq`, upstream's proxy host allowlist,
-  User-Agent `wraex/<version> (+repo URL)`). Not yet: turning fetched listings
-  into price-check results (per game), leagues, poe.ninja prices, and the
-  session cookies upstream's proxy forwards (Cloudflare, a logged-in POESESSID).
+  User-Agent `wraex/<version> (+repo URL)`). Leagues (`core::leagues`, both
+  games), PoE1 result rows and bulk groups (`poe1::results`, with Luxon's
+  short relative dates in `core::relative_time`), EE2's listing display items
+  (`poe2::results`, matched against `fixtures/listings/poe2/`, recorded from
+  EE2's own `specs/docs/fetchResponses.json`) and PoE1's poe.ninja prices
+  (`poe1::prices`) are ported. Not yet: EE2's prices (`Prices.ts`) and the rest
+  of its result rows, which normalise prices through them; the session cookies
+  upstream's proxy forwards (Cloudflare, a logged-in POESESSID).
 - `GameConfig.ts` (reads PoE's keybinds from `production_Config.ini`),
   `GameLogWatcher.ts` (Client.txt for zone/chat events).
 - Settings storage (`ConfigStore.ts`): read upstream's config format so users
