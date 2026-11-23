@@ -1,0 +1,6 @@
+Item Class: Rings
+Rarity: Rare
+Doom Loop
+Imaginary Ring
+--------
+Item Level: 80

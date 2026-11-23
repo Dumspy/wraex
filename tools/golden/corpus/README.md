@@ -8,6 +8,9 @@ this list current when adding cases, so it is clear which ones are real copies.
 - `ee2-*`: the item texts of `ref/ee2/renderer/specs/Parser/items.ts` at v0.16.3,
   added with `npm run seed:poe2`. Real in-game copies (EE2's own test data).
 
+- `error-*`: texts the parser rejects (`item.parse_error`, `item.unknown`, and
+  `item.wrong_language` for a Russian copy). Hand-written.
+
 ## poe1
 
 - `real-*`: real in-game copies (advanced format, Ctrl+Alt+C), from the
