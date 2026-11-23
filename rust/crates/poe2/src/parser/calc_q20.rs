@@ -117,8 +117,9 @@ pub struct PropRoll {
 /// `propAt20Quality`
 pub fn prop_at_20_quality(total: f64, stats: PropStats, item: &Item) -> PropRoll {
     let base = calc_prop_base(stats, item);
-    // `calcFlat(total, incr, item.quality)`: an undefined quality is NaN there.
-    let flat_base = calc_flat(total, base.incr.value, item.quality.unwrap_or(f64::NAN), false) - base.flat.value;
+    // `calcFlat(total, incr, item.quality)`: an undefined quality takes the
+    // parameter's default, 0.
+    let flat_base = calc_flat(total, base.incr.value, item.quality.unwrap_or(0.0), false) - base.flat.value;
     let quality =
         if item.is_modifiable() { js_max(20.0, item.quality.unwrap_or(0.0)) } else { item.quality.unwrap_or(0.0) };
     PropRoll {
