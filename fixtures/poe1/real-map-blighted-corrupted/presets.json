@@ -1,0 +1,48 @@
+{
+  "active": "filters.preset_bulk",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": true
+        },
+        "mapBlighted": {
+          "value": "Blighted"
+        },
+        "mapTier": {
+          "disabled": false,
+          "value": 16
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Blighted Map",
+          "baseTypeTrade": "Map",
+          "discriminatorTrade": "map",
+          "sub": {
+            "baseType": "Desert",
+            "baseTypeTrade": "34997",
+            "disabled": false,
+            "discriminatorTrade": "blighted"
+          }
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_bulk",
+      "stats": []
+    }
+  ]
+}

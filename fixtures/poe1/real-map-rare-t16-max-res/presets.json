@@ -1,0 +1,177 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "mapBlighted": {
+          "value": false
+        },
+        "mapTier": {
+          "disabled": false,
+          "value": 16
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Map",
+          "baseTypeTrade": "Map",
+          "discriminatorTrade": "map"
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 9007199254740991,
+              "min": 0
+            },
+            "default": {
+              "max": 74,
+              "min": 60
+            },
+            "dp": false,
+            "goodness": 7.43849426498855e-15,
+            "isNegated": false,
+            "min": 60,
+            "value": 67
+          },
+          "sources": [],
+          "statRef": "Atlas Drops: +#%",
+          "tag": "property",
+          "text": "Atlas Drops: +#%",
+          "tradeId": [
+            "item.map_atlas_drops"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 9007199254740991,
+              "min": 0
+            },
+            "default": {
+              "max": 43,
+              "min": 35
+            },
+            "dp": false,
+            "goodness": 4.329869796038111e-15,
+            "isNegated": false,
+            "min": 35,
+            "value": 39
+          },
+          "sources": [],
+          "statRef": "Item Rarity: +#%",
+          "tag": "property",
+          "text": "Item Rarity: +#%",
+          "tradeId": [
+            "item.map_item_rarity"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 9007199254740991,
+              "min": 0
+            },
+            "default": {
+              "max": 28,
+              "min": 22
+            },
+            "dp": false,
+            "goodness": 2.7755575615628917e-15,
+            "isNegated": false,
+            "min": 22,
+            "value": 25
+          },
+          "sources": [],
+          "statRef": "Monster Pack Size: +#%",
+          "tag": "property",
+          "text": "Monster Pack Size: +#%",
+          "tradeId": [
+            "item.map_pack_size"
+          ]
+        }
+      ]
+    },
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "mapBlighted": {
+          "value": false
+        },
+        "mapTier": {
+          "disabled": false,
+          "value": 16
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Map",
+          "baseTypeTrade": "Map",
+          "discriminatorTrade": "map"
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_bulk",
+      "stats": []
+    }
+  ]
+}

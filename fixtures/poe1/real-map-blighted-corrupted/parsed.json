@@ -1,0 +1,894 @@
+{
+  "areaAtlasDrops": 46,
+  "areaItemRarity": 46,
+  "areaPackSize": 18,
+  "baseType": "Blighted Map",
+  "category": "Map",
+  "influences": [],
+  "info": {
+    "area": {
+      "blighted": true
+    },
+    "craftable": {
+      "category": "Map"
+    },
+    "icon": "/images/maps/blight1.png",
+    "name": "Blighted Map",
+    "namespace": "ITEM",
+    "refName": "Blighted Map",
+    "tradeDisc": "blighted"
+  },
+  "infoVariants": [
+    {
+      "area": {
+        "blighted": true
+      },
+      "craftable": {
+        "category": "Map"
+      },
+      "icon": "/images/maps/blight1.png",
+      "name": "Blighted Map",
+      "namespace": "ITEM",
+      "refName": "Blighted Map",
+      "tradeDisc": "blighted"
+    }
+  ],
+  "isCorrupted": {},
+  "isUnidentified": false,
+  "itemLevel": 83,
+  "mapArea": {
+    "area": {
+      "screenshot": "https://i.imgur.com/BcaiqlN.jpg"
+    },
+    "icon": "",
+    "name": "Desert",
+    "namespace": "AREA",
+    "refName": "Desert",
+    "tradeDisc": "34997"
+  },
+  "mapTier": 16,
+  "name": "Bleak Instigation",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 1,
+            "min": 1,
+            "unscalable": true,
+            "value": 1
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Area is infested with Fungal Growths\nCan be Anointed up to # times"
+              },
+              {
+                "string": "Area is infested with Fungal Growths\nCan be Anointed up to 3 times",
+                "value": 1
+              }
+            ],
+            "ref": "Area is infested with Fungal Growths\nCan be Anointed up to 3 times",
+            "trade": {
+              "ids": {
+                "implicit": [
+                  "implicit.stat_299373046"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Area is infested with Fungal Growths\nCan be Anointed up to 3 times",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "mechanic": "corrupted",
+        "tags": [],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 20,
+            "min": 10,
+            "unscalable": false,
+            "value": 18
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "#% Item Rarity"
+              }
+            ],
+            "ref": "+#% Item Rarity",
+            "trade": {
+              "ids": {
+                "implicit": [
+                  "implicit.stat_190932737"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% Item Rarity"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Emanant",
+        "tags": [],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Area is inhabited by ranged monsters"
+              }
+            ],
+            "ref": "Area is inhabited by ranged monsters",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_645841425"
+                ],
+                "fractured": [
+                  "fractured.stat_645841425"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Area is inhabited by ranged monsters"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Impervious",
+        "tags": [
+          "Physical",
+          "Chaos",
+          "Attack",
+          "Ailment"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 50,
+            "min": 50,
+            "unscalable": false,
+            "value": 50
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Monsters have a #% chance to avoid Poison, Impale, and Bleeding"
+              }
+            ],
+            "ref": "Monsters have a #% chance to avoid Poison, Impale, and Bleeding",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_144665660"
+                ],
+                "fractured": [
+                  "fractured.stat_144665660"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Monsters have a #% chance to avoid Poison, Impale, and Bleeding"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Bloodlines",
+        "tags": [],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 30,
+            "min": 20,
+            "unscalable": false,
+            "value": 20
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "#% increased Magic Monsters"
+              }
+            ],
+            "ref": "#% increased Magic Monsters",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_1821565133"
+                ],
+                "fractured": [
+                  "fractured.stat_1821565133"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Magic Monsters"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "mechanic": "explicit-rareonly",
+        "name": "of Unearthed Technology",
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Area contains a buried Apex Sentinel"
+              }
+            ],
+            "ref": "Area contains a buried Apex Sentinel",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_2788592463"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Area contains a buried Apex Sentinel"
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Rare",
+  "rawText": "Item Class: Maps\nRarity: Rare\nBleak Instigation\nBlighted Map (Tier 16)\n--------\nMap Area: Desert\nAtlas Drops: +46% (augmented)\nItem Rarity: +46% (augmented)\nMonster Pack Size: +18% (augmented)\n--------\nItem Level: 83\n--------\nMonster Level: 83\n--------\n{ Implicit Modifier }\nArea is infested with Fungal Growths\nCan be Anointed up to 3 times — Unscalable Value\nNatural inhabitants of this area have been removed — Unscalable Value\n{ Corruption Implicit Modifier }\n+18(10-20)% Item Rarity\n--------\n{ Prefix Modifier \"Emanant\" (Tier: 1) }\nArea is inhabited by ranged monsters — Unscalable Value\n{ Prefix Modifier \"Impervious\" (Tier: 1) — Physical, Chaos, Attack, Ailment }\nMonsters have a 50% chance to avoid Poison, Impale, and Bleeding\n{ Suffix Modifier \"of Bloodlines\" (Tier: 1) }\n20(20-30)% increased Magic Monsters\n{ Rare-only Suffix Modifier \"of Unearthed Technology\" }\nArea contains a buried Apex Sentinel — Unscalable Value\n--------\nTravel to a Map of this tier or lower by using this in a personal Map Device. Maps can only be used once. \n--------\nCorrupted\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 1,
+            "min": 1,
+            "value": 1
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 1,
+                  "min": 1,
+                  "unscalable": true,
+                  "value": 1
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Area is infested with Fungal Growths\nCan be Anointed up to # times"
+                    },
+                    {
+                      "string": "Area is infested with Fungal Growths\nCan be Anointed up to 3 times",
+                      "value": 1
+                    }
+                  ],
+                  "ref": "Area is infested with Fungal Growths\nCan be Anointed up to 3 times",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_299373046"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Area is infested with Fungal Growths\nCan be Anointed up to 3 times",
+                  "value": 1
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 1,
+              "min": 1,
+              "unscalable": true,
+              "value": 1
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Area is infested with Fungal Growths\nCan be Anointed up to # times"
+                },
+                {
+                  "string": "Area is infested with Fungal Growths\nCan be Anointed up to 3 times",
+                  "value": 1
+                }
+              ],
+              "ref": "Area is infested with Fungal Growths\nCan be Anointed up to 3 times",
+              "trade": {
+                "ids": {
+                  "implicit": [
+                    "implicit.stat_299373046"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Area is infested with Fungal Growths\nCan be Anointed up to 3 times",
+              "value": 1
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Area is infested with Fungal Growths\nCan be Anointed up to # times"
+          },
+          {
+            "string": "Area is infested with Fungal Growths\nCan be Anointed up to 3 times",
+            "value": 1
+          }
+        ],
+        "ref": "Area is infested with Fungal Growths\nCan be Anointed up to 3 times",
+        "trade": {
+          "ids": {
+            "implicit": [
+              "implicit.stat_299373046"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 20,
+            "min": 10,
+            "value": 18
+          },
+          "modifier": {
+            "info": {
+              "mechanic": "corrupted",
+              "tags": [],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 20,
+                  "min": 10,
+                  "unscalable": false,
+                  "value": 18
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% Item Rarity"
+                    }
+                  ],
+                  "ref": "+#% Item Rarity",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_190932737"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% Item Rarity"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 20,
+              "min": 10,
+              "unscalable": false,
+              "value": 18
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "#% Item Rarity"
+                }
+              ],
+              "ref": "+#% Item Rarity",
+              "trade": {
+                "ids": {
+                  "implicit": [
+                    "implicit.stat_190932737"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% Item Rarity"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "#% Item Rarity"
+          }
+        ],
+        "ref": "+#% Item Rarity",
+        "trade": {
+          "ids": {
+            "implicit": [
+              "implicit.stat_190932737"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Emanant",
+              "tags": [],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Area is inhabited by ranged monsters"
+                    }
+                  ],
+                  "ref": "Area is inhabited by ranged monsters",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_645841425"
+                      ],
+                      "fractured": [
+                        "fractured.stat_645841425"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Area is inhabited by ranged monsters"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Area is inhabited by ranged monsters"
+                }
+              ],
+              "ref": "Area is inhabited by ranged monsters",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_645841425"
+                  ],
+                  "fractured": [
+                    "fractured.stat_645841425"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Area is inhabited by ranged monsters"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Area is inhabited by ranged monsters"
+          }
+        ],
+        "ref": "Area is inhabited by ranged monsters",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_645841425"
+            ],
+            "fractured": [
+              "fractured.stat_645841425"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 50,
+            "min": 50,
+            "value": 50
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Impervious",
+              "tags": [
+                "Physical",
+                "Chaos",
+                "Attack",
+                "Ailment"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 50,
+                  "min": 50,
+                  "unscalable": false,
+                  "value": 50
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Monsters have a #% chance to avoid Poison, Impale, and Bleeding"
+                    }
+                  ],
+                  "ref": "Monsters have a #% chance to avoid Poison, Impale, and Bleeding",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_144665660"
+                      ],
+                      "fractured": [
+                        "fractured.stat_144665660"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Monsters have a #% chance to avoid Poison, Impale, and Bleeding"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 50,
+              "min": 50,
+              "unscalable": false,
+              "value": 50
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Monsters have a #% chance to avoid Poison, Impale, and Bleeding"
+                }
+              ],
+              "ref": "Monsters have a #% chance to avoid Poison, Impale, and Bleeding",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_144665660"
+                  ],
+                  "fractured": [
+                    "fractured.stat_144665660"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Monsters have a #% chance to avoid Poison, Impale, and Bleeding"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Monsters have a #% chance to avoid Poison, Impale, and Bleeding"
+          }
+        ],
+        "ref": "Monsters have a #% chance to avoid Poison, Impale, and Bleeding",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_144665660"
+            ],
+            "fractured": [
+              "fractured.stat_144665660"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 30,
+            "min": 20,
+            "value": 20
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Bloodlines",
+              "tags": [],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 20,
+                  "unscalable": false,
+                  "value": 20
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% increased Magic Monsters"
+                    }
+                  ],
+                  "ref": "#% increased Magic Monsters",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1821565133"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1821565133"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Magic Monsters"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 30,
+              "min": 20,
+              "unscalable": false,
+              "value": 20
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "#% increased Magic Monsters"
+                }
+              ],
+              "ref": "#% increased Magic Monsters",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_1821565133"
+                  ],
+                  "fractured": [
+                    "fractured.stat_1821565133"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Magic Monsters"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "#% increased Magic Monsters"
+          }
+        ],
+        "ref": "#% increased Magic Monsters",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_1821565133"
+            ],
+            "fractured": [
+              "fractured.stat_1821565133"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "mechanic": "explicit-rareonly",
+              "name": "of Unearthed Technology",
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Area contains a buried Apex Sentinel"
+                    }
+                  ],
+                  "ref": "Area contains a buried Apex Sentinel",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_2788592463"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Area contains a buried Apex Sentinel"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Area contains a buried Apex Sentinel"
+                }
+              ],
+              "ref": "Area contains a buried Apex Sentinel",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_2788592463"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Area contains a buried Apex Sentinel"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Area contains a buried Apex Sentinel"
+          }
+        ],
+        "ref": "Area contains a buried Apex Sentinel",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_2788592463"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": [
+    {
+      "text": "Natural inhabitants of this area have been removed — Unscalable Value",
+      "type": "implicit"
+    }
+  ]
+}

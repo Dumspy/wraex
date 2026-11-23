@@ -1,0 +1,45 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "mapCompletionReward": {
+          "name": "Willclash",
+          "nameTrade": "Willclash"
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Valdo Map",
+          "baseTypeTrade": "Valdo Map"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": [
+        {
+          "disabled": false,
+          "not": true,
+          "sources": [],
+          "statRef": "Players who Die in area are sent to the Void",
+          "tag": "explicit",
+          "text": "Players who Die in area are sent to the Void",
+          "tradeId": [
+            "explicit.stat_1095765106"
+          ]
+        }
+      ]
+    }
+  ]
+}

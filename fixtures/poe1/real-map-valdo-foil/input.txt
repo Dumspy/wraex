@@ -1,0 +1,39 @@
+Item Class: Maps
+Rarity: Rare
+Arid Territory
+Valdo Map
+--------
+Map Area: Beach
+Reward: Foil Willclash
+Atlas Drops: +174% (augmented)
+Monster Pack Size: +28% (augmented)
+--------
+Chance for dropped Maps to convert to:
+Elder Map: 3% (augmented)
+Conqueror Map: 12% (augmented)
+Threads: 44% (augmented)
+--------
+Item Level: 100
+--------
+Monster Level: 84
+--------
+{ Unique Modifier }
+Maximum number of Players in Area is one
+{ Unique Modifier }
+Area contains The Feared
+{ Unique Modifier }
+Monsters can only be Damaged while within 2 metres of a Player
+Players' modifiers to Light Radius also apply to this range
+{ Unique Modifier }
+Players have 50% reduced Movement Speed
+Players' Travel Skills are Disabled
+{ Unique Modifier }
+Monsters Kill things with 20% or lower Life on Hit
+{ Unique Modifier }
+All Magic and Normal Monsters in Area are in a Union of Souls
+--------
+Travel to this Map by using it in a personal Map Device. Maps can only be used once. Defeat 90% of all monsters in this Map, including all Rare and Unique enemies to obtain the Reward. The area created is not affected by your Atlas Passive Tree, and cannot be augmented via the Map Device.
+--------
+Unmodifiable
+--------
+Foil (Celestial Quartz)

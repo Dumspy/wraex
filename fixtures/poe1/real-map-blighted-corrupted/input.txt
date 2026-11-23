@@ -1,0 +1,33 @@
+Item Class: Maps
+Rarity: Rare
+Bleak Instigation
+Blighted Map (Tier 16)
+--------
+Map Area: Desert
+Atlas Drops: +46% (augmented)
+Item Rarity: +46% (augmented)
+Monster Pack Size: +18% (augmented)
+--------
+Item Level: 83
+--------
+Monster Level: 83
+--------
+{ Implicit Modifier }
+Area is infested with Fungal Growths
+Can be Anointed up to 3 times — Unscalable Value
+Natural inhabitants of this area have been removed — Unscalable Value
+{ Corruption Implicit Modifier }
++18(10-20)% Item Rarity
+--------
+{ Prefix Modifier "Emanant" (Tier: 1) }
+Area is inhabited by ranged monsters — Unscalable Value
+{ Prefix Modifier "Impervious" (Tier: 1) — Physical, Chaos, Attack, Ailment }
+Monsters have a 50% chance to avoid Poison, Impale, and Bleeding
+{ Suffix Modifier "of Bloodlines" (Tier: 1) }
+20(20-30)% increased Magic Monsters
+{ Rare-only Suffix Modifier "of Unearthed Technology" }
+Area contains a buried Apex Sentinel — Unscalable Value
+--------
+Travel to a Map of this tier or lower by using this in a personal Map Device. Maps can only be used once. 
+--------
+Corrupted

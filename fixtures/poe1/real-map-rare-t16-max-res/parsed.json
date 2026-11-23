@@ -1,0 +1,1403 @@
+{
+  "areaAtlasDrops": 67,
+  "areaItemRarity": 39,
+  "areaPackSize": 25,
+  "baseType": "Map",
+  "category": "Map",
+  "influences": [],
+  "info": {
+    "area": {},
+    "craftable": {
+      "category": "Map"
+    },
+    "icon": "/images/maps/normal.png",
+    "name": "Map",
+    "namespace": "ITEM",
+    "refName": "Map"
+  },
+  "infoVariants": [
+    {
+      "area": {},
+      "craftable": {
+        "category": "Map"
+      },
+      "icon": "/images/maps/normal.png",
+      "name": "Map",
+      "namespace": "ITEM",
+      "refName": "Map"
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 85,
+  "mapTier": 16,
+  "name": "Horror Progression",
+  "newMods": [
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Overlord's",
+        "tags": [
+          "Attack",
+          "Caster",
+          "Speed"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 25,
+            "min": 25,
+            "unscalable": false,
+            "value": 25
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Unique Boss deals #% increased Damage"
+              }
+            ],
+            "ref": "Unique Boss deals #% increased Damage",
+            "trade": {
+              "ids": {
+                "enchant": [
+                  "enchant.stat_124877078"
+                ],
+                "explicit": [
+                  "explicit.stat_124877078"
+                ],
+                "fractured": [
+                  "fractured.stat_124877078"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Unique Boss deals #% increased Damage"
+          }
+        },
+        {
+          "roll": {
+            "dp": false,
+            "max": 30,
+            "min": 30,
+            "unscalable": false,
+            "value": 30
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Unique Boss has #% increased Attack and Cast Speed"
+              }
+            ],
+            "ref": "Unique Boss has #% increased Attack and Cast Speed",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_2109106920"
+                ],
+                "fractured": [
+                  "fractured.stat_2109106920"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Unique Boss has #% increased Attack and Cast Speed"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Fleet",
+        "tags": [
+          "Attack",
+          "Caster",
+          "Speed"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 30,
+            "min": 25,
+            "unscalable": false,
+            "value": 28
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "#% increased Monster Movement Speed"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Monster Movement Speed"
+              }
+            ],
+            "ref": "#% increased Monster Movement Speed",
+            "trade": {
+              "ids": {
+                "enchant": [
+                  "enchant.stat_2306522833"
+                ],
+                "explicit": [
+                  "explicit.stat_2306522833"
+                ],
+                "fractured": [
+                  "fractured.stat_2306522833"
+                ],
+                "implicit": [
+                  "implicit.stat_2306522833"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Monster Movement Speed"
+          }
+        },
+        {
+          "roll": {
+            "dp": false,
+            "max": 45,
+            "min": 35,
+            "unscalable": false,
+            "value": 35
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "#% increased Monster Attack Speed"
+              }
+            ],
+            "ref": "#% increased Monster Attack Speed",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_1913583994"
+                ],
+                "fractured": [
+                  "fractured.stat_1913583994"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Monster Attack Speed"
+          }
+        },
+        {
+          "roll": {
+            "dp": false,
+            "max": 45,
+            "min": 35,
+            "unscalable": false,
+            "value": 37
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "#% increased Monster Cast Speed"
+              }
+            ],
+            "ref": "#% increased Monster Cast Speed",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_2488361432"
+                ],
+                "fractured": [
+                  "fractured.stat_2488361432"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Monster Cast Speed"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Exposure",
+        "tags": [
+          "Elemental",
+          "Resistance"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": -9,
+            "min": -12,
+            "unscalable": false,
+            "value": -12
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Players have #% to all maximum Resistances"
+              }
+            ],
+            "ref": "Players have #% to all maximum Resistances",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_3376488707"
+                ],
+                "fractured": [
+                  "fractured.stat_3376488707"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Players have #% to all maximum Resistances"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Vulnerability",
+        "tags": [
+          "Caster",
+          "Curse"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Players are Cursed with Vulnerability"
+              }
+            ],
+            "ref": "Players are Cursed with Vulnerability",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_1366534040"
+                ],
+                "fractured": [
+                  "fractured.stat_1366534040"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Players are Cursed with Vulnerability"
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Rare",
+  "rawText": "Item Class: Maps\nRarity: Rare\nHorror Progression\nMap (Tier 16)\n--------\nAtlas Drops: +67% (augmented)\nItem Rarity: +39% (augmented)\nMonster Pack Size: +25% (augmented)\n--------\nItem Level: 85\n--------\nMonster Level: 83\n--------\n{ Prefix Modifier \"Overlord's\" (Tier: 1) — Attack, Caster, Speed }\nUnique Boss deals 25% increased Damage\nUnique Boss has 30% increased Attack and Cast Speed\n{ Prefix Modifier \"Fleet\" (Tier: 1) — Attack, Caster, Speed }\n28(25-30)% increased Monster Movement Speed\n35(35-45)% increased Monster Attack Speed\n37(35-45)% increased Monster Cast Speed\n{ Suffix Modifier \"of Exposure\" (Tier: 1) — Elemental, Resistance }\nPlayers have -12(-12--9)% to all maximum Resistances\n{ Suffix Modifier \"of Vulnerability\" (Tier: 1) — Caster, Curse }\nPlayers are Cursed with Vulnerability\n(Vulnerability is a Hex which increases Physical Damage taken by 15% and causes Hits to have +25% chance to inflict Bleeding on the target. It lasts 8 seconds)\n--------\nTravel to a Map of this tier or lower by using this in a personal Map Device. Maps can only be used once.\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 25,
+            "min": 25,
+            "value": 25
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Overlord's",
+              "tags": [
+                "Attack",
+                "Caster",
+                "Speed"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 25,
+                  "min": 25,
+                  "unscalable": false,
+                  "value": 25
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Unique Boss deals #% increased Damage"
+                    }
+                  ],
+                  "ref": "Unique Boss deals #% increased Damage",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_124877078"
+                      ],
+                      "explicit": [
+                        "explicit.stat_124877078"
+                      ],
+                      "fractured": [
+                        "fractured.stat_124877078"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Unique Boss deals #% increased Damage"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 30,
+                  "unscalable": false,
+                  "value": 30
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Unique Boss has #% increased Attack and Cast Speed"
+                    }
+                  ],
+                  "ref": "Unique Boss has #% increased Attack and Cast Speed",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_2109106920"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2109106920"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Unique Boss has #% increased Attack and Cast Speed"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 25,
+              "min": 25,
+              "unscalable": false,
+              "value": 25
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Unique Boss deals #% increased Damage"
+                }
+              ],
+              "ref": "Unique Boss deals #% increased Damage",
+              "trade": {
+                "ids": {
+                  "enchant": [
+                    "enchant.stat_124877078"
+                  ],
+                  "explicit": [
+                    "explicit.stat_124877078"
+                  ],
+                  "fractured": [
+                    "fractured.stat_124877078"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Unique Boss deals #% increased Damage"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Unique Boss deals #% increased Damage"
+          }
+        ],
+        "ref": "Unique Boss deals #% increased Damage",
+        "trade": {
+          "ids": {
+            "enchant": [
+              "enchant.stat_124877078"
+            ],
+            "explicit": [
+              "explicit.stat_124877078"
+            ],
+            "fractured": [
+              "fractured.stat_124877078"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 30,
+            "min": 30,
+            "value": 30
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Overlord's",
+              "tags": [
+                "Attack",
+                "Caster",
+                "Speed"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 25,
+                  "min": 25,
+                  "unscalable": false,
+                  "value": 25
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Unique Boss deals #% increased Damage"
+                    }
+                  ],
+                  "ref": "Unique Boss deals #% increased Damage",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_124877078"
+                      ],
+                      "explicit": [
+                        "explicit.stat_124877078"
+                      ],
+                      "fractured": [
+                        "fractured.stat_124877078"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Unique Boss deals #% increased Damage"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 30,
+                  "unscalable": false,
+                  "value": 30
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Unique Boss has #% increased Attack and Cast Speed"
+                    }
+                  ],
+                  "ref": "Unique Boss has #% increased Attack and Cast Speed",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_2109106920"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2109106920"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Unique Boss has #% increased Attack and Cast Speed"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 30,
+              "min": 30,
+              "unscalable": false,
+              "value": 30
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Unique Boss has #% increased Attack and Cast Speed"
+                }
+              ],
+              "ref": "Unique Boss has #% increased Attack and Cast Speed",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_2109106920"
+                  ],
+                  "fractured": [
+                    "fractured.stat_2109106920"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Unique Boss has #% increased Attack and Cast Speed"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Unique Boss has #% increased Attack and Cast Speed"
+          }
+        ],
+        "ref": "Unique Boss has #% increased Attack and Cast Speed",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_2109106920"
+            ],
+            "fractured": [
+              "fractured.stat_2109106920"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 30,
+            "min": 25,
+            "value": 28
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Fleet",
+              "tags": [
+                "Attack",
+                "Caster",
+                "Speed"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 25,
+                  "unscalable": false,
+                  "value": 28
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% increased Monster Movement Speed"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Monster Movement Speed"
+                    }
+                  ],
+                  "ref": "#% increased Monster Movement Speed",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_2306522833"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2306522833"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2306522833"
+                      ],
+                      "implicit": [
+                        "implicit.stat_2306522833"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Monster Movement Speed"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 45,
+                  "min": 35,
+                  "unscalable": false,
+                  "value": 35
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% increased Monster Attack Speed"
+                    }
+                  ],
+                  "ref": "#% increased Monster Attack Speed",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1913583994"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1913583994"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Monster Attack Speed"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 45,
+                  "min": 35,
+                  "unscalable": false,
+                  "value": 37
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% increased Monster Cast Speed"
+                    }
+                  ],
+                  "ref": "#% increased Monster Cast Speed",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_2488361432"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2488361432"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Monster Cast Speed"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 30,
+              "min": 25,
+              "unscalable": false,
+              "value": 28
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "#% increased Monster Movement Speed"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Monster Movement Speed"
+                }
+              ],
+              "ref": "#% increased Monster Movement Speed",
+              "trade": {
+                "ids": {
+                  "enchant": [
+                    "enchant.stat_2306522833"
+                  ],
+                  "explicit": [
+                    "explicit.stat_2306522833"
+                  ],
+                  "fractured": [
+                    "fractured.stat_2306522833"
+                  ],
+                  "implicit": [
+                    "implicit.stat_2306522833"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Monster Movement Speed"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "#% increased Monster Movement Speed"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Monster Movement Speed"
+          }
+        ],
+        "ref": "#% increased Monster Movement Speed",
+        "trade": {
+          "ids": {
+            "enchant": [
+              "enchant.stat_2306522833"
+            ],
+            "explicit": [
+              "explicit.stat_2306522833"
+            ],
+            "fractured": [
+              "fractured.stat_2306522833"
+            ],
+            "implicit": [
+              "implicit.stat_2306522833"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 45,
+            "min": 35,
+            "value": 35
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Fleet",
+              "tags": [
+                "Attack",
+                "Caster",
+                "Speed"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 25,
+                  "unscalable": false,
+                  "value": 28
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% increased Monster Movement Speed"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Monster Movement Speed"
+                    }
+                  ],
+                  "ref": "#% increased Monster Movement Speed",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_2306522833"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2306522833"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2306522833"
+                      ],
+                      "implicit": [
+                        "implicit.stat_2306522833"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Monster Movement Speed"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 45,
+                  "min": 35,
+                  "unscalable": false,
+                  "value": 35
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% increased Monster Attack Speed"
+                    }
+                  ],
+                  "ref": "#% increased Monster Attack Speed",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1913583994"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1913583994"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Monster Attack Speed"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 45,
+                  "min": 35,
+                  "unscalable": false,
+                  "value": 37
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% increased Monster Cast Speed"
+                    }
+                  ],
+                  "ref": "#% increased Monster Cast Speed",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_2488361432"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2488361432"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Monster Cast Speed"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 45,
+              "min": 35,
+              "unscalable": false,
+              "value": 35
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "#% increased Monster Attack Speed"
+                }
+              ],
+              "ref": "#% increased Monster Attack Speed",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_1913583994"
+                  ],
+                  "fractured": [
+                    "fractured.stat_1913583994"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Monster Attack Speed"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "#% increased Monster Attack Speed"
+          }
+        ],
+        "ref": "#% increased Monster Attack Speed",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_1913583994"
+            ],
+            "fractured": [
+              "fractured.stat_1913583994"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 45,
+            "min": 35,
+            "value": 37
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Fleet",
+              "tags": [
+                "Attack",
+                "Caster",
+                "Speed"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 30,
+                  "min": 25,
+                  "unscalable": false,
+                  "value": 28
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% increased Monster Movement Speed"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Monster Movement Speed"
+                    }
+                  ],
+                  "ref": "#% increased Monster Movement Speed",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_2306522833"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2306522833"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2306522833"
+                      ],
+                      "implicit": [
+                        "implicit.stat_2306522833"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Monster Movement Speed"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 45,
+                  "min": 35,
+                  "unscalable": false,
+                  "value": 35
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% increased Monster Attack Speed"
+                    }
+                  ],
+                  "ref": "#% increased Monster Attack Speed",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1913583994"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1913583994"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Monster Attack Speed"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 45,
+                  "min": 35,
+                  "unscalable": false,
+                  "value": 37
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% increased Monster Cast Speed"
+                    }
+                  ],
+                  "ref": "#% increased Monster Cast Speed",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_2488361432"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2488361432"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Monster Cast Speed"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 45,
+              "min": 35,
+              "unscalable": false,
+              "value": 37
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "#% increased Monster Cast Speed"
+                }
+              ],
+              "ref": "#% increased Monster Cast Speed",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_2488361432"
+                  ],
+                  "fractured": [
+                    "fractured.stat_2488361432"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Monster Cast Speed"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "#% increased Monster Cast Speed"
+          }
+        ],
+        "ref": "#% increased Monster Cast Speed",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_2488361432"
+            ],
+            "fractured": [
+              "fractured.stat_2488361432"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": -9,
+            "min": -12,
+            "value": -12
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Exposure",
+              "tags": [
+                "Elemental",
+                "Resistance"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": -9,
+                  "min": -12,
+                  "unscalable": false,
+                  "value": -12
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Players have #% to all maximum Resistances"
+                    }
+                  ],
+                  "ref": "Players have #% to all maximum Resistances",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3376488707"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3376488707"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Players have #% to all maximum Resistances"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": -9,
+              "min": -12,
+              "unscalable": false,
+              "value": -12
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Players have #% to all maximum Resistances"
+                }
+              ],
+              "ref": "Players have #% to all maximum Resistances",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_3376488707"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3376488707"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Players have #% to all maximum Resistances"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Players have #% to all maximum Resistances"
+          }
+        ],
+        "ref": "Players have #% to all maximum Resistances",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_3376488707"
+            ],
+            "fractured": [
+              "fractured.stat_3376488707"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Vulnerability",
+              "tags": [
+                "Caster",
+                "Curse"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Players are Cursed with Vulnerability"
+                    }
+                  ],
+                  "ref": "Players are Cursed with Vulnerability",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1366534040"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1366534040"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Players are Cursed with Vulnerability"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Players are Cursed with Vulnerability"
+                }
+              ],
+              "ref": "Players are Cursed with Vulnerability",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_1366534040"
+                  ],
+                  "fractured": [
+                    "fractured.stat_1366534040"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Players are Cursed with Vulnerability"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Players are Cursed with Vulnerability"
+          }
+        ],
+        "ref": "Players are Cursed with Vulnerability",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_1366534040"
+            ],
+            "fractured": [
+              "fractured.stat_1366534040"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": []
+}

@@ -1,0 +1,135 @@
+{
+  "areaAtlasDrops": 174,
+  "areaPackSize": 28,
+  "baseType": "Valdo Map",
+  "category": "Map",
+  "influences": [],
+  "info": {
+    "area": {},
+    "craftable": {
+      "category": "Map"
+    },
+    "icon": "/images/maps/normal.png",
+    "name": "Valdo Map",
+    "namespace": "ITEM",
+    "refName": "Valdo Map"
+  },
+  "infoVariants": [
+    {
+      "area": {},
+      "craftable": {
+        "category": "Map"
+      },
+      "icon": "/images/maps/normal.png",
+      "name": "Valdo Map",
+      "namespace": "ITEM",
+      "refName": "Valdo Map"
+    }
+  ],
+  "isCorrupted": {},
+  "isUnidentified": false,
+  "isUnmodifiable": true,
+  "itemLevel": 100,
+  "mapArea": {
+    "area": {
+      "screenshot": "https://i.imgur.com/qZNQGdD.jpg"
+    },
+    "icon": "",
+    "name": "Beach",
+    "namespace": "AREA",
+    "refName": "Beach",
+    "tradeDisc": "62685"
+  },
+  "mapCompletionReward": {
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL01pbmRCbG9ja01hc2siLCJ3IjoyLCJoIjoyLCJzY2FsZSI6MX1d/aeb4a78ada/MindBlockMask.png",
+    "name": "Willclash",
+    "namespace": "UNIQUE",
+    "refName": "Willclash",
+    "unique": {
+      "base": "Golden Mask",
+      "disenchantValue": 2.73
+    }
+  },
+  "name": "Arid Territory",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": []
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": []
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": []
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": []
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": []
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": []
+    }
+  ],
+  "rarity": "Rare",
+  "rawText": "Item Class: Maps\nRarity: Rare\nArid Territory\nValdo Map\n--------\nMap Area: Beach\nReward: Foil Willclash\nAtlas Drops: +174% (augmented)\nMonster Pack Size: +28% (augmented)\n--------\nChance for dropped Maps to convert to:\nElder Map: 3% (augmented)\nConqueror Map: 12% (augmented)\nThreads: 44% (augmented)\n--------\nItem Level: 100\n--------\nMonster Level: 84\n--------\n{ Unique Modifier }\nMaximum number of Players in Area is one\n{ Unique Modifier }\nArea contains The Feared\n{ Unique Modifier }\nMonsters can only be Damaged while within 2 metres of a Player\nPlayers' modifiers to Light Radius also apply to this range\n{ Unique Modifier }\nPlayers have 50% reduced Movement Speed\nPlayers' Travel Skills are Disabled\n{ Unique Modifier }\nMonsters Kill things with 20% or lower Life on Hit\n{ Unique Modifier }\nAll Magic and Normal Monsters in Area are in a Union of Souls\n--------\nTravel to this Map by using it in a personal Map Device. Maps can only be used once. Defeat 90% of all monsters in this Map, including all Rare and Unique enemies to obtain the Reward. The area created is not affected by your Atlas Passive Tree, and cannot be augmented via the Map Device.\n--------\nUnmodifiable\n--------\nFoil (Celestial Quartz)\n",
+  "statsByType": [],
+  "unknownModifiers": [
+    {
+      "text": "Maximum number of Players in Area is one",
+      "type": "explicit"
+    },
+    {
+      "text": "Area contains The Feared",
+      "type": "explicit"
+    },
+    {
+      "text": "Monsters can only be Damaged while within 2 metres of a Player",
+      "type": "explicit"
+    },
+    {
+      "text": "Players' modifiers to Light Radius also apply to this range",
+      "type": "explicit"
+    },
+    {
+      "text": "Players have 50% reduced Movement Speed",
+      "type": "explicit"
+    },
+    {
+      "text": "Players' Travel Skills are Disabled",
+      "type": "explicit"
+    },
+    {
+      "text": "Monsters Kill things with 20% or lower Life on Hit",
+      "type": "explicit"
+    },
+    {
+      "text": "All Magic and Normal Monsters in Area are in a Union of Souls",
+      "type": "explicit"
+    }
+  ]
+}

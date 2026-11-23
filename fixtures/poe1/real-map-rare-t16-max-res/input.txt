@@ -1,0 +1,27 @@
+Item Class: Maps
+Rarity: Rare
+Horror Progression
+Map (Tier 16)
+--------
+Atlas Drops: +67% (augmented)
+Item Rarity: +39% (augmented)
+Monster Pack Size: +25% (augmented)
+--------
+Item Level: 85
+--------
+Monster Level: 83
+--------
+{ Prefix Modifier "Overlord's" (Tier: 1) — Attack, Caster, Speed }
+Unique Boss deals 25% increased Damage
+Unique Boss has 30% increased Attack and Cast Speed
+{ Prefix Modifier "Fleet" (Tier: 1) — Attack, Caster, Speed }
+28(25-30)% increased Monster Movement Speed
+35(35-45)% increased Monster Attack Speed
+37(35-45)% increased Monster Cast Speed
+{ Suffix Modifier "of Exposure" (Tier: 1) — Elemental, Resistance }
+Players have -12(-12--9)% to all maximum Resistances
+{ Suffix Modifier "of Vulnerability" (Tier: 1) — Caster, Curse }
+Players are Cursed with Vulnerability
+(Vulnerability is a Hex which increases Physical Damage taken by 15% and causes Hits to have +25% chance to inflict Bleeding on the target. It lasts 8 seconds)
+--------
+Travel to a Map of this tier or lower by using this in a personal Map Device. Maps can only be used once.
