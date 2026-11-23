@@ -510,6 +510,22 @@ fn ascendancy_points(ref_name: &str) -> Option<&'static [(u32, f64)]> {
     }
 }
 
+/// `areaLevelByAscendancyPoints`: the area level an item needs to award `points`.
+/// `None` is `undefined`: no entry for that many points.
+pub fn area_level_by_ascendancy_points(ref_name: &str, points: f64) -> Option<f64> {
+    let Some(levels) = ascendancy_points(ref_name) else { return Some(0.0) };
+    let max_possible_points = if ref_name == "Inscribed Ultimatum" { 3.0 } else { 4.0 };
+
+    // Cases not possible.
+    if points < 1.0 {
+        return Some(1.0);
+    } else if points > max_possible_points {
+        return Some(75.0);
+    }
+
+    levels.iter().find(|&&(p, _)| f64::from(p) == points).map(|&(_, level)| level)
+}
+
 /// `ascendancyPointsByAreaLevel`
 pub fn ascendancy_points_by_area_level(ref_name: &str, area_level: f64) -> f64 {
     let Some(levels) = ascendancy_points(ref_name) else { return 0.0 };
@@ -541,5 +557,7 @@ mod tests {
         assert_eq!(ascendancy_points_by_area_level("Inscribed Ultimatum", 75.0), 3.0);
         assert_eq!(ascendancy_points_by_area_level("Inscribed Ultimatum", 10.0), 1.0);
         assert_eq!(ascendancy_points_by_area_level("Other", 75.0), 0.0);
+        assert_eq!(area_level_by_ascendancy_points("Djinn Barya", 3.0), Some(60.0));
+        assert_eq!(area_level_by_ascendancy_points("Djinn Barya", 5.0), Some(75.0));
     }
 }

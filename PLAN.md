@@ -212,7 +212,12 @@ In order, each step done when its fixtures pass (for each game):
    `presets.json` matches for all 29 parsed PoE2 cases, two of them added for
    filter branches. Not ported: `fill-augments.ts` and the `calc-base.ts`
    behind it, which only the item editor and settings page call.
-5. `price-check/trade` → trade API request building (and bulk exchange)
+5. `price-check/trade` → trade API request building (and bulk exchange).
+   **Done for both games**: `poe1::trade` and `poe2::trade` port
+   `apiToSatisfySearch` and `createTradeRequest`; the bulk exchange request
+   and `dot-prop`'s `setProperty` are in `core::trade`, the bulk status chosen
+   per game. Every `trade/<id>.json` matches (47 PoE1, 40 PoE2 requests).
+   Sending, rate limits and result parsing are phase 4.
 6. Map-check and item-check logic
 
 Agent loop per step: port module → `golden check` → fix diffs → repeat.
