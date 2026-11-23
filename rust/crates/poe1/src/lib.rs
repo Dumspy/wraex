@@ -1,11 +1,13 @@
 //! Path of Exile 1: parser, data loading and game-specific filters.
 //!
 //! Ported from `ref/apt` (Awakened PoE Trade). Ported so far: the data layer
-//! ([`data`]), the parser ([`parser`]) and the default filters ([`filters`]).
+//! ([`data`]), the parser ([`parser`]), the default filters ([`filters`]) and
+//! trade request building ([`trade`]).
 
 pub mod data;
 pub mod filters;
 pub mod parser;
+pub mod trade;
 
 use wraex_core::GameId;
 use wraex_game::{Game, ParseError};
@@ -94,5 +96,57 @@ mod tests {
         }
         assert!(compared > 0);
         assert!(failures.is_empty(), "{} of {compared} cases differ:\n\n{}", failures.len(), failures.join("\n\n"));
+    }
+
+    /// `TradeBulk.vue`'s first (optimistic) exchange search.
+    fn optimistic_have(ref_name: &str) -> Vec<String> {
+        match ref_name {
+            "Chaos Orb" => vec!["divine".into()],
+            "Divine Orb" => vec!["chaos".into()],
+            _ => vec!["divine".into(), "chaos".into()],
+        }
+    }
+
+    /// Each preset's `{ api, request }` equals `trade/<id>.json`.
+    #[test]
+    fn trade_requests_match_the_fixtures() {
+        let mut langs = std::collections::HashMap::new();
+        let mut failures = Vec::new();
+        let mut compared = 0;
+        for case in &wraex_golden::cases(GameId::Poe1) {
+            if case.presets.is_none() {
+                continue;
+            }
+            let lang = case.options["lang"].as_str().unwrap().to_owned();
+            let data = langs
+                .entry(lang.clone())
+                .or_insert_with(|| data::Data::load(&data::reference_source(), &lang).unwrap());
+            let item = parser::parse_clipboard(data, &case.input).unwrap();
+            let opts: filters::CreatePresetsOptions = serde_json::from_value(case.options["options"].clone()).unwrap();
+            let presets = filters::create_presets(data, &item, &opts).unwrap();
+            let have: Vec<String> = serde_json::from_value(case.options["have"].clone()).unwrap();
+            assert_eq!(presets.presets.len(), case.trade.len(), "{}", case.slug);
+            for preset in &presets.presets {
+                let api = trade::api_to_satisfy_search(&item, &preset.stats);
+                let request = match api {
+                    trade::Api::Bulk => {
+                        let have = if have.is_empty() { optimistic_have(&item.info().ref_name) } else { have.clone() };
+                        wraex_core::js::json_value(&trade::create_bulk_request(&preset.filters, &item, have))
+                    }
+                    trade::Api::Trade => match trade::create_trade_request(data, &preset.filters, &preset.stats) {
+                        Ok(r) => wraex_core::js::json_value(&r),
+                        Err(e) => serde_json::json!({ "error": e.to_string() }),
+                    },
+                };
+                let actual = serde_json::json!({ "api": api, "request": request });
+                let expected = &case.trade.iter().find(|(id, _)| id == &preset.id).unwrap().1;
+                compared += 1;
+                if let Some(diff) = wraex_golden::diff(expected, &actual) {
+                    failures.push(format!("{} {}: {diff}", case.slug, preset.id));
+                }
+            }
+        }
+        assert!(compared > 0);
+        assert!(failures.is_empty(), "{} of {compared} requests differ:\n\n{}", failures.len(), failures.join("\n\n"));
     }
 }

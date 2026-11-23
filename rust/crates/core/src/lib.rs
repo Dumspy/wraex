@@ -11,6 +11,7 @@ pub mod js;
 pub mod js_regex;
 pub mod parse;
 pub mod rarity;
+pub mod trade;
 
 use serde::{Deserialize, Serialize};
 
