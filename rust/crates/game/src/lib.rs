@@ -5,6 +5,7 @@
 //! module by module; anything both games do identically belongs in `wraex-core`,
 //! and only genuinely game-specific behaviour lands behind this trait.
 
+use std::borrow::Cow;
 use std::fmt;
 
 use serde::Serialize;
@@ -15,10 +16,9 @@ use wraex_core::GameId;
 pub enum ParseError {
     /// The reference's `parseClipboard` returned an error: `item.unknown` (not in
     /// the game data) or `item.parse_error` (not item text, or a parser threw).
+    /// PoE2 also has `item.wrong_language|<item language>|<app language>`.
     #[error("{key}")]
-    Rejected { key: &'static str },
-    #[error("{game} parsing is not ported yet")]
-    NotPorted { game: GameId },
+    Rejected { key: Cow<'static, str> },
 }
 
 /// One supported game.

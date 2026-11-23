@@ -1,0 +1,1574 @@
+//! `ref/ee2/renderer/src/parser/Parser.ts`: `parseClipboard`.
+//!
+//! The item text is split into sections (`--------`), and each parser in
+//! [`PARSERS`] gets the remaining sections in order until one is parsed; virtual
+//! parsers work on the item alone. Section parsers are ported one function per
+//! TS function, in the same order. Where the reference throws (a `TypeError` on
+//! `undefined`, or an explicit `throw`), parsing fails with `item.parse_error`,
+//! as its `try/catch` does.
+//!
+//! Not ported yet: filling empty augment sockets from the price-check widget's
+//! `savedAugments` (`useAugment`, which needs `calc-base.ts` and the item
+//! editor). Parsing behaves as with `savedAugments: {}`, the default.
+
+pub mod advanced_mod_desc;
+pub mod augment_builder;
+pub mod calc_q20;
+pub mod item;
+pub mod magic_name;
+pub mod meta;
+pub mod modifiers;
+pub mod stat_translations;
+
+use std::borrow::Cow;
+
+use wraex_core::js;
+use wraex_core::js_regex::Regex;
+use wraex_core::parse::{item_text_to_sections, lines_to_stat_strings, markup_condition_parser};
+use wraex_core::{Rarity, data::js_string};
+
+use crate::data::{AugmentData, BaseType, Data, Namespace, TradeItemQuery};
+use advanced_mod_desc::{
+    AUGMENT_LINE, ENCHANT_LINE, IMPLICIT_LINE, ModifierInfo, ParsedModifier, group_lines_by_mod, is_mod_info_line,
+    parse_mod_info_line, parse_mod_type,
+};
+use augment_builder::build_editor_items;
+use calc_q20::{calc_prop_percentile, quality_stats};
+use item::{
+    AugmentSockets, EditorItem, GemSockets, Heist, IncursionRoom, Item, ItemInfluence, Requires, StackSize, Trials,
+    UnknownModifier,
+};
+use meta::{GEM, ItemCategory};
+use modifiers::{ModifierType, StatCalculated, sum_stats_by_mod_type};
+use stat_translations::{ParsedStat, StatRollInfo, StatString, get_roll_or_minmax_avg, try_parse_translation};
+
+/// Why parsing stopped: the reference's error key.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Fail(pub Cow<'static, str>);
+
+impl Fail {
+    /// Anything the reference throws on, caught by `parseClipboard`.
+    pub const THROW: Fail = Fail(Cow::Borrowed("item.parse_error"));
+    pub const UNKNOWN: Fail = Fail(Cow::Borrowed("item.unknown"));
+}
+
+type R<T> = Result<T, Fail>;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Section {
+    Parsed,
+    Skipped,
+    ParserSkipped,
+}
+
+use Section::{Parsed, ParserSkipped, Skipped};
+
+type SectionParser = fn(&[String], &mut Item, &Data) -> R<Section>;
+type VirtualParser = fn(&mut Item, &Data) -> R<()>;
+
+enum Step {
+    Section(SectionParser),
+    Virtual(VirtualParser),
+}
+
+use Step::{Section as S, Virtual as V};
+
+/// `LANGUAGE_DETECTOR`: `(lang, displayLang, rarityLine)`.
+const LANGUAGE_DETECTOR: &[(&str, &str, &str)] = &[
+    ("en", "English", "Rarity: "),
+    ("ru", "Русский", "Редкость: "),
+    ("fr", "Français", "Rareté: "),
+    ("de", "Deutsch", "Seltenheit: "),
+    ("pt", "Português (Brasil)", "Raridade: "),
+    ("es", "Español", "Rareza: "),
+    ("th", "ไทย", "Rarity: "),
+    ("ko", "한국어", "아이템 희귀도: "),
+    ("cmn-Hant", "正體中文", "稀有度: "),
+    ("cmn-Hans", "普通话", "Rarity: "),
+    ("ja", "日本語", "レアリティ: "),
+];
+
+/// `parsers`, in order. Each section is parsed by at most one parser.
+const PARSERS: &[Step] = &[
+    S(parse_unidentified),
+    V(parse_superior),
+    V(parse_exceptional),
+    V(parse_runeforged),
+    S(parse_synthesised),
+    S(parse_category_by_help_text),
+    V(normalize_name),
+    V(find_in_database),
+    // -----------
+    S(parse_item_level),
+    S(parse_requirements),
+    S(parse_talisman_tier),
+    S(parse_gem),
+    S(parse_armour),
+    S(parse_weapon),
+    S(parse_caster),
+    S(parse_flask),
+    S(parse_jewelery),
+    S(parse_charm_slots),
+    S(parse_spirit),
+    S(parse_price_note),
+    S(parse_timelost_radius),
+    S(parse_stack_size),
+    S(parse_corrupted),
+    S(parse_foil),
+    S(parse_influence),
+    S(parse_map),
+    S(parse_waystone),
+    S(parse_sockets),
+    S(parse_augment_sockets),
+    S(parse_heist_blueprint),
+    S(parse_trials),
+    S(parse_area_level),
+    S(parse_atzoatl_rooms),
+    S(parse_mirrored_tablet),
+    S(parse_filled_coffin),
+    S(parse_mirrored),
+    S(parse_sanctified),
+    S(parse_sentinel_charge),
+    S(parse_logbook_area),
+    S(parse_logbook_area),
+    S(parse_logbook_area),
+    S(parse_modifiers), // enchant
+    S(parse_modifiers), // augment
+    S(parse_modifiers), // implicit
+    S(parse_modifiers), // grant skill
+    S(parse_modifiers), // explicit
+    V(transform_to_legacy_modifiers),
+    V(parse_fractured),
+    V(parse_blighted_map),
+    V(apply_augment_sockets),
+    V(apply_elemental_added),
+    V(pick_correct_variant),
+    V(calc_base_percentile),
+];
+
+/// `parseClipboard`: the item, or the reference's error key.
+pub fn parse_clipboard(d: &Data, clipboard: &str) -> Result<Item, Fail> {
+    let mut sections = item_text_to_sections(clipboard);
+
+    let first = sections.first().ok_or(Fail::THROW)?;
+    if first.get(2).map(String::as_str) == Some(d.s("CANNOT_USE_ITEM")) {
+        let mut first = sections.remove(0);
+        first.pop(); // the CANNOT_USE_ITEM line
+        // Item class and rarity move into the next section.
+        let next = sections.first_mut().ok_or(Fail::THROW)?;
+        first.append(next);
+        *next = first;
+    }
+    let mut item = parse_name_plate(d, &mut sections[0])?;
+    sections.remove(0);
+    item.raw_text = clipboard.to_owned();
+
+    for step in PARSERS {
+        match step {
+            V(parser) => parser(&mut item, d)?,
+            S(parser) => {
+                let mut i = 0;
+                while i < sections.len() {
+                    match parser(&sections[i], &mut item, d)? {
+                        Parsed => {
+                            sections.remove(i);
+                            break;
+                        }
+                        ParserSkipped => break,
+                        Skipped => i += 1,
+                    }
+                }
+            }
+        }
+    }
+    Ok(item)
+}
+
+/// `x` is set and truthy.
+fn truthy(x: Option<f64>) -> bool {
+    x.is_some_and(js::truthy)
+}
+
+/// `str` set and non-empty (truthy).
+fn non_empty(s: &Option<String>) -> Option<&str> {
+    s.as_deref().filter(|s| !s.is_empty())
+}
+
+/// `re.exec(text)![1]`, throwing when it does not match.
+fn exec_group1(re: &Regex, text: &str) -> R<String> {
+    let caps = re.captures(text).ok_or(Fail::THROW)?;
+    Ok(js_string(&caps.get(1).map(str::to_owned)).to_owned())
+}
+
+/// `CLIENT_STRINGS_REF[key]` first, then `CLIENT_STRINGS[key]`: the group of the
+/// first that matches.
+fn ref_then_local(d: &Data, key: &str, text: &str) -> R<Option<String>> {
+    for re in [d.re_ref(key), d.re(key)] {
+        if re.is_match(text) {
+            return exec_group1(re, text).map(Some);
+        }
+    }
+    Ok(None)
+}
+
+fn normalize_name(item: &mut Item, d: &Data) -> R<()> {
+    if item.rarity == Some(Rarity::Magic)
+        && let Some(base_type) = magic_name::magic_basetype(d, &item.name)?
+    {
+        item.name = base_type;
+    }
+
+    if matches!(item.rarity, Some(Rarity::Normal | Rarity::Rare)) {
+        let blight = |text: &str| -> R<Option<String>> {
+            for re in [
+                d.re_ref("MAP_BLIGHTED"),
+                d.re_ref("MAP_BLIGHT_RAVAGED"),
+                d.re("MAP_BLIGHTED"),
+                d.re("MAP_BLIGHT_RAVAGED"),
+            ] {
+                if re.is_match(text) {
+                    return exec_group1(re, text).map(Some);
+                }
+            }
+            Ok(None)
+        };
+        match non_empty(&item.base_type).map(str::to_owned) {
+            Some(base) => {
+                if let Some(b) = blight(&base)? {
+                    item.base_type = Some(b);
+                }
+            }
+            None => {
+                if let Some(n) = blight(&item.name)? {
+                    item.name = n;
+                }
+            }
+        }
+    }
+
+    if item.category == Some(ItemCategory::MetamorphSample) {
+        for (key, name) in [
+            ("METAMORPH_BRAIN", "Metamorph Brain"),
+            ("METAMORPH_EYE", "Metamorph Eye"),
+            ("METAMORPH_LUNG", "Metamorph Lung"),
+            ("METAMORPH_HEART", "Metamorph Heart"),
+            ("METAMORPH_LIVER", "Metamorph Liver"),
+        ] {
+            if d.re(key).is_match(&item.name) {
+                item.name = name.to_owned();
+                break;
+            }
+        }
+    }
+    Ok(())
+}
+
+/// One `findInDatabase` lookup round (`by_ref` or translated names).
+fn lookup_info(d: &Data, item: &Item, by_ref: bool) -> Option<Vec<BaseType>> {
+    let find = |ns, name: &str| if by_ref { d.item_by_ref(ns, name) } else { d.item_by_translated(ns, name) };
+    let base_or_name = item.base_type.as_deref().unwrap_or(&item.name);
+    match &item.category {
+        Some(ItemCategory::DivinationCard) => find(Namespace::DivinationCard, &item.name),
+        Some(ItemCategory::CapturedBeast) => find(Namespace::CapturedBeast, base_or_name),
+        Some(c) if GEM.contains(c) => find(Namespace::Gem, &item.name),
+        Some(ItemCategory::MetamorphSample) => find(Namespace::Item, &item.name),
+        Some(ItemCategory::Voidstone) => find(Namespace::Item, "Charged Compass"),
+        _ if item.rarity == Some(Rarity::Unique) && !item.is_unidentified => find(Namespace::Unique, &item.name),
+        _ => find(Namespace::Item, base_or_name),
+    }
+}
+
+fn find_in_database(item: &mut Item, d: &Data) -> R<()> {
+    let has = |i: &Option<Vec<BaseType>>| i.as_ref().is_some_and(|v| !v.is_empty());
+    let mut info = lookup_info(d, item, true);
+    if !has(&info) {
+        // BUG[UPSTREAM]: https://www.pathofexile.com/forum/view-thread/3913283
+        info = lookup_info(d, item, false);
+    }
+    if !has(&info) {
+        // First attempt to find the item in the trade site's items.
+        let query = TradeItemQuery {
+            name: Some(&item.name),
+            category: item.category.as_ref(),
+            rarity: item.rarity,
+            base_type: item.base_type.as_deref(),
+        };
+        info = d.trade_item_by_ref(&query, false);
+        if !has(&info) {
+            return Err(Fail::UNKNOWN);
+        }
+    }
+    let mut info = info.unwrap();
+
+    if info[0].unique.is_some() {
+        let base_of = |i: &BaseType| i.unique.as_ref().map(|u| u.base.clone());
+        let unique_info: Vec<BaseType> = info.iter().filter(|i| base_of(i) == item.base_type).cloned().collect();
+        if !unique_info.is_empty() {
+            info = unique_info;
+        } else if let Some(base_type) = non_empty(&item.base_type)
+            && let Some(base_info) = d.item_by_translated(Namespace::Item, base_type).filter(|b| !b.is_empty())
+        {
+            let base_ref = base_info[0].ref_name.clone();
+            info.retain(|i| base_of(i) == base_ref);
+        }
+    }
+    // No variant left: `item.info` is undefined and the next read throws.
+    let chosen = info.first().cloned().ok_or(Fail::THROW)?;
+    item.info_variants = Some(info);
+    item.info = Some(chosen);
+    // Same for every variant.
+    let wombgift = item.info().craftable.as_ref().is_some_and(|c| c.category == ItemCategory::Wombgift.as_str());
+    if item.category.is_none() || wombgift {
+        let info = item.info();
+        if let Some(craftable) = &info.craftable {
+            item.category = Some(ItemCategory::from_text(&craftable.category));
+        } else if let Some(unique) = &info.unique {
+            let base = d.item_by_ref(Namespace::Item, &unique.base).ok_or(Fail::THROW)?;
+            let craftable = base.first().and_then(|b| b.craftable.as_ref()).ok_or(Fail::THROW)?;
+            item.category = Some(ItemCategory::from_text(&craftable.category));
+        }
+    }
+    Ok(())
+}
+
+fn parse_map(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if let Some(rest) = section[0].strip_prefix(d.s("MAP_TIER")) {
+        item.map_tier = Some(js::number(rest));
+        return Ok(Parsed);
+    }
+    Ok(Skipped)
+}
+
+fn parse_waystone(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    let tier = item.info().map.as_ref().and_then(|m| m.tier).filter(|t| *t != 0);
+    let (true, Some(tier)) = (section[0].starts_with(d.s("WAYSTONE_REVIVES")), tier) else { return Ok(Skipped) };
+    // We are a map now.
+    item.map_tier = Some(f64::from(tier));
+    for line in section {
+        let props: [(&str, &mut Option<f64>); 8] = [
+            ("WAYSTONE_REVIVES", &mut item.map_revives),
+            ("WAYSTONE_PACK_SIZE", &mut item.map_pack_size),
+            ("WAYSTONE_MAGIC_MONSTERS", &mut item.map_magic_monsters),
+            ("WAYSTONE_RARE_MONSTERS", &mut item.map_rare_monsters),
+            ("WAYSTONE_DROP_CHANCE", &mut item.map_drop_chance),
+            ("WAYSTONE_RARITY", &mut item.map_item_rarity),
+            ("WAYSTONE_MONSTER_RARITY", &mut item.map_monster_rarity),
+            ("WAYSTONE_EFFECTIVENESS", &mut item.map_effectiveness),
+        ];
+        for (key, field) in props {
+            if let Some(rest) = line.strip_prefix(d.s(key)) {
+                *field = Some(js::parse_int(rest));
+                break;
+            }
+        }
+    }
+    Ok(Parsed)
+}
+
+fn parse_blighted_map(item: &mut Item, d: &Data) -> R<()> {
+    if item.category != Some(ItemCategory::Map) {
+        return Ok(());
+    }
+    let calc = item.stats_by_type.iter().find(|c| {
+        c.kind == ModifierType::Implicit && c.stat.stat_ref.starts_with("Area is infested with Fungal Growths")
+    });
+    let Some(calc) = calc else { return Ok(()) };
+    let value = calc.sources.first().and_then(|s| s.contributes).ok_or(Fail::THROW)?.value;
+    let (blighted, map) =
+        if value == 9.0 { ("Blight-ravaged", "Blight-ravaged Map") } else { ("Blighted", "Blighted Map") };
+    let icon = d.item_by_ref(Namespace::Item, map).and_then(|m| m.into_iter().next()).ok_or(Fail::THROW)?.icon;
+    item.map_blighted = Some(blighted);
+    // `item.info` is still `infoVariants[0]` here: the same object upstream.
+    if let Some(first) = item.info_variants.as_mut().and_then(|v| v.first_mut()) {
+        first.icon = icon.clone();
+    }
+    item.info.as_mut().expect("info is set").icon = icon;
+    Ok(())
+}
+
+fn parse_fractured(item: &mut Item, _: &Data) -> R<()> {
+    if item.new_mods.iter().any(|m| m.info.kind == ModifierType::Fractured) {
+        item.is_fractured = Some(true);
+    }
+    Ok(())
+}
+
+/// `pickCorrectVariant`: the last variant whose conditions the item meets. It may
+/// find none, e.g. a corrupted implicit on a Two-Stone Ring.
+fn pick_correct_variant(item: &mut Item, _: &Data) -> R<()> {
+    if item.info().disc.is_none() {
+        return Ok(());
+    }
+    let set = |flag: Option<bool>| flag == Some(true);
+    let tier_is = |f: &dyn Fn(f64) -> bool| item.map_tier.is_some_and(f);
+    let mut picked = None;
+    for variant in item.info_variants.as_deref().unwrap_or_default() {
+        let cond = variant.disc.as_ref().ok_or(Fail::THROW)?;
+        if set(cond.prop_ar) && !truthy(item.armour_ar)
+            || set(cond.prop_ev) && !truthy(item.armour_ev)
+            || set(cond.prop_es) && !truthy(item.armour_es)
+        {
+            continue;
+        }
+        match cond.map_tier.as_deref() {
+            Some("W") if !tier_is(&|t| t <= 5.0) => continue,
+            Some("Y") if !tier_is(&|t| (6.0..=10.0).contains(&t)) => continue,
+            Some("R") if !tier_is(&|t| t >= 11.0) => continue,
+            _ => {}
+        }
+        if let Some(implicit) = &cond.has_implicit
+            && !item
+                .stats_by_type
+                .iter()
+                .any(|c| c.kind == ModifierType::Implicit && c.stat.stat_ref == implicit.stat_ref)
+        {
+            continue;
+        }
+        if let Some(explicit) = &cond.has_explicit
+            && !item
+                .stats_by_type
+                .iter()
+                .any(|c| c.kind == ModifierType::Explicit && c.stat.stat_ref == explicit.stat_ref)
+        {
+            continue;
+        }
+        if let Some(text) = cond.section_text.as_deref().filter(|t| !t.is_empty())
+            && !item.raw_text.contains(text)
+        {
+            continue;
+        }
+        picked = Some(variant.clone());
+    }
+    if let Some(variant) = picked {
+        item.info = Some(variant);
+    }
+    Ok(())
+}
+
+/// `isItemMissingItemClass`: meta skill gems come without an item class line.
+fn is_item_missing_item_class(d: &Data, section: &[String]) -> bool {
+    (2..=3).contains(&section.len()) && section[0].starts_with(d.s("RARITY"))
+}
+
+fn parse_name_plate(d: &Data, section: &mut Vec<String>) -> R<Item> {
+    let mut lines: std::collections::VecDeque<String> = std::mem::take(section).into();
+    let line = lines.pop_front();
+    let mut missing_item_class = false;
+
+    if !line.as_deref().is_some_and(|l| l.starts_with(d.s("ITEM_CLASS"))) {
+        // HACK (upstream): meta skill gems. `line && section.unshift(line) && ...`:
+        // only a non-empty line goes back and gets checked.
+        let truthy_line = line.filter(|l| !l.is_empty());
+        let checked = truthy_line.is_some();
+        if let Some(l) = truthy_line {
+            lines.push_front(l);
+        }
+        let section: Vec<String> = lines.iter().cloned().collect();
+        if checked && is_item_missing_item_class(d, &section) {
+            missing_item_class = true;
+        } else {
+            // A wrong language, or a bug.
+            let second = section.get(1).ok_or(Fail::THROW)?;
+            if let Some((_, display, _)) = LANGUAGE_DETECTOR.iter().find(|(_, _, rarity)| second.starts_with(rarity)) {
+                let configured = LANGUAGE_DETECTOR.iter().find(|(lang, _, _)| *lang == d.lang()).ok_or(Fail::THROW)?.1;
+                return Err(Fail(format!("item.wrong_language|{display}|{configured}").into()));
+            }
+            return Err(Fail::THROW);
+        }
+    }
+
+    let mut line = lines.pop_front();
+    let mut rarity_text = None;
+    if let Some(l) = line.as_deref().filter(|l| l.starts_with(d.s("RARITY"))) {
+        rarity_text = Some(l[d.s("RARITY").len()..].to_owned());
+        line = lines.pop_front();
+    }
+    let name = markup_condition_parser(&line.ok_or(Fail::THROW)?);
+    // `line && markupConditionParser(line)`: an empty line stays "".
+    let base_type = lines.pop_front().map(|l| if l.is_empty() { l } else { markup_condition_parser(&l) });
+
+    let mut item = Item::empty(name, base_type);
+    let rarity = rarity_text.as_deref();
+    let is = |key: &str| rarity == Some(d.s(key));
+    if is("RARITY_CURRENCY") {
+        item.category = Some(ItemCategory::Currency);
+    } else if is("RARITY_DIVCARD") {
+        item.category = Some(ItemCategory::DivinationCard);
+    } else if is("RARITY_GEM") {
+        item.category = Some(ItemCategory::Gem);
+    } else if is("RARITY_NORMAL") || is("RARITY_QUEST") {
+        item.rarity = Some(Rarity::Normal);
+    } else if is("RARITY_MAGIC") {
+        item.rarity = Some(Rarity::Magic);
+    } else if is("RARITY_RARE") {
+        item.rarity = Some(Rarity::Rare);
+    } else if is("RARITY_UNIQUE") {
+        item.rarity = Some(Rarity::Unique);
+    }
+    if missing_item_class {
+        item.category = Some(ItemCategory::Gem);
+    }
+    Ok(item)
+}
+
+fn parse_influence(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if section.len() <= 2 {
+        let count_before = item.influences.len();
+        for line in section {
+            let influence = [
+                ("INFLUENCE_CRUSADER", ItemInfluence::Crusader),
+                ("INFLUENCE_ELDER", ItemInfluence::Elder),
+                ("INFLUENCE_SHAPER", ItemInfluence::Shaper),
+                ("INFLUENCE_HUNTER", ItemInfluence::Hunter),
+                ("INFLUENCE_REDEEMER", ItemInfluence::Redeemer),
+                ("INFLUENCE_WARLORD", ItemInfluence::Warlord),
+            ]
+            .into_iter()
+            .find(|(key, _)| d.client_strings.text(key) == Some(line.as_str()));
+            if let Some((_, influence)) = influence {
+                item.influences.push(influence);
+            }
+        }
+        if count_before < item.influences.len() {
+            return Ok(Parsed);
+        }
+    }
+    Ok(Skipped)
+}
+
+fn parse_corrupted(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    let first = js::trim(&section[0]);
+    if first == d.s("CORRUPTED") || first == d.s("DOUBLE_CORRUPTED") {
+        item.is_corrupted = true;
+        Ok(Parsed)
+    } else if section[0] == d.s("UNMODIFIABLE") {
+        item.is_corrupted = true;
+        item.is_unmodifiable = Some(true);
+        Ok(Parsed)
+    } else {
+        Ok(Skipped)
+    }
+}
+
+fn parse_foil(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if item.rarity != Some(Rarity::Unique) {
+        return Ok(ParserSkipped);
+    }
+    if section[0] == d.s("FOIL_UNIQUE") {
+        item.is_foil = Some(true);
+        return Ok(Parsed);
+    }
+    Ok(Skipped)
+}
+
+fn parse_unidentified(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    let Some(m) = d.re("UNIDENTIFIED").captures(&section[0]) else { return Ok(Skipped) };
+    item.is_unidentified = true;
+    if let Some(tier) = m.name("tier").filter(|t| !t.is_empty()) {
+        item.unidentified_tier = Some(js::number(tier));
+    }
+    Ok(Parsed)
+}
+
+fn parse_item_level(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    let prefix = if item.ref_name_is("Filled Coffin") { d.s("CORPSE_LEVEL") } else { d.s("ITEM_LEVEL") };
+    for line in section {
+        if let Some(rest) = line.strip_prefix(prefix) {
+            item.item_level = Some(js::number(rest));
+            return Ok(Parsed);
+        }
+    }
+    Ok(Skipped)
+}
+
+fn parse_requirements(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if !section[0].starts_with(d.s("REQUIRES")) || item.category.as_ref().is_some_and(|c| GEM.contains(c)) {
+        return Ok(Skipped);
+    }
+    // TODO (upstream): remove the throw once validated in other languages.
+    let m = d.re("REQUIRES_LINE").captures(&section[0]).ok_or(Fail::THROW)?;
+    let n = |group: &str| js::parse_int(m.name(group).unwrap_or("0"));
+    item.requires = Some(Requires { level: n("level"), str: n("str"), dex: n("dex"), int: n("int") });
+    Ok(Parsed)
+}
+
+fn parse_talisman_tier(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if let Some(rest) = section[0].strip_prefix(d.s("TALISMAN_TIER")) {
+        item.talisman_tier = Some(js::number(rest));
+        return Ok(Parsed);
+    }
+    Ok(Skipped)
+}
+
+fn parse_gem(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    let line = match item.category {
+        Some(ItemCategory::Gem | ItemCategory::MetaGem) => 1,
+        Some(ItemCategory::UncutGem) => 0,
+        _ => return Ok(ParserSkipped),
+    };
+    if let Some(level) = section.get(line).and_then(|l| l.strip_prefix(d.s("GEM_LEVEL"))) {
+        // "Level: 20 (Max)"
+        item.gem_level = Some(js::parse_int(level));
+        parse_quality_nested(d, section, item)?;
+        return Ok(Parsed);
+    }
+    Ok(Skipped)
+}
+
+fn parse_stack_size(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if item.rarity != Some(Rarity::Normal)
+        && !matches!(
+            item.category,
+            Some(ItemCategory::Currency | ItemCategory::DivinationCard | ItemCategory::MapFragment)
+        )
+    {
+        return Ok(ParserSkipped);
+    }
+    if let Some(rest) = section[0].strip_prefix(d.s("STACK_SIZE")) {
+        // Portal Scroll "Stack Size: 2[localized separator]448/40"
+        let digits: String = rest.chars().filter(|c| c.is_ascii_digit() || *c == '/').collect();
+        let mut parts = digits.split('/').map(js::number);
+        let size = StackSize { value: parts.next().unwrap(), max: parts.next() };
+        if !item.ref_name_is("Idol of Estazunti") {
+            item.stack_size = Some(size);
+        }
+        return Ok(Parsed);
+    }
+    Ok(Skipped)
+}
+
+fn empty_sockets(count: f64) -> Vec<Option<EditorItem>> {
+    vec![None; count as usize]
+}
+
+fn parse_augment_sockets(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    let category_max = get_max_sockets(item);
+    if category_max == 0.0 {
+        return Ok(ParserSkipped);
+    }
+    if let Some(rest) = section[0].strip_prefix(d.s("SOCKETS")) {
+        let current = js::trim_end(rest).matches('S').count() as f64;
+        let slots = if item.is_modifiable() { category_max.max(current) } else { current };
+        item.augment_sockets =
+            Some(AugmentSockets { empty: 0.0, current, normal: category_max, augments: empty_sockets(slots) });
+        return Ok(Parsed);
+    }
+    // None yet, possibly.
+    if item.is_modifiable() {
+        item.augment_sockets = Some(AugmentSockets {
+            empty: category_max,
+            current: 0.0,
+            normal: category_max,
+            augments: empty_sockets(category_max),
+        });
+    }
+    Ok(Skipped)
+}
+
+fn parse_sockets(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    let is_gem = item.category.as_ref().is_some_and(|c| GEM.contains(c));
+    let Some(rest) = section[0].strip_prefix(d.s("SOCKETS")).filter(|_| is_gem) else { return Ok(Skipped) };
+    let shape: String = js::trim_end(rest).chars().map(|c| if c == ' ' || c == '-' { c } else { '#' }).collect();
+    let linked = match shape.as_str() {
+        "#-#-#-#-#-#" => Some(6),
+        "# #-#-#-#-#" | "#-#-#-#-# #" | "#-#-#-#-#" => Some(5),
+        _ => None,
+    };
+    // Counted after every socket became `#`, so `white` is always 0 upstream.
+    item.gem_sockets = Some(GemSockets {
+        number: shape.matches('#').count() as f64,
+        linked,
+        white: shape.matches('W').count() as f64,
+    });
+    Ok(Parsed)
+}
+
+fn parse_quality_nested(d: &Data, section: &[String], item: &mut Item) -> R<()> {
+    for line in section {
+        let Some(rest) = line.strip_prefix(d.s("QUALITY")) else { continue };
+        // "Quality: +20% (augmented)"
+        item.quality = Some(js::parse_int(rest));
+        if matches!(item.category, Some(ItemCategory::Ring | ItemCategory::Amulet | ItemCategory::Jewel)) {
+            let catalysts = if item.category == Some(ItemCategory::Jewel) {
+                &d.catalyst_types().refined
+            } else {
+                &d.catalyst_types().normal
+            };
+            for catalyst in catalysts {
+                // `CATALYST_TO_TAG[catalyst.tags[1]]` must exist, or the loop throws.
+                let tag_key = catalyst.tags.get(1).ok_or(Fail::THROW)?;
+                let tags = d.catalyst_to_tag(tag_key).ok_or(Fail::THROW)?;
+                if tags.iter().any(|t| line.contains(t.as_str())) {
+                    item.quality_type = Some(tag_key.clone());
+                    return Ok(());
+                }
+            }
+        }
+        return Ok(());
+    }
+    Ok(())
+}
+
+fn parse_armour(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    let mut is_parsed = Skipped;
+    for line in section {
+        let props: [(&str, &mut Option<f64>); 5] = [
+            ("ARMOUR", &mut item.armour_ar),
+            ("EVASION", &mut item.armour_ev),
+            ("ENERGY_SHIELD", &mut item.armour_es),
+            ("BLOCK_CHANCE", &mut item.armour_block),
+            ("RUNIC_WARD", &mut item.armour_rw),
+        ];
+        for (key, field) in props {
+            if let Some(rest) = line.strip_prefix(d.s(key)) {
+                *field = Some(js::parse_int(rest));
+                is_parsed = Parsed;
+                break;
+            }
+        }
+    }
+    if is_parsed == Parsed {
+        parse_quality_nested(d, section, item)?;
+    }
+    if item.rarity == Some(Rarity::Unique) {
+        // Undo everything.
+        item.armour_ar = None;
+        item.armour_ev = None;
+        item.armour_es = None;
+        item.armour_rw = None;
+        item.armour_block = None;
+    }
+    Ok(is_parsed)
+}
+
+/// `"min-max"` per element (`, `-separated), digits only, averaged and summed.
+fn damage_sum(d: &Data, text: &str) -> f64 {
+    text.split(", ").map(|element| damage_avg(d, element)).fold(0.0, |sum, x| sum + x)
+}
+
+fn damage_avg(d: &Data, text: &str) -> f64 {
+    let values: Vec<f64> = text
+        .split(d.s("HYPHEN"))
+        .map(|s| js::parse_int(&s.chars().filter(char::is_ascii_digit).collect::<String>()))
+        .collect();
+    get_roll_or_minmax_avg(&values)
+}
+
+fn parse_weapon(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    let mut is_parsed = Skipped;
+    for line in section {
+        if let Some(rest) = line.strip_prefix(d.s("CRIT_CHANCE")) {
+            item.weapon_crit = Some(js::parse_float(rest));
+        } else if let Some(rest) = line.strip_prefix(d.s("ATTACK_SPEED")) {
+            item.weapon_as = Some(js::parse_float(rest));
+        } else if let Some(rest) = line.strip_prefix(d.s("PHYSICAL_DAMAGE")) {
+            item.weapon_physical = Some(damage_avg(d, rest));
+        } else if let Some(rest) = line.strip_prefix(d.s("ELEMENTAL_DAMAGE")) {
+            item.weapon_elemental = Some(damage_sum(d, rest));
+        } else if let Some(rest) =
+            ["FIRE_DAMAGE", "COLD_DAMAGE", "LIGHTNING_DAMAGE"].into_iter().find_map(|key| line.strip_prefix(d.s(key)))
+        {
+            let damage = damage_sum(d, rest);
+            item.weapon_elemental = Some(match item.weapon_elemental.filter(|e| js::truthy(*e)) {
+                Some(e) => damage + e,
+                None => damage,
+            });
+        } else if let Some(rest) = line.strip_prefix(d.s("RELOAD_SPEED")) {
+            item.weapon_reload = Some(js::parse_float(rest));
+        } else if let Some(rest) = line.strip_prefix(d.s("BASE_SPIRIT")) {
+            item.weapon_spirit = Some(js::parse_int(rest));
+        } else {
+            continue;
+        }
+        is_parsed = Parsed;
+    }
+    if is_parsed == Parsed {
+        parse_quality_nested(d, section, item)?;
+    }
+    if item.rarity == Some(Rarity::Unique) {
+        // Undo everything.
+        item.weapon_elemental = None;
+        item.weapon_as = None;
+        item.weapon_physical = None;
+        item.weapon_cold = None;
+        item.weapon_lightning = None;
+        item.weapon_fire = None;
+        item.weapon_crit = None;
+        item.weapon_reload = None;
+        item.weapon_spirit = None;
+    }
+    Ok(is_parsed)
+}
+
+fn parse_caster(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if !matches!(item.category, Some(ItemCategory::Wand | ItemCategory::Sceptre | ItemCategory::Staff)) {
+        return Ok(ParserSkipped);
+    }
+    if section.len() == 1 && section[0].starts_with(d.s("QUALITY")) {
+        parse_quality_nested(d, section, item)?;
+        return Ok(Parsed);
+    }
+    Ok(Skipped)
+}
+
+fn parse_logbook_area(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if !item.ref_name_is("Expedition Logbook") {
+        return Ok(ParserSkipped);
+    }
+    if section.len() < 3 {
+        return Ok(Skipped);
+    }
+    // Skip the area, parse the faction (which is then dropped again).
+    if d.stat_by_match_str(&section[1]).is_none() {
+        return Ok(Skipped);
+    }
+    let (mod_type, lines) = parse_mod_type(d, &section[2..]);
+    let mut area_mods = Vec::new();
+    for line in &lines {
+        let stat = StatString { string: line.clone(), unscalable: false };
+        if let Some(found) = try_parse_translation(d, &stat, mod_type)? {
+            area_mods.push(ParsedModifier { info: ModifierInfo::new(mod_type), stats: vec![found] });
+        }
+    }
+    if !area_mods.is_empty() {
+        item.logbook_area_mods.get_or_insert_with(Vec::new).push(area_mods);
+    }
+    Ok(Parsed)
+}
+
+fn parse_modifiers(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if !matches!(item.rarity, Some(Rarity::Normal | Rarity::Magic | Rarity::Rare | Rarity::Unique)) {
+        return Ok(ParserSkipped);
+    }
+    let grants_skill = d.s("GRANTS_SKILL");
+    let recognized = section.iter().find(|l| {
+        l.ends_with(ENCHANT_LINE) || l.ends_with(AUGMENT_LINE) || l.starts_with(grants_skill) || is_mod_info_line(l)
+    });
+    let Some(recognized) = recognized else { return Ok(Skipped) };
+
+    if is_mod_info_line(recognized) {
+        for (mod_line, stat_lines) in group_lines_by_mod(section) {
+            let (mod_type, lines) = parse_mod_type(d, &stat_lines);
+            let mut info = parse_mod_info_line(d, &mod_line, mod_type)?;
+            if item.category == Some(ItemCategory::Relic) && info.kind == ModifierType::Explicit {
+                info.kind = ModifierType::Sanctum;
+            }
+            parse_stats_from_mod(d, &lines, item, info, None)?;
+            if mod_type == ModifierType::Veiled {
+                item.is_veiled = Some(true);
+            }
+        }
+    } else {
+        let (_, lines) = parse_mod_type(d, section);
+        let kind = if recognized.ends_with(ENCHANT_LINE) {
+            ModifierType::Enchant
+        } else if recognized.starts_with(grants_skill) {
+            ModifierType::Skill
+        } else {
+            ModifierType::Augment
+        };
+        parse_stats_from_mod(d, &lines, item, ModifierInfo::new(kind), None)?;
+    }
+    Ok(Parsed)
+}
+
+fn parse_mirrored(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if section.len() == 1 && section[0] == d.s("MIRRORED") {
+        item.is_mirrored = Some(true);
+        return Ok(Parsed);
+    }
+    Ok(Skipped)
+}
+
+fn parse_sanctified(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if section.len() == 1 && section[0] == d.s("SANCTIFIED") {
+        item.is_sanctified = Some(true);
+        return Ok(Parsed);
+    }
+    Ok(Skipped)
+}
+
+/// Consumes flask buffs so they are not recognised as modifiers. Upstream checks
+/// `if (isParsed)` on a non-empty string, so quality is read from every section
+/// this parser visits.
+fn parse_flask(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    let is_parsed = if section.iter().any(|l| d.re("FLASK_CHARGES").is_match(l)) { Parsed } else { Skipped };
+    parse_quality_nested(d, section, item)?;
+    Ok(is_parsed)
+}
+
+fn parse_jewelery(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if !matches!(item.category, Some(ItemCategory::Amulet | ItemCategory::Ring | ItemCategory::Belt)) {
+        return Ok(ParserSkipped);
+    }
+    // `QUALITY.substring(0, QUALITY.indexOf(":"))`: empty without a colon.
+    let quality = d.s("QUALITY");
+    let prefix = quality.find(':').map_or("", |i| &quality[..i]);
+    Ok(if section.iter().any(|l| l.starts_with(prefix)) { Parsed } else { Skipped })
+}
+
+/// Consumes "Charm Slots" sections so they are not recognised as modifiers.
+fn parse_charm_slots(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if item.category != Some(ItemCategory::Belt) {
+        return Ok(ParserSkipped);
+    }
+    Ok(if section.iter().any(|l| l.starts_with(d.s("CHARM_SLOTS"))) { Parsed } else { Skipped })
+}
+
+/// Consumes "Spirit: 100" sections so they are not recognised as modifiers.
+fn parse_spirit(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if item.category != Some(ItemCategory::Sceptre) {
+        return Ok(ParserSkipped);
+    }
+    Ok(if section.iter().any(|l| l.starts_with(d.s("BASE_SPIRIT"))) { Parsed } else { Skipped })
+}
+
+fn parse_price_note(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    for line in section {
+        if let Some(note) = line.strip_prefix(d.s("PRICE_NOTE")) {
+            item.note = Some(note.to_owned());
+            return Ok(Parsed);
+        }
+    }
+    Ok(Skipped)
+}
+
+fn parse_timelost_radius(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if item.category != Some(ItemCategory::Jewel) {
+        return Ok(ParserSkipped);
+    }
+    Ok(if section.iter().any(|l| l.starts_with(d.s("TIMELESS_RADIUS"))) { Parsed } else { Skipped })
+}
+
+fn parse_sentinel_charge(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if item.category != Some(ItemCategory::Sentinel) {
+        return Ok(ParserSkipped);
+    }
+    if section.len() == 1
+        && let Some(rest) = section[0].strip_prefix(d.s("SENTINEL_CHARGE"))
+    {
+        item.sentinel_charge = Some(js::parse_int(rest));
+        return Ok(Parsed);
+    }
+    Ok(Skipped)
+}
+
+fn parse_synthesised(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if section.len() == 1 && section[0] == d.s("SECTION_SYNTHESISED") {
+        item.is_synthesised = Some(true);
+        let exec = |text: &str| -> R<String> {
+            match d.re_ref("ITEM_SYNTHESISED").captures(text) {
+                Some(_) => exec_group1(d.re_ref("ITEM_SYNTHESISED"), text),
+                None => exec_group1(d.re("ITEM_SYNTHESISED"), text),
+            }
+        };
+        match non_empty(&item.base_type).map(str::to_owned) {
+            Some(base) => item.base_type = Some(exec(&base)?),
+            None => item.name = exec(&item.name)?,
+        }
+        return Ok(Parsed);
+    }
+    Ok(Skipped)
+}
+
+/// `Normal`, or an unidentified magic, rare or unique item.
+fn may_have_quality_prefix(item: &Item) -> bool {
+    match item.rarity {
+        Some(Rarity::Normal) => true,
+        Some(Rarity::Magic | Rarity::Rare | Rarity::Unique) => item.is_unidentified,
+        None => false,
+    }
+}
+
+fn parse_superior(item: &mut Item, d: &Data) -> R<()> {
+    if may_have_quality_prefix(item)
+        && let Some(name) = ref_then_local(d, "ITEM_SUPERIOR", &item.name)?
+    {
+        item.name = name;
+    }
+    Ok(())
+}
+
+fn parse_exceptional(item: &mut Item, d: &Data) -> R<()> {
+    if may_have_quality_prefix(item)
+        && let Some(name) = ref_then_local(d, "ITEM_EXCEPTIONAL", &item.name)?
+    {
+        item.name = name;
+    }
+    Ok(())
+}
+
+/// Runeforged items have a different base type upstream, so nothing is done.
+fn parse_runeforged(_: &mut Item, _: &Data) -> R<()> {
+    Ok(())
+}
+
+fn parse_category_by_help_text(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    let category = [
+        ("BEAST_HELP", ItemCategory::CapturedBeast),
+        ("METAMORPH_HELP", ItemCategory::MetamorphSample),
+        ("VOIDSTONE_HELP", ItemCategory::Voidstone),
+    ]
+    .into_iter()
+    .find(|(key, _)| section[0] == d.s(key));
+    match category {
+        Some((_, category)) => {
+            item.category = Some(category);
+            Ok(Parsed)
+        }
+        None => Ok(Skipped),
+    }
+}
+
+fn parse_heist_blueprint(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if item.category != Some(ItemCategory::HeistBlueprint) {
+        return Ok(ParserSkipped);
+    }
+    parse_area_level_nested(d, section, item);
+    if !truthy(item.area_level) {
+        return Ok(Skipped);
+    }
+    let mut heist = Heist::default();
+    for line in section {
+        if let Some(target) = line.strip_prefix(d.s("HEIST_TARGET")) {
+            let found = [
+                ("HEIST_BLUEPRINT_ENCHANTS", "Enchants"),
+                ("HEIST_BLUEPRINT_GEMS", "Gems"),
+                ("HEIST_BLUEPRINT_REPLICAS", "Replicas"),
+                ("HEIST_BLUEPRINT_TRINKETS", "Trinkets"),
+            ]
+            .into_iter()
+            .find(|(key, _)| target == d.s(key));
+            if let Some((_, target)) = found {
+                heist.target = Some(target);
+            }
+        } else if let Some(rest) = line.strip_prefix(d.s("HEIST_WINGS_REVEALED")) {
+            heist.wings_revealed = Some(js::parse_int(rest));
+        }
+    }
+    item.heist = Some(heist);
+    Ok(Parsed)
+}
+
+fn parse_trials(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if !item.ref_name_is("Djinn Barya") && !item.ref_name_is("Inscribed Ultimatum") {
+        return Ok(ParserSkipped);
+    }
+    parse_area_level_nested(d, section, item);
+    if !truthy(item.area_level) {
+        return Ok(Skipped);
+    }
+    let ultimatum = item.ref_name_is("Inscribed Ultimatum");
+    let mut trials = Trials::default();
+    for line in section {
+        if let Some(rest) = line.strip_prefix(d.s("TRIAL_COUNT")) {
+            trials.number_of_trials = Some(js::number(rest));
+        } else if ultimatum {
+            if line.starts_with(d.s("ULTIMATUM_VICTORIOUS")) {
+                trials.ultimatum_hint = Some("Victorious");
+            } else if line.starts_with(d.s("ULTIMATUM_COWARDLY")) {
+                trials.ultimatum_hint = Some("Cowardly");
+            } else if line.starts_with(d.s("ULTIMATUM_DEADLY")) {
+                trials.ultimatum_hint = Some("Deadly");
+            }
+        }
+    }
+    item.trials = Some(trials);
+    Ok(Parsed)
+}
+
+fn parse_area_level_nested(d: &Data, section: &[String], item: &mut Item) {
+    if let Some(rest) = section.iter().find_map(|l| l.strip_prefix(d.s("AREA_LEVEL"))) {
+        item.area_level = Some(js::number(rest));
+    }
+}
+
+fn parse_area_level(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if !["Chronicle of Atzoatl", "Expedition Logbook", "Mirrored Tablet", "Forbidden Tome"]
+        .iter()
+        .any(|r| item.ref_name_is(r))
+    {
+        return Ok(ParserSkipped);
+    }
+    parse_area_level_nested(d, section, item);
+    Ok(if truthy(item.area_level) { Parsed } else { Skipped })
+}
+
+fn parse_atzoatl_rooms(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if !item.ref_name_is("Chronicle of Atzoatl") {
+        return Ok(ParserSkipped);
+    }
+    if section[0] != d.s("INCURSION_OPEN") {
+        return Ok(Skipped);
+    }
+    let mut state = IncursionRoom::Open;
+    for line in &section[1..] {
+        if line == d.s("INCURSION_OBSTRUCTED") {
+            state = IncursionRoom::Obstructed;
+            continue;
+        }
+        match d.stat_by_match_str(line) {
+            Some((stat, matcher)) => {
+                let string = match state {
+                    IncursionRoom::Open => matcher.string,
+                    IncursionRoom::Obstructed => format!("{} {}", d.s("INCURSION_OBSTRUCTED"), matcher.string),
+                };
+                let value = f64::from(state as u8);
+                item.new_mods.push(ParsedModifier {
+                    info: ModifierInfo::new(ModifierType::Pseudo),
+                    stats: vec![ParsedStat {
+                        stat,
+                        translation: crate::data::StatMatcher {
+                            string,
+                            advanced: None,
+                            negate: None,
+                            value: None,
+                            oils: None,
+                        },
+                        roll: Some(StatRollInfo {
+                            unscalable: true,
+                            legacy: None,
+                            dp: false,
+                            value,
+                            min: value,
+                            max: value,
+                            option: None,
+                        }),
+                        from_added_augment: None,
+                    }],
+                });
+            }
+            None => item.unknown_modifiers.push(UnknownModifier { text: line.clone(), kind: ModifierType::Pseudo }),
+        }
+    }
+    Ok(Parsed)
+}
+
+fn parse_mirrored_tablet(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if !item.ref_name_is("Mirrored Tablet") {
+        return Ok(ParserSkipped);
+    }
+    if section.len() < 8 {
+        return Ok(Skipped);
+    }
+    for line in section {
+        let stat = StatString { string: line.clone(), unscalable: true };
+        match try_parse_translation(d, &stat, ModifierType::Pseudo)? {
+            Some(found) => {
+                item.new_mods.push(ParsedModifier { info: ModifierInfo::new(ModifierType::Pseudo), stats: vec![found] })
+            }
+            None => item.unknown_modifiers.push(UnknownModifier { text: line.clone(), kind: ModifierType::Pseudo }),
+        }
+    }
+    Ok(Parsed)
+}
+
+fn parse_filled_coffin(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
+    if !item.ref_name_is("Filled Coffin") {
+        return Ok(ParserSkipped);
+    }
+    if !section.iter().any(|l| l.ends_with(IMPLICIT_LINE)) {
+        return Ok(Skipped);
+    }
+    let (_, lines) = parse_mod_type(d, section);
+    parse_stats_from_mod(d, &lines, item, ModifierInfo::new(ModifierType::Necropolis), None)?;
+    Ok(Parsed)
+}
+
+/// Built-in skills that are skipped entirely.
+const BUILTIN_SKILLS: [&str; 3] = ["Grants Skill: Parry", "Grants Skill: Raise Shield", "Grants Skill: Spear Throw"];
+
+/// `parseStatsFromMod`: adds the modifier with every stat its lines parse to.
+pub fn parse_stats_from_mod(
+    d: &Data,
+    lines: &[String],
+    item: &mut Item,
+    info: ModifierInfo,
+    added_augment: Option<&BaseType>,
+) -> R<bool> {
+    let mut modifier = ParsedModifier { info, stats: Vec::new() };
+    if modifier.info.kind == ModifierType::Veiled {
+        item.new_mods.push(modifier);
+        return Ok(true);
+    }
+
+    let kind = modifier.info.kind;
+    let from_nothing = item.ref_name_is("From Nothing");
+    let not_parsed = lines_to_stat_strings(lines, d.s("UNSCALABLE_VALUE"), |stat| {
+        let mut stat = stat.clone();
+        if from_nothing {
+            stat.string = stat.string.replacen("()", "", 1);
+        }
+        let Some(mut parsed) = try_parse_translation(d, &stat, kind)? else { return Ok(false) };
+        // Fully skip built-in skills.
+        if BUILTIN_SKILLS.contains(&parsed.stat.stat_ref.as_str()) {
+            return Ok(true);
+        }
+        // Keep the augment base type on the stat.
+        if kind == ModifierType::AddedAugment {
+            parsed.from_added_augment = added_augment.cloned();
+        }
+        modifier.stats.push(parsed);
+        Ok(true)
+    })?;
+    item.new_mods.push(modifier);
+    item.unknown_modifiers.extend(not_parsed.into_iter().map(|text| UnknownModifier { text, kind }));
+    Ok(true)
+}
+
+/// `transformToLegacyModifiers` (deprecated upstream).
+fn transform_to_legacy_modifiers(item: &mut Item, _: &Data) -> R<()> {
+    item.stats_by_type = sum_stats_by_mod_type(&item.new_mods);
+    Ok(())
+}
+
+/// `combinations` (`utils.ts`): every subset, in the reference's order.
+fn combinations(n: usize) -> Vec<Vec<usize>> {
+    let mut acc: Vec<Vec<usize>> = vec![Vec::new()];
+    for curr in 0..n {
+        let extended: Vec<Vec<usize>> = acc.iter().map(|a| [a.as_slice(), &[curr]].concat()).collect();
+        acc.extend(extended);
+    }
+    acc
+}
+
+/// `applyAugmentSockets`: which runes sit in the sockets, worked out from the
+/// item's rune stats.
+fn apply_augment_sockets(item: &mut Item, d: &Data) -> R<()> {
+    let Some(sockets) = &item.augment_sockets else { return Ok(()) };
+    let augment_mod = item.new_mods.iter().find(|m| m.info.kind == ModifierType::Augment).cloned();
+    let augment_stats: Vec<&StatCalculated> = item
+        .stats_by_type
+        .iter()
+        .filter(|c| c.kind == ModifierType::Augment && !c.stat.stat_ref.starts_with("Bonded"))
+        .collect();
+
+    let mut combos: Vec<Vec<usize>> = combinations(augment_stats.len()).into_iter().filter(|c| !c.is_empty()).collect();
+    // `toSorted` is stable.
+    combos.sort_by_key(|c| std::cmp::Reverse(c.len()));
+    let mut augs: Vec<Vec<BaseType>> = Vec::new();
+    let mut i = 0;
+    while i < combos.len() {
+        let stats: Vec<&StatCalculated> = combos[i].iter().map(|&s| augment_stats[s]).collect();
+        let found = determine_augments(d, augment_mod.as_ref().ok_or(Fail::THROW)?, &stats)?;
+        if !found.is_empty() {
+            augs.push(found);
+            for used in combos[i].clone() {
+                // Drop every combination that uses one of these stats.
+                combos.retain(|c| !c.contains(&used));
+            }
+            i = 0;
+            continue;
+        }
+        i += 1;
+    }
+
+    let category = item.category.clone().unwrap_or(ItemCategory::Unknown);
+    let mut augments: Vec<Option<EditorItem>> =
+        augs.iter().flat_map(|group| build_editor_items(group, &category, true)).map(Some).collect();
+    let (current, normal) = (sockets.current, sockets.normal);
+    let len = augments.len() as f64;
+    if len < current.max(normal) {
+        // Possibly empty sockets.
+        let empty = if item.is_corrupted { current - len } else { current.max(normal) - len };
+        for _ in 0..(empty.max(0.0) as usize) {
+            augments.push(None);
+        }
+    }
+    let sockets = item.augment_sockets.as_mut().expect("checked above");
+    sockets.empty = augments.iter().filter(|a| a.is_none()).count() as f64;
+    sockets.augments = augments;
+    // Filling empty sockets from `savedAugments` comes with the item editor; with
+    // the default `savedAugments: {}` upstream returns here.
+    Ok(())
+}
+
+/// `modifiedBfs`: the fewest augment values summing to `remaining`, preferring
+/// repeats of one value.
+fn modified_bfs(remaining: f64, combo: &mut Vec<f64>, available: &[f64]) -> Option<Vec<f64>> {
+    if remaining == 0.0 {
+        return Some(combo.clone());
+    }
+    if combo.len() >= 7 || available.len() > 8 {
+        return Some(Vec::new());
+    }
+    let max_repeats =
+        |v: &[f64]| v.iter().map(|x| v.iter().filter(|y| *y == x).count() as f64).fold(f64::NEG_INFINITY, f64::max);
+    let distinct = |v: &[f64]| v.iter().enumerate().filter(|(i, x)| !v[..*i].contains(x)).count();
+    let mut best: Option<Vec<f64>> = None;
+    for &value in available {
+        if value > remaining {
+            continue;
+        }
+        combo.push(value);
+        let result = modified_bfs(remaining - value, combo, available);
+        combo.pop();
+        let Some(result) = result else { continue };
+        match &best {
+            None => best = Some(result),
+            Some(b) if result.len() < b.len() => best = Some(result),
+            Some(b) if result.len() == b.len() => {
+                let (rm, bm) = (max_repeats(&result), max_repeats(b));
+                if rm > bm || (rm == bm && distinct(&result) < distinct(b)) {
+                    best = Some(result);
+                }
+            }
+            Some(_) => {}
+        }
+    }
+    best.map(|mut b| {
+        b.sort_by(|x, y| y.partial_cmp(x).unwrap_or(std::cmp::Ordering::Equal));
+        b
+    })
+}
+
+/// `SameValueZero` membership, as `Set#has` does for numbers.
+fn set_has(values: &[f64], x: f64) -> bool {
+    values.iter().any(|v| *v == x || (v.is_nan() && x.is_nan()))
+}
+
+fn augment_item(d: &Data, ref_name: &str) -> R<BaseType> {
+    d.item_by_ref(Namespace::Item, ref_name).and_then(|i| i.into_iter().next()).ok_or(Fail::THROW)
+}
+
+/// `determineAugments`: the runes that explain a set of rune stats.
+fn determine_augments(d: &Data, modifier: &ParsedModifier, stat_calcs: &[&StatCalculated]) -> R<Vec<BaseType>> {
+    if modifier.info.kind != ModifierType::Augment {
+        return Ok(Vec::new());
+    }
+    let applied: Vec<f64> =
+        stat_calcs.iter().filter_map(|s| s.sources.first().and_then(|src| src.contributes).map(|c| c.value)).collect();
+
+    let mut all_possible: Vec<&[AugmentData]> = Vec::new();
+    for calc in stat_calcs {
+        let id = calc
+            .stat
+            .trade
+            .ids
+            .as_ref()
+            .and_then(|ids| ids.get(ModifierType::Augment.as_str()))
+            .and_then(|ids| ids.first())
+            .ok_or(Fail::THROW)?;
+        if let Some(group) = d.augment_data_by_trade_id(id) {
+            all_possible.push(group);
+        }
+    }
+    // Intersect the possible augments of every stat.
+    let ref_sets: Vec<Vec<&str>> =
+        all_possible.iter().map(|g| g.iter().map(|a| a.ref_name.as_str()).collect()).collect();
+    let in_all = |r: &str| ref_sets.iter().all(|set| set.contains(&r));
+    let Some(possible) = all_possible
+        .iter()
+        .map(|g| g.iter().filter(|a| in_all(&a.ref_name)).collect::<Vec<_>>())
+        .find(|g| !g.is_empty())
+    else {
+        return Ok(Vec::new());
+    };
+
+    // Something like "Raven-Touched".
+    if applied.is_empty() {
+        return Ok(vec![augment_item(d, &possible[0].ref_name)?]);
+    }
+
+    if applied.len() > 1 {
+        let likely = possible.iter().find(|aug| {
+            let mut common: Vec<f64> = Vec::new();
+            for v in &aug.values {
+                if set_has(&applied, *v) && !set_has(&common, *v) {
+                    common.push(*v);
+                }
+            }
+            common.len() == applied.len()
+        });
+        return match likely {
+            Some(aug) => Ok(vec![augment_item(d, &aug.ref_name)?]),
+            None => Ok(Vec::new()),
+        };
+    }
+
+    // How many of this augment are in the item.
+    let mut available: Vec<f64> = possible
+        .iter()
+        .map(|aug| {
+            if aug.values.len() == 1 {
+                return aug.values[0];
+            }
+            // Stats like "# to # added Lightning Damage".
+            if aug.base_stat.matches('#').count() > 1 {
+                let avg = aug.values.iter().sum::<f64>() / aug.values.len() as f64;
+                return if js::truthy(avg) { avg } else { 0.0 };
+            }
+            // Everything else; an empty list reads `values[0]` as undefined.
+            aug.values.first().copied().unwrap_or(f64::NAN)
+        })
+        .collect();
+    available.sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));
+
+    // Search all combinations with the fewest augments.
+    let likely = modified_bfs(applied[0], &mut Vec::new(), &available).unwrap_or_default();
+    likely
+        .iter()
+        .map(|&v| {
+            let aug = possible
+                .iter()
+                .find(|aug| aug.values.contains(&v) || aug.values.iter().sum::<f64>() / aug.values.len() as f64 == v)
+                .ok_or(Fail::THROW)?;
+            augment_item(d, &aug.ref_name)
+        })
+        .collect()
+}
+
+fn apply_elemental_added(item: &mut Item, _: &Data) -> R<()> {
+    if !truthy(item.weapon_elemental) || item.rarity == Some(Rarity::Unique) {
+        return Ok(());
+    }
+    let add = |field: &mut Option<f64>, v: f64| {
+        *field = Some(match field.filter(|x| js::truthy(*x)) {
+            Some(x) => v + x,
+            None => v,
+        });
+    };
+    for calc in &item.stats_by_type {
+        let field = match calc.stat.stat_ref.as_str() {
+            "Adds # to # Lightning Damage" => &mut item.weapon_lightning,
+            "Adds # to # Cold Damage" => &mut item.weapon_cold,
+            "Adds # to # Fire Damage" => &mut item.weapon_fire,
+            _ => continue,
+        };
+        for source in &calc.sources {
+            add(field, source.contributes.ok_or(Fail::THROW)?.value);
+        }
+    }
+    Ok(())
+}
+
+fn calc_base_percentile(item: &mut Item, d: &Data) -> R<()> {
+    // The ref name, since `unique.base` is one.
+    let armour = match &item.info().unique {
+        Some(unique) => augment_item(d, &unique.base)?.armour,
+        None => item.info().armour.clone(),
+    };
+    let Some(info) = armour else { return Ok(()) };
+    let bounds = |b: [u32; 2]| [f64::from(b[0]), f64::from(b[1])];
+    // Base percentile is the same for all defences. AR/EV -> ES order: larger
+    // rolls give a more precise result. No ward: it is not used anymore.
+    let percentile = if let (true, Some(ar)) = (truthy(item.armour_ar), info.ar) {
+        calc_prop_percentile(item.armour_ar.unwrap(), bounds(ar), quality_stats::ARMOUR, item)
+    } else if let (true, Some(ev)) = (truthy(item.armour_ev), info.ev) {
+        calc_prop_percentile(item.armour_ev.unwrap(), bounds(ev), quality_stats::EVASION, item)
+    } else if let (true, Some(es)) = (truthy(item.armour_es), info.es) {
+        calc_prop_percentile(item.armour_es.unwrap(), bounds(es), quality_stats::ENERGY_SHIELD, item)
+    } else {
+        return Ok(());
+    };
+    item.base_percentile = Some(percentile);
+    Ok(())
+}
+
+/// `getMaxSockets`: augment sockets an item has without corruption.
+pub fn get_max_sockets(item: &Item) -> f64 {
+    let by_name = match item.info().ref_name.as_deref() {
+        Some("Atziri's Splendour") => Some(6.0),
+        Some("Runeseeker's Call") => Some(5.0),
+        Some("Greymake" | "Morior Invictus" | "The Bringer of Rain") => Some(4.0),
+        Some("Serle's Grit") => Some(3.0),
+        Some("Darkness Enthroned" | "Mahuxotl's Machination") => Some(2.0),
+        Some("Grasping Ring" | "Corona Amulet" | "Stalking Belt") => Some(1.0),
+        _ => None,
+    };
+    if let Some(n) = by_name {
+        return n;
+    }
+    use ItemCategory as C;
+    match item.category {
+        Some(
+            C::BodyArmour
+            | C::TwoHandedAxe
+            | C::TwoHandedMace
+            | C::TwoHandedSword
+            | C::Crossbow
+            | C::Bow
+            | C::Warstaff
+            | C::Staff
+            | C::Talisman,
+        ) => 2.0,
+        Some(
+            C::Helmet
+            | C::Shield
+            | C::Gloves
+            | C::Boots
+            | C::OneHandedAxe
+            | C::OneHandedMace
+            | C::OneHandedSword
+            | C::Claw
+            | C::Dagger
+            | C::Focus
+            | C::Spear
+            | C::Flail
+            | C::Wand
+            | C::Buckler
+            | C::Sceptre,
+        ) => 1.0,
+        _ => 0.0,
+    }
+}
+
+/// `isArmourOrWeaponOrCaster`
+pub fn is_armour_or_weapon_or_caster(category: Option<&ItemCategory>) -> Option<&'static str> {
+    use ItemCategory as C;
+    match category? {
+        C::BodyArmour | C::Boots | C::Gloves | C::Helmet | C::Shield | C::Focus | C::Buckler => Some("armour"),
+        C::OneHandedAxe
+        | C::OneHandedMace
+        | C::OneHandedSword
+        | C::Quiver
+        | C::Claw
+        | C::Dagger
+        | C::Sceptre
+        | C::TwoHandedAxe
+        | C::TwoHandedMace
+        | C::TwoHandedSword
+        | C::Crossbow
+        | C::Bow
+        | C::Warstaff
+        | C::Spear
+        | C::Flail
+        | C::Talisman => Some("weapon"),
+        C::Wand | C::Staff => Some("caster"),
+        _ => None,
+    }
+}
+
+/// `parseAffixStrings`: `[Ref|Text]` markup to its text (or the ref alone).
+pub fn parse_affix_strings(text: &str) -> String {
+    static RE: std::sync::OnceLock<Regex> = std::sync::OnceLock::new();
+    let re = RE.get_or_init(|| Regex::new(r"\[([^\]|]+)\|?([^\]]*)\]", "g").unwrap());
+    re.replace_all(text, |caps| {
+        let part2 = caps.get(2).unwrap_or("");
+        if part2.is_empty() { caps.get(1).unwrap_or("").to_owned() } else { part2.to_owned() }
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn combinations_follow_the_reference_order() {
+        assert_eq!(combinations(2), vec![vec![], vec![0], vec![1], vec![0, 1]]);
+        assert_eq!(combinations(3).len(), 8);
+        assert_eq!(combinations(3)[4], vec![2]);
+    }
+
+    #[test]
+    fn modified_bfs_prefers_fewest_and_repeats() {
+        assert_eq!(modified_bfs(60.0, &mut Vec::new(), &[30.0, 20.0, 10.0]), Some(vec![30.0, 30.0]));
+        assert_eq!(modified_bfs(35.0, &mut Vec::new(), &[30.0, 20.0]), None);
+        assert_eq!(modified_bfs(0.0, &mut Vec::new(), &[1.0]), Some(vec![]));
+    }
+
+    #[test]
+    fn affix_markup_takes_the_text() {
+        assert_eq!(parse_affix_strings("[Fire|Fire Damage] and [Cold]"), "Fire Damage and Cold");
+    }
+}

@@ -25,7 +25,7 @@ impl Game for Poe1 {
     }
 
     fn parse_clipboard(&self, data: &data::Data, text: &str) -> Result<parser::item::Item, ParseError> {
-        parser::parse_clipboard(data, text).map_err(|parser::Fail(key)| ParseError::Rejected { key })
+        parser::parse_clipboard(data, text).map_err(|parser::Fail(key)| ParseError::Rejected { key: key.into() })
     }
 }
 
@@ -53,7 +53,6 @@ mod tests {
             let actual = match Poe1.parse_clipboard(data, &case.input) {
                 Ok(item) => wraex_core::js::json_value(&item),
                 Err(ParseError::Rejected { key }) => serde_json::json!({ "error": key }),
-                Err(e) => panic!("{}: {e}", case.slug),
             };
             if let Some(diff) = wraex_golden::diff(&case.parsed, &actual) {
                 failures.push(format!("{}: {diff}", case.slug));

@@ -210,7 +210,7 @@ pub struct MapInfo {
     pub tier: Option<u32>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GemInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -383,6 +383,15 @@ impl TradeData {
     }
 }
 
+/// `TRADE_ITEM_BY_REF`'s `itemQuery`.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct TradeItemQuery<'a> {
+    pub base_type: Option<&'a str>,
+    pub name: Option<&'a str>,
+    pub rarity: Option<wraex_core::Rarity>,
+    pub category: Option<&'a crate::parser::meta::ItemCategory>,
+}
+
 /// The keys `make-index-files.mjs` indexes a PoE2 stats line under: its ref, and
 /// each matcher's `string` and, if set, `advanced`.
 fn stat_keys(stat: &Stat) -> StatKeys {
@@ -525,6 +534,27 @@ impl Data {
         &self.lang
     }
 
+    /// `CLIENT_STRINGS[key]` as text. Every language defines the same keys as
+    /// English (tested), so a missing key is a bug in the caller.
+    pub fn s(&self, key: &str) -> &str {
+        self.client_strings.text(key).unwrap_or_else(|| panic!("client string {key} is not text"))
+    }
+
+    /// `CLIENT_STRINGS[key]` as a regex.
+    pub fn re(&self, key: &str) -> &wraex_core::js_regex::Regex {
+        self.client_strings.regex(key).unwrap_or_else(|| panic!("client string {key} is not a regex"))
+    }
+
+    /// `CLIENT_STRINGS_REF[key]` (English) as text.
+    pub fn s_ref(&self, key: &str) -> &str {
+        self.client_strings_ref.text(key).unwrap_or_else(|| panic!("client string {key} is not text"))
+    }
+
+    /// `CLIENT_STRINGS_REF[key]` (English) as a regex.
+    pub fn re_ref(&self, key: &str) -> &wraex_core::js_regex::Regex {
+        self.client_strings_ref.regex(key).unwrap_or_else(|| panic!("client string {key} is not a regex"))
+    }
+
     pub fn items(&self) -> &ItemTable {
         &self.items
     }
@@ -619,6 +649,63 @@ impl Data {
     /// The trade site's data, if it loaded.
     pub fn trade(&self) -> Option<&TradeData> {
         self.trade.as_ref()
+    }
+
+    /// `TRADE_ITEM_BY_REF`: a stand-in `BaseType` for an item the trade site
+    /// lists but the shipped data lacks. `None` without trade data, as when
+    /// `loadTradeData` fails.
+    pub fn trade_item_by_ref(&self, query: &TradeItemQuery<'_>, force_craftable: bool) -> Option<Vec<BaseType>> {
+        use crate::parser::meta::{GEM, ItemCategory};
+        let trade = self.trade.as_ref()?;
+        let stub = |name: &str, namespace| BaseType {
+            name: Some(name.to_owned()),
+            ref_name: Some(name.to_owned()),
+            namespace,
+            icon: "%NOT_FOUND%".to_owned(),
+            w: None,
+            h: None,
+            trade_tag: None,
+            trade_disc: None,
+            disc: None,
+            craftable: None,
+            unique: None,
+            map: None,
+            gem: None,
+            armour: None,
+            augment: None,
+            tags: Vec::new(),
+        };
+        let craftable =
+            |category: &str| Craftable { category: category.to_owned(), corrupted: None, unique_only: None };
+        let name = query.name.filter(|n| !n.is_empty());
+        let base = if query.category.is_some_and(|c| GEM.contains(c)) {
+            name.filter(|n| trade.has_item(n))
+                .map(|n| BaseType { gem: Some(GemInfo::default()), ..stub(n, Namespace::Gem) })
+        } else if query.rarity == Some(wraex_core::Rarity::Unique) {
+            // `${name} ${baseType}`; an undefined base type prints as "undefined".
+            let base_type = query.base_type.unwrap_or("undefined");
+            name.filter(|n| trade.has_item(&format!("{n} {base_type}"))).map(|n| BaseType {
+                unique: Some(UniqueInfo { base: base_type.to_owned(), fixed_stats: None }),
+                ..stub(n, Namespace::Unique)
+            })
+        } else if query.base_type.is_none_or(str::is_empty) {
+            // TODO (upstream): currency works without tradeTag, just ninja only
+            name.filter(|n| trade.has_item(n)).map(|n| {
+                let category = match query.category {
+                    Some(c) => Some(craftable(c.as_str())),
+                    None if force_craftable => Some(craftable(n)),
+                    None => None,
+                };
+                BaseType { craftable: category, ..stub(n, Namespace::Item) }
+            })
+        } else {
+            let base_type = query.base_type.unwrap();
+            trade.has_item(base_type).then(|| BaseType {
+                craftable: Some(craftable(ItemCategory::Unknown.as_str())),
+                ..stub(base_type, Namespace::Item)
+            })
+        };
+        base.map(|b| vec![b])
     }
 
     /// `TRADE_STAT_BY_STAT_ID`
@@ -722,11 +809,11 @@ fn group_augments(augments: Vec<BaseType>) -> AugmentGroups {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use std::sync::OnceLock;
 
-    fn en() -> &'static Data {
+    pub(crate) fn en() -> &'static Data {
         static EN: OnceLock<Data> = OnceLock::new();
         EN.get_or_init(|| Data::load(&reference_source(), "en", Some(reference_trade_data())).unwrap())
     }
@@ -741,6 +828,34 @@ mod tests {
             assert!(data.augment_data_by_augment("Iron Rune").is_some(), "{lang}");
             assert!(!data.trade_stat_by_stat_id("explicit.stat_3299347043"));
         }
+    }
+
+    /// [`Data::s`] and friends rely on this.
+    #[test]
+    fn every_language_has_the_english_client_string_keys() {
+        let kind = |c: &wraex_core::data::ClientString| std::mem::discriminant(c);
+        let en = en();
+        for lang in LANGUAGES {
+            let data = Data::load(&reference_source(), lang, None).unwrap();
+            for (key, value) in en.client_strings.iter() {
+                let other = data.client_strings.get(key).unwrap_or_else(|| panic!("{lang}: no {key}"));
+                assert_eq!(kind(other), kind(value), "{lang}: {key}");
+            }
+        }
+    }
+
+    #[test]
+    fn stands_in_for_items_only_the_trade_site_lists() {
+        let d = en();
+        let query = TradeItemQuery { name: Some("Crimson Amulet"), ..Default::default() };
+        let item = &d.trade_item_by_ref(&query, true).unwrap()[0];
+        assert_eq!(
+            (item.icon.as_str(), item.craftable.as_ref().unwrap().category.as_str()),
+            ("%NOT_FOUND%", "Crimson Amulet")
+        );
+        assert!(
+            d.trade_item_by_ref(&TradeItemQuery { name: Some("Not Listed"), ..Default::default() }, false).is_none()
+        );
     }
 
     /// `specs/data/dataLoader.test.ts`

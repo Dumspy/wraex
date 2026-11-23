@@ -189,13 +189,17 @@ In order, each step done when its fixtures pass (for each game):
    (`core::data`, `poe1::data`, `poe2::data`): every language loads, every
    ndjson line round-trips through the typed schema, and the in-memory indexes
    hold the same rows as the generated `*.index.bin` (`--ignored` tests, run by
-   `check:fixtures` and CI). Deferred to the modules that need them: PoE2
-   `TRADE_ITEM_BY_REF` (needs `meta.ts`), `item-drop.json`, `patrons.json`.
+   `check:fixtures` and CI). Deferred to the modules that need them:
+   `item-drop.json`, `patrons.json`.
 2. `parser/modifiers.ts`, `stat-translations.ts`, `advanced-mod-desc.ts`
 3. `parser/Parser.ts` (`parseClipboard`), `calc-q20.ts`, `magic-name.ts`.
    **PoE1 done** (`poe1::parser`, with `core::js` and `core::js_regex` for
    JavaScript number and regex semantics): `parsed.json` matches for all 32
-   PoE1 cases. Steps 2 and 3 are checked together, since the fixtures record
+   PoE1 cases. **PoE2 done** (`poe2::parser`, incl. `augment-builder.ts` and
+   rune detection): all 30 PoE2 cases match. Shared helpers moved to
+   `core::parse`. Not yet: filling empty sockets from `savedAugments`
+   (`useAugment`, needs `calc-base.ts`), which the harness's default config
+   never reaches. Steps 2 and 3 are checked together, since the fixtures record
    whole items. English only (see Languages above).
 4. `price-check/filters` (incl. `pseudo`) → default filter generation
 5. `price-check/trade` → trade API request building (and bulk exchange)
