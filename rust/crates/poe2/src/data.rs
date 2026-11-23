@@ -545,6 +545,11 @@ impl Data {
         self.client_strings.regex(key).unwrap_or_else(|| panic!("client string {key} is not a regex"))
     }
 
+    /// `CLIENT_STRINGS[key]` as a list.
+    pub fn list(&self, key: &str) -> &[String] {
+        self.client_strings.list(key).unwrap_or_else(|| panic!("client string {key} is not a list"))
+    }
+
     /// `CLIENT_STRINGS_REF[key]` (English) as text.
     pub fn s_ref(&self, key: &str) -> &str {
         self.client_strings_ref.text(key).unwrap_or_else(|| panic!("client string {key} is not text"))
