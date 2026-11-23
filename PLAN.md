@@ -194,14 +194,19 @@ In order, each step done when its fixtures pass (for each game):
 2. `parser/modifiers.ts`, `stat-translations.ts`, `advanced-mod-desc.ts`
 3. `parser/Parser.ts` (`parseClipboard`), `calc-q20.ts`, `magic-name.ts`.
    **PoE1 done** (`poe1::parser`, with `core::js` and `core::js_regex` for
-   JavaScript number and regex semantics): `parsed.json` matches for all 32
-   PoE1 cases. **PoE2 done** (`poe2::parser`, incl. `augment-builder.ts` and
+   JavaScript number and regex semantics): `parsed.json` matches for every
+   PoE1 case. **PoE2 done** (`poe2::parser`, incl. `augment-builder.ts` and
    rune detection): all 30 PoE2 cases match. Shared helpers moved to
    `core::parse`. Not yet: filling empty sockets from `savedAugments`
    (`useAugment`, needs `calc-base.ts`), which the harness's default config
    never reaches. Steps 2 and 3 are checked together, since the fixtures record
    whole items. English only (see Languages above).
-4. `price-check/filters` (incl. `pseudo`) → default filter generation
+4. `price-check/filters` (incl. `pseudo`) → default filter generation.
+   **PoE1 done** (`poe1::filters`, helpers shared with PoE2 in `core::filters`):
+   `presets.json` matches for all 40 parsed PoE1 cases, ten of them added for
+   filter branches (logbooks, mercenaries, Atzoatl, Mirrored Tablet, timeless
+   jewels, anointments, ...). Where the reference throws or asserts a missing
+   field with `!`, `createPresets` returns a `FilterError`.
 5. `price-check/trade` → trade API request building (and bulk exchange)
 6. Map-check and item-check logic
 

@@ -242,7 +242,7 @@ fn find_and_resolve_translation(
 }
 
 /// `_resolveTranslation`: picks (or merges) the stat of a group the text means.
-fn resolve_translation(
+pub(crate) fn resolve_translation(
     group: StatGroup,
     match_str: &str,
     mod_type: ModifierType,

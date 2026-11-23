@@ -6,6 +6,7 @@
 //! `PLAN.md`, phase 3).
 
 pub mod data;
+pub mod filters;
 pub mod js;
 pub mod js_regex;
 pub mod parse;
