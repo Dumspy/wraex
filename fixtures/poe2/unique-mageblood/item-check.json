@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Belts%0ARarity%3A%20Unique%0AMageblood%0AUtility%20Belt%0A--------%0ARequires%3A%20Level%2070%0A--------%0AItem%20Level%3A%2082%0A--------%0A%7B%20Implicit%20Modifier%20%7D%0A20%25%20of%20Flask%20Recovery%20applied%20Instantly%0A%7B%20Implicit%20Modifier%20%E2%80%94%20Charm%20%7D%0AHas%203(1-3)%20Charm%20Slots%0A--------%0A%7B%20Unique%20Modifier%20%7D%0ALegacy%20of%20Topaz(Amethyst-Topaz)%20%E2%80%94%20Unscalable%20Value%0A%7B%20Unique%20Modifier%20%7D%0ALegacy%20of%20Topaz(Amethyst-Topaz)%20%E2%80%94%20Unscalable%20Value%0A%7B%20Unique%20Modifier%20%7D%0ALegacy%20of%20Gold(Amethyst-Topaz)%20%E2%80%94%20Unscalable%20Value%0A%7B%20Unique%20Modifier%20%7D%0ALegacy%20of%20Ruby(Amethyst-Topaz)%20%E2%80%94%20Unscalable%20Value%0A%7B%20Unique%20Modifier%20%7D%0AAll%20Mage's%20Legacies%20have%2040(25-50)%25%20increased%20effect%20per%20duplicate%20Mage's%20Legacy%20you%20have%0A--------%0ARivers%20of%20power%20course%20through%20your%20veins.%0A",
+  "poedb": "https://poe2db.tw/us/Mageblood",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Mageblood\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Mageblood"
+}

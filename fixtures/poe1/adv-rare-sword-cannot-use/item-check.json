@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20One%20Hand%20Swords%0ARarity%3A%20Rare%0AYou%20cannot%20use%20this%20item.%20Its%20stats%20will%20be%20ignored%0A--------%0AHavoc%20Bite%0AJewelled%20Foil%0A--------%0AOne%20Hand%20Sword%0APhysical%20Damage%3A%2061-110%20(augmented)%0AElemental%20Damage%3A%2010-20%20(augmented)%2C%203-45%20(augmented)%0ACritical%20Strike%20Chance%3A%205.50%25%0AAttacks%20per%20Second%3A%201.60%0AWeapon%20Range%3A%201.1%20metres%0A--------%0ARequirements%3A%0ALevel%3A%2068%0ADex%3A%20212%0A--------%0ASockets%3A%20R-G-B%20%0A--------%0AItem%20Level%3A%2084%0A--------%0AAllocates%20Ruthless%20(enchant)%0A--------%0A%7B%20Implicit%20Modifier%20%E2%80%94%20Damage%2C%20Critical%20%7D%0A%2B25%25%20to%20Global%20Critical%20Strike%20Multiplier%0A--------%0A%7B%20Prefix%20Modifier%20%22Tyrannical%22%20(Tier%3A%202)%20%E2%80%94%20Damage%2C%20Physical%2C%20Attack%20%7D%0A155(155-169)%25%20increased%20Physical%20Damage%0A%7B%20Prefix%20Modifier%20%22Smoldering%22%20(Tier%3A%206)%20%E2%80%94%20Damage%2C%20Elemental%2C%20Fire%2C%20Attack%20%7D%0AAdds%2010(9-12)%20to%2020(19-22)%20Fire%20Damage%0A%7B%20Prefix%20Modifier%20%22Shocking%22%20(Tier%3A%204)%20%E2%80%94%20Damage%2C%20Elemental%2C%20Lightning%2C%20Attack%20%7D%0AAdds%203(2-5)%20to%2045(41-47)%20Lightning%20Damage%0A%7B%20Suffix%20Modifier%20%22of%20Venom%22%20(Tier%3A%201)%20%E2%80%94%20Damage%2C%20Chaos%2C%20Ailment%20%7D%0A20(16-20)%25%20chance%20to%20Poison%20on%20Hit%0A%7B%20Master%20Crafted%20Suffix%20Modifier%20%22of%20Craft%22%20(Rank%3A%202)%20%E2%80%94%20Attack%2C%20Speed%20%7D%0A12(10-12)%25%20increased%20Attack%20Speed%0A%7B%20Unique%20Modifier%20%7D%0ACast%20Level%2020%20Fire%20Burst%20on%20Hit%0A",
+  "poedb": "https://poedb.tw/us/Jewelled_Foil",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Jewelled Foil\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Jewelled Foil"
+}

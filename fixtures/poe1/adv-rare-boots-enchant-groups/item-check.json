@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Boots%0ARarity%3A%20Rare%0AGloom%20Track%0ATwo-Toned%20Boots%0A--------%0AArmour%3A%20120%0AEnergy%20Shield%3A%2024%0A--------%0ARequirements%3A%0ALevel%3A%2070%0A--------%0AItem%20Level%3A%2084%0A--------%0AAdds%2014%20to%2018%20Fire%20Damage%20if%20you've%20Killed%20Recently%20(enchant)%0A--------%0A%2B20%25%20to%20Fire%20Resistance%20(scourge)%0A--------%0A%7B%20Implicit%20Modifier%20%E2%80%94%20Elemental%2C%20Fire%2C%20Cold%2C%20Resistance%20%7D%0A%2B12(8-12)%25%20to%20Fire%20and%20Cold%20Resistances%0A--------%0A%7B%20Prefix%20Modifier%20%22Fecund%22%20(Tier%3A%202)%20%E2%80%94%20Life%20%7D%0A%2B80(80-89)%20to%20maximum%20Life%0A%7B%20Suffix%20Modifier%20%22of%20Vulnerability%22%20%E2%80%94%20Curse%20%7D%0ACurse%20Enemies%20with%20Vulnerability%20on%20Hit%0A%7B%20Suffix%20Modifier%20%22of%20the%20Wall%22%20%E2%80%94%20Block%20%7D%0A%2B5%25%20Chance%20to%20Block%20Spell%20Damage%0A%7B%20Suffix%20Modifier%20%22of%20Nonsense%22%20%E2%80%94%20Nonsense%20%7D%0AThis%20line%20matches%20no%20stat%20at%20all%0A--------%0ATwice%20Corrupted%0A",
+  "poedb": "https://poedb.tw/us/Two-Toned_Boots",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Two-Toned Boots\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Two-Toned Boots"
+}

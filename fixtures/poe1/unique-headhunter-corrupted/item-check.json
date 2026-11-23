@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Belts%0ARarity%3A%20Unique%0AHeadhunter%0ALeather%20Belt%0A--------%0ARequirements%3A%0ALevel%3A%2040%0A--------%0AItem%20Level%3A%2084%0A--------%0A%2B33%20to%20maximum%20Life%20(implicit)%0A--------%0A%2B48%20to%20Strength%0A%2B51%20to%20Dexterity%0A%2B56%20to%20maximum%20Life%0A21%25%20increased%20Damage%20with%20Hits%20against%20Rare%20monsters%0AWhen%20you%20Kill%20a%20Rare%20Monster%2C%20you%20gain%20its%20Modifiers%20for%2060%20seconds%0A--------%0A%22A%20man's%20soul%20rules%20from%20a%20cavern%20of%20bone%2C%20learns%20and%0Ajudges%20through%20flesh-born%20windows.%20The%20heart%20is%20meat.%0AThe%20head%20is%20where%20the%20Man%20is.%22%0A-%20Lavianga%2C%20Advisor%20to%20Kaom%0A--------%0ACorrupted%0A",
+  "poedb": "https://poedb.tw/us/Headhunter",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Headhunter\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Headhunter"
+}

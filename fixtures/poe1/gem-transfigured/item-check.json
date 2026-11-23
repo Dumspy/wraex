@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Skill%20Gems%0ARarity%3A%20Gem%0AKinetic%20Blast%20of%20Clustering%0A--------%0AProjectile%2C%20Spell%2C%20AoE%0ALevel%3A%2020%20(Max)%0ACost%3A%2013%20Mana%0ACast%20Time%3A%201.00%20sec%0AQuality%3A%20%2B20%25%20(augmented)%0A--------%0ARequirements%3A%0ALevel%3A%2070%0AInt%3A%20155%0A--------%0AExperience%3A%201%2F1%0A--------%0APlace%20into%20an%20item%20socket%20of%20the%20right%20colour%20to%20gain%20this%20skill.%20Right%20click%20to%20remove%20from%20a%20socket.%0A",
+  "poedb": "https://poedb.tw/us/Kinetic_Blast_of_Clustering",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Kinetic Blast of Clustering\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Kinetic Blast of Clustering"
+}

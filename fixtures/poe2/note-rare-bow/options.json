@@ -1,0 +1,31 @@
+{
+  "config": {
+    "language": "en",
+    "preferredTradeSite": "default",
+    "realm": "pc-ggg",
+    "widgets": [
+      {
+        "alwaysShowTier": false,
+        "apiLatencySeconds": 2,
+        "coreCurrency": "exalted",
+        "savedAugments": {},
+        "searchStatRange": 10,
+        "wmType": "price-check"
+      },
+      {
+        "samePricedType": "both",
+        "wmType": "item-check"
+      }
+    ]
+  },
+  "have": [],
+  "lang": "en",
+  "options": {
+    "activateStockFilter": false,
+    "collapseListings": "api",
+    "defaultAllSelected": false,
+    "league": "Standard",
+    "searchStatRange": 10,
+    "useEn": false
+  }
+}

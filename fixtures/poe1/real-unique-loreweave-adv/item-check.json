@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Body%20Armours%0ARarity%3A%20Unique%0ALoreweave%0AElegant%20Ringmail%0A--------%0AArmour%3A%20417%0AEnergy%20Shield%3A%20136%20(augmented)%0A--------%0ARequirements%3A%0ALevel%3A%2078%0AStr%3A%20114%0ADex%3A%20159%0AInt%3A%20105%0A--------%0ASockets%3A%20W-W-W-R-W-G%20%0A--------%0AItem%20Level%3A%2081%0A--------%0A%7B%20Unique%20Modifier%20%E2%80%94%20Elemental%2C%20Chaos%2C%20Resistance%20%7D%0AYour%20Maximum%20Resistances%20are%2078(76-78)%25%20%E2%80%94%20Unscalable%20Value%0A%7B%20Unique%20Modifier%20%E2%80%94%20Attribute%20%7D%0A%2B16(8-24)%20to%20all%20Attributes%0A(Attributes%20are%20Strength%2C%20Dexterity%2C%20and%20Intelligence)%0A%7B%20Unique%20Modifier%20%E2%80%94%20Life%20%7D%0A%2B29(20-60)%20to%20maximum%20Life%0A%7B%20Unique%20Modifier%20%E2%80%94%20Mana%20%7D%0A%2B28(20-50)%20to%20maximum%20Mana%0A%7B%20Unique%20Modifier%20%E2%80%94%20Drop%20%7D%0A%2B19(6-30)%25%20to%20Item%20Rarity%0A%7B%20Unique%20Modifier%20%E2%80%94%20Defences%2C%20Energy%20Shield%20%7D%0A%2B35(15-50)%20to%20maximum%20Energy%20Shield%0A%7B%20Unique%20Modifier%20%E2%80%94%20Critical%20%7D%0A56(20-60)%25%20increased%20Global%20Critical%20Strike%20Chance%0A%7B%20Unique%20Modifier%20%7D%0AHas%206%20Sockets%20%E2%80%94%20Unscalable%20Value%0A%7B%20Unique%20Modifier%20%E2%80%94%20Damage%2C%20Elemental%20%7D%0A26(15-50)%25%20increased%20Elemental%20Damage%0A%7B%20Unique%20Modifier%20%E2%80%94%20Damage%2C%20Physical%2C%20Attack%20%7D%0AAdds%204(4-10)%20to%2029(14-36)%20Physical%20Damage%20to%20Attacks%0A--------%0AWhen%20it%20comes%20to%20finding%20a%20use%20for%20surplus%2C%0Aa%20rich%20man%20has%20within%20himself%0Aboundless%20creativity.%0A",
+  "poedb": "https://poedb.tw/us/Loreweave",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Loreweave\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Loreweave"
+}

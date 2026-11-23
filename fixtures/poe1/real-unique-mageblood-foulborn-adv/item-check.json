@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Belts%0ARarity%3A%20Unique%0AFoulborn%20Mageblood%0AHeavy%20Belt%0A--------%0AQuality%20(Attribute%20Modifiers)%3A%20%2B20%25%20(augmented)%0A--------%0ARequirements%3A%0ALevel%3A%2044%0A--------%0AItem%20Level%3A%2080%0A--------%0A%7B%20Implicit%20Modifier%20%E2%80%94%20Attribute%20%20%E2%80%94%2020%25%20Increased%20%7D%0A%2B25(25-35)%20to%20Strength%0A--------%0A%7B%20Unique%20Modifier%20%E2%80%94%20Attribute%20%20%E2%80%94%2020%25%20Increased%20%7D%0A%2B48(30-50)%20to%20Dexterity%0A%7B%20Unique%20Modifier%20%E2%80%94%20Elemental%2C%20Fire%2C%20Resistance%20%7D%0A%2B15(15-25)%25%20to%20Fire%20Resistance%0A%7B%20Unique%20Modifier%20%E2%80%94%20Elemental%2C%20Cold%2C%20Resistance%20%7D%0A%2B22(15-25)%25%20to%20Cold%20Resistance%0A%7B%20Unique%20Modifier%20%7D%0AMagic%20Utility%20Flasks%20cannot%20be%20Used%0A%7B%20Unique%20Modifier%20%7D%0AMagic%20Utility%20Flask%20Effects%20cannot%20be%20removed%0A%7B%20Foulborn%20Unique%20Modifier%20%7D%0ARightmost%204(2-4)%20Magic%20Utility%20Flasks%20constantly%20apply%20their%20Flask%20Effects%20to%20you%0A--------%0ARivers%20of%20power%20course%20through%20your%20veins.%0A",
+  "poedb": "https://poedb.tw/us/Mageblood",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Mageblood\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Mageblood"
+}

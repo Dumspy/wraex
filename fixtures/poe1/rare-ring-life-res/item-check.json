@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Rings%0ARarity%3A%20Rare%0AStorm%20Loop%0ATwo-Stone%20Ring%0A--------%0ARequirements%3A%0ALevel%3A%2056%0A--------%0AItem%20Level%3A%2084%0A--------%0A%2B14%25%20to%20Fire%20and%20Lightning%20Resistances%20(implicit)%0A--------%0A%2B62%20to%20maximum%20Life%0A%2B41%25%20to%20Cold%20Resistance%0A%2B38%25%20to%20Lightning%20Resistance%0A%2B18%20to%20Dexterity%0AAdds%203%20to%207%20Physical%20Damage%20to%20Attacks%0A",
+  "poedb": "https://poedb.tw/us/Two-Stone_Ring",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Two-Stone Ring\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Two-Stone Ring"
+}

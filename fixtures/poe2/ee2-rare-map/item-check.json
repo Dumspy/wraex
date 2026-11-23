@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Waystones%0ARarity%3A%20Rare%0ADesolate%20Route%0AWaystone%20(Tier%2014)%0A--------%0ARevives%20Available%3A%202%20(augmented)%0APack%20Size%3A%20%2B34%25%20(augmented)%0ARare%20Monsters%3A%20%2B28%25%20(augmented)%0AWaystone%20Drop%20Chance%3A%20%2B75%25%20(augmented)%0A--------%0AItem%20Level%3A%2080%0A--------%0A%7B%20Prefix%20Modifier%20%22Shocking%22%20(Tier%3A%201)%20%7D%0AArea%20has%20patches%20of%20Shocked%20Ground%20%E2%80%94%20Unscalable%20Value%0A%7B%20Prefix%20Modifier%20%22Painful%22%20(Tier%3A%201)%20%7D%0A28(26-30)%25%20increased%20Monster%20Damage%0A%7B%20Suffix%20Modifier%20%22of%20Splitting%22%20(Tier%3A%202)%20%7D%0AMonsters%20fire%202%20additional%20Projectiles%0A%7B%20Suffix%20Modifier%20%22of%20Destruction%22%20(Tier%3A%201)%20%7D%0AMonsters%20have%20293(260-300)%25%20increased%20Critical%20Hit%20Chance%0A%2B26(26-30)%25%20to%20Monster%20Critical%20Damage%20Bonus%0A--------%0ACan%20be%20used%20in%20a%20Map%20Device%2C%20allowing%20you%20to%20enter%20a%20Map.%20Waystones%20can%20only%20be%20used%20once.%0A",
+  "poedb": "https://poe2db.tw/us/Waystone_(Tier_14)",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Waystone (Tier 14)\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Waystone (Tier 14)"
+}

@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Boots%0ARarity%3A%20Rare%0ATwo-Toned%20Boots%0A--------%0AArmour%3A%20109%0AEnergy%20Shield%3A%2022%0A--------%0ARequirements%3A%0ALevel%3A%2070%0AStr%3A%2062%0AInt%3A%2062%0A--------%0AItem%20Level%3A%2086%0A--------%0A%2B15%25%20to%20Fire%20and%20Cold%20Resistances%20(implicit)%0A--------%0AUnidentified%0A",
+  "poedb": "https://poedb.tw/us/Two-Toned_Boots",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Two-Toned Boots\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Two-Toned Boots"
+}

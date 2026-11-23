@@ -1,0 +1,29 @@
+[
+  {
+    "matcher": "Unique Boss deals #% increased Damage",
+    "roll": 25
+  },
+  {
+    "matcher": "Unique Boss has #% increased Attack and Cast Speed",
+    "roll": 30
+  },
+  {
+    "matcher": "#% increased Monster Movement Speed",
+    "roll": 28
+  },
+  {
+    "matcher": "#% increased Monster Attack Speed",
+    "roll": 35
+  },
+  {
+    "matcher": "#% increased Monster Cast Speed",
+    "roll": 37
+  },
+  {
+    "matcher": "Players have #% to all maximum Resistances",
+    "roll": -12
+  },
+  {
+    "matcher": "Players are Cursed with Vulnerability"
+  }
+]

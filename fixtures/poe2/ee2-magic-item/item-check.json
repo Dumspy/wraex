@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Two%20Hand%20Maces%0ARarity%3A%20Magic%0ACrackling%20Temple%20Maul%20of%20the%20Brute%0A--------%0APhysical%20Damage%3A%2035-72%0ALightning%20Damage%3A%201-50%20(lightning)%0ACritical%20Hit%20Chance%3A%205.00%25%0AAttacks%20per%20Second%3A%201.20%0A--------%0ARequires%3A%20Level%2028%2C%2057%20(augmented)%20Str%0A--------%0AItem%20Level%3A%2032%0A--------%0A%7B%20Prefix%20Modifier%20%22Crackling%22%20(Tier%3A%207)%20%E2%80%94%20Damage%2C%20Elemental%2C%20Lightning%2C%20Attack%20%7D%0AAdds%201(1-4)%20to%2050(46-66)%20Lightning%20Damage%0A%7B%20Suffix%20Modifier%20%22of%20the%20Brute%22%20(Tier%3A%208)%20%E2%80%94%20Attribute%20%7D%0A%2B8(5-8)%20to%20Strength%0A",
+  "poedb": "https://poe2db.tw/us/Two_Hand_Maces#ModifiersCalc",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Temple Maul\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Temple Maul"
+}

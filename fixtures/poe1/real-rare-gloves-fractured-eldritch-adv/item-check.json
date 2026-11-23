@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Gloves%0ARarity%3A%20Rare%0AGlyph%20Paw%0APaladin%20Gloves%0A--------%0AQuality%3A%20%2B20%25%20(augmented)%0AArmour%3A%20247%20(augmented)%0AEnergy%20Shield%3A%2049%20(augmented)%0A--------%0ARequirements%3A%0ALevel%3A%2084%0AStr%3A%20159%0AInt%3A%2080%0A--------%0ASockets%3A%20B-W-W-W%20%0A--------%0AItem%20Level%3A%2085%0A--------%0A%7B%20Searing%20Exarch%20Implicit%20Modifier%20(Exquisite)%20%E2%80%94%20Attack%20%7D%0ANon-Vaal%20Strike%20Skills%20target%202%20additional%20nearby%20Enemies%0A%7B%20Eater%20of%20Worlds%20Implicit%20Modifier%20(Grand)%20%E2%80%94%20Attack%20%7D%0A14(13-14)%25%20increased%20Global%20Accuracy%20Rating%0A--------%0A%7B%20Prefix%20Modifier%20%22Rotund%22%20(Tier%3A%203)%20%E2%80%94%20Life%20%7D%0A%2B93(85-99)%20to%20maximum%20Life%0A%7B%20Prefix%20Modifier%20%22Frozen%22%20(Tier%3A%201)%20%E2%80%94%20Damage%2C%20Elemental%2C%20Cold%2C%20Attack%20%7D%0AAdds%2011(10-13)%20to%2020(20-24)%20Cold%20Damage%20to%20Attacks%0A%7B%20Master%20Crafted%20Prefix%20Modifier%20%22Upgraded%22%20%E2%80%94%20Damage%20%7D%0A25(24-28)%25%20increased%20Damage%20during%20any%20Flask%20Effect%0A%7B%20Fractured%20Suffix%20Modifier%20%22of%20Lioneye%22%20(Tier%3A%201)%20%E2%80%94%20Attack%20%7D%0A%2B589(481-600)%20to%20Accuracy%20Rating%0A%7B%20Suffix%20Modifier%20%22of%20the%20Essence%22%20%E2%80%94%20Attack%2C%20Speed%20%7D%0A18(17-18)%25%20increased%20Attack%20Speed%0A%7B%20Suffix%20Modifier%20%22of%20Exile%22%20(Tier%3A%202)%20%E2%80%94%20Chaos%2C%20Resistance%20%7D%0A%2B26(26-30)%25%20to%20Chaos%20Resistance%0ASearing%20Exarch%20Item%0AEater%20of%20Worlds%20Item%0A--------%0AFractured%20Item%0A",
+  "poedb": "https://poedb.tw/us/Paladin_Gloves",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Paladin Gloves\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Paladin Gloves"
+}

@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Crossbows%0ARarity%3A%20Rare%0AStorm%20Core%0AGemini%20Crossbow%0A--------%0AQuality%3A%20%2B20%25%20(augmented)%0APhysical%20Damage%3A%2074-231%20(augmented)%0ALightning%20Damage%3A%2010-273%20(lightning)%0ACritical%20Hit%20Chance%3A%205.00%25%0AAttacks%20per%20Second%3A%201.89%20(augmented)%0AReload%20Time%3A%200.93%20(augmented)%0A--------%0ARequires%3A%20Level%2078%2C%2089%20Str%2C%2089%20Dex%0A--------%0ASockets%3A%20S%20S%0A--------%0AItem%20Level%3A%2080%0A--------%0A45%25%20increased%20Elemental%20Damage%20with%20Attacks%20(enchant)%0A--------%0A18%25%20increased%20Physical%20Damage%20(rune)%0AGain%2030%20Mana%20per%20enemy%20killed%20(rune)%0A--------%0A%7B%20Implicit%20Modifier%20%E2%80%94%20Attack%20%7D%0ALoads%20an%20additional%20bolt%0A--------%0AGrants%20Skill%3A%20Level%2018%20Cackling%20Companions%0A--------%0A%7B%20Fractured%20Prefix%20Modifier%20%22Electrocuting%22%20(Tier%3A%202)%20%E2%80%94%20Damage%2C%20Elemental%2C%20Lightning%2C%20Attack%20%7D%0AAdds%2010(1-16)%20to%20273(239-300)%20Lightning%20Damage%0A%7B%20Prefix%20Modifier%20%22Razor-sharp%22%20(Tier%3A%203)%20%E2%80%94%20Damage%2C%20Physical%2C%20Attack%20%7D%0AAdds%2024(23-35)%20to%2051(39-59)%20Physical%20Damage%0A%7B%20Prefix%20Modifier%20%22Overpowering%22%20(Tier%3A%202)%20%E2%80%94%20Damage%2C%20Elemental%2C%20Attack%20%7D%0A109(100-119)%25%20increased%20Elemental%20Damage%20with%20Attacks%0A%7B%20Suffix%20Modifier%20%22of%20the%20Drought%22%20(Tier%3A%201)%20%E2%80%94%20Mana%2C%20Physical%2C%20Attack%20%7D%0ALeeches%207.59(7-7.9)%25%20of%20Physical%20Damage%20as%20Mana%0A%7B%20Desecrated%20Suffix%20Modifier%20%22of%20Siphoning%22%20(Tier%3A%203)%20%E2%80%94%20Mana%20%7D%0AGain%2021(21-27)%20Mana%20per%20enemy%20killed%0A%7B%20Suffix%20Modifier%20%22of%20Acclaim%22%20(Tier%3A%201)%20%E2%80%94%20Attack%2C%20Speed%20%7D%0A18(17-19)%25%20increased%20Attack%20Speed%0A--------%0ACorrupted%0A--------%0AFractured%20Item%0A",
+  "poedb": "https://poe2db.tw/us/Crossbows#ModifiersCalc",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Gemini Crossbow\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Gemini Crossbow"
+}

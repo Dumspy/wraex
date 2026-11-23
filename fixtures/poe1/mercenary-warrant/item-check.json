@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Mercenary%20Warrants%0ARarity%3A%20Normal%0AMercenary%20Warrant%0A--------%0AMercenary%20Level%3A%2080%0ABuild%3A%20Kineticist%0A--------%0AElemental%20Weakness%0A--------%0ABarrage%0AFaster%20Attacks%20(Tier%3A%202)%0AMultiple%20Projectiles%20(Tier%3A%201)%0AElemental%20Damage%20with%20Attacks%20(Tier%3A%202)%0AAdded%20Cold%20(Tier%3A%202)%0APierce%20(Tier%3A%202)%0A--------%0AHaste%0A--------%0AItem%20Level%3A%2080%0A--------%0ARight%20click%20this%20item%20then%20left%20click%20a%20location%20on%20the%20ground%20to%20summon%20a%20Mercenary.%0A",
+  "poedb": "https://poedb.tw/us/Mercenary_Warrant",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Mercenary Warrant\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Mercenary Warrant"
+}

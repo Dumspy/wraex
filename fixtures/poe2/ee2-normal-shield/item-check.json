@@ -1,0 +1,19 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Shields%0ARarity%3A%20Normal%0APolished%20Targe%0A--------%0ABlock%20chance%3A%2025%25%0AArmour%3A%2071%0AEvasion%20Rating%3A%2064%0A--------%0ARequires%3A%20Level%2054%2C%2042%20Str%2C%2042%20Dex%0A--------%0AItem%20Level%3A%2054%0A--------%0AGrants%20Skill%3A%20Raise%20Shield%0A--------%0ANote%3A%20~b%2Fo%201%20aug%0A",
+  "poedb": "https://poe2db.tw/us/Shields_str_dex#ModifiersCalc",
+  "samePriced": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"~b/o 1 aug\"\"Polished Targe\""
+    }
+  },
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Polished Targe\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Polished Targe"
+}

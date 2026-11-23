@@ -93,3 +93,22 @@ export function byLang<T extends { inputs: { lang: string } }> (cases: T[]): Map
   }
   return out
 }
+
+/**
+ * What `action` opens (`window.open`) or sends (`Host.sendEvent`): the item
+ * check's actions return nothing. `window` exists only while one runs; defined
+ * for good, libraries take the harness for a browser and reach for `document`.
+ */
+export function captureOutput (action: () => void): unknown {
+  globalThis.__GOLDEN_OUTPUT__ = []
+  const g = globalThis as unknown as { window?: unknown }
+  g.window = { open: (url: string) => { globalThis.__GOLDEN_OUTPUT__.push(url) } }
+  try {
+    action()
+  } finally {
+    delete g.window
+  }
+  const out = globalThis.__GOLDEN_OUTPUT__
+  if (out.length > 1) throw new Error('golden: an action produced more than one output')
+  return out[0]
+}

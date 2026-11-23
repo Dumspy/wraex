@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Helmets%0ARarity%3A%20Normal%0ASuperior%20Divine%20Crown%0A--------%0AQuality%3A%20%2B9%25%20(augmented)%0AArmour%3A%20174%20(augmented)%0AEnergy%20Shield%3A%2060%20(augmented)%0A--------%0ARequires%3A%20Level%2075%2C%2067%20(augmented)%20Str%2C%2067%20(augmented)%20Int%0A--------%0AItem%20Level%3A%2081%0A",
+  "poedb": "https://poe2db.tw/us/Helmets_str_int#ModifiersCalc",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Divine Crown\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Divine Crown"
+}

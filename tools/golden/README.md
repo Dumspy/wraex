@@ -31,6 +31,8 @@ fixtures/<poe1|poe2>/<case>/
   parsed.json      parseClipboard(text)
   presets.json     createPresets(parsed, options) -> { presets, active }
   trade/<id>.json  { api, request } for each preset id
+  map-check.json   the map check's prepared stats (map-like items only)
+  item-check.json  what the item check's hotkey actions open or send
 ```
 
 If `parseClipboard` fails, `parsed.json` is `{ "error": "<key>" }` and there are no
@@ -45,7 +47,7 @@ neighbouring double. `case` is a stable slug (`unique-headhunter-corrupted`).
 
 ## Pipeline
 
-The reference code has three stages, not two:
+The reference code runs these stages:
 
 1. `init(lang)` (`renderer/src/assets/data/index.ts`) after the index files exist.
 2. `parseClipboard(text)` (`renderer/src/parser/Parser.ts`).
@@ -62,6 +64,18 @@ The reference code has three stages, not two:
      `have` is the first (optimistic) exchange search the app sends, unless the case
      sets it: PoE1 `TradeBulk.vue` (`['divine', 'chaos']`, minus the item itself),
      PoE2 `bulk-api.ts` (`['divine', 'exalted', 'chaos']`, minus the item itself).
+
+5. The item check, on the parsed item before the presets see it:
+   - `map-check.json`, only where `WidgetItemCheck.vue` `isMapLike` holds:
+     PoE1 `MapCheck.vue` `mapStats` (the explicit stats through
+     `prepareMapStat`), PoE2 `prepareMapStats(item)`. `isMapLike` and PoE1's
+     filter live in `.vue` files, so the harness repeats them.
+   - `item-check.json`: `openWiki`, `openPoedb`, `openCoE`, `findSimilarItems`
+     and (PoE2) `findSamePricedItems` from `web/item-check/hotkeyable-actions.ts`.
+     They return nothing; the harness records the URL each passes to
+     `window.open` (defined only while one runs) or the event it sends through
+     `Host.sendEvent`. PoE2's config gets `WidgetItemCheck.vue`'s default
+     item-check widget (`samePricedType: "both"`).
 
 Record the `active` preset and all presets, not just the active one. `presets.json`
 is written before any request is built, and the requests get the live preset objects

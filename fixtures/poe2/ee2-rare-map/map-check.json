@@ -1,0 +1,26 @@
+[
+  {
+    "matcher": "Area has patches of Shocked Ground",
+    "type": "explicit"
+  },
+  {
+    "matcher": "#% increased Monster Damage",
+    "roll": 28,
+    "type": "explicit"
+  },
+  {
+    "matcher": "Monsters fire # additional Projectiles",
+    "roll": 2,
+    "type": "explicit"
+  },
+  {
+    "matcher": "Monsters have #% increased Critical Hit Chance",
+    "roll": 293,
+    "type": "explicit"
+  },
+  {
+    "matcher": "#% to Monster Critical Damage Bonus",
+    "roll": 26,
+    "type": "explicit"
+  }
+]

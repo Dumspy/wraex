@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Skill%20Gems%0ARarity%3A%20Gem%0AVaal%20Grace%0A--------%0AAura%2C%20Vaal%2C%20Spell%2C%20AoE%2C%20Duration%0ALevel%3A%2020%20(Max)%0AQuality%3A%20%2B20%25%20(augmented)%0A--------%0ARequirements%3A%0ALevel%3A%2070%0ADex%3A%20155%0A--------%0ACasts%20an%20aura%20that%20grants%20evasion%20to%20you%20and%20your%20allies.%0A--------%0AExperience%3A%209569465%2F9569465%0A--------%0APlace%20into%20an%20item%20socket%20of%20the%20right%20colour%20to%20gain%20this%20skill.%20Right%20click%20to%20remove%20from%20a%20socket.%0A--------%0ACorrupted%0A",
+  "poedb": "https://poedb.tw/us/Vaal_Grace",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Vaal Grace\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Vaal Grace"
+}

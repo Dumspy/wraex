@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Stackable%20Currency%0ARarity%3A%20Currency%0ADeafening%20Essence%20of%20Greed%0A--------%0AStack%20Size%3A%202%2F9%0A--------%0AUpgrades%20a%20normal%20item%20to%20rare%20with%20one%20guaranteed%20property%0AProperties%20restricted%20to%20level%2082%20and%20below%0A--------%0ARight%20click%20this%20item%20then%20left%20click%20a%20normal%20item%20to%20apply%20it.%0AShift%20click%20to%20unstack.%0A",
+  "poedb": "https://poedb.tw/us/Deafening_Essence_of_Greed",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Deafening Essence of Greed\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Deafening Essence of Greed"
+}

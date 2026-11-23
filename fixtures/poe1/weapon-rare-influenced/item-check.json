@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Two%20Hand%20Swords%0ARarity%3A%20Rare%0AHavoc%20Edge%0AReaver%20Sword%0A--------%0ATwo%20Hand%20Sword%0APhysical%20Damage%3A%20152-317%20(augmented)%0ACritical%20Strike%20Chance%3A%205.00%25%0AAttacks%20per%20Second%3A%201.38%20(augmented)%0AWeapon%20Range%3A%201.3%20metres%0A--------%0ARequirements%3A%0ALevel%3A%2071%0AStr%3A%20113%0ADex%3A%20113%0A--------%0ASockets%3A%20R-R-G-R-R-B%20%0A--------%0AItem%20Level%3A%2085%0A--------%0A40%25%20increased%20Accuracy%20Rating%20(implicit)%0A--------%0A171%25%20increased%20Physical%20Damage%0AAdds%2012%20to%2024%20Physical%20Damage%0A15%25%20increased%20Attack%20Speed%0A%2B28%20to%20Strength%0A--------%0AShaper%20Item%0A--------%0AMirrored%0A",
+  "poedb": "https://poedb.tw/us/Reaver_Sword",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Reaver Sword\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Reaver Sword"
+}

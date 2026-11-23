@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Amulets%0ARarity%3A%20Rare%0ADoom%20Beads%0AOnyx%20Amulet%0A--------%0ARequirements%3A%0ALevel%3A%2060%0A--------%0AItem%20Level%3A%2084%0A--------%0AAllocates%20Acrimony%20(enchant)%0A--------%0A%7B%20Implicit%20Modifier%20%E2%80%94%20Attribute%20%7D%0A%2B14(10-16)%20to%20all%20Attributes%0A--------%0A%7B%20Prefix%20Modifier%20%22Virile%22%20(Tier%3A%203)%20%E2%80%94%20Life%20%7D%0A%2B72(70-79)%20to%20maximum%20Life%0A%7B%20Suffix%20Modifier%20%22of%20the%20Lion%22%20(Tier%3A%203)%20%E2%80%94%20Attribute%20%7D%0A%2B44(43-50)%20to%20Strength%0A%7B%20Suffix%20Modifier%20%22of%20the%20Volcano%22%20(Tier%3A%202)%20%E2%80%94%20Elemental%2C%20Fire%2C%20Resistance%20%7D%0A%2B44(42-45)%25%20to%20Fire%20Resistance%0A%7B%20Suffix%20Modifier%20%22of%20the%20Ice%22%20(Tier%3A%204)%20%E2%80%94%20Elemental%2C%20Cold%2C%20Resistance%20%7D%0A%2B33(30-35)%25%20to%20Cold%20Resistance%0A",
+  "poedb": "https://poedb.tw/us/Onyx_Amulet",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Onyx Amulet\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Onyx Amulet"
+}

@@ -1,18 +1,33 @@
 // PoE1 (ref/apt): the pipeline CheckedItem.vue runs for a price check.
 import { beforeAll, describe, it } from 'vitest'
 import { init } from '@/assets/data'
-import { parseClipboard } from '@/parser'
+import { ItemCategory, ItemRarity, parseClipboard, type ParsedItem } from '@/parser'
 import { createPresets } from '@/web/price-check/filters/create-presets'
 import { apiToSatisfySearch } from '@/web/price-check/trade/common'
 import { createTradeRequest } from '@/web/price-check/trade/pathofexile-trade'
 import { createTradeRequest as createBulkRequest } from '@/web/price-check/trade/pathofexile-bulk'
-import { byLang, canonical, loadCases, pruneFixtures, writeFixture } from './fixtures'
+import { prepareMapStat } from '@/web/map-check/prepare-map-stats'
+import { ModifierType } from '@/parser/modifiers'
+import { byLang, canonical, captureOutput, loadCases, pruneFixtures, writeFixture } from './fixtures'
+import * as itemCheck from '@/web/item-check/hotkeyable-actions'
 
 // TradeBulk.vue execSearch: the first exchange request a check sends.
 function optimisticHave (refName: string): string[] {
   if (refName === 'Chaos Orb') return ['divine']
   if (refName === 'Divine Orb') return ['chaos']
   return ['divine', 'chaos']
+}
+
+// WidgetItemCheck.vue isMapLike: the items the item check shows MapCheck for.
+function isMapLike (item: ParsedItem): boolean {
+  const { category, rarity, info: { refName } } = item
+  return (
+    (category === ItemCategory.Map && rarity !== ItemRarity.Unique) ||
+    category === ItemCategory.HeistContract ||
+    category === ItemCategory.HeistBlueprint ||
+    category === ItemCategory.Invitation ||
+    category === ItemCategory.Chart ||
+    refName === 'Expedition Logbook')
 }
 
 // The price-check widget defaults (PriceCheckWindow.vue) and AppConfig defaults.
@@ -59,6 +74,21 @@ for (const [lang, group] of byLang(cases)) {
         }
         const item = parsed.value
         files['parsed.json'] = canonical(item)
+
+        // The item check's hotkey actions: the URL each opens, the stash search it sends.
+        files['item-check.json'] = canonical({
+          wiki: captureOutput(() => itemCheck.openWiki(item)),
+          poedb: captureOutput(() => itemCheck.openPoedb(item)),
+          craftOfExile: captureOutput(() => itemCheck.openCoE(item)),
+          similar: captureOutput(() => itemCheck.findSimilarItems(item))
+        })
+
+        // MapCheck.vue mapStats, before anything else sees the item.
+        if (isMapLike(item)) {
+          files['map-check.json'] = canonical(item.statsByType
+            .filter(calc => calc.type === ModifierType.Explicit)
+            .map(calc => prepareMapStat(calc)))
+        }
 
         const presets = createPresets(item, c.inputs.options)
         // Serialised before the requests are built: like the app, they get the

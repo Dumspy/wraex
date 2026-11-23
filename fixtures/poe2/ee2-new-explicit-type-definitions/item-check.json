@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Amulets%0ARarity%3A%20Rare%0ABrood%20Locket%0AGold%20Amulet%0A--------%0ARequires%3A%20Level%2060%0A--------%0AItem%20Level%3A%2081%0A--------%0AAllocates%20Cooked%20(enchant)%0A--------%0A%7B%20Implicit%20Modifier%20%7D%0A18(12-20)%25%20increased%20Rarity%20of%20Items%20found%0A--------%0A%7B%20Prefix%20Modifier%20%22Lady's%22%20(Tier%3A%205)%20%7D%0A%2B30(30-33)%20to%20Spirit%0A%7B%20Prefix%20Modifier%20%22Gentian%22%20(Tier%3A%206)%20%E2%80%94%20Mana%20%7D%0A%2B90(90-104)%20to%20maximum%20Mana%0A%7B%20Prefix%20Modifier%20%22Incanter's%22%20(Tier%3A%201)%20%E2%80%94%20Damage%2C%20Caster%20%7D%0A29(27-30)%25%20increased%20Spell%20Damage%0A%7B%20Fractured%20Suffix%20Modifier%20%22of%20the%20Ice%22%20(Tier%3A%202)%20%E2%80%94%20Elemental%2C%20Cold%2C%20Resistance%20%7D%0A%2B37(36-40)%25%20to%20Cold%20Resistance%0A%7B%20Suffix%20Modifier%20%22of%20the%20Sorcerer%22%20(Tier%3A%201)%20%E2%80%94%20Caster%2C%20Gem%20%7D%0A%2B3%20to%20Level%20of%20all%20Spell%20Skills%0A%7B%20Desecrated%20Suffix%20Modifier%20%22of%20Amanamu%22%20(Tier%3A%201)%20%E2%80%94%20Elemental%2C%20Fire%2C%20Chaos%2C%20Resistance%20%7D%0A%2B17(13-17)%25%20to%20Fire%20and%20Chaos%20Resistances%0A--------%0AFractured%20Item%0A",
+  "poedb": "https://poe2db.tw/us/Amulets#ModifiersCalc",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Gold Amulet\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Gold Amulet"
+}

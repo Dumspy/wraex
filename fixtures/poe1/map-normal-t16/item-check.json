@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Maps%0ARarity%3A%20Normal%0AMap%20(Tier%2016)%0A--------%0AMap%20Tier%3A%2016%0A--------%0AItem%20Level%3A%2083%0A--------%0ATravel%20to%20this%20Map%20by%20using%20it%20in%20a%20personal%20Map%20Device.%20Maps%20can%20only%20be%20used%20once.%0A",
+  "poedb": "https://poedb.tw/us/Map",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Map\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Map"
+}

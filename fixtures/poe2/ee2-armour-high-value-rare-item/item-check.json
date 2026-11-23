@@ -1,0 +1,19 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Body%20Armours%0ARarity%3A%20Rare%0AHate%20Pelt%0ASoldier%20Cuirass%0A--------%0AQuality%3A%20%2B20%25%20(augmented)%0AArmour%3A%203075%20(augmented)%0A--------%0ARequires%3A%20Level%2065%2C%20121%20(unmet)%20Str%0A--------%0ASockets%3A%20S%20S%20S%0A--------%0AItem%20Level%3A%2080%0A--------%0A54%25%20increased%20Armour%2C%20Evasion%20and%20Energy%20Shield%20(rune)%0A--------%0A%7B%20Prefix%20Modifier%20%22Impenetrable%22%20(Tier%3A%201)%20%E2%80%94%20Defences%20%7D%0A103(101-110)%25%20increased%20Armour%0A%7B%20Prefix%20Modifier%20%22Hardened%22%20(Tier%3A%201)%20%E2%80%94%20Defences%20%7D%0A%2B70(70-86)%20to%20Armour%0A41(39-42)%25%20increased%20Armour%0A%7B%20Prefix%20Modifier%20%22Unmoving%22%20(Tier%3A%202)%20%E2%80%94%20Defences%20%7D%0A%2B256(226-256)%20to%20Armour%20(desecrated)%0A%7B%20Suffix%20Modifier%20%22of%20the%20Titan%22%20(Tier%3A%201)%20%E2%80%94%20Attribute%20%7D%0A%2B32(31-33)%20to%20Strength%0A%7B%20Suffix%20Modifier%20%22of%20Allaying%22%20(Tier%3A%203)%20%E2%80%94%20Physical%2C%20Ailment%20%7D%0A48(50-46)%25%20reduced%20Duration%20of%20Bleeding%20on%20You%0A%7B%20Suffix%20Modifier%20%22of%20the%20Essence%22%20(Tier%3A%201)%20%7D%0AHits%20against%20you%20have%2044(40-50)%25%20reduced%20Critical%20Damage%20Bonus%0A--------%0ANote%3A%20~b%2Fo%2010%20divine%0A",
+  "poedb": "https://poe2db.tw/us/Body_Armours_str#ModifiersCalc",
+  "samePriced": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"~b/o 10 divine\"\"Soldier Cuirass\""
+    }
+  },
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Soldier Cuirass\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Soldier Cuirass"
+}

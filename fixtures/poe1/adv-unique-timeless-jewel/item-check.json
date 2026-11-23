@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Jewels%0ARarity%3A%20Unique%0ALethal%20Pride%0ATimeless%20Jewel%0A--------%0ALimited%20to%3A%201%20Historic%0ARadius%3A%20Large%0A--------%0AItem%20Level%3A%2084%0A--------%0A%7B%20Unique%20Modifier%20%7D%0ACommanded%20leadership%20over%2012345(10000-18000)%20warriors%20under%20Kaom%0APassives%20in%20radius%20are%20Conquered%20by%20the%20Karui%0A%7B%20Unique%20Modifier%20%7D%0AHistoric%0A--------%0AThey%20believed%20that%20power%20was%20a%20gift%0Afrom%20the%20gods%2C%20and%20that%20only%20the%20strong%0Awere%20worthy%20of%20it.%0A--------%0APlace%20into%20an%20allocated%20Jewel%20Socket%20on%20the%20Passive%20Skill%20Tree.%20Right%20click%20to%20remove%20from%20the%20Socket.%0A",
+  "poedb": "https://poedb.tw/us/Lethal_Pride",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Lethal Pride\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Lethal Pride"
+}

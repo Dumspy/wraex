@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Shields%0ARarity%3A%20Rare%0AWrath%20Tower%0AChampion%20Kite%20Shield%0A--------%0AQuality%3A%20%2B20%25%20(augmented)%0AChance%20to%20Block%3A%2026%25%0AArmour%3A%201024%20(augmented)%0AEnergy%20Shield%3A%20229%20(augmented)%0A--------%0ARequirements%3A%0ALevel%3A%2072%0AStr%3A%2085%0ADex%3A%20114%0AInt%3A%20100%0A--------%0ASockets%3A%20W-B-W%20%0A--------%0AItem%20Level%3A%2086%0A--------%0A%7B%20Fractured%20Prefix%20Modifier%20%22Saintly%22%20(Tier%3A%201)%20%E2%80%94%20Defences%2C%20Armour%2C%20Energy%20Shield%20%7D%0A%2B290(221-300)%20to%20Armour%0A%2B69(61-72)%20to%20maximum%20Energy%20Shield%0A%7B%20Prefix%20Modifier%20%22Athlete's%22%20(Tier%3A%203)%20%E2%80%94%20Life%20%7D%0A%2B118(115-129)%20to%20maximum%20Life%0A%7B%20Master%20Crafted%20Prefix%20Modifier%20%22Upgraded%22%20(Rank%3A%203)%20%E2%80%94%20Defences%2C%20Armour%2C%20Energy%20Shield%20%7D%0A69(56-74)%25%20increased%20Armour%20and%20Energy%20Shield%0A%7B%20Suffix%20Modifier%20%22of%20Bameth%22%20(Tier%3A%201)%20%E2%80%94%20Chaos%2C%20Resistance%20%7D%0A%2B35(31-35)%25%20to%20Chaos%20Resistance%0A%7B%20Suffix%20Modifier%20%22of%20Interference%22%20(Tier%3A%202)%20%E2%80%94%20Damage%2C%20Critical%20%7D%0AYou%20take%2044(41-50)%25%20reduced%20Extra%20Damage%20from%20Critical%20Strikes%0A%7B%20Suffix%20Modifier%20%22of%20the%20Conservator%22%20(Tier%3A%201)%20%E2%80%94%20Physical%20%7D%0A8%25%20additional%20Physical%20Damage%20Reduction%0A--------%0AFractured%20Item%0A",
+  "poedb": "https://poedb.tw/us/Champion_Kite_Shield",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Champion Kite Shield\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Champion Kite Shield"
+}

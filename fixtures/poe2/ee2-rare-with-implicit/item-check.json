@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Rings%0ARarity%3A%20Rare%0ARune%20Loop%0APrismatic%20Ring%0A--------%0ARequires%3A%20Level%2045%0A--------%0AItem%20Level%3A%2079%0A--------%0A%7B%20Implicit%20Modifier%20%E2%80%94%20Elemental%2C%20Fire%2C%20Cold%2C%20Lightning%2C%20Resistance%20%7D%0A%2B8(7-10)%25%20to%20all%20Elemental%20Resistances%0A--------%0A%7B%20Prefix%20Modifier%20%22Vaporous%22%20(Tier%3A%203)%20%E2%80%94%20Defences%20%7D%0A%2B143(124-151)%20to%20Evasion%20Rating%0A%7B%20Suffix%20Modifier%20%22of%20the%20Wrestler%22%20(Tier%3A%207)%20%E2%80%94%20Attribute%20%7D%0A%2B12(9-12)%20to%20Strength%0A%7B%20Suffix%20Modifier%20%22of%20Warmth%22%20(Tier%3A%203)%20%E2%80%94%20Mana%20%7D%0A8(8-12)%25%20increased%20Mana%20Regeneration%20Rate%0A5%25%20increased%20Light%20Radius%0A%7B%20Suffix%20Modifier%20%22of%20the%20Penguin%22%20(Tier%3A%207)%20%E2%80%94%20Elemental%2C%20Cold%2C%20Resistance%20%7D%0A%2B15(11-15)%25%20to%20Cold%20Resistance%0A",
+  "poedb": "https://poe2db.tw/us/Rings#ModifiersCalc",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Prismatic Ring\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Prismatic Ring"
+}

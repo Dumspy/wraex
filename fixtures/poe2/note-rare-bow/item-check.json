@@ -1,0 +1,19 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Bows%0ARarity%3A%20Rare%0AOblivion%20Strike%0ARider%20Bow%0A--------%0APhysical%20Damage%3A%2036-61%0AElemental%20Damage%3A%2027-36%20(fire)%2C%209-13%20(cold)%2C%205-82%20(lightning)%0ACritical%20Hit%20Chance%3A%205.00%25%0AAttacks%20per%20Second%3A%201.20%0A--------%0ARequires%3A%20Level%2051%2C%20103%20(augmented)%20Dex%0A--------%0AItem%20Level%3A%2080%0A--------%0A%7B%20Prefix%20Modifier%20%22Shocking%22%20(Tier%3A%204)%20%E2%80%94%20Damage%2C%20Elemental%2C%20Lightning%2C%20Attack%20%7D%0AAdds%205(1-5)%20to%2082(62-89)%20Lightning%20Damage%0A%7B%20Prefix%20Modifier%20%22Scorching%22%20(Tier%3A%205)%20%E2%80%94%20Damage%2C%20Elemental%2C%20Fire%2C%20Attack%20%7D%0AAdds%2027(20-30)%20to%2036(31-46)%20Fire%20Damage%0A%7B%20Prefix%20Modifier%20%22Icy%22%20(Tier%3A%208)%20%E2%80%94%20Damage%2C%20Elemental%2C%20Cold%2C%20Attack%20%7D%0AAdds%209(6-9)%20to%2013(10-15)%20Cold%20Damage%0A%7B%20Suffix%20Modifier%20%22of%20Radiance%22%20(Tier%3A%201)%20%E2%80%94%20Attack%20%7D%0A%2B57(41-60)%20to%20Accuracy%20Rating%0A15%25%20increased%20Light%20Radius%0A--------%0ANote%3A%20~price%205%20exalted%0A",
+  "poedb": "https://poe2db.tw/us/Bows#ModifiersCalc",
+  "samePriced": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"~price 5 exalted\"\"Rider Bow\""
+    }
+  },
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Rider Bow\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Rider Bow"
+}

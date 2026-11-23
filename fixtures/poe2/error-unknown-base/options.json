@@ -11,6 +11,10 @@
         "savedAugments": {},
         "searchStatRange": 10,
         "wmType": "price-check"
+      },
+      {
+        "samePricedType": "both",
+        "wmType": "item-check"
       }
     ]
   },

@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Uncut%20Skill%20Gems%0ARarity%3A%20Currency%0AUncut%20Skill%20Gem%20(Level%2019)%0A--------%0ACreates%20a%20Skill%20Gem%20or%20Level%20an%20existing%20gem%20to%20level%2019%0A--------%0ARight%20Click%20to%20engrave%20a%20Skill%20Gem.%0A",
+  "poedb": "https://poe2db.tw/us/Uncut_Skill_Gem_(Level_19)",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Uncut Skill Gem (Level 19)\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Uncut Skill Gem (Level 19)"
+}

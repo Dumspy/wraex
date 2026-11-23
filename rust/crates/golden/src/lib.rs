@@ -29,6 +29,10 @@ pub struct Case {
     pub parsed: Value,
     /// `presets.json`, absent when parsing failed.
     pub presets: Option<Value>,
+    /// `map-check.json`: the map check's prepared stats, for map-like items.
+    pub map_check: Option<Value>,
+    /// `item-check.json`: what the item check's hotkey actions open or send.
+    pub item_check: Option<Value>,
     /// `trade/<preset id>.json` as `(id, { api, request })`, sorted by id.
     pub trade: Vec<(String, Value)>,
 }
@@ -60,6 +64,8 @@ fn load(game: GameId, slug: String) -> Case {
     };
 
     let presets = dir.join("presets.json").exists().then(|| json("presets.json"));
+    let map_check = dir.join("map-check.json").exists().then(|| json("map-check.json"));
+    let item_check = dir.join("item-check.json").exists().then(|| json("item-check.json"));
     let mut trade = Vec::new();
     if let Ok(entries) = fs::read_dir(dir.join("trade")) {
         for entry in entries {
@@ -76,6 +82,8 @@ fn load(game: GameId, slug: String) -> Case {
         options: json("options.json"),
         parsed: json("parsed.json"),
         presets,
+        map_check,
+        item_check,
         trade,
         dir,
         slug,

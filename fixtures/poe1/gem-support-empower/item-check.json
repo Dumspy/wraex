@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Support%20Gems%0ARarity%3A%20Gem%0AEmpower%20Support%0A--------%0ASupport%0ALevel%3A%203%20(Max)%0A--------%0ARequirements%3A%0ALevel%3A%2072%0AStr%3A%2085%0ADex%3A%2085%0AInt%3A%2085%0A--------%0ASupports%20any%20skill%20gem.%20Once%20this%20gem%20reaches%20level%202%20or%20above%2C%20will%20raise%20the%20level%20of%20supported%20gems.%20Cannot%20support%20skills%20that%20don't%20come%20from%20gems.%0A--------%0AExperience%3A%201%2F1%0A--------%0AThis%20is%20a%20Support%20Gem.%20It%20does%20not%20grant%20a%20bonus%20to%20your%20character%2C%20but%20to%20skills%20in%20sockets%20connected%20to%20it.%20Place%20into%20an%20item%20socket%20connected%20to%20a%20socket%20containing%20the%20Skill%20Gem%20you%20wish%20to%20augment.%20Right%20click%20to%20remove%20from%20a%20socket.%0A",
+  "poedb": "https://poedb.tw/us/Empower_Support",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Empower Support\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Empower Support"
+}

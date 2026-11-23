@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Foci%0ARarity%3A%20Unique%0AThe%20Eternal%20Spark%0ACrystal%20Focus%0A--------%0AEnergy%20Shield%3A%2044%20(augmented)%0A--------%0ARequires%3A%20Level%2026%2C%2043%20(augmented)%20Int%0A--------%0AItem%20Level%3A%2081%0A--------%0A%7B%20Unique%20Modifier%20%E2%80%94%20Defences%20%7D%0A56(50-70)%25%20increased%20Energy%20Shield%0A%7B%20Unique%20Modifier%20%E2%80%94%20Mana%20%7D%0A40%25%20increased%20Mana%20Regeneration%20Rate%20while%20stationary%0A%7B%20Unique%20Modifier%20%E2%80%94%20Elemental%2C%20Lightning%2C%20Resistance%20%7D%0A%2B26(20-30)%25%20to%20Lightning%20Resistance%0A%7B%20Unique%20Modifier%20%E2%80%94%20Elemental%2C%20Lightning%2C%20Resistance%20%7D%0A%2B5%25%20to%20Maximum%20Lightning%20Resistance%0A%7B%20Unique%20Modifier%20%E2%80%94%20Mana%20%7D%0A40%25%20increased%20Mana%20Regeneration%20Rate%0A--------%0AA%20flash%20of%20blue%2C%20a%20stormcloud's%20kiss%2C%0Aher%20motionless%20dance%20the%20pulse%20of%20bliss%0A",
+  "poedb": "https://poe2db.tw/us/The_Eternal_Spark",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"The Eternal Spark\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/The Eternal Spark"
+}

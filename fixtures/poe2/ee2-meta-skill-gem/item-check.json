@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Rarity%3A%20Gem%0AMirage%20Archer%0A--------%0ABuff%2C%20Persistent%2C%20Trigger%2C%20Duration%2C%20Meta%0ALevel%3A%2014%0AReservation%3A%2060%20Spirit%0A--------%0ARequires%3A%20Level%2058%2C%20103%20Dex%0ARequires%3A%20Spear%2C%20Bow%2C%20Crossbow%0A--------%0ASockets%3A%20G%20G%20G%20G%0A--------%0AWhile%20active%2C%20dodge%20rolling%20will%20create%20a%20Mirage%20that%20uses%20socketed%20ranged%20Attacks%20for%20a%20short%20duration%2C%20then%20vanish.%0A--------%0ASupport%0A--------%0AMirages%20deal%2030%25%20less%20Damage%0ASocketed%20Skills%20cannot%20consume%20Charges%0A--------%0AMirage%0A--------%0ACooldown%20Time%3A%2010.00s%0A--------%0AMirage%20duration%20is%205.7%20seconds%0A--------%0APlace%20one%20or%20more%20Skill%20Gems%20into%20this%20Meta%20Gem's%20sockets%20in%20the%20Skills%20Panel.%20The%20socketed%20Skills%20will%20be%20incorporated%20into%20the%20Meta%20Gem's%20effect.%0A",
+  "poedb": "https://poe2db.tw/us/Mirage_Archer",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Mirage Archer\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Mirage Archer"
+}

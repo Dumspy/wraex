@@ -1,0 +1,35 @@
+[
+  {
+    "matcher": "#% increased Monster Damage",
+    "roll": 30,
+    "type": "explicit"
+  },
+  {
+    "matcher": "Monsters are Armoured",
+    "type": "explicit"
+  },
+  {
+    "matcher": "Players are periodically Cursed with Temporal Chains",
+    "type": "explicit"
+  },
+  {
+    "matcher": "Monsters have #% increased Ailment Threshold",
+    "roll": 71,
+    "type": "explicit"
+  },
+  {
+    "matcher": "Monsters have #% increased Stun Threshold",
+    "roll": 72,
+    "type": "explicit"
+  },
+  {
+    "matcher": "Players gain #% reduced Flask Charges",
+    "roll": 33,
+    "type": "explicit"
+  },
+  {
+    "matcher": "Monsters Break Armour equal to #% of Physical Damage dealt",
+    "roll": 36,
+    "type": "explicit"
+  }
+]

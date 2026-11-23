@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Maps%0ARarity%3A%20Rare%0ABleak%20Instigation%0ABlighted%20Map%20(Tier%2016)%0A--------%0AMap%20Area%3A%20Desert%0AAtlas%20Drops%3A%20%2B46%25%20(augmented)%0AItem%20Rarity%3A%20%2B46%25%20(augmented)%0AMonster%20Pack%20Size%3A%20%2B18%25%20(augmented)%0A--------%0AItem%20Level%3A%2083%0A--------%0AMonster%20Level%3A%2083%0A--------%0A%7B%20Implicit%20Modifier%20%7D%0AArea%20is%20infested%20with%20Fungal%20Growths%0ACan%20be%20Anointed%20up%20to%203%20times%20%E2%80%94%20Unscalable%20Value%0ANatural%20inhabitants%20of%20this%20area%20have%20been%20removed%20%E2%80%94%20Unscalable%20Value%0A%7B%20Corruption%20Implicit%20Modifier%20%7D%0A%2B18(10-20)%25%20Item%20Rarity%0A--------%0A%7B%20Prefix%20Modifier%20%22Emanant%22%20(Tier%3A%201)%20%7D%0AArea%20is%20inhabited%20by%20ranged%20monsters%20%E2%80%94%20Unscalable%20Value%0A%7B%20Prefix%20Modifier%20%22Impervious%22%20(Tier%3A%201)%20%E2%80%94%20Physical%2C%20Chaos%2C%20Attack%2C%20Ailment%20%7D%0AMonsters%20have%20a%2050%25%20chance%20to%20avoid%20Poison%2C%20Impale%2C%20and%20Bleeding%0A%7B%20Suffix%20Modifier%20%22of%20Bloodlines%22%20(Tier%3A%201)%20%7D%0A20(20-30)%25%20increased%20Magic%20Monsters%0A%7B%20Rare-only%20Suffix%20Modifier%20%22of%20Unearthed%20Technology%22%20%7D%0AArea%20contains%20a%20buried%20Apex%20Sentinel%20%E2%80%94%20Unscalable%20Value%0A--------%0ATravel%20to%20a%20Map%20of%20this%20tier%20or%20lower%20by%20using%20this%20in%20a%20personal%20Map%20Device.%20Maps%20can%20only%20be%20used%20once.%20%0A--------%0ACorrupted%0A",
+  "poedb": "https://poedb.tw/us/Blighted_Map",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Blighted Map\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Blighted Map"
+}

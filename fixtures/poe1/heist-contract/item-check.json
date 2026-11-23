@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Contracts%0ARarity%3A%20Normal%0AContract%3A%20Bunker%0A--------%0AClient%3A%20Hjalmar%20the%20Seeker%0AHeist%20Target%3A%20Bloodbound%20Assegai%20(Moderate%20Value)%0AArea%20Level%3A%2083%0ARequires%20Brute%20Force%20(Level%203)%0A--------%0AItem%20Level%3A%2083%0A--------%0AGive%20this%20item%20to%20Faustus%2C%20the%20Fixer%20at%20the%20Heist%20Hideout%20to%20begin%20a%20Heist.%0A",
+  "poedb": "https://poedb.tw/us/Contract%3A_Bunker",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Contract: Bunker\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Contract: Bunker"
+}

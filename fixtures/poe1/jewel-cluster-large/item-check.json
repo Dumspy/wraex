@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Jewels%0ARarity%3A%20Magic%0AFearsome%20Large%20Cluster%20Jewel%20of%20Potency%0A--------%0ARequirements%3A%0ALevel%3A%2054%0A--------%0AItem%20Level%3A%2084%0A--------%0AAdds%208%20Passive%20Skills%20(enchant)%0A2%20Added%20Passive%20Skills%20are%20Jewel%20Sockets%20(enchant)%0AAdded%20Small%20Passive%20Skills%20grant%3A%2012%25%20increased%20Fire%20Damage%20(enchant)%0A--------%0A1%20Added%20Passive%20Skill%20is%20Prismatic%20Heart%0A--------%0APlace%20into%20an%20allocated%20Large%20Jewel%20Socket%20on%20the%20Passive%20Skill%20Tree.%20Added%20passives%20do%20not%20interact%20with%20jewel%20radiuses.%20Right%20click%20to%20remove%20from%20the%20Socket.%0A",
+  "poedb": "https://poedb.tw/us/Large_Cluster_Jewel",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Large Cluster Jewel\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Large Cluster Jewel"
+}

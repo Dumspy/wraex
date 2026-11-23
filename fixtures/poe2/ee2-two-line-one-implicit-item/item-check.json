@@ -1,0 +1,19 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Tablet%0ARarity%3A%20Rare%0APlanar%20Challenge%0ADelirium%20Precursor%20Tablet%0A--------%0AItem%20Level%3A%2084%0A--------%0A%7B%20Implicit%20Modifier%20%7D%0AAdds%20a%20Mirror%20of%20Delirium%20to%20a%20Map%0A17%20uses%20remaining%0A--------%0A%7B%20Prefix%20Modifier%20%22Breeding%22%20%7D%0A7(4-10)%25%20increased%20Pack%20Size%20in%20Map%0A%7B%20Prefix%20Modifier%20%22Teeming%22%20%7D%0AMap%20has%2016(25-70)%25%20increased%20Magic%20Monsters%0A%7B%20Suffix%20Modifier%20%22of%20the%20Simulacrum%22%20(Tier%3A%201)%20%7D%0A6(10-30)%25%20increased%20Stack%20size%20of%20Simulacrum%20Splinters%20found%20in%20Map%0A%7B%20Suffix%20Modifier%20%22of%20Phobia%22%20(Tier%3A%201)%20%7D%0ADelirium%20Encounters%20in%20Map%20are%205(10-30)%25%20more%20likely%20to%20spawn%20Unique%20Bosses%0A--------%0ACan%20be%20used%20in%20a%20personal%20Map%20Device%20to%20add%20modifiers%20to%20a%20Map.%0A--------%0ACorrupted%0A--------%0ANote%3A%20~b%2Fo%201%20exalted%0A",
+  "poedb": "https://poe2db.tw/us/Delirium_Precursor_Tablet#ModifiersCalc",
+  "samePriced": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"~b/o 1 exalted\"\"Delirium Precursor Tablet\""
+    }
+  },
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Delirium Precursor Tablet\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Delirium Precursor Tablet"
+}

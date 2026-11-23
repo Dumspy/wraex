@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Helmets%0ARarity%3A%20Rare%0ALoath%20Glance%0ADivine%20Crown%0A--------%0AQuality%3A%20%2B20%25%20(augmented)%0AArmour%3A%20753%20(augmented)%0AEnergy%20Shield%3A%20186%20(augmented)%0A--------%0ARequirements%3A%0ALevel%3A%2084%0AStr%3A%20159%0ADex%3A%20100%0AInt%3A%20132%0A--------%0ASockets%3A%20W-W-W-W%20%0A--------%0AItem%20Level%3A%2085%0A--------%0A%7B%20Searing%20Exarch%20Implicit%20Modifier%20(Greater)%20%7D%0A9(9-10)%25%20of%20Physical%20Damage%20taken%20Recouped%20as%20Life%0A(Only%20Damage%20from%20Hits%20can%20be%20Recouped%2C%20over%204%20seconds%20following%20the%20Hit)%0A%7B%20Eater%20of%20Worlds%20Implicit%20Modifier%20(Greater)%20%E2%80%94%20Physical%2C%20Elemental%2C%20Lightning%20%7D%0A6%25%20of%20Physical%20Damage%20from%20Hits%20taken%20as%20Lightning%20Damage%0A--------%0A%7B%20Prefix%20Modifier%20%22Abbot's%22%20(Tier%3A%201)%20%E2%80%94%20Life%2C%20Defences%2C%20Energy%20Shield%20%7D%0A%2B17(16-25)%20to%20maximum%20Energy%20Shield%0A%2B30(29-33)%20to%20maximum%20Life%0A%7B%20Prefix%20Modifier%20%22Athlete's%22%20(Tier%3A%202)%20%E2%80%94%20Life%20%7D%0A%2B123(115-129)%20to%20maximum%20Life%0A%7B%20Prefix%20Modifier%20%22Inculcated%22%20(Tier%3A%203)%20%E2%80%94%20Defences%2C%20Armour%2C%20Energy%20Shield%20%7D%0A72(68-79)%25%20increased%20Armour%20and%20Energy%20Shield%0A%7B%20Suffix%20Modifier%20%22of%20Bameth%22%20(Tier%3A%201)%20%E2%80%94%20Chaos%2C%20Resistance%20%7D%0A%2B33(31-35)%25%20to%20Chaos%20Resistance%0A%7B%20Suffix%20Modifier%20%22of%20the%20Sage%22%20(Tier%3A%205)%20%E2%80%94%20Attribute%20%7D%0A%2B34(33-37)%20to%20Intelligence%0A%7B%20Master%20Crafted%20Suffix%20Modifier%20%22of%20Craft%22%20%E2%80%94%20Elemental%2C%20Cold%2C%20Chaos%2C%20Resistance%20%7D%0A%2B13(13-15)%25%20to%20Cold%20and%20Chaos%20Resistances%0ASearing%20Exarch%20Item%0AEater%20of%20Worlds%20Item%0A",
+  "poedb": "https://poedb.tw/us/Divine_Crown",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Divine Crown\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Divine Crown"
+}

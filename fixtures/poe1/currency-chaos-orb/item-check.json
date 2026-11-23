@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Stackable%20Currency%0ARarity%3A%20Currency%0AChaos%20Orb%0A--------%0AStack%20Size%3A%207%2F20%0A--------%0AReforges%20a%20rare%20item%20with%20new%20random%20modifiers%0A--------%0ARight%20click%20this%20item%20then%20left%20click%20a%20rare%20item%20to%20apply%20it.%0AShift%20click%20to%20unstack.%0A",
+  "poedb": "https://poedb.tw/us/Chaos_Orb",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Chaos Orb\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Chaos Orb"
+}

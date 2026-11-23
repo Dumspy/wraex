@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Body%20Armours%0ARarity%3A%20Rare%0AGolem%20Shell%0ASaint's%20Hauberk%0A--------%0AQuality%3A%20%2B20%25%20(augmented)%0AArmour%3A%201123%20(augmented)%0AEnergy%20Shield%3A%20312%20(augmented)%0A--------%0ARequirements%3A%0ALevel%3A%2067%0AStr%3A%20109%0AInt%3A%2094%0A--------%0ASockets%3A%20B-R-R-B-G-B%20%0A--------%0AItem%20Level%3A%2085%0A--------%0A%7B%20Prefix%20Modifier%20%22Rhino's%22%20(Tier%3A%203)%20%E2%80%94%20Life%2C%20Defences%20%7D%0A%2B38(36-41)%20to%20maximum%20Life%0A42(39-42)%25%20increased%20Armour%20and%20Energy%20Shield%0A%7B%20Prefix%20Modifier%20%22Fecund%22%20(Tier%3A%203)%20%E2%80%94%20Life%20%7D%0A%2B95(90-99)%20to%20maximum%20Life%0A%7B%20Suffix%20Modifier%20%22of%20the%20Gods%22%20(Tier%3A%201)%20%E2%80%94%20Attribute%20%7D%0A%2B52(51-55)%20to%20Strength%0A%7B%20Suffix%20Modifier%20%22of%20the%20Wind%22%20(Tier%3A%204)%20%E2%80%94%20Attribute%20%7D%0A%2B29(28-32)%20to%20Dexterity%0A%7B%20Suffix%20Modifier%20%22of%20the%20Genius%22%20(Tier%3A%206)%20%E2%80%94%20Attribute%20%7D%0A%2B19(18-22)%20to%20Intelligence%0A",
+  "poedb": "https://poedb.tw/us/Saints_Hauberk",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Saint's Hauberk\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Saint's Hauberk"
+}

@@ -13,6 +13,8 @@ this list current when adding cases, so it is clear which ones are real copies.
 - `unique-mageblood` (its own preset, after the example in EE2's
   `create-unique-filters.ts`) and `currency-djinn-barya` (trial filters):
   hand-written for filter branches EE2's items miss. Not real copies.
+- `note-rare-bow`: `ee2-rare-item` with a price note, for the item check's
+  "same priced" stash search.
 
 ## poe1
 

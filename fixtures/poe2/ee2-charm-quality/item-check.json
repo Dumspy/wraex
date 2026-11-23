@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Charms%0ARarity%3A%20Magic%0ASprouting%20Silver%20Charm%20of%20the%20Bountiful%0A--------%0AQuality%3A%20%2B14%25%20(augmented)%0ALasts%203.40%20(augmented)%20Seconds%0AConsumes%2020%20of%2060%20(augmented)%20Charges%20on%20use%0ACurrently%20has%200%20Charges%0AYour%20speed%20is%20unaffected%20by%20Slows%0A--------%0ARequires%3A%20Level%2037%0A--------%0AItem%20Level%3A%2080%0A--------%0A%7B%20Implicit%20Modifier%20%7D%0AUsed%20when%20you%20are%20affected%20by%20a%20Slow%20%E2%80%94%20Unscalable%20Value%0A--------%0A%7B%20Prefix%20Modifier%20%22Sprouting%22%20(Tier%3A%205)%20%E2%80%94%20Charm%2C%20Life%20%7D%0ARecover%20106(96-130)%20Life%20when%20Used%0A%7B%20Suffix%20Modifier%20%22of%20the%20Bountiful%22%20(Tier%3A%203)%20%7D%0A51(47-54)%25%20increased%20Charges%0A--------%0AUsed%20automatically%20when%20condition%20is%20met.%20Can%20only%20hold%20charges%20while%20in%20belt.%20Refill%20at%20Wells%20or%20by%20killing%20monsters.%0A",
+  "poedb": "https://poe2db.tw/us/Charms#ModifiersCalc",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Silver Charm\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Silver Charm"
+}

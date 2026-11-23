@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Map%20Fragments%0ARarity%3A%20Currency%0AMirrored%20Tablet%0A--------%0AArea%20Level%3A%2083%0A--------%0AReflection%20of%20Kalandra%20(Difficulty%2010)%0AReflection%20of%20Delirium%20(Difficulty%204)%0AReflection%20of%20the%20Sun%20(Difficulty%206)%0AReflection%20of%20Abyss%20(Difficulty%209)%0AReflection%20of%20Breach%20(Difficulty%203)%0AReflection%20of%20Paradise%20(Difficulty%207)%0AReflection%20of%20Flame%20(Difficulty%208)%0AReflection%20of%20Angling%20(Difficulty%202)%0A--------%0AUse%20this%20on%20the%20Kalandra%20Map%20Device%20to%20open%20a%20portal%20to%20the%20Lake%20of%20Kalandra.%0A",
+  "poedb": "https://poedb.tw/us/Mirrored_Tablet",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Mirrored Tablet\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Mirrored Tablet"
+}

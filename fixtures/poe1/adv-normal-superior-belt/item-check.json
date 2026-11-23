@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Belts%0ARarity%3A%20Normal%0ASuperior%20Leather%20Belt%0A--------%0ARequirements%3A%0ALevel%3A%208%0A--------%0AItem%20Level%3A%2050%0A--------%0A%7B%20Implicit%20Modifier%20%E2%80%94%20Life%20%7D%0A%2B32(25-40)%20to%20maximum%20Life%0A",
+  "poedb": "https://poedb.tw/us/Leather_Belt",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Leather Belt\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Leather Belt"
+}

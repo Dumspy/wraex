@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Wands%0ARarity%3A%20Rare%0AVolatile%20Wand%0A--------%0ARequires%3A%20113%20Intelligence%0A--------%0AItem%20Level%3A%2069%0A--------%0AGrants%20Skill%3A%20Level%2015%20Volatile%20Dead%0A--------%0AUnidentified%0A",
+  "poedb": "https://poe2db.tw/us/Wands#ModifiersCalc",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Volatile Wand\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Volatile Wand"
+}

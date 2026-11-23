@@ -1,0 +1,1183 @@
+{
+  "augmentSockets": {
+    "augments": [
+      null,
+      null
+    ],
+    "current": 0,
+    "empty": 2,
+    "normal": 2
+  },
+  "baseType": "Rider Bow",
+  "category": "Bow",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Bow"
+    },
+    "h": 4,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9Ud29IYW5kV2VhcG9ucy9Cb3dzL0Jhc2V0eXBlcy9Cb3cwNSIsInciOjIsImgiOjQsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/8861b7f497/Bow05.png",
+    "name": "Rider Bow",
+    "namespace": "ITEM",
+    "refName": "Rider Bow",
+    "tags": [],
+    "w": 2
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Bow"
+      },
+      "h": 4,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9Ud29IYW5kV2VhcG9ucy9Cb3dzL0Jhc2V0eXBlcy9Cb3cwNSIsInciOjIsImgiOjQsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/8861b7f497/Bow05.png",
+      "name": "Rider Bow",
+      "namespace": "ITEM",
+      "refName": "Rider Bow",
+      "tags": [],
+      "w": 2
+    }
+  ],
+  "isCorrupted": false,
+  "isUnidentified": false,
+  "itemLevel": 80,
+  "name": "Oblivion Strike",
+  "newMods": [
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Shocking",
+        "tags": [
+          "Damage",
+          "Elemental",
+          "Lightning",
+          "Attack"
+        ],
+        "tier": 4,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 47,
+            "min": 31.5,
+            "unscalable": false,
+            "value": 43.5
+          },
+          "stat": {
+            "better": 1,
+            "id": "local_minimum_added_lightning_damage",
+            "matchers": [
+              {
+                "string": "Adds # to # Lightning Damage"
+              }
+            ],
+            "ref": "Adds # to # Lightning Damage",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_3336890334"
+                ],
+                "desecrated": [
+                  "desecrated.stat_3336890334"
+                ],
+                "enchant": [
+                  "enchant.stat_3336890334"
+                ],
+                "explicit": [
+                  "explicit.stat_3336890334"
+                ],
+                "fractured": [
+                  "fractured.stat_3336890334"
+                ],
+                "rune": [
+                  "rune.stat_3336890334"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Adds # to # Lightning Damage"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Scorching",
+        "tags": [
+          "Damage",
+          "Elemental",
+          "Fire",
+          "Attack"
+        ],
+        "tier": 5,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 38,
+            "min": 25.5,
+            "unscalable": false,
+            "value": 31.5
+          },
+          "stat": {
+            "better": 1,
+            "id": "local_minimum_added_fire_damage",
+            "matchers": [
+              {
+                "string": "Adds # to # Fire Damage"
+              }
+            ],
+            "ref": "Adds # to # Fire Damage",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_709508406"
+                ],
+                "desecrated": [
+                  "desecrated.stat_709508406"
+                ],
+                "enchant": [
+                  "enchant.stat_709508406"
+                ],
+                "explicit": [
+                  "explicit.stat_709508406"
+                ],
+                "fractured": [
+                  "fractured.stat_709508406"
+                ],
+                "rune": [
+                  "rune.stat_709508406"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Adds # to # Fire Damage"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Icy",
+        "tags": [
+          "Damage",
+          "Elemental",
+          "Cold",
+          "Attack"
+        ],
+        "tier": 8,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 12,
+            "min": 8,
+            "unscalable": false,
+            "value": 11
+          },
+          "stat": {
+            "better": 1,
+            "id": "local_minimum_added_cold_damage",
+            "matchers": [
+              {
+                "string": "Adds # to # Cold Damage"
+              }
+            ],
+            "ref": "Adds # to # Cold Damage",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_1037193709"
+                ],
+                "desecrated": [
+                  "desecrated.stat_1037193709"
+                ],
+                "enchant": [
+                  "enchant.stat_1037193709"
+                ],
+                "explicit": [
+                  "explicit.stat_1037193709"
+                ],
+                "fractured": [
+                  "fractured.stat_1037193709"
+                ],
+                "rune": [
+                  "rune.stat_1037193709"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Adds # to # Cold Damage"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Radiance",
+        "tags": [
+          "Attack"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 60,
+            "min": 41,
+            "unscalable": false,
+            "value": 57
+          },
+          "stat": {
+            "better": 1,
+            "id": "local_accuracy_rating",
+            "matchers": [
+              {
+                "string": "# to Accuracy Rating"
+              }
+            ],
+            "ref": "# to Accuracy Rating",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_691932474",
+                  "crafted.stat_803737631"
+                ],
+                "desecrated": [
+                  "desecrated.stat_691932474",
+                  "desecrated.stat_803737631"
+                ],
+                "enchant": [
+                  "enchant.stat_803737631"
+                ],
+                "explicit": [
+                  "explicit.stat_691932474",
+                  "explicit.stat_803737631"
+                ],
+                "fractured": [
+                  "fractured.stat_691932474",
+                  "fractured.stat_803737631"
+                ],
+                "implicit": [
+                  "implicit.stat_803737631"
+                ],
+                "rune": [
+                  "rune.stat_691932474",
+                  "rune.stat_803737631"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to Accuracy Rating"
+          }
+        },
+        {
+          "roll": {
+            "dp": false,
+            "max": 15,
+            "min": 15,
+            "unscalable": false,
+            "value": 15
+          },
+          "stat": {
+            "better": 1,
+            "id": "light_radius_+%",
+            "matchers": [
+              {
+                "string": "#% increased Light Radius"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Light Radius"
+              }
+            ],
+            "ref": "#% increased Light Radius",
+            "trade": {
+              "ids": {
+                "desecrated": [
+                  "desecrated.stat_1263695895"
+                ],
+                "explicit": [
+                  "explicit.stat_1263695895"
+                ],
+                "fractured": [
+                  "fractured.stat_1263695895"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Light Radius"
+          }
+        }
+      ]
+    }
+  ],
+  "note": "~price 5 exalted",
+  "rarity": "Rare",
+  "rawText": "Item Class: Bows\nRarity: Rare\nOblivion Strike\nRider Bow\n--------\nPhysical Damage: 36-61\nElemental Damage: 27-36 (fire), 9-13 (cold), 5-82 (lightning)\nCritical Hit Chance: 5.00%\nAttacks per Second: 1.20\n--------\nRequires: Level 51, 103 (augmented) Dex\n--------\nItem Level: 80\n--------\n{ Prefix Modifier \"Shocking\" (Tier: 4) — Damage, Elemental, Lightning, Attack }\nAdds 5(1-5) to 82(62-89) Lightning Damage\n{ Prefix Modifier \"Scorching\" (Tier: 5) — Damage, Elemental, Fire, Attack }\nAdds 27(20-30) to 36(31-46) Fire Damage\n{ Prefix Modifier \"Icy\" (Tier: 8) — Damage, Elemental, Cold, Attack }\nAdds 9(6-9) to 13(10-15) Cold Damage\n{ Suffix Modifier \"of Radiance\" (Tier: 1) — Attack }\n+57(41-60) to Accuracy Rating\n15% increased Light Radius\n--------\nNote: ~price 5 exalted\n",
+  "requires": {
+    "dex": 103,
+    "int": 0,
+    "level": 51,
+    "str": 0
+  },
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 47,
+            "min": 31.5,
+            "value": 43.5
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Shocking",
+              "tags": [
+                "Damage",
+                "Elemental",
+                "Lightning",
+                "Attack"
+              ],
+              "tier": 4,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 47,
+                  "min": 31.5,
+                  "unscalable": false,
+                  "value": 43.5
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_minimum_added_lightning_damage",
+                  "matchers": [
+                    {
+                      "string": "Adds # to # Lightning Damage"
+                    }
+                  ],
+                  "ref": "Adds # to # Lightning Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3336890334"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_3336890334"
+                      ],
+                      "enchant": [
+                        "enchant.stat_3336890334"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3336890334"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3336890334"
+                      ],
+                      "rune": [
+                        "rune.stat_3336890334"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Adds # to # Lightning Damage"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 47,
+              "min": 31.5,
+              "unscalable": false,
+              "value": 43.5
+            },
+            "stat": {
+              "better": 1,
+              "id": "local_minimum_added_lightning_damage",
+              "matchers": [
+                {
+                  "string": "Adds # to # Lightning Damage"
+                }
+              ],
+              "ref": "Adds # to # Lightning Damage",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_3336890334"
+                  ],
+                  "desecrated": [
+                    "desecrated.stat_3336890334"
+                  ],
+                  "enchant": [
+                    "enchant.stat_3336890334"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3336890334"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3336890334"
+                  ],
+                  "rune": [
+                    "rune.stat_3336890334"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Adds # to # Lightning Damage"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "local_minimum_added_lightning_damage",
+        "matchers": [
+          {
+            "string": "Adds # to # Lightning Damage"
+          }
+        ],
+        "ref": "Adds # to # Lightning Damage",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_3336890334"
+            ],
+            "desecrated": [
+              "desecrated.stat_3336890334"
+            ],
+            "enchant": [
+              "enchant.stat_3336890334"
+            ],
+            "explicit": [
+              "explicit.stat_3336890334"
+            ],
+            "fractured": [
+              "fractured.stat_3336890334"
+            ],
+            "rune": [
+              "rune.stat_3336890334"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 38,
+            "min": 25.5,
+            "value": 31.5
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Scorching",
+              "tags": [
+                "Damage",
+                "Elemental",
+                "Fire",
+                "Attack"
+              ],
+              "tier": 5,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 38,
+                  "min": 25.5,
+                  "unscalable": false,
+                  "value": 31.5
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_minimum_added_fire_damage",
+                  "matchers": [
+                    {
+                      "string": "Adds # to # Fire Damage"
+                    }
+                  ],
+                  "ref": "Adds # to # Fire Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_709508406"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_709508406"
+                      ],
+                      "enchant": [
+                        "enchant.stat_709508406"
+                      ],
+                      "explicit": [
+                        "explicit.stat_709508406"
+                      ],
+                      "fractured": [
+                        "fractured.stat_709508406"
+                      ],
+                      "rune": [
+                        "rune.stat_709508406"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Adds # to # Fire Damage"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 38,
+              "min": 25.5,
+              "unscalable": false,
+              "value": 31.5
+            },
+            "stat": {
+              "better": 1,
+              "id": "local_minimum_added_fire_damage",
+              "matchers": [
+                {
+                  "string": "Adds # to # Fire Damage"
+                }
+              ],
+              "ref": "Adds # to # Fire Damage",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_709508406"
+                  ],
+                  "desecrated": [
+                    "desecrated.stat_709508406"
+                  ],
+                  "enchant": [
+                    "enchant.stat_709508406"
+                  ],
+                  "explicit": [
+                    "explicit.stat_709508406"
+                  ],
+                  "fractured": [
+                    "fractured.stat_709508406"
+                  ],
+                  "rune": [
+                    "rune.stat_709508406"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Adds # to # Fire Damage"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "local_minimum_added_fire_damage",
+        "matchers": [
+          {
+            "string": "Adds # to # Fire Damage"
+          }
+        ],
+        "ref": "Adds # to # Fire Damage",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_709508406"
+            ],
+            "desecrated": [
+              "desecrated.stat_709508406"
+            ],
+            "enchant": [
+              "enchant.stat_709508406"
+            ],
+            "explicit": [
+              "explicit.stat_709508406"
+            ],
+            "fractured": [
+              "fractured.stat_709508406"
+            ],
+            "rune": [
+              "rune.stat_709508406"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 12,
+            "min": 8,
+            "value": 11
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Icy",
+              "tags": [
+                "Damage",
+                "Elemental",
+                "Cold",
+                "Attack"
+              ],
+              "tier": 8,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 12,
+                  "min": 8,
+                  "unscalable": false,
+                  "value": 11
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_minimum_added_cold_damage",
+                  "matchers": [
+                    {
+                      "string": "Adds # to # Cold Damage"
+                    }
+                  ],
+                  "ref": "Adds # to # Cold Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1037193709"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_1037193709"
+                      ],
+                      "enchant": [
+                        "enchant.stat_1037193709"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1037193709"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1037193709"
+                      ],
+                      "rune": [
+                        "rune.stat_1037193709"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Adds # to # Cold Damage"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 12,
+              "min": 8,
+              "unscalable": false,
+              "value": 11
+            },
+            "stat": {
+              "better": 1,
+              "id": "local_minimum_added_cold_damage",
+              "matchers": [
+                {
+                  "string": "Adds # to # Cold Damage"
+                }
+              ],
+              "ref": "Adds # to # Cold Damage",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_1037193709"
+                  ],
+                  "desecrated": [
+                    "desecrated.stat_1037193709"
+                  ],
+                  "enchant": [
+                    "enchant.stat_1037193709"
+                  ],
+                  "explicit": [
+                    "explicit.stat_1037193709"
+                  ],
+                  "fractured": [
+                    "fractured.stat_1037193709"
+                  ],
+                  "rune": [
+                    "rune.stat_1037193709"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Adds # to # Cold Damage"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "local_minimum_added_cold_damage",
+        "matchers": [
+          {
+            "string": "Adds # to # Cold Damage"
+          }
+        ],
+        "ref": "Adds # to # Cold Damage",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_1037193709"
+            ],
+            "desecrated": [
+              "desecrated.stat_1037193709"
+            ],
+            "enchant": [
+              "enchant.stat_1037193709"
+            ],
+            "explicit": [
+              "explicit.stat_1037193709"
+            ],
+            "fractured": [
+              "fractured.stat_1037193709"
+            ],
+            "rune": [
+              "rune.stat_1037193709"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 60,
+            "min": 41,
+            "value": 57
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Radiance",
+              "tags": [
+                "Attack"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 60,
+                  "min": 41,
+                  "unscalable": false,
+                  "value": 57
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_accuracy_rating",
+                  "matchers": [
+                    {
+                      "string": "# to Accuracy Rating"
+                    }
+                  ],
+                  "ref": "# to Accuracy Rating",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_691932474",
+                        "crafted.stat_803737631"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_691932474",
+                        "desecrated.stat_803737631"
+                      ],
+                      "enchant": [
+                        "enchant.stat_803737631"
+                      ],
+                      "explicit": [
+                        "explicit.stat_691932474",
+                        "explicit.stat_803737631"
+                      ],
+                      "fractured": [
+                        "fractured.stat_691932474",
+                        "fractured.stat_803737631"
+                      ],
+                      "implicit": [
+                        "implicit.stat_803737631"
+                      ],
+                      "rune": [
+                        "rune.stat_691932474",
+                        "rune.stat_803737631"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Accuracy Rating"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 15,
+                  "min": 15,
+                  "unscalable": false,
+                  "value": 15
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "light_radius_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Light Radius"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Light Radius"
+                    }
+                  ],
+                  "ref": "#% increased Light Radius",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1263695895"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1263695895"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1263695895"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Light Radius"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 60,
+              "min": 41,
+              "unscalable": false,
+              "value": 57
+            },
+            "stat": {
+              "better": 1,
+              "id": "local_accuracy_rating",
+              "matchers": [
+                {
+                  "string": "# to Accuracy Rating"
+                }
+              ],
+              "ref": "# to Accuracy Rating",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_691932474",
+                    "crafted.stat_803737631"
+                  ],
+                  "desecrated": [
+                    "desecrated.stat_691932474",
+                    "desecrated.stat_803737631"
+                  ],
+                  "enchant": [
+                    "enchant.stat_803737631"
+                  ],
+                  "explicit": [
+                    "explicit.stat_691932474",
+                    "explicit.stat_803737631"
+                  ],
+                  "fractured": [
+                    "fractured.stat_691932474",
+                    "fractured.stat_803737631"
+                  ],
+                  "implicit": [
+                    "implicit.stat_803737631"
+                  ],
+                  "rune": [
+                    "rune.stat_691932474",
+                    "rune.stat_803737631"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to Accuracy Rating"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "local_accuracy_rating",
+        "matchers": [
+          {
+            "string": "# to Accuracy Rating"
+          }
+        ],
+        "ref": "# to Accuracy Rating",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_691932474",
+              "crafted.stat_803737631"
+            ],
+            "desecrated": [
+              "desecrated.stat_691932474",
+              "desecrated.stat_803737631"
+            ],
+            "enchant": [
+              "enchant.stat_803737631"
+            ],
+            "explicit": [
+              "explicit.stat_691932474",
+              "explicit.stat_803737631"
+            ],
+            "fractured": [
+              "fractured.stat_691932474",
+              "fractured.stat_803737631"
+            ],
+            "implicit": [
+              "implicit.stat_803737631"
+            ],
+            "rune": [
+              "rune.stat_691932474",
+              "rune.stat_803737631"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 15,
+            "min": 15,
+            "value": 15
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Radiance",
+              "tags": [
+                "Attack"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 60,
+                  "min": 41,
+                  "unscalable": false,
+                  "value": 57
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "local_accuracy_rating",
+                  "matchers": [
+                    {
+                      "string": "# to Accuracy Rating"
+                    }
+                  ],
+                  "ref": "# to Accuracy Rating",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_691932474",
+                        "crafted.stat_803737631"
+                      ],
+                      "desecrated": [
+                        "desecrated.stat_691932474",
+                        "desecrated.stat_803737631"
+                      ],
+                      "enchant": [
+                        "enchant.stat_803737631"
+                      ],
+                      "explicit": [
+                        "explicit.stat_691932474",
+                        "explicit.stat_803737631"
+                      ],
+                      "fractured": [
+                        "fractured.stat_691932474",
+                        "fractured.stat_803737631"
+                      ],
+                      "implicit": [
+                        "implicit.stat_803737631"
+                      ],
+                      "rune": [
+                        "rune.stat_691932474",
+                        "rune.stat_803737631"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Accuracy Rating"
+                }
+              },
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 15,
+                  "min": 15,
+                  "unscalable": false,
+                  "value": 15
+                },
+                "stat": {
+                  "better": 1,
+                  "id": "light_radius_+%",
+                  "matchers": [
+                    {
+                      "string": "#% increased Light Radius"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Light Radius"
+                    }
+                  ],
+                  "ref": "#% increased Light Radius",
+                  "trade": {
+                    "ids": {
+                      "desecrated": [
+                        "desecrated.stat_1263695895"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1263695895"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1263695895"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Light Radius"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 15,
+              "min": 15,
+              "unscalable": false,
+              "value": 15
+            },
+            "stat": {
+              "better": 1,
+              "id": "light_radius_+%",
+              "matchers": [
+                {
+                  "string": "#% increased Light Radius"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Light Radius"
+                }
+              ],
+              "ref": "#% increased Light Radius",
+              "trade": {
+                "ids": {
+                  "desecrated": [
+                    "desecrated.stat_1263695895"
+                  ],
+                  "explicit": [
+                    "explicit.stat_1263695895"
+                  ],
+                  "fractured": [
+                    "fractured.stat_1263695895"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Light Radius"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "id": "light_radius_+%",
+        "matchers": [
+          {
+            "string": "#% increased Light Radius"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Light Radius"
+          }
+        ],
+        "ref": "#% increased Light Radius",
+        "trade": {
+          "ids": {
+            "desecrated": [
+              "desecrated.stat_1263695895"
+            ],
+            "explicit": [
+              "explicit.stat_1263695895"
+            ],
+            "fractured": [
+              "fractured.stat_1263695895"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": [],
+  "weaponAS": 1.2,
+  "weaponCOLD": 11,
+  "weaponCRIT": 5,
+  "weaponELEMENTAL": 86,
+  "weaponFIRE": 31.5,
+  "weaponLIGHTNING": 43.5,
+  "weaponPHYSICAL": 48.5
+}

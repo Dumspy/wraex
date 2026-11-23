@@ -10,7 +10,10 @@ const REF = process.env.GOLDEN_REF!
 // The config each case runs with; set by the runner before init().
 declare global {
   var __GOLDEN_CONFIG__: { language: string, widgets: Array<{ wmType: string }> } & Record<string, unknown>
+  // What the item check's actions open (window.open) or send (Host.sendEvent).
+  var __GOLDEN_OUTPUT__: unknown[]
 }
+globalThis.__GOLDEN_OUTPUT__ = []
 
 // Replaced whole, like EE2's setup: the real module imports every widget's .vue file.
 vi.mock('@/web/Config', () => ({
@@ -31,7 +34,7 @@ vi.mock('@/web/background/IPC', () => ({
       return new Response(fs.readFileSync(path.join(REF, 'specs/data', `${m[1]}.json`)))
     },
     onEvent: () => new AbortController(),
-    sendEvent: () => {},
+    sendEvent: (event: unknown) => { globalThis.__GOLDEN_OUTPUT__.push(event) },
     getConfig: async () => null,
     logs: { value: '' },
     version: { value: '0.0.00000' },

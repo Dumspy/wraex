@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Maps%0ARarity%3A%20Rare%0AArid%20Territory%0AValdo%20Map%0A--------%0AMap%20Area%3A%20Beach%0AReward%3A%20Foil%20Willclash%0AAtlas%20Drops%3A%20%2B174%25%20(augmented)%0AMonster%20Pack%20Size%3A%20%2B28%25%20(augmented)%0A--------%0AChance%20for%20dropped%20Maps%20to%20convert%20to%3A%0AElder%20Map%3A%203%25%20(augmented)%0AConqueror%20Map%3A%2012%25%20(augmented)%0AThreads%3A%2044%25%20(augmented)%0A--------%0AItem%20Level%3A%20100%0A--------%0AMonster%20Level%3A%2084%0A--------%0A%7B%20Unique%20Modifier%20%7D%0AMaximum%20number%20of%20Players%20in%20Area%20is%20one%0A%7B%20Unique%20Modifier%20%7D%0AArea%20contains%20The%20Feared%0A%7B%20Unique%20Modifier%20%7D%0AMonsters%20can%20only%20be%20Damaged%20while%20within%202%20metres%20of%20a%20Player%0APlayers'%20modifiers%20to%20Light%20Radius%20also%20apply%20to%20this%20range%0A%7B%20Unique%20Modifier%20%7D%0APlayers%20have%2050%25%20reduced%20Movement%20Speed%0APlayers'%20Travel%20Skills%20are%20Disabled%0A%7B%20Unique%20Modifier%20%7D%0AMonsters%20Kill%20things%20with%2020%25%20or%20lower%20Life%20on%20Hit%0A%7B%20Unique%20Modifier%20%7D%0AAll%20Magic%20and%20Normal%20Monsters%20in%20Area%20are%20in%20a%20Union%20of%20Souls%0A--------%0ATravel%20to%20this%20Map%20by%20using%20it%20in%20a%20personal%20Map%20Device.%20Maps%20can%20only%20be%20used%20once.%20Defeat%2090%25%20of%20all%20monsters%20in%20this%20Map%2C%20including%20all%20Rare%20and%20Unique%20enemies%20to%20obtain%20the%20Reward.%20The%20area%20created%20is%20not%20affected%20by%20your%20Atlas%20Passive%20Tree%2C%20and%20cannot%20be%20augmented%20via%20the%20Map%20Device.%0A--------%0AUnmodifiable%0A--------%0AFoil%20(Celestial%20Quartz)%0A",
+  "poedb": "https://poedb.tw/us/Valdo_Map",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Valdo Map\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Valdo Map"
+}

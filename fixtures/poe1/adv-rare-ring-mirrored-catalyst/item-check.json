@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Rings%0ARarity%3A%20Rare%0ADoom%20Band%0ADiamond%20Ring%0A--------%0AQuality%20(Life%20and%20Mana%20Modifiers)%3A%20%2B20%25%20(augmented)%0A--------%0ARequirements%3A%0ALevel%3A%2056%0A--------%0AItem%20Level%3A%2085%0A--------%0A%7B%20Implicit%20Modifier%20%E2%80%94%20Damage%2C%20Critical%20%7D%0A25(20-30)%25%20increased%20Global%20Critical%20Strike%20Chance%0A--------%0A%7B%20Prefix%20Modifier%20%22Rotund%22%20(Tier%3A%201)%20%E2%80%94%20Life%20%20%E2%80%94%2020%25%20Increased%20%7D%0A%2B82(80-89)%20to%20maximum%20Life%0A%7B%20Suffix%20Modifier%20%22of%20the%20Rainbow%22%20(Tier%3A%203)%20%E2%80%94%20Elemental%2C%20Fire%2C%20Cold%2C%20Lightning%2C%20Resistance%20%7D%0A%2B14(12-14)%25%20to%20all%20Elemental%20Resistances%0A%7B%20Suffix%20Modifier%20%22of%20Tzteosh%22%20(Tier%3A%201)%20%E2%80%94%20Elemental%2C%20Fire%2C%20Resistance%20%7D%0A%2B52(46-48)%25%20to%20Fire%20Resistance%0A--------%0AMirrored%0A",
+  "poedb": "https://poedb.tw/us/Diamond_Ring",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Diamond Ring\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Diamond Ring"
+}

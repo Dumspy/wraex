@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Boots%0ARarity%3A%20Rare%0ADunerunner%20Sandals%0A--------%0AEnergy%20Shield%3A%2058%0A--------%0ARequires%3A%2078%20(unmet)%20Intelligence%0A--------%0AItem%20Level%3A%2068%0A--------%0AUnidentified%0A",
+  "poedb": "https://poe2db.tw/us/Boots_int#ModifiersCalc",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Dunerunner Sandals\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Dunerunner Sandals"
+}

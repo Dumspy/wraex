@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Bows%0ARarity%3A%20Rare%0AOblivion%20Branch%0AObliterator%20Bow%0A--------%0AQuality%3A%20%2B20%25%20(augmented)%0APhysical%20Damage%3A%20288-534%20(augmented)%0AFire%20Damage%3A%2047-92%20(fire)%0ACritical%20Hit%20Chance%3A%208.45%25%20(augmented)%0AAttacks%20per%20Second%3A%201.27%20(augmented)%0A--------%0ARequires%3A%20Level%2078%2C%20163%20Dex%0A--------%0ASockets%3A%20S%20S%20S%0A--------%0AItem%20Level%3A%2080%0A--------%0A38%25%20increased%20Physical%20Damage%20(rune)%0ABow%20Attacks%20fire%20an%20additional%20Arrow%20(rune)%0A--------%0A%7B%20Implicit%20Modifier%20%7D%0A50%25%20reduced%20Projectile%20Range%0A--------%0A%7B%20Prefix%20Modifier%20%22Cruel%22%20(Tier%3A%203)%20%E2%80%94%20Damage%2C%20Physical%2C%20Attack%20%7D%0A151(135-154)%25%20increased%20Physical%20Damage%0A%7B%20Desecrated%20Prefix%20Modifier%20%22Razor-sharp%22%20(Tier%3A%203)%20%E2%80%94%20Damage%2C%20Physical%2C%20Attack%20%7D%0AAdds%2021(16-24)%20to%2039(28-42)%20Physical%20Damage%0A%7B%20Prefix%20Modifier%20%22Blasting%22%20(Tier%3A%203)%20%E2%80%94%20Damage%2C%20Elemental%2C%20Fire%2C%20Attack%20%7D%0AAdds%2047(47-59)%20to%2092(74-97)%20Fire%20Damage%0A%7B%20Suffix%20Modifier%20%22of%20Renown%22%20(Tier%3A%202)%20%E2%80%94%20Attack%2C%20Speed%20%7D%0A15(14-16)%25%20increased%20Attack%20Speed%0A%7B%20Suffix%20Modifier%20%22of%20the%20Vampire%22%20(Tier%3A%201)%20%E2%80%94%20Life%2C%20Physical%2C%20Attack%20%7D%0ALeeches%209.6(9-9.9)%25%20of%20Physical%20Damage%20as%20Life%0A%7B%20Crafted%20Suffix%20Modifier%20%22of%20Calamity%22%20(Tier%3A%203)%20%E2%80%94%20Attack%2C%20Critical%20%7D%0A%2B3.45(3.11-3.8)%25%20to%20Critical%20Hit%20Chance%0A--------%0ACorrupted%0A",
+  "poedb": "https://poe2db.tw/us/Bows#ModifiersCalc",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Obliterator Bow\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Obliterator Bow"
+}

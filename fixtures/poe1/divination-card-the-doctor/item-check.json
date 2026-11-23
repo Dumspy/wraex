@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Divination%20Cards%0ARarity%3A%20Divination%20Card%0AThe%20Doctor%0A--------%0AStack%20Size%3A%201%2F8%0A--------%0AHeadhunter%0ALeather%20Belt%0A--------%0AA%20doctor's%20skill%20is%20measured%20by%20the%20lives%20he%20saves%3B%20this%20one%20has%20no%20patients.%0A",
+  "poedb": "https://poedb.tw/us/The_Doctor",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"The Doctor\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/The Doctor"
+}

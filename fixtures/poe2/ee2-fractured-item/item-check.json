@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Bows%0ARarity%3A%20Rare%0AMiracle%20Siege%0AObliterator%20Bow%0A--------%0AQuality%3A%20%2B25%25%20(augmented)%0APhysical%20Damage%3A%20381-705%20(augmented)%0ACritical%20Hit%20Chance%3A%209.40%25%20(augmented)%0AAttacks%20per%20Second%3A%201.15%0A--------%0ARequires%3A%20Level%2078%2C%20163%20(unmet)%20Dex%0A--------%0ASockets%3A%20S%20S%0A--------%0AItem%20Level%3A%2081%0A--------%0A36%25%20increased%20Physical%20Damage%20(rune)%0A--------%0A%7B%20Implicit%20Modifier%20%7D%0A50%25%20reduced%20Projectile%20Range%0A--------%0A%7B%20Prefix%20Modifier%20%22Flaring%22%20(Tier%3A%201)%20%E2%80%94%20Damage%2C%20Physical%2C%20Attack%20%7D%0AAdds%2032(26-39)%20to%2059(44-66)%20Physical%20Damage%20(fractured)%0A%0A%7B%20Prefix%20Modifier%20%22Bloodthirsty%22%20(Tier%3A%204)%20%E2%80%94%20Damage%2C%20Physical%2C%20Attack%20%7D%0A134(110-134)%25%20increased%20Physical%20Damage%0A%0A%7B%20Prefix%20Modifier%20%22Champion's%22%20(Tier%3A%204)%20%E2%80%94%20Damage%2C%20Physical%2C%20Attack%20%7D%0A54(45-54)%25%20increased%20Physical%20Damage%0A%2B113(98-123)%20to%20Accuracy%20Rating%0A%0A%7B%20Suffix%20Modifier%20%22of%20the%20Essence%22%20%E2%80%94%20Speed%20%7D%0A20(20-25)%25%20chance%20to%20gain%20Onslaught%20on%20Killing%20Hits%20with%20this%20Weapon%0A%0A%7B%20Suffix%20Modifier%20%22of%20the%20Essence%22%20%E2%80%94%20Attack%20%7D%0A%2B3%20to%20Level%20of%20all%20Attack%20Skills%0A%0A%7B%20Suffix%20Modifier%20%22of%20Ruin%22%20(Tier%3A%202)%20%E2%80%94%20Attack%2C%20Critical%20%7D%0A%2B4.4(3.81-4.4)%25%20to%20Critical%20Hit%20Chance%0A%0A--------%0AFractured%20Item%0A",
+  "poedb": "https://poe2db.tw/us/Bows#ModifiersCalc",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Obliterator Bow\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Obliterator Bow"
+}

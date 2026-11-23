@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Map%20Fragments%0ARarity%3A%20Currency%0AChronicle%20of%20Atzoatl%0A--------%0AArea%20Level%3A%2079%0A--------%0AOpen%20Rooms%3A%0AApex%20of%20Atzoatl%0ALocus%20of%20Corruption%20(Tier%203)%0AWealth%20of%20the%20Vaal%20(Tier%203)%0AExplosives%20Room%20(Tier%201)%0AHall%20of%20Champions%20(Tier%203)%0ABarracks%20(Tier%202)%0ABanquet%20Hall%0AObstructed%20Rooms%3A%0ASanctum%20of%20Immortality%20(Tier%203)%0AArmoury%20(Tier%202)%0AHall%20of%20Legends%20(Tier%203)%0A--------%0ATake%20this%20item%20to%20the%20Map%20Device%20in%20your%20Hideout%20to%20open%20portals%20to%20the%20Temple%20of%20Atzoatl.%0A",
+  "poedb": "https://poedb.tw/us/Chronicle_of_Atzoatl",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Chronicle of Atzoatl\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Chronicle of Atzoatl"
+}

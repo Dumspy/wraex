@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Maps%0ARarity%3A%20Rare%0AHorror%20Progression%0AMap%20(Tier%2016)%0A--------%0AAtlas%20Drops%3A%20%2B67%25%20(augmented)%0AItem%20Rarity%3A%20%2B39%25%20(augmented)%0AMonster%20Pack%20Size%3A%20%2B25%25%20(augmented)%0A--------%0AItem%20Level%3A%2085%0A--------%0AMonster%20Level%3A%2083%0A--------%0A%7B%20Prefix%20Modifier%20%22Overlord's%22%20(Tier%3A%201)%20%E2%80%94%20Attack%2C%20Caster%2C%20Speed%20%7D%0AUnique%20Boss%20deals%2025%25%20increased%20Damage%0AUnique%20Boss%20has%2030%25%20increased%20Attack%20and%20Cast%20Speed%0A%7B%20Prefix%20Modifier%20%22Fleet%22%20(Tier%3A%201)%20%E2%80%94%20Attack%2C%20Caster%2C%20Speed%20%7D%0A28(25-30)%25%20increased%20Monster%20Movement%20Speed%0A35(35-45)%25%20increased%20Monster%20Attack%20Speed%0A37(35-45)%25%20increased%20Monster%20Cast%20Speed%0A%7B%20Suffix%20Modifier%20%22of%20Exposure%22%20(Tier%3A%201)%20%E2%80%94%20Elemental%2C%20Resistance%20%7D%0APlayers%20have%20-12(-12--9)%25%20to%20all%20maximum%20Resistances%0A%7B%20Suffix%20Modifier%20%22of%20Vulnerability%22%20(Tier%3A%201)%20%E2%80%94%20Caster%2C%20Curse%20%7D%0APlayers%20are%20Cursed%20with%20Vulnerability%0A(Vulnerability%20is%20a%20Hex%20which%20increases%20Physical%20Damage%20taken%20by%2015%25%20and%20causes%20Hits%20to%20have%20%2B25%25%20chance%20to%20inflict%20Bleeding%20on%20the%20target.%20It%20lasts%208%20seconds)%0A--------%0ATravel%20to%20a%20Map%20of%20this%20tier%20or%20lower%20by%20using%20this%20in%20a%20personal%20Map%20Device.%20Maps%20can%20only%20be%20used%20once.%0A",
+  "poedb": "https://poedb.tw/us/Map",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Map\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Map"
+}

@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Body%20Armours%0ARarity%3A%20Unique%0ATabula%20Rasa%0ASimple%20Robe%0A--------%0ASockets%3A%20W-W-W-W-W-W%20%0A--------%0AItem%20Level%3A%2068%0A--------%0AItem%20has%20no%20Level%20requirement%0A--------%0AShaper%20Items%20and%20Elder%20Items%20cannot%20be%20modified%0A",
+  "poedb": "https://poedb.tw/us/Tabula_Rasa",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Tabula Rasa\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Tabula Rasa"
+}

@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Expedition%20Logbooks%0ARarity%3A%20Normal%0AExpedition%20Logbook%0A--------%0AArea%20Level%3A%2083%0A--------%0ABluffs%0ADruids%20of%20the%20Broken%20Circle%0AArea%20contains%20Medved%2C%20Feller%20of%20Heroes%20(implicit)%0A--------%0ACemetery%0ABlack%20Scythe%20Mercenaries%0AArea%20contains%20Olroth%2C%20Origin%20of%20the%20Fall%20(implicit)%0A--------%0AItem%20Level%3A%2083%0A--------%0ATake%20this%20item%20to%20Dannig%20in%20your%20Hideout%20to%20open%20portals%20to%20an%20expedition.%0A",
+  "poedb": "https://poedb.tw/us/Expedition_Logbook",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Expedition Logbook\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Expedition Logbook"
+}

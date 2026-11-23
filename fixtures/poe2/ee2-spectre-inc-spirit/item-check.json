@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Sceptres%0ARarity%3A%20Rare%0ASkull%20Song%0AShrine%20Sceptre%0A--------%0ASpirit%3A%20152%20(augmented)%0A--------%0ARequires%3A%20Level%2072%2C%2039%20Str%2C%2098%20Int%0A--------%0ASockets%3A%20S%0A--------%0AItem%20Level%3A%2079%0A--------%0AGrants%20Skill%3A%20Level%2017%20Purity%20of%20Lightning%0A--------%0A%7B%20Prefix%20Modifier%20%22Duke's%22%20(Tier%3A%203)%20%7D%0A52(51-55)%25%20increased%20Spirit%0A%7B%20Prefix%20Modifier%20%22Arcing%22%20(Tier%3A%204)%20%E2%80%94%20Damage%2C%20Elemental%2C%20Lightning%2C%20Attack%20%7D%0AAllies%20in%20your%20Presence%20deal%202(1-2)%20to%2034(33-40)%20added%20Attack%20Lightning%20Damage%0A%7B%20Prefix%20Modifier%20%22Opalescent%22%20(Tier%3A%205)%20%E2%80%94%20Mana%20%7D%0A%2B83(80-89)%20to%20maximum%20Mana%0A%7B%20Suffix%20Modifier%20%22of%20Excitement%22%20(Tier%3A%206)%20%E2%80%94%20Mana%20%7D%0A18(10-19)%25%20increased%20Mana%20Regeneration%20Rate%0A%7B%20Suffix%20Modifier%20%22of%20the%20Tutor%22%20(Tier%3A%205)%20%E2%80%94%20Life%2C%20Minion%20%7D%0AMinions%20have%2028(26-30)%25%20increased%20maximum%20Life%0A%7B%20Suffix%20Modifier%20%22of%20the%20Sage%22%20(Tier%3A%203)%20%E2%80%94%20Attribute%20%7D%0A%2B27(25-27)%20to%20Intelligence%0A",
+  "poedb": "https://poe2db.tw/us/Sceptres#ModifiersCalc",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Shrine Sceptre\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Shrine Sceptre"
+}

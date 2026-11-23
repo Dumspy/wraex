@@ -1,0 +1,19 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Wands%0ARarity%3A%20Rare%0ADoom%20Bite%0AWithered%20Wand%0A--------%0ARequires%3A%20Level%2090%20(unmet)%2C%20125%20(augmented)%20Int%0A--------%0AItem%20Level%3A%2082%0A--------%0AGrants%20Skill%3A%20Level%2020%20Chaos%20Bolt%0A--------%0A%7B%20Prefix%20Modifier%20%22Malignant%22%20(Tier%3A%204)%20%E2%80%94%20Damage%2C%20Chaos%20%7D%0A71(65-74)%25%20increased%20Chaos%20Damage%0A%7B%20Prefix%20Modifier%20%22Frostbound%22%20(Tier%3A%201)%20%E2%80%94%20Damage%2C%20Elemental%2C%20Cold%20%7D%0AGain%2028(28-30)%25%20of%20Damage%20as%20Extra%20Cold%20Damage%0A%7B%20Suffix%20Modifier%20%22of%20the%20Hearth%22%20(Tier%3A%201)%20%E2%80%94%20Mana%20%7D%0A22(18-22)%25%20increased%20Mana%20Regeneration%20Rate%0A15%25%20increased%20Light%20Radius%0A%7B%20Suffix%20Modifier%20%22of%20the%20Apt%22%20(Tier%3A%204)%20%7D%0A20%25%20reduced%20Attribute%20Requirements%0A--------%0ANote%3A%20~b%2Fo%205%20exalted%0A",
+  "poedb": "https://poe2db.tw/us/Wands#ModifiersCalc",
+  "samePriced": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"~b/o 5 exalted\"\"Withered Wand\""
+    }
+  },
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Withered Wand\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Withered Wand"
+}

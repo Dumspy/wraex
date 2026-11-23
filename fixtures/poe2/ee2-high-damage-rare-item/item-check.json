@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Crossbows%0ARarity%3A%20Rare%0ADragon%20Core%0ASiege%20Crossbow%0A--------%0AQuality%3A%20%2B29%25%20(augmented)%0APhysical%20Damage%3A%20414-1%2C043%20(augmented)%0ACritical%20Hit%20Chance%3A%205.00%25%0AAttacks%20per%20Second%3A%202.07%20(augmented)%0AReload%20Time%3A%200.60%20(augmented)%0A--------%0ARequires%3A%20Level%2079%2C%2089%20(unmet)%20Str%2C%2089%20Dex%0A--------%0ASockets%3A%20S%20S%0A--------%0AItem%20Level%3A%2082%0A--------%0A36%25%20increased%20Physical%20Damage%20(rune)%0A--------%0A%7B%20Implicit%20Modifier%20%7D%0AGrenade%20Skills%20Fire%20an%20additional%20Projectile%0A--------%0A%7B%20Prefix%20Modifier%20%22Merciless%22%20(Tier%3A%201)%20%E2%80%94%20Damage%2C%20Physical%2C%20Attack%20%7D%0A173(170-179)%25%20increased%20Physical%20Damage%0A%7B%20Prefix%20Modifier%20%22Dictator's%22%20(Tier%3A%201)%20%E2%80%94%20Damage%2C%20Physical%2C%20Attack%20%7D%0A78(75-79)%25%20increased%20Physical%20Damage%0A%2B175(175-200)%20to%20Accuracy%20Rating%0A%7B%20Prefix%20Modifier%20%22Flaring%22%20(Tier%3A%201)%20%E2%80%94%20Damage%2C%20Physical%2C%20Attack%20%7D%0AAdds%2054(37-55)%20to%2094(63-94)%20Physical%20Damage%20(desecrated)%0A%7B%20Suffix%20Modifier%20%22of%20Infamy%22%20%E2%80%94%20Attack%2C%20Speed%20%7D%0A25(23-25)%25%20increased%20Attack%20Speed%20(fractured)%0A%7B%20Suffix%20Modifier%20%22of%20the%20Sniper%22%20(Tier%3A%201)%20%7D%0A%2B7%20to%20Level%20of%20all%20Projectile%20Skills%0A%7B%20Suffix%20Modifier%20%22of%20Bursting%22%20(Tier%3A%201)%20%E2%80%94%20Attack%20%7D%0ALoads%202%20additional%20bolts%0A--------%0AFractured%20Item%0A",
+  "poedb": "https://poe2db.tw/us/Crossbows#ModifiersCalc",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Siege Crossbow\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Siege Crossbow"
+}

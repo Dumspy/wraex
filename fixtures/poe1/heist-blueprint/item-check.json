@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Blueprints%0ARarity%3A%20Normal%0ABlueprint%3A%20Bunker%0A--------%0AHeist%20Target%3A%20Unusual%20Gems%0AArea%20Level%3A%2083%0AWings%20Revealed%3A%202%2F4%0AEscape%20Routes%20Revealed%3A%203%2F8%0AReward%20Rooms%20Revealed%3A%209%2F26%0A--------%0ARequires%20Lockpicking%20(Level%205)%0ARequires%20Agility%20(Level%204)%0A--------%0AItem%20Level%3A%2083%0A--------%0ATake%20this%20item%20to%20the%20Heist%20Board%20in%20your%20Hideout%20to%20plan%20a%20Heist.%0A",
+  "poedb": "https://poedb.tw/us/Blueprint%3A_Bunker",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Blueprint: Bunker\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Blueprint: Bunker"
+}

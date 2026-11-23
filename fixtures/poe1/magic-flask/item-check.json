@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Utility%20Flasks%0ARarity%3A%20Magic%0AExperimenter's%20Quicksilver%20Flask%20of%20Adrenaline%0A--------%0AQuality%3A%20%2B20%25%20(augmented)%0ALasts%204.80%20(augmented)%20Seconds%0AConsumes%2020%20of%2050%20Charges%20on%20use%0ACurrently%20has%200%20Charges%0A40%25%20increased%20Movement%20Speed%20during%20Effect%0A--------%0ARequirements%3A%0ALevel%3A%2021%0A--------%0AItem%20Level%3A%2083%0A--------%0A21%25%20increased%20Duration%0A25%25%20increased%20Movement%20Speed%20during%20Effect%0A--------%0ARight%20click%20to%20drink.%20Can%20only%20hold%20charges%20while%20in%20belt.%20Refills%20as%20you%20kill%20monsters.%0A",
+  "poedb": "https://poedb.tw/us/Quicksilver_Flask",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Quicksilver Flask\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Quicksilver Flask"
+}

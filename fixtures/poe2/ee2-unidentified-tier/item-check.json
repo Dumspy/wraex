@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Rings%0ARarity%3A%20Magic%0ASapphire%20Ring%0A--------%0AItem%20Level%3A%2054%0A--------%0A%7B%20Implicit%20Modifier%20%E2%80%94%20Elemental%2C%20Cold%2C%20Resistance%20%7D%0A%2B23(20-30)%25%20to%20Cold%20Resistance%0A--------%0AUnidentified%20(Tier%204)%0A",
+  "poedb": "https://poe2db.tw/us/Rings#ModifiersCalc",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Sapphire Ring\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Sapphire Ring"
+}

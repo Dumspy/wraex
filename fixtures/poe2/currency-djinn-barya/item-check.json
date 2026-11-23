@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Trial%20Coins%0ARarity%3A%20Currency%0ADjinn%20Barya%0A--------%0AArea%20Level%3A%2065%0ANumber%20of%20Trials%3A%203%0A--------%0ACan%20be%20used%20at%20the%20Relic%20Altar%20in%20the%20Trial%20of%20the%20Sekhemas%20to%20begin%20a%20Trial.%0A",
+  "poedb": "https://poe2db.tw/us/Djinn_Barya",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Djinn Barya\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Djinn Barya"
+}

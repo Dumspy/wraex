@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Helmets%0ARarity%3A%20Rare%0AGale%20Crest%0AHubris%20Circlet%0A--------%0AQuality%3A%20%2B20%25%20(augmented)%0AEnergy%20Shield%3A%20220%20(augmented)%0A--------%0ARequirements%3A%0ALevel%3A%2069%0AInt%3A%20154%0A--------%0ASockets%3A%20B-B-B-G%20%0A--------%0AItem%20Level%3A%2086%0A--------%0A%7B%20Prefix%20Modifier%20%22Fecund%22%20(Tier%3A%201)%20%E2%80%94%20Life%20%7D%0A%2B95(90-99)%20to%20maximum%20Life%0A%7B%20Suffix%20Modifier%20%22of%20Shaping%22%20(Tier%3A%201)%20%E2%80%94%20Defences%2C%20Energy%20Shield%20%7D%0A5(4-6)%25%20increased%20maximum%20Energy%20Shield%0A%7B%20Fractured%20Suffix%20Modifier%20%22of%20the%20Ice%22%20(Tier%3A%203)%20%E2%80%94%20Elemental%2C%20Cold%2C%20Resistance%20%7D%0A%2B38(36-41)%25%20to%20Cold%20Resistance%0A--------%0ASplit%0A--------%0AShaper%20Item%0A",
+  "poedb": "https://poedb.tw/us/Hubris_Circlet",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Hubris Circlet\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Hubris Circlet"
+}

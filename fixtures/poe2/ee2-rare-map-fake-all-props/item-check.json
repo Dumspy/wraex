@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe2&eimport=Item%20Class%3A%20Waystones%0ARarity%3A%20Rare%0ABlasted%20Control%0AWaystone%20(Tier%2016)%0A--------%0ARevives%20Available%3A%200%20(augmented)%0APack%20Size%3A%20%2B20%25%20(augmented)%0AMagic%20Monsters%3A%20%2B30%25%20(augmented)%0ARare%20Monsters%3A%20%2B71%25%20(augmented)%0AWaystone%20Drop%20Chance%3A%20%2B90%25%20(augmented)%0AItem%20Rarity%3A%20%2B17%25%20(augmented)%0AMonster%20Rarity%3A%20%2B32%25%20(augmented)%0AItem%20Rarity%3A%20%2B17%25%20(augmented)%0AMonster%20Effectiveness%3A%20%2B45%25%20(augmented)%0A--------%0AItem%20Level%3A%2079%0A--------%0A%7B%20Prefix%20Modifier%20%22Painful%22%20(Tier%3A%201)%20%7D%0A30(26-30)%25%20increased%20Monster%20Damage%0A%7B%20Prefix%20Modifier%20%22Enduring%22%20(Tier%3A%201)%20%7D%0AMonsters%20are%20Armoured%0A%7B%20Prefix%20Modifier%20%22Slowing%22%20(Tier%3A%201)%20%7D%0APlayers%20are%20periodically%20Cursed%20with%20Temporal%20Chains%20%E2%80%94%20Unscalable%20Value%0A%7B%20Suffix%20Modifier%20%22of%20the%20Unwavering%22%20(Tier%3A%201)%20%7D%0AMonsters%20have%2071(70-79)%25%20increased%20Ailment%20Threshold%0AMonsters%20have%2072(70-79)%25%20increased%20Stun%20Threshold%0A%7B%20Suffix%20Modifier%20%22of%20Drought%22%20(Tier%3A%201)%20%7D%0APlayers%20gain%2033(35-30)%25%20reduced%20Flask%20Charges%0A%7B%20Suffix%20Modifier%20%22of%20Shattering%22%20(Tier%3A%201)%20%7D%0AMonsters%20Break%20Armour%20equal%20to%2036(30-45)%25%20of%20Physical%20Damage%20dealt%0A--------%0ACan%20be%20used%20in%20a%20Map%20Device%2C%20allowing%20you%20to%20enter%20a%20Map.%20Waystones%20can%20only%20be%20used%20once.%0A--------%0ACorrupted%0A",
+  "poedb": "https://poe2db.tw/us/Waystone_(Tier_16)",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Waystone (Tier 16)\""
+    }
+  },
+  "wiki": "https://www.poe2wiki.net/wiki/Waystone (Tier 16)"
+}

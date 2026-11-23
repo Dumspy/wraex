@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Rings%0ARarity%3A%20Unique%0ABerek's%20Grip%0ATwo-Stone%20Ring%0A--------%0ARequirements%3A%0ALevel%3A%2041%0A--------%0AItem%20Level%3A%2075%0A--------%0A%7B%20Corruption%20Implicit%20Modifier%20%E2%80%94%20Damage%2C%20Critical%20%7D%0A11(10-12)%25%20increased%20Global%20Critical%20Strike%20Chance%0A--------%0A%7B%20Unique%20Modifier%20%E2%80%94%20Elemental%2C%20Cold%2C%20Lightning%2C%20Resistance%20%7D%0A%2B28(20-25)%25%20to%20Cold%20and%20Lightning%20Resistances%0A%7B%20Unique%20Modifier%20%E2%80%94%20Life%20%7D%0A%2B45(40-50)%20to%20maximum%20Life%0A--------%0ACorrupted%0A",
+  "poedb": "https://poedb.tw/us/Bereks_Grip",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Berek's Grip\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Berek's Grip"
+}

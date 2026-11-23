@@ -1,0 +1,16 @@
+[
+  {
+    "matcher": "Area is inhabited by ranged monsters"
+  },
+  {
+    "matcher": "Monsters have a #% chance to avoid Poison, Impale, and Bleeding",
+    "roll": 50
+  },
+  {
+    "matcher": "#% increased Magic Monsters",
+    "roll": 20
+  },
+  {
+    "matcher": "Area contains a buried Apex Sentinel"
+  }
+]
