@@ -7,10 +7,13 @@
     "regen": "vitest run",
     "regen:poe1": "vitest run --project poe1",
     "regen:poe2": "vitest run --project poe2",
+    "screens": "node screens/run.mjs",
     "seed:poe2": "node scripts/seed-poe2.mjs"
   },
   "devDependencies": {
     "happy-dom": "21.0.4",
-    "vitest": "4.1.11"
+    "playwright": "1.65.0",
+    "vitest": "4.1.11",
+    "ws": "8.23.0"
   }
 }

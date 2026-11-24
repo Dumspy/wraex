@@ -11,6 +11,9 @@ devenv.local.yaml
 
 # Node (golden harness, reference checkouts)
 node_modules
+# Built renderers and screenshots for tools/golden/screens (phase 5)
+/tools/golden/.screens-build
+/target
 
 # Secrets
 .env

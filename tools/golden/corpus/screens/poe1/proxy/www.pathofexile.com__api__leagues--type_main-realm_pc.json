@@ -1,0 +1,12 @@
+[
+  {
+    "id": "Standard",
+    "event": false,
+    "rules": []
+  },
+  {
+    "id": "Hardcore",
+    "event": false,
+    "rules": []
+  }
+]

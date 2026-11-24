@@ -82,6 +82,9 @@ in
     # it installs the references' npm deps and builds their index files.
     "golden:prepare".exec = "cd ${root}/tools/golden && npm ci --no-audit --no-fund && npm run prepare-refs";
     "golden:regen".exec = "cd ${root}/tools/golden && npm run regen";
+    # Reference price-check screenshots (phase 5), built and rendered on demand.
+    # Output is target/screens/, never committed; `--rebuild` after a ref bump.
+    "golden:screens".exec = "cd ${root}/tools/golden && npm run screens";
     # Not part of check:all: it needs golden:prepare first. CI runs it.
     "check:fixtures" = {
       after = [ "golden:regen" ];

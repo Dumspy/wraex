@@ -259,7 +259,9 @@ Agent loop per step: port module → `golden check` → fix diffs → repeat.
   `initConfig` and `getConfigForHost`, matched against `fixtures/config/poe1/`.
   **PoE2 done** (`poe2::config`); steps 3 to 16 are shared in
   `core::config_upgrade`.
-- Tray icon, auto-updater, logging.
+- Tray icon, auto-updater, logging. **Tray and update check done**
+  (`platform::tray`, `core::updates`): the update check only notifies; full
+  self-update is #3. Logging and wiring both into the app come with phase 5.
 - Later / optional: OCR (`main/src/vision`, Heist gem finder).
 
 ## Phase 5: UI in Rune (≈ 4–8 weeks)

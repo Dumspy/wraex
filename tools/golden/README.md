@@ -158,6 +158,74 @@ jewels, heist and sanctum items, logbooks; every language upstream supports
 `renderer/specs/**/*.test.ts`. Own play, GitHub issues and community dumps fill the
 rest.
 
+## Screenshots (phase 5)
+
+`screens/` renders the *original* price-check window in headless Chromium and writes
+a PNG plus the element's `innerText`, so the Rune port can be compared with upstream
+before Rune's own widget exists. It is not a fixture: nothing it produces is
+committed or compared automatically.
+
+```sh
+devenv tasks run golden:screens                    # both games, default cases
+cd tools/golden
+npm run screens -- --game poe1                     # one game, default cases
+npm run screens -- --game poe2 --case ee2-rare-map # one case
+npm run screens -- --rebuild                       # after bumping a reference
+```
+
+It runs the reference's own `vite build` once per game, with cwd
+`ref/<game>/renderer` and the output in `tools/golden/.screens-build/<game>/`
+(gitignored; the build is skipped while `index.html` exists). That needs
+`golden:prepare` once: its `npm ci` installs `vite`, and it builds the data index
+files. PoE1's vite plugin regenerates those itself on `buildStart`.
+
+Per case it starts a fake main process (`screens/host.mjs`), opens the built page in
+Playwright (`playwright` 1.65.0, Chromium revision 1254) at 1600x900 / DPR 1, freezes
+the clock at 2026-01-01T12:00Z, waits for the `/events` websocket, sends
+
+```json
+{ "name": "MAIN->CLIENT::item-text",
+  "payload": { "target": "price-check", "clipboard": "<corpus text>",
+               "position": { "x": 800, "y": 450 }, "focusOverlay": false } }
+```
+
+and screenshots `#price-window` to `target/screens/<game>/<case>.png` (repo root,
+gitignored), with `target/screens/<game>/<case>.txt` next to it. The default cases
+are in `screens/cases.mjs`; item text comes from `corpus/<game>/<slug>.txt`.
+
+The host serves `/config` as `HostState`
+(`{ version, updater, contents: JSON.stringify(config) }`). `config` is
+`fixtures/config/<game>/default/config.json` with one change: `leagueId` is set to
+`Standard`, because the recorded default omits it and the leagues fixture only
+offers `Standard`/`Hardcore`. Everything else stays as recorded.
+
+### Proxy fixtures
+
+Trade and poe.ninja requests must go through `/proxy/<host>/<path>`, so the host
+answers them from `corpus/screens/<game>/proxy/`. A file is named after the URL
+after `/proxy/`, with `/` -> `__`, `?` -> `--`, `&` -> `-`, `=` -> `_` and any
+other character outside `[A-Za-z0-9._-]` -> `_`:
+
+```
+www.pathofexile.com/api/leagues?type=main&realm=pc
+  -> www.pathofexile.com__api__leagues--type_main-realm_pc.json
+www.pathofexile.com/api/trade2/data/leagues
+  -> www.pathofexile.com__api__trade2__data__leagues.json
+```
+
+Lookup order is `<name>.<METHOD>.json`, then `<name>.json`, so a POST and a GET to
+the same URL can be answered differently. Missing URLs are logged to stderr and
+answered `404 {}`, so the page never hangs. Only the leagues answers are committed
+today (PoE1 `[{ id, realm, event, rules }]`, PoE2 `{ result: [{ id, text }] }`).
+Because the trade endpoints are unanswered, the results area shows "Trade site
+request failed" (and PoE2 marks stats it would need `/api/trade2/data/stats` for as
+unrecognized). That is expected: the item header and the filters above it are what
+these screenshots are for. Add proxy fixture files, not code, to answer more.
+
+Screenshots are for visual comparison only: fonts and rendering differ by machine
+and browser, so do not pixel-diff them (the `.txt` dump helps with text). They are
+not committed.
+
 ## Rules
 
 - Fixtures are committed. Any diff after bumping a reference is the to-do list.
