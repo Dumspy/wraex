@@ -257,7 +257,8 @@ Agent loop per step: port module → `golden check` → fix diffs → repeat.
   **PoE1 done** (`core::config_store`, `poe1::config`): the store (with
   upstream's path to import from), `defaultConfig`, every `upgradeConfig` step,
   `initConfig` and `getConfigForHost`, matched against `fixtures/config/poe1/`.
-  PoE2 next.
+  **PoE2 done** (`poe2::config`); steps 3 to 16 are shared in
+  `core::config_upgrade`.
 - Tray icon, auto-updater, logging.
 - Later / optional: OCR (`main/src/vision`, Heist gem finder).
 
