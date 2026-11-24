@@ -532,6 +532,14 @@ export async function startHost ({
     /** Requests that could not be recorded, apart from 429. */
     failures,
 
+    /**
+     * Replaces the state `/config` serves, for a case that needs a config upstream's own
+     * UI cannot reach in a browser (`screens/widgets.mjs`'s delve grid).
+     */
+    setConfig (next) {
+      hostState.contents = JSON.stringify(next)
+    },
+
     /** Sends one IPC event to the most recently connected client. */
     sendEvent (event) {
       if (!lastClient || lastClient.readyState !== WebSocket.OPEN) {

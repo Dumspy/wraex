@@ -12,10 +12,11 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { chromium } from 'playwright'
 import { ensureBuild } from './build.mjs'
-import { DEFAULT_CASES, DEFAULT_SETTINGS_CASES, REPO_ROOT, SETTINGS_LABELS, corpusFile, normalizeCase, normalizeSettingsCase, screenName, widgetId } from './cases.mjs'
+import { DEFAULT_CASES, DEFAULT_SETTINGS_CASES, DEFAULT_WIDGET_CASES, REPO_ROOT, SETTINGS_LABELS, WIDGET_NAMES, corpusFile, normalizeCase, normalizeSettingsCase, normalizeWidgetCase, screenName, widgetId } from './cases.mjs'
 import { PROXY_HOSTS, startHost } from './host.mjs'
 import { imageDir, installImages, recordImage, waitForImages } from './images.mjs'
 import { shootSettings } from './settings.mjs'
+import { shootWidget } from './widgets.mjs'
 
 // The fixture harness records `defaultConfig()` without a league; `Host.getConfig`
 // hands the renderer the same JSON. The only edit is leagueId, so the leagues
@@ -92,6 +93,9 @@ function usage () {
                       default), map-check or item-check (both open item-check's
                       widget, which draws the map check for a map-like item);
                       filters the default cases
+  --overlay <name>    overlay widget to render (repeatable; needs exactly one
+                      --game): menu, stopwatch, image-strip, delve-grid,
+                      item-search or stash-search
   --record            fetch proxy misses from the real trade site / poe.ninja and
                       save them under corpus/screens/<game>/proxy/ (one request
                       per second; needs network)
@@ -104,13 +108,13 @@ function usage () {
   -h, --help
 
 Cases are tools/golden/corpus/<game>/<slug>.txt. Output: target/screens/<game>/<slug>.png
-for the price check, <widget>-<slug>.png for the map and item checks, and
-settings-<page>.png for the settings window, each with a .txt of its innerText next to
-it.`)
+for the price check, <widget>-<slug>.png for the map and item checks,
+settings-<page>.png for the settings window, and <name>.png for an overlay widget, each
+with a .txt of its innerText next to it.`)
 }
 
 function parseArgs (argv) {
-  const opts = { games: [], cases: [], settings: [], rebuild: false, debug: false, record: false, images: [], widget: null }
+  const opts = { games: [], cases: [], settings: [], overlays: [], rebuild: false, debug: false, record: false, images: [], widget: null }
   const widgets = ['price-check', 'map-check', 'item-check']
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -126,6 +130,12 @@ function parseArgs (argv) {
       const page = argv[++i]
       if (!page) throw new Error('--settings needs a page name')
       opts.settings.push(page)
+    } else if (arg === '--overlay') {
+      const name = argv[++i]
+      if (!WIDGET_NAMES.includes(name)) {
+        throw new Error(`--overlay must be one of ${WIDGET_NAMES.join(', ')}, got ${name}`)
+      }
+      if (!opts.overlays.includes(name)) opts.overlays.push(name)
     } else if (arg === '--widget') {
       const widget = argv[++i]
       if (!widgets.includes(widget)) throw new Error(`--widget must be one of ${widgets.join(', ')}, got ${widget}`)
@@ -159,6 +169,7 @@ function parseArgs (argv) {
       }
     }
   }
+  if (opts.overlays.length && opts.games.length !== 1) throw new Error('--overlay needs exactly one --game')
   if (opts.cases.length) {
     if (opts.games.length !== 1) throw new Error('--case needs exactly one --game')
     for (const slug of opts.cases) {
@@ -341,7 +352,7 @@ async function main () {
   const opts = parseArgs(process.argv.slice(2))
   const casesByGame = opts.cases.length
     ? { [opts.games[0]]: opts.cases.map(slug => caseEntry(opts.games[0], slug, opts.widget)) }
-    : opts.settings.length
+    : opts.settings.length || opts.overlays.length
       ? {}
       : Object.fromEntries(
         Object.entries(DEFAULT_CASES).map(([game, cases]) => [
@@ -351,10 +362,25 @@ async function main () {
       )
   const settingsByGame = opts.settings.length
     ? { [opts.games[0]]: opts.settings.map(settings => ({ settings })) }
-    : opts.cases.length
+    : opts.cases.length || opts.overlays.length
       ? {}
       : Object.fromEntries(
         Object.entries(DEFAULT_SETTINGS_CASES).map(([game, cases]) => [game, cases.map(normalizeSettingsCase)])
+      )
+  const widgetsByGame = opts.overlays.length
+    ? {
+        // A named case keeps the row's `tab`/`query`/`wmTitle` (the item search needs them).
+        [opts.games[0]]: opts.overlays.map(overlay => {
+          const known = (DEFAULT_WIDGET_CASES[opts.games[0]] ?? [])
+            .map(normalizeWidgetCase)
+            .find(entry => entry.overlay === overlay)
+          return known ?? normalizeWidgetCase(overlay)
+        })
+      }
+    : opts.cases.length || opts.settings.length
+      ? {}
+      : Object.fromEntries(
+        Object.entries(DEFAULT_WIDGET_CASES).map(([game, cases]) => [game, cases.map(normalizeWidgetCase)])
       )
 
   if (opts.images.length) {
@@ -405,6 +431,21 @@ async function main () {
             host,
             game,
             pageSlug: settings,
+            config,
+            clock,
+            record: opts.record,
+            debug: opts.debug,
+            userAgent: agent
+          })
+          if (host.errors.length) throw new Error(host.errors[0])
+        }
+        for (const widgetCase of widgetsByGame[game] ?? []) {
+          await shootWidget({
+            browser,
+            host,
+            game,
+            name: widgetCase.overlay,
+            testCase: widgetCase,
             config,
             clock,
             record: opts.record,

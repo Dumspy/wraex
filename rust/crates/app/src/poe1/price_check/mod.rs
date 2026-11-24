@@ -136,13 +136,29 @@ impl PriceCheck {
         crate::ui::art::set_mode(mode);
         let data = data();
         let item = parse_clipboard(data, text).map_err(|fail| ParseError::Rejected { key: fail.0.into() });
+        Self::build(text.to_owned(), item, mode)
+    }
+
+    /// `MAIN->CLIENT::item-text` with the item already parsed: what the item search sends when
+    /// one of its picked entries is pressed (`WidgetItemSearch.vue`'s `selectedItemClick`, which
+    /// builds a `createVirtualItem` and `Host.selfDispatch`es it). `parseClipboard` is skipped;
+    /// the text is the virtual item's own `rawText`.
+    pub fn with_item(item: Item, mode: Mode) -> Self {
+        crate::ui::art::set_mode(mode);
+        let text = item.raw_text.clone();
+        Self::build(text, Ok(item), mode)
+    }
+
+    /// The window over a parsed item, whatever produced it.
+    fn build(text: String, item: Result<Item, ParseError>, mode: Mode) -> Self {
+        let data = data();
         let presets = item.as_ref().ok().map(|item| create_presets(data, item, &preset_options()));
         let do_search = match (&item, &presets) {
             (Ok(item), Some(Ok(presets))) => initial_do_search(item, presets),
             _ => false,
         };
         let mut check = Self {
-            text: text.to_owned(),
+            text,
             item,
             presets,
             do_search,

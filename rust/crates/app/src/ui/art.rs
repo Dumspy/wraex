@@ -158,6 +158,35 @@ pub fn local_sized(game: GameId, name: &str, size: (f32, f32)) -> El {
     draw(Source::Local { game, name: name.to_owned() }, size)
 }
 
+/// `/images/<name>` cropped to fill `size`, as CSS `object-fit: cover` does:
+/// `WidgetImageStrip.vue`'s `FullscreenImage` in a card.
+///
+/// The picture is scaled so it covers the box and centred; the overflow is left to the caller's
+/// clipped box (`El::clip_rounded`), so the returned element may be larger than `size` and is out
+/// of flow at the offset it needs. A picture that has not loaded is a grey placeholder filling
+/// the box, so the strip never jumps.
+pub fn local_cover(game: GameId, name: &str, size: (f32, f32)) -> El {
+    let (w, h) = size;
+    let source = Source::Local { game, name: name.to_owned() };
+    let Some(image) = ready(&source) else {
+        return el()
+            .absolute(0.0, 0.0)
+            .size(w, h)
+            .radius(crate::theme::ROUNDED)
+            .fill(crate::theme::gray(700))
+            .a11y_hidden();
+    };
+    let [iw, ih] = image.size().unwrap_or([w.max(1.0) as u32, h.max(1.0) as u32]);
+    let (iw, ih) = (iw as f32, ih as f32);
+    let scale = (w / iw).max(h / ih);
+    let (dw, dh) = (iw * scale, ih * scale);
+    el().absolute((w - dw) / 2.0, (h - dh) / 2.0)
+        .size(dw, dh)
+        .pixels_fit(image.pixels(), SurfaceFit::Fit)
+        .role("img")
+        .label(source.label())
+}
+
 /// An item's art at `url` (a `web.poecdn.com` image from the game data), `size` points.
 pub fn cdn(game: GameId, url: &str, size: (f32, f32)) -> El {
     draw(Source::Cdn { game, url: url.to_owned() }, size)

@@ -73,6 +73,7 @@ pub fn orange(shade: u16) -> Color {
         400 => "#f6ad55",
         500 => "#ed8936",
         600 => "#dd6b20",
+        700 => "#c05621",
         _ => panic!("no `orange.{shade}` in upstream's tailwind.config.js"),
     })
 }
@@ -110,6 +111,15 @@ pub fn slate(shade: u16) -> Color {
 /// `gray-800` and `gray-700`.
 pub fn table_stripe() -> Color {
     c("#353f52")
+}
+
+/// What an overlay widget is drawn over: `OverlayWindow.vue` paints `AppConfig()`'s
+/// `overlayBackground` (`rgba(129, 139, 149, 0.15)` on a fresh install) over the page's dark
+/// canvas (`<meta name="color-scheme" content="dark">`), and the screenshot harness's page
+/// flattens that to this. A widget scene fills its window with it, so a translucent widget (the
+/// delve grid, the stopwatch) composites as the reference's screenshot does.
+pub fn overlay_background() -> Color {
+    c("#232426")
 }
 
 /// Tailwind's `indigo` ramp (an enchant tag).

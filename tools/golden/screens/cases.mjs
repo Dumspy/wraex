@@ -154,3 +154,53 @@ export function normalizeSettingsCase (entry) {
 export function settingsScreenName (game, page) {
   return path.join(REPO_ROOT, 'target/screens', game, `settings-${page}`)
 }
+
+// The overlay widgets the screenshot tool renders, per game: the widget menu, the
+// stopwatch, the image strip, the delve grid, the item search and the stash search
+// (`screens/widgets.mjs` says how each is opened). A widget case is
+// `{ overlay: '<name>' }`; like the settings cases it needs no corpus file, because the
+// host serves `fixtures/config/<game>/default/config.json`. The output is
+// `target/screens/<game>/<name>.png`, the names of the Rune scenes `widget-<name>`
+// (`rust/crates/app/src/lib.rs`).
+//
+// The two that are config lists rather than chrome take more:
+//
+// - `item-search`: `tab` (the `typeFilter` button to press: APT's "Skill Gem" or
+//   "Replicas", EE2's "Skill Gems", "Uniques" or "Base Items") and `query` (typed into the
+//   search field). APT's pinned data ships no alt-quality gems, so its gem tab lists
+//   nothing and a default case searches for replicas instead.
+// - `stash-search`: `wmTitle` picks the config instance the menu button opens ("Map
+//   rolling"; "Dump sorting" is the same widget with another list), and an optional `name`
+//   renames the output.
+export const WIDGET_NAMES = ['menu', 'stopwatch', 'image-strip', 'delve-grid', 'item-search', 'stash-search']
+
+export const DEFAULT_WIDGET_CASES = {
+  poe1: [
+    ...['menu', 'stopwatch', 'image-strip', 'delve-grid'].map(overlay => ({ overlay })),
+    { overlay: 'item-search', tab: 'Replicas', query: 'headhunter' },
+    { overlay: 'stash-search', wmTitle: 'Map rolling' }
+  ],
+  poe2: [
+    ...['menu', 'stopwatch', 'image-strip', 'delve-grid'].map(overlay => ({ overlay })),
+    { overlay: 'item-search', tab: 'Uniques', query: 'Mageblood' },
+    { overlay: 'stash-search', wmTitle: 'Map rolling' }
+  ]
+}
+
+/** A widget case as `{ overlay, tab, query, wmTitle, name }`, from a cases.mjs row. */
+export function normalizeWidgetCase (entry) {
+  if (typeof entry === 'string') return { overlay: entry }
+  const { overlay } = entry
+  return {
+    overlay,
+    tab: entry.tab,
+    query: entry.query,
+    wmTitle: entry.wmTitle,
+    name: entry.name ?? overlay
+  }
+}
+
+/** `target/screens/<game>/<name>`, without the extension. */
+export function overlayScreenName (game, name) {
+  return path.join(REPO_ROOT, 'target/screens', game, name)
+}

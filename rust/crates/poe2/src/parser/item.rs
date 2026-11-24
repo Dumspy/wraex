@@ -322,4 +322,41 @@ impl Item {
             info_variants: None,
         }
     }
+
+    /// `createVirtualItem`: an item the parser never saw, standing in for a base type the
+    /// item search picked (`WidgetItemSearch.vue`'s `starredItemClick`).
+    ///
+    /// The reference spreads the props it is given over a fresh `ParsedItem` and hard-codes
+    /// `rawText: 'VIRTUAL_ITEM'`, the empty lists and `isUnidentified: false`; `name` and
+    /// `baseType` stay `undefined` there, which [`Item::empty`] spells as empty text.
+    fn virtual_item(info: BaseType) -> Self {
+        let mut item = Self::empty(String::new(), None);
+        item.info = Some(info);
+        item.raw_text = "VIRTUAL_ITEM".to_owned();
+        item
+    }
+
+    /// `createVirtualItem({ category: ItemCategory.Gem, info, gemLevel: 1 })`: a skill gem at
+    /// level 1.
+    pub fn virtual_gem(info: BaseType) -> Self {
+        let mut item = Self::virtual_item(info);
+        item.category = Some(ItemCategory::Gem);
+        item.gem_level = Some(1.0);
+        item
+    }
+
+    /// `createVirtualItem({ rarity: ItemRarity.Unique, info })`: a unique, by name.
+    pub fn virtual_unique(info: BaseType) -> Self {
+        let mut item = Self::virtual_item(info);
+        item.rarity = Some(Rarity::Unique);
+        item
+    }
+
+    /// `createVirtualItem({ rarity: ItemRarity.Normal, info })`: a base type, which EE2's
+    /// third tab searches.
+    pub fn virtual_normal(info: BaseType) -> Self {
+        let mut item = Self::virtual_item(info);
+        item.rarity = Some(Rarity::Normal);
+        item
+    }
 }

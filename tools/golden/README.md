@@ -160,10 +160,12 @@ rest.
 
 ## Screenshots (phase 5)
 
-`screens/` renders the *original* windows (price check, map check, item check, settings) in
-headless Chromium and writes a PNG plus the element's `innerText`, so the Rune port can be
-compared with upstream before Rune's own widget exists. It is not a fixture: nothing it
-produces is committed or compared automatically.
+`screens/` renders the *original* windows (price check, map check, item check, settings) and the
+overlay's widgets (the widget menu, stopwatch, image strip, delve grid, item search and stash
+search) in headless Chromium
+and writes a PNG plus the element's `innerText`, so the Rune port can be compared with upstream
+before Rune's own widget exists. It is not a fixture: nothing it produces is committed or
+compared automatically.
 
 ```sh
 devenv tasks run golden:screens                    # both games, default cases
@@ -171,6 +173,7 @@ cd tools/golden
 npm run screens -- --game poe1                     # one game, default cases
 npm run screens -- --game poe2 --case ee2-rare-map # one case
 npm run screens -- --game poe1 --settings general  # one settings page
+npm run screens -- --game poe1 --overlay menu      # one overlay widget
 npm run screens -- --rebuild                       # after bumping a reference
 npm run screens -- --game poe2 --record            # fetch + save new answers (network)
 npm run screens -- --game poe1 --image <url>       # record one item image on its own
@@ -322,6 +325,51 @@ own 800x608, so comparing needs no `--size`.
 npm run screens -- --game poe1 --settings general
 npm run screens -- --settings hotkeys --settings about --game poe2
 ```
+
+### Overlay widgets
+
+`DEFAULT_WIDGET_CASES` (`screens/cases.mjs`) renders the overlay's own widgets — the widget
+menu, the stopwatch, the image strip, the delve grid, the item search and the stash search —
+for both games. A case is `{ overlay: 'menu' }` (or `--overlay <name>`); like the settings cases
+it needs no corpus file.
+The output is `target/screens/<game>/<name>.png` plus a `.txt` of its `innerText`, the names of
+the Rune scenes `widget-<name>` and `poe2-widget-<name>` (`rust/crates/app/src/lib.rs`).
+
+```sh
+npm run screens -- --game poe1 --overlay menu --overlay stopwatch
+npm run screens -- --game poe2            # every case, widgets included
+```
+
+Each widget is a card positioned by its `anchor` on the 1600x900 overlay page, hidden until
+`wmWants` says show. The element to screenshot is `#widget-<wmId> > div` (the positioned
+`.widget`), whose box is the card: a scene renders at exactly that size, so comparing needs no
+`--size`. The run logs the box, which is where the scenes' sizes come from (`widgets::scene_size`).
+
+How each one is opened, because three are not visible on load:
+
+- `menu`: `wmWants: 'show'` in `defaultConfig()`, so it is already there.
+- `stopwatch`: not in `defaultConfig()` (it is an `instances: 'multi'` widget). The menu's
+  `fa-ellipsis-h` popover adds one (`wm.create('timer')`), and the new widget shows itself; its
+  id is the config's largest + 1.
+- `image-strip`: in the config, hidden; its button in the widget menu (`wm.show`) shows it. The
+  menu lists it under its title ("Cheat sheets"), so that is what the run clicks.
+- `item-search`: in the config, hidden; the menu's magnifier button (`wmTitle: '{icon=fa-search}'`)
+  shows it. Its case also carries a `tab` (the `typeFilter` button to press) and a `query` typed
+  into the search field, since the card is a search box and its results are the point. APT's
+  pinned data ships no alt-quality gems, so its gem tab (`Skill Gem`) finds nothing and the
+  default case searches the Replicas tab instead; EE2's default case searches uniques.
+- `stash-search`: two instances in the config, both hidden; the menu lists them under their titles
+  ("Map rolling", "Dump sorting"). A case names the instance with `wmTitle`; "Dump sorting" is the
+  same widget with another list, so only "Map rolling" has a default case.
+- `delve-grid`: in the config, hidden, and `menu::skip`, so the menu has no button for it. Its
+  only opener in Electron is the `MAIN->CLIENT::widget-action` event, which
+  `WidgetDelveGrid.vue` ignores outside Electron (`!Host.isElectron` returns), so a browser
+  cannot reach it. The host serves the same config with this widget shown and the menu hidden
+  (`host.setConfig`), because the menu sits over the grid's top-left corner in the crop.
+
+The image strip's default picture is `syndicate.jpg` from the reference's own
+`public/images`, so it needs no recording; the port draws it `object-fit: cover`, from
+`ui/art.rs`'s `local_cover`.
 
 ### Recording answers (`--record`)
 

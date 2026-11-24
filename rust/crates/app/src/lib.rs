@@ -6,7 +6,8 @@
 //! and the recorded answers of [`replay`]. Each game's item check ([`poe1::item_check`],
 //! [`poe2::item_check`]) draws its map check ([`poe1::map_check`], [`poe2::map_check`]) for a
 //! map-like item. The settings window ([`settings`]) opens over either game's check, one scene
-//! per page.
+//! per page. The overlay's own widgets ([`widgets`]) — the menu, the stopwatch, the image strip,
+//! the delve grid, the item search and the stash search — are one scene each.
 //!
 //! `cargo run -p wraex-app` opens the window; `-- --snap out.png --scene <slug>` renders one of
 //! the corpus cases headlessly (`--list-scenes` lists them).
@@ -18,6 +19,7 @@ pub mod settings;
 pub mod theme;
 pub mod trade;
 pub mod ui;
+pub mod widgets;
 
 use rune::{AppSpec, Cx, El, Waker};
 use wraex_core::GameId;
@@ -51,6 +53,10 @@ pub struct App {
     pub item_check: Option<poe1::item_check::ItemCheck>,
     /// The item check window on PoE2.
     pub item_check_poe2: Option<poe2::item_check::ItemCheck>,
+    /// An overlay widget (`widgets`): the menu, the stopwatch, the image strip, the delve grid,
+    /// the item search or the stash search, one per scene. The app itself would draw every
+    /// widget whose `wmWants` is `show`.
+    pub widgets: Option<widgets::Overlay>,
     /// Where trade requests go: HTTPS in a window, recorded answers headless.
     mode: Mode,
     /// The waker `AppSpec::poll` gave the app, handed to whichever window is built later.
@@ -66,6 +72,7 @@ impl std::fmt::Debug for App {
             .field("settings", &self.settings)
             .field("item_check", &self.item_check)
             .field("item_check_poe2", &self.item_check_poe2)
+            .field("widgets", &self.widgets)
             .field("mode", &self.mode)
             .finish()
     }
@@ -86,6 +93,7 @@ impl App {
             settings: None,
             item_check: None,
             item_check_poe2: None,
+            widgets: None,
             mode,
             waker: None,
         }
@@ -102,6 +110,7 @@ impl App {
             settings: None,
             item_check: None,
             item_check_poe2: None,
+            widgets: None,
             mode,
             waker: None,
         };
@@ -197,6 +206,30 @@ impl App {
         app
     }
 
+    /// The app with only an overlay widget open on `kind`'s scene: the menu, the stopwatch, the
+    /// image strip, the delve grid, the item search or the stash search, at the card's own size.
+    /// A scene never reads the user's
+    /// config or the network: [`widgets::Overlay::scene`] reads `default_config()` only.
+    pub fn widgets_scene(game: GameId, kind: widgets::Kind) -> Self {
+        let mut app = match game {
+            GameId::Poe2 => Self::with_mode_poe2(&corpus_poe2("currency-djinn-barya"), Mode::Replay),
+            _ => Self::with_mode(&corpus(SCENES[0].0), Mode::Replay),
+        };
+        app.game = game;
+        app.widgets = Some(widgets::Overlay::scene(game, kind));
+        app
+    }
+
+    /// `--scene widget-<name>` / `--scene poe2-widget-<name>` and the tests: replace the state
+    /// with that widget's scene.
+    pub fn show_widget(&mut self, game: GameId, kind: widgets::Kind) {
+        let waker = self.waker.clone();
+        *self = Self::widgets_scene(game, kind);
+        if let Some(waker) = waker {
+            self.set_waker(waker);
+        }
+    }
+
     /// The waker the window's trade and price answers use to run `poll`.
     pub fn set_waker(&mut self, waker: Waker) {
         self.price_check.set_waker(waker.clone());
@@ -217,12 +250,65 @@ impl App {
         }
     }
 
-    /// `AppSpec::poll`: a landed answer in whichever window is open; true when one applied.
-    pub fn poll(&mut self) -> bool {
+    /// `AppSpec::poll`: a landed answer in whichever window is open, the overlay's stopwatches
+    /// advanced to `clock`, and the item search's picked entry opened; true when something
+    /// changed.
+    pub fn poll(&mut self, clock: f64) -> bool {
         let poe1 = self.price_check.poll();
         let poe2 = self.poe2.as_mut().is_some_and(|check| check.poll());
         let settings = self.settings.as_mut().is_some_and(|settings| settings.poll());
-        poe1 || poe2 || settings
+        let widgets = self.widgets.as_mut().is_some_and(|overlay| overlay.poll(clock));
+        // The item search's field shows the query its results came from: Rune's write-back of a
+        // blurred field's model can land empty, and the view rebuilds the field from it.
+        let repaired = self
+            .widgets
+            .as_mut()
+            .and_then(|overlay| overlay.item_search.as_mut())
+            .is_some_and(|state| state.sync_field());
+        // `MAIN->CLIENT::item-text` from the item search's strip: the widget records the
+        // dispatch, and the shell reopens the price check on the item.
+        let opened = match self.widgets.as_mut().and_then(widgets::item_search::take_picked) {
+            Some(picked) => {
+                self.open_picked_item(picked);
+                true
+            }
+            None => false,
+        };
+        poe1 || poe2 || settings || widgets || opened || repaired
+    }
+
+    /// `MAIN->CLIENT::item-text` with an item the parser never saw: the item search's
+    /// `selectedItemClick` builds a `createVirtualItem` and self-dispatches it, which reopens the
+    /// price check on it. In an overlay both widgets would stay up; this one-window shell shows
+    /// the price check instead of the widget that asked for it.
+    pub fn open_picked_item(&mut self, picked: widgets::item_search::Picked) {
+        // Hide the widget rather than drop it: a queued handler of the frame that pressed the
+        // strip entry still projects onto the overlay, and its state is what a later show returns
+        // to. The view stops drawing it once it is hidden.
+        if let Some(overlay) = self.widgets.as_mut()
+            && let Some(widget) = overlay.widget_mut(overlay.shown)
+        {
+            widget.set_wants(widgets::Wants::Hide);
+        }
+        match picked {
+            widgets::item_search::Picked::Poe1(item) => {
+                self.game = GameId::Poe1;
+                self.price_check = PriceCheck::with_item(*item, self.mode);
+            }
+            widgets::item_search::Picked::Poe2(item) => {
+                self.game = GameId::Poe2;
+                self.poe2 = Some(poe2::price_check::PriceCheck::with_item(*item, self.mode));
+                self.attach_waker();
+            }
+        }
+    }
+
+    /// Run `f` on the item search's state, when the item-search widget built one. The scenes use
+    /// it to open on the query their screenshot types.
+    pub fn item_search(&mut self, f: impl FnOnce(&mut widgets::item_search::State)) {
+        if let Some(state) = self.widgets.as_mut().and_then(|overlay| overlay.item_search.as_mut()) {
+            f(state);
+        }
     }
 }
 
@@ -247,6 +333,11 @@ fn project_settings(app: &mut App) -> &mut Settings {
     app.settings.as_mut().expect("a settings scene built the window")
 }
 
+/// `App` → the overlay widget's state, for its handlers.
+fn project_widgets(app: &mut App) -> &mut widgets::Overlay {
+    app.widgets.as_mut().expect("a widget scene built the window")
+}
+
 /// `App` → the PoE1 item check, for its handlers.
 fn project_item_check(app: &mut App) -> &mut poe1::item_check::ItemCheck {
     app.item_check.as_mut().expect("an item-check scene built the window")
@@ -260,6 +351,13 @@ fn project_item_check_poe2(app: &mut App) -> &mut poe2::item_check::ItemCheck {
 /// The app's window: the settings window while it is open, else the item check, else whichever
 /// game's price check is open.
 pub fn view(app: &App, cx: &mut Cx<App>) -> El {
+    // An overlay widget is a card of its own, at its own size; a hidden one shows the window
+    // under it (the item search hands the window to the price check its pick opened).
+    if let Some(overlay) = &app.widgets
+        && overlay.shown_widget().is_some_and(|widget| widget.wm_wants == widgets::Wants::Show)
+    {
+        return widgets::view(overlay, cx, project_widgets);
+    }
     if let Some(settings) = &app.settings
         && settings.open
     {
@@ -327,6 +425,37 @@ pub const SCENES: &[Scene] = &[
     ("poe2-item-check-note-rare-bow", |app| app.load_item_check_poe2("note-rare-bow")),
     ("poe2-item-check-ee2-unique-item", |app| app.load_item_check_poe2("ee2-unique-item")),
     ("poe2-item-check-ee2-uncut-skill-gem", |app| app.load_item_check_poe2("ee2-uncut-skill-gem")),
+    // The overlay widgets (`tools/golden/screens/widgets.mjs`): the menu, the stopwatch, the
+    // image strip and the delve grid, for both games. A scene is the widget's own card, which is
+    // what their screenshots crop.
+    ("widget-menu", |app| app.show_widget(GameId::Poe1, widgets::Kind::Menu)),
+    ("widget-stopwatch", |app| app.show_widget(GameId::Poe1, widgets::Kind::Stopwatch)),
+    ("widget-image-strip", |app| app.show_widget(GameId::Poe1, widgets::Kind::ImageStrip)),
+    ("widget-delve-grid", |app| app.show_widget(GameId::Poe1, widgets::Kind::DelveGrid)),
+    ("poe2-widget-menu", |app| app.show_widget(GameId::Poe2, widgets::Kind::Menu)),
+    ("poe2-widget-stopwatch", |app| app.show_widget(GameId::Poe2, widgets::Kind::Stopwatch)),
+    ("poe2-widget-image-strip", |app| app.show_widget(GameId::Poe2, widgets::Kind::ImageStrip)),
+    ("poe2-widget-delve-grid", |app| app.show_widget(GameId::Poe2, widgets::Kind::DelveGrid)),
+    // The two widgets that are config lists rather than chrome: the stash searches ("Map
+    // rolling" and "Dump sorting" come from `defaultConfig()`) and the item search, opened on the
+    // query its screenshot types (`tools/golden/screens/widgets.mjs`). APT's data has no
+    // alt-quality gems at this pin, so its item search shows a replica instead.
+    ("widget-item-search", |app| {
+        app.show_widget(GameId::Poe1, widgets::Kind::ItemSearch);
+        app.item_search(|state| {
+            state.set_tab(widgets::item_search::Tab::Replica);
+            state.set_query("headhunter");
+        });
+    }),
+    ("widget-stash-search", |app| app.show_widget(GameId::Poe1, widgets::Kind::StashSearch)),
+    ("poe2-widget-item-search", |app| {
+        app.show_widget(GameId::Poe2, widgets::Kind::ItemSearch);
+        app.item_search(|state| {
+            state.set_tab(widgets::item_search::Tab::Unique);
+            state.set_query("Mageblood");
+        });
+    }),
+    ("poe2-widget-stash-search", |app| app.show_widget(GameId::Poe2, widgets::Kind::StashSearch)),
     // The settings window, one scene per menu page, for both games.
     ("settings-poe1-hotkeys", |app| app.settings_page(GameId::Poe1, Page::Hotkeys)),
     ("settings-poe1-chat", |app| app.settings_page(GameId::Poe1, Page::Chat)),
@@ -379,6 +508,9 @@ pub fn settings_scene(slug: &str) -> Option<(GameId, Page)> {
 /// at that size and needs no `--size`. A price check keeps the price-check window's size, and
 /// an explicit `--size` still wins.
 pub fn scene_size(scene: Option<&str>) -> (f32, f32) {
+    if let Some((game, kind)) = scene.and_then(widgets::scene) {
+        return widgets::scene_size(game, kind);
+    }
     match scene.and_then(settings_scene) {
         Some(_) => (settings::WIDTH, settings::HEIGHT),
         None => (WIDTH, HEIGHT),
@@ -398,13 +530,17 @@ pub fn main() {
         // A live search's answer lands from a worker thread; the waker runs `poll`, which
         // applies it and redraws. Replay answers land in the handler, so `poll` is idle.
         setup: Some(|app, waker| app.set_waker(waker)),
-        poll: Some(|app, _t, _tx| app.poll()),
+        poll: Some(|app, clock, _tx| app.poll(clock)),
         // The window is exactly the widget: the price check is a fixed 28.75 rem wide, so the
         // window must not shrink past it. (As an overlay it won't be resizable at all.)
         min_size: Some(size),
         ..AppSpec::new("Wraex", size, App::default, view)
     });
 }
+
+#[cfg(test)]
+#[path = "widgets/tests.rs"]
+mod widget_tests;
 
 #[cfg(test)]
 mod tests {
@@ -419,6 +555,9 @@ mod tests {
         // PoE2's window on its own corpus (`poe2-ee2-rare-item` →
         // `corpus/poe2/ee2-rare-item.txt`); everything else is PoE1's, as before.
         let size = scene_size(Some(slug));
+        if let Some((game, kind)) = widgets::scene(slug) {
+            return runtime_app(App::widgets_scene(game, kind), size);
+        }
         if let Some((game, page)) = settings_scene(slug) {
             return runtime_app(App::settings_scene(game, page), size);
         }
@@ -444,7 +583,7 @@ mod tests {
         let text = TextSystem::new(theme::FONTS, theme::FAMILIES);
         let mut runtime = Runtime::with_text(app, view, size, Env::new(true, 1.0), text);
         // `AppSpec::poll` in a window; the tests drive frames themselves.
-        runtime.poll = Some(|app: &mut App, _t: f64, _tx: &mut rune::Tx| app.poll());
+        runtime.poll = Some(|app: &mut App, clock: f64, _tx: &mut rune::Tx| app.poll(clock));
         runtime.frame(0.0);
         runtime
     }
@@ -506,6 +645,9 @@ mod tests {
             } else if is_item_check_scene(slug) {
                 // `WidgetItemCheck.vue` is an overlay card: upstream's overlay draws no title bar
                 // over it either (its hover actions panel is not ported).
+                assert!(runtime.find("titlebar").is_none(), "{slug}: no title bar");
+            } else if widgets::scene(slug).is_some() {
+                // An overlay widget is a card on the game's panel, with no title bar of its own.
                 assert!(runtime.find("titlebar").is_none(), "{slug}: no title bar");
             } else {
                 assert_eq!(text_of(&runtime, "titlebar-title").as_deref(), Some("Standard"), "{slug}");

@@ -8,6 +8,7 @@ pub mod config;
 pub mod data;
 pub mod filters;
 pub mod item_check;
+pub mod item_search;
 pub mod map_check;
 pub mod parser;
 pub mod prices;

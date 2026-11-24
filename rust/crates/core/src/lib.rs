@@ -15,6 +15,7 @@ pub mod js;
 pub mod js_regex;
 pub mod keys;
 pub mod leagues;
+pub mod levenshtein;
 pub mod parse;
 pub mod rarity;
 pub mod relative_time;
