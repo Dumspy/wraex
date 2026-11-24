@@ -8,6 +8,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+tray-icon = { workspace = true }
 ureq = { workspace = true }
 wraex-core = { workspace = true }
 

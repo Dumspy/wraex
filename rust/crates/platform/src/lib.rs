@@ -3,10 +3,12 @@
 //!
 //! Window tracking, hotkeys, overlay and clipboard are not implemented yet:
 //! phase 2 (the Windows spike) picks the crates and proves they work before any
-//! feature is ported on top of them. [`http`] sends the trade API's requests.
+//! feature is ported on top of them. [`http`] sends the trade API's requests and
+//! [`tray`] owns the system tray icon.
 
 pub mod clipboard;
 pub mod hotkeys;
 pub mod http;
 pub mod overlay;
+pub mod tray;
 pub mod window;

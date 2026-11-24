@@ -35,6 +35,10 @@ fancy-regex = "0.20"
 ureq = "3"
 # `String.prototype.normalize('NFKD')` (poe.ninja detail page slugs).
 unicode-normalization = "0.1"
+# The system tray (`wraex_platform::tray`), the crate Tauri uses. Default
+# features pick the GTK 3 AppIndicator backend on Linux; they are no-ops on
+# macOS and Windows.
+tray-icon = "0.26"
 
 # Cargo doesn't inherit patches from a dependency. Rune vendors these six crates at
 # the rev above and needs them patched, or the build fails (`parley_engine` has no
