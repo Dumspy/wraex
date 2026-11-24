@@ -5,10 +5,12 @@
 //! ui::item_quick_price("trend", Some(price)).build()
 //! ```
 
-use rune::{El, Span, el, rich, row, text};
+use rune::{El, Span, rich, row, text};
+use wraex_core::GameId;
 use wraex_poe1::prices::{CurrencyValue, display_rounding};
 
 use crate::theme::{self, text as type_};
+use crate::ui::art::{self, Picture};
 use crate::ui::icon;
 
 /// The item image's size (`w-8 h-8` unless the base type is taller or wider).
@@ -21,6 +23,8 @@ pub struct ItemQuickPrice {
     fraction: bool,
     currency_text: bool,
     slot: Option<El>,
+    /// `itemImg`: the item's art, `/images/wisdom.png` when the caller has none.
+    item_img: Option<Picture>,
     icon_w: f32,
     icon_h: f32,
     color: Option<rune::Color>,
@@ -46,10 +50,18 @@ impl ItemQuickPrice {
             fraction: false,
             currency_text: false,
             slot: None,
+            item_img: None,
             icon_w: ICON,
             icon_h: ICON,
             color: None,
         }
+    }
+
+    /// `itemImg`: the item's art (`item.info.icon` on the CDN, or one of the reference's
+    /// `/images` files). Without it the reference's default, `wisdom.png`, is drawn.
+    pub fn item_img(mut self, picture: Picture) -> Self {
+        self.item_img = Some(picture);
+        self
     }
 
     /// The price's colour. Popped over the white tippy frame the window's inherited
@@ -96,14 +108,15 @@ impl ItemQuickPrice {
     }
 
     pub fn build(self) -> El {
-        let Self { key, price, fraction, currency_text, slot, icon_w, icon_h, color } = self;
+        let Self { key, price, fraction, currency_text, slot, item_img, icon_w, icon_h, color } = self;
         // `displayRounding` of both ends: no price is the reference's `?`.
         let min = price.map_or_else(|| "?".to_owned(), |price| display_rounding(price.min, fraction));
         let max = price.map_or_else(|| "?".to_owned(), |price| display_rounding(price.max, fraction));
         let range = min != max;
 
         let slot = slot.unwrap_or_else(|| {
-            el().key(format!("{key}-item-icon")).size(icon_w, icon_h).radius(theme::ROUNDED).fill(theme::gray(700))
+            let picture = item_img.unwrap_or_else(|| Picture::local("wisdom.png"));
+            art::picture(GameId::Poe1, &picture, (icon_w, icon_h)).key(format!("{key}-item-icon"))
         });
         let mut label = row().key(format!("{key}-text")).items_center().min_w(0.0);
         // `<span :class="{ 'px-1': (minText === '?') }">`
@@ -154,7 +167,9 @@ impl ItemQuickPrice {
             .child(icon::arrow_right(theme::rem(0.875), theme::rem(0.875), theme::gray(600)).mx(theme::rem(0.25)))
             .child(label);
         if !currency_text {
-            root = root.child(icon::image_placeholder(theme::rem(2.0)).key(format!("{key}-currency-icon")));
+            // `isValuable`: `/images/divine.png` for a divine price, `/images/chaos.png` otherwise.
+            let icon = if price.is_some_and(|price| price.currency == "div") { "divine.png" } else { "chaos.png" };
+            root = root.child(art::local(GameId::Poe1, icon, theme::rem(2.0)).key(format!("{key}-currency-icon")));
         }
         root
     }

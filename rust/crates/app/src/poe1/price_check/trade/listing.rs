@@ -10,7 +10,7 @@ use crate::poe1::i18n;
 use crate::poe1::price_check::PriceCheck;
 use crate::poe1::price_check::view::Project;
 use crate::theme::{self, text as type_};
-use crate::ui;
+use crate::ui::art;
 
 use super::online;
 
@@ -234,11 +234,16 @@ fn price_cell(index: usize, result: &PricingResult, listed_times: u32) -> El {
                 ),
         );
     } else if !result.has_fee {
-        // `stashListing`: the stash icon, and a `?` when the listing has no note. The icon
-        // font and `public/images` are not wired up, so a square stands in.
+        // `stashListing`: the stash icon, and a `?` when the listing has no note.
+        // `$style.stashIcon`: `height: 1.25rem`, greyed out (`grayscale(1) opacity(.5)`; Rune
+        // has no colour filter, so only the opacity is applied).
         let mut stash =
             row().key(format!("listing-{index}-stash")).items_center().ml(theme::rem(0.25)).mr(-(theme::rem(0.25)));
-        stash = stash.child(ui::icon::image_placeholder(theme::rem(1.25)));
+        stash = stash.child(
+            art::local(wraex_core::GameId::Poe1, "stash.png", theme::rem(1.25))
+                .opacity(0.5)
+                .key(format!("listing-{index}-stash-icon")),
+        );
         if !result.has_note {
             stash = stash.child(text("?").font(type_::XS).color(theme::gray(500)));
         }

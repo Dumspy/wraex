@@ -6,6 +6,7 @@ use crate::poe1::i18n;
 use crate::poe1::price_check::view::Project;
 use crate::poe1::price_check::{InputField, NumericFilter, NumericPart, PriceCheck};
 use crate::theme::{self, text as type_};
+use crate::ui::art;
 use crate::ui::icon;
 
 use super::{FieldStyle, LINE, number_field, number_width};
@@ -65,13 +66,13 @@ pub fn numeric<S: 'static>(check: &PriceCheck, which: NumericFilter, project: Pr
 
 /// `FilterBtnLogical.vue`: one boolean chip. `collapse` is the stats chip's chevron: the
 /// reference passes `statsVisibility.disabled`, so the chevron is drawn only while the
-/// block is collapsed, pointing down.
+/// block is collapsed, pointing down. `image` is the chip's `img` prop (an influence badge).
 pub fn logical<S: 'static>(
     key: &str,
     label: &str,
     active: bool,
     collapse: Option<bool>,
-    image: bool,
+    image: Option<art::Picture>,
     on_press: impl Fn(&mut S) + 'static,
 ) -> El {
     let mut chip = row()
@@ -88,8 +89,8 @@ pub fn logical<S: 'static>(
         .role("button")
         .label(label)
         .on_press(on_press);
-    if image {
-        chip = chip.child(super::image(theme::rem(1.25)));
+    if let Some(image) = image {
+        chip = chip.child(super::image(image, theme::rem(1.25)));
     }
     chip = chip.child(
         text(label).key(format!("btn-{key}-label")).font(type_::SM).color(theme::gray(200)).pl(theme::rem(0.25)),

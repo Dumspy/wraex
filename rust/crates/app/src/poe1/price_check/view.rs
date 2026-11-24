@@ -20,6 +20,7 @@ use crate::poe1::i18n;
 use crate::poe1::price_check::trade;
 use crate::poe1::price_check::{PriceCheck, WIDTH};
 use crate::theme::{self, text as type_};
+use crate::ui::art::{self, Picture};
 use crate::ui::{self, icon};
 
 /// How a view reaches its own state. Rune runs a handler with the app's state (`&mut S`), so a
@@ -80,6 +81,8 @@ fn exchange_popover(check: &PriceCheck) -> El {
     content = content.child(
         ui::QuickPrice::new("exchange", Some(CurrencyValue { min: rate, max: rate, currency: "chaos" }))
             .color(theme::gray(900))
+            // `PriceCheckWindow.vue`'s `<item-quick-price item-img="/images/divine.png">`.
+            .item_img(Picture::local("divine.png"))
             .build(),
     );
     for tenth in 1..=9 {
@@ -263,6 +266,7 @@ fn trend<S: 'static>(check: &PriceCheck, _project: Project<S>) -> Option<El> {
                 ui::QuickPrice::new("trend", None)
                     .currency_text()
                     .item_size(base.w, base.h)
+                    .item_img(Picture::cdn(info.icon.clone()))
                     .build()
                     .grow(1.0)
                     .justify_center(),
@@ -277,7 +281,8 @@ fn trend<S: 'static>(check: &PriceCheck, _project: Project<S>) -> Option<El> {
     } else {
         check.prices.prices().auto_currency(price.info.chaos)
     };
-    let mut quick = ui::QuickPrice::new("trend", Some(currency)).fraction(fraction);
+    let mut quick =
+        ui::QuickPrice::new("trend", Some(currency)).fraction(fraction).item_img(Picture::cdn(info.icon.clone()));
     quick = if is_valuable_basetype(item) {
         // `<template #item><span class="text-gray-400">{{ t(':base_item') }}</span></template>`
         quick.slot(
@@ -441,7 +446,11 @@ fn stack_value(check: &PriceCheck) -> Option<El> {
         .child(muted(i18n::t("trade_result.you_have")))
         .child(muted_times())
         .child(muted(format!(" {}", number_to_string(stack.value))).key("stack-value-have-amount"))
+        // `{{ value.have.amount }} <i …></i> {{ value.have.price }}`: the template keeps a
+        // space on each side of the arrow, so the line reads `You have × 3 → 2673 chaos`.
+        .child(muted(" "))
         .child(icon::arrow_right(theme::rem(0.75), theme::rem(0.75), theme::gray(600)).px(theme::rem(0.25)))
+        .child(muted(" "))
         .child(muted(price_for(stack.value)).key("stack-value-have-price"));
     let mut value = row().key("stack-value-row").child(left);
     if let Some(max) = item.stack_size.as_ref().and_then(|stack| stack.max) {
@@ -451,7 +460,9 @@ fn stack_value(check: &PriceCheck) -> Option<El> {
                 .child(muted(i18n::t("trade_result.stack")))
                 .child(muted_times())
                 .child(muted(format!(" {}", number_to_string(max))).key("stack-value-stack-amount"))
+                .child(muted(" "))
                 .child(icon::arrow_right(theme::rem(0.75), theme::rem(0.75), theme::gray(600)).px(theme::rem(0.25)))
+                .child(muted(" "))
                 .child(muted(price_for(max)).key("stack-value-stack-price")),
         );
     }
@@ -492,8 +503,13 @@ fn dust_value(item: &Item) -> Option<El> {
             .child(icon::arrow_right(theme::rem(0.75), theme::rem(0.75), theme::gray(600)).px(theme::rem(0.25)))
             .child(muted(grouped(dust)).key("dust-value-amount"))
             .child(muted_times())
-            // `<img class="w-5 -my-5 inline-block">`: the dust icon, pulled out of the line.
-            .child(icon::image_placeholder(theme::rem(1.25)).my(-(theme::rem(1.25)))),
+            // `<img class="w-5 -my-5 inline-block" src="/images/dust.png">`: the dust icon,
+            // pulled out of the line.
+            .child(
+                art::local(wraex_core::GameId::Poe1, "dust.png", theme::rem(1.25))
+                    .my(-(theme::rem(1.25)))
+                    .key("dust-value-icon"),
+            ),
     )
 }
 

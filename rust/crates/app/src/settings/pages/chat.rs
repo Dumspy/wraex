@@ -1,0 +1,120 @@
+//! `web/settings/chat.vue`: the chat commands, their Enter toggle and their hotkeys.
+
+use rune::{El, col, row, text};
+use serde_json::json;
+
+use crate::settings::hotkey::{self, Recording, hotkey_input};
+use crate::settings::pages::{page, text_field, tr};
+use crate::settings::{Field, Project, Settings};
+use crate::theme::{self, text as type_};
+use crate::ui;
+use crate::ui::field::Kind;
+
+pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
+    let mut page = page("page-chat");
+    let mut list = col().key("chat-commands").w_full().gap(theme::rem(1.0)).mb(theme::rem(1.0));
+
+    for (index, command) in settings.commands().iter().enumerate() {
+        let send = command.get("send").and_then(serde_json::Value::as_bool).unwrap_or(false);
+        let hotkey = command.get("hotkey").and_then(serde_json::Value::as_str).map(str::to_owned);
+        let mut entry = col().key(format!("chat-command-{index}")).gap(theme::rem(0.25));
+
+        // `input v-model.trim="command.text" class="… w-full font-poe"`
+        entry = entry.child(text_field(
+            settings,
+            &format!("chat-command-{index}"),
+            Field::Command(index, "text"),
+            Kind::Text,
+            None,
+            "",
+            project,
+        ));
+
+        let actions = row()
+            .key(format!("chat-command-{index}-actions"))
+            .w_full()
+            .items_center()
+            .flex_wrap()
+            .gap(theme::rem(0.5))
+            .child(ui::toggle(
+                &format!("chat-command-{index}-send"),
+                &tr(settings, "settings.chat_cmd_send"),
+                send,
+                move |s: &mut S| {
+                    let settings = project(s);
+                    settings.set_bool(Field::Command(index, "send"), !settings.bool(Field::Command(index, "send")));
+                },
+            ))
+            .child(row().key(format!("chat-command-{index}-remove-row")).grow(1.0))
+            .child(
+                row()
+                    .key(format!("chat-command-{index}-remove"))
+                    .items_center()
+                    .focusable(true)
+                    .role("button")
+                    .label(tr(settings, "Remove"))
+                    .on_press(move |s: &mut S| {
+                        let settings = project(s);
+                        if let Some(commands) = settings.config.get_mut("commands").and_then(|c| c.as_array_mut())
+                            && index < commands.len()
+                        {
+                            commands.remove(index);
+                        }
+                        settings.seed_edits();
+                    })
+                    .child(
+                        text(tr(settings, "Remove"))
+                            .key(format!("chat-command-{index}-remove-label"))
+                            .font(type_::SM)
+                            .color(theme::gray(500)),
+                    ),
+            )
+            .child(hotkey_input(
+                &format!("chat-command-{index}-hotkey"),
+                hotkey.as_deref(),
+                hotkey::WIDE,
+                &hotkey::no_key(settings.game),
+                super::hotkeys::is_recording(settings, Field::Command(index, "hotkey")),
+                move |s: &mut S| {
+                    let settings = project(s);
+                    settings.recording =
+                        Some(Recording { field: Field::Command(index, "hotkey"), required: false, no_mod_keys: false });
+                    settings.select_open = None;
+                },
+            ));
+        entry = entry.child(actions);
+        list = list.child(entry);
+    }
+    page = page.child(list);
+
+    // `<button class="bg-gray-900 rounded flex items-baseline px-2 py-1 leading-none"><i class="fas fa-plus">`
+    page = page.child(
+        row()
+            .key("chat-add")
+            .px(theme::rem(0.5))
+            .py(theme::rem(0.25))
+            .radius(theme::ROUNDED)
+            .fill(theme::gray(900))
+            .items_center()
+            .gap(theme::rem(0.25))
+            .focusable(true)
+            .role("button")
+            .label(tr(settings, "settings.chat_cmd_add"))
+            .on_press(move |s: &mut S| {
+                let settings = project(s);
+                if let Some(commands) = settings.config.get_mut("commands").and_then(|c| c.as_array_mut()) {
+                    commands.push(json!({ "text": "", "hotkey": null, "send": true }));
+                }
+                settings.seed_edits();
+            })
+            .child(text("+").key("chat-add-icon").font(theme::leading_none(type_::SM)).color(theme::gray(400)))
+            .child(
+                text(tr(settings, "settings.chat_cmd_add"))
+                    .key("chat-add-label")
+                    .font(theme::leading_none(type_::SM))
+                    .color(theme::gray(400)),
+            ),
+    );
+
+    page
+}

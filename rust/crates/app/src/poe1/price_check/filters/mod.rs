@@ -5,8 +5,9 @@
 //! tiers and options), [`group`] is `FilterGroup.vue`, and [`source_info`], [`unknown`] and
 //! [`anointment`] are the small components the rows mount.
 //!
-//! Font Awesome is not available (see [`crate::ui::icon`]) and item/currency art is not wired
-//! up yet, so icons are drawn shapes and images are plain placeholder squares.
+//! Font Awesome is not available (see [`crate::ui::icon`]), so its glyphs are drawn shapes.
+//! The images are upstream's: the reference's `/images` files and the items' CDN art, through
+//! [`crate::ui::art`].
 //!
 //! Not ported yet: `StatRollSlider.vue` (a unique's second line keeps its min/max fields but no
 //! slider), the hidden row's `hiddenReason` tooltip (the eye is drawn, it opens nothing), the
@@ -35,6 +36,7 @@ use crate::poe1::i18n;
 use crate::poe1::price_check::view::Project;
 use crate::poe1::price_check::{InputField, LogicalToggle, NumericFilter, PriceCheck, StatPath};
 use crate::theme::{self, text as type_};
+use crate::ui::art;
 use crate::ui::{self, icon};
 
 /// `FilterModifier.vue`'s `.rollInput`: `w-12` (48 pt), 22 pt tall with its 1 pt border.
@@ -65,7 +67,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             &label,
             sub.disabled != Some(true),
             None,
-            false,
+            None,
             move |s: &mut S| {
                 project(s).toggle_logical(LogicalToggle::SearchSub);
             },
@@ -76,7 +78,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
     }
     if let Some(reward) = &filters.map_completion_reward {
         let label = i18n::fmt("item.map_foil_reward", &[&reward.name]);
-        chips = chips.child(btn::logical("map-foil", &label, true, None, false, |_: &mut S| {}));
+        chips = chips.child(btn::logical("map-foil", &label, true, None, None, |_: &mut S| {}));
     }
     for which in [
         NumericFilter::AreaLevel,
@@ -95,19 +97,21 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             &i18n::t("item.not_catalysed"),
             filters.not_catalysed.as_ref().is_some_and(|filter| !filter.disabled),
             None,
-            false,
+            None,
             move |s: &mut S| project(s).toggle_logical(LogicalToggle::NotCatalysed),
         ));
     }
     if let Some(influences) = &filters.influences {
         for (index, influence) in influences.iter().enumerate() {
             let label = influence.value.as_str().to_owned();
+            // `:img="`/images/influence-${influence.value}.png`"`
+            let picture = art::Picture::local(format!("influence-{}.png", influence.value.as_str()));
             chips = chips.child(btn::logical(
                 &format!("influence-{index}"),
                 &label,
                 !influence.disabled,
                 None,
-                true,
+                Some(picture),
                 move |s: &mut S| project(s).toggle_logical(LogicalToggle::Influence(index)),
             ));
         }
@@ -118,7 +122,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             &i18n::t("Magic"),
             filters.rarity.as_ref().is_some_and(|rarity| !rarity.disabled),
             None,
-            false,
+            None,
             move |s: &mut S| project(s).toggle_logical(LogicalToggle::RarityMagic),
         ));
     }
@@ -128,7 +132,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             &i18n::t("item.unidentified"),
             !unidentified.disabled,
             None,
-            false,
+            None,
             move |s: &mut S| project(s).toggle_logical(LogicalToggle::Unidentified),
         ));
     }
@@ -138,7 +142,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             &i18n::t("item.veiled"),
             !veiled.disabled,
             None,
-            false,
+            None,
             move |s: &mut S| project(s).toggle_logical(LogicalToggle::Veiled),
         ));
     }
@@ -148,7 +152,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             &i18n::t("item.foil_unique"),
             !foil.disabled,
             None,
-            false,
+            None,
             move |s: &mut S| project(s).toggle_logical(LogicalToggle::Foil),
         ));
     }
@@ -156,7 +160,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
         && !mirrored.hidden
     {
         let label = i18n::t(if mirrored.disabled { "item.not_mirrored" } else { "item.mirrored" });
-        chips = chips.child(btn::logical("mirrored", &label, !mirrored.disabled, None, false, move |s: &mut S| {
+        chips = chips.child(btn::logical("mirrored", &label, !mirrored.disabled, None, None, move |s: &mut S| {
             project(s).toggle_logical(LogicalToggle::Mirrored);
         }));
     }
@@ -164,7 +168,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
         && !split.hidden
     {
         let label = i18n::t(if split.disabled { "item.not_split" } else { "item.split" });
-        chips = chips.child(btn::logical("split", &label, !split.disabled, None, false, move |s: &mut S| {
+        chips = chips.child(btn::logical("split", &label, !split.disabled, None, None, move |s: &mut S| {
             project(s).toggle_logical(LogicalToggle::Split);
         }));
     }
@@ -187,7 +191,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             &label,
             selected > 0,
             Some(check.stats_collapsed),
-            false,
+            None,
             move |s: &mut S| project(s).toggle_stats_collapsed(),
         ));
     }
@@ -634,7 +638,8 @@ pub(super) fn tag_label(filter: &StatFilter) -> String {
     label
 }
 
-/// The item's or currency's image stand-in (see [`icon::image_placeholder`]).
-pub(super) fn image(size: f32) -> El {
-    icon::image_placeholder(size)
+/// The item's or currency's image (`FilterModifier.vue`'s mercenary icon, the roll markers
+/// and the influence badges): the reference's own `/images` art, or an item's CDN icon.
+pub(super) fn image(picture: art::Picture, size: f32) -> El {
+    art::picture(wraex_core::GameId::Poe1, &picture, (size, size))
 }

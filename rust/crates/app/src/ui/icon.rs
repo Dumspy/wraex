@@ -198,16 +198,10 @@ pub fn warning(size: f32, color: Color) -> El {
     canvas(triangle).size(size, size).a11y_hidden()
 }
 
-/// A 1 rem placeholder square for an item, currency or oil image the data layer does not
-/// resolve yet (`<img>` tags in the reference).
+/// A dark square for an image that is still loading or never arrived: an item's CDN art, a
+/// currency icon. [`art`](crate::ui::art) draws the picture over it once it has one.
 pub fn image_placeholder(size: f32) -> El {
     el().size(size, size).radius(theme::ROUNDED).fill(theme::gray(700)).a11y_hidden()
-}
-
-/// `/images/augments/empty-socket.png` (`FiltersBlock.vue`'s item-editor button): an empty
-/// socket's ring, which the reference draws as art the port does not ship.
-pub fn socket(size: f32, color: Color) -> El {
-    el().size(size, size).radius(size / 2.0).border(2.0, color).a11y_hidden()
 }
 
 /// `fas fa-question` (`TradeItem.vue`): a listing with no note.

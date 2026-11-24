@@ -24,6 +24,7 @@ use crate::poe2::i18n;
 use crate::poe2::price_check::trade;
 use crate::poe2::price_check::{PriceCheck, WIDTH};
 use crate::theme::{self, text as type_};
+use crate::ui::art;
 use crate::ui::{self, icon};
 
 /// How a view reaches its own state. Rune runs a handler with the app's state (`&mut S`), so a
@@ -221,12 +222,18 @@ fn trend(check: &PriceCheck, item: &Item) -> Option<El> {
         (w, _) if w > 1 => (theme::rem(3.0), theme::rem(2.0)),
         _ => (theme::rem(2.0), theme::rem(2.0)),
     };
-    let mut line = row().grow(1.0).justify_center().items_center().gap(theme::rem(0.25)).child(icon_placeholder(
-        "trend-item-icon",
-        icon_w,
-        icon_h,
-    ));
-    line = line.child(icon::arrow_right(theme::rem(0.875), theme::rem(0.875), theme::gray(600)).mx(theme::rem(0.25)));
+    // `:item-img="item.info.icon"`: the item's own art on the CDN, and `UiItemImg.vue`'s
+    // `404.png` for the data's missing icon. Built per drawn row only: a row the reference
+    // drops must not start a load.
+    let item_art = || {
+        let size = (icon_w, icon_h);
+        if info.icon.is_empty() || info.icon == "%NOT_FOUND%" {
+            art::local_sized(wraex_core::GameId::Poe2, "404.png", size).key("trend-item-icon")
+        } else {
+            art::cdn(wraex_core::GameId::Poe2, &info.icon, size).key("trend-item-icon")
+        }
+    };
+    let arrow = || icon::arrow_right(theme::rem(0.875), theme::rem(0.875), theme::gray(600)).mx(theme::rem(0.25));
     match check.prices.find_price(&query) {
         Some(price) => {
             let fraction = item.stack_size.is_some();
@@ -234,6 +241,8 @@ fn trend(check: &PriceCheck, item: &Item) -> Option<El> {
                 check.prices.auto_currency(price.info.primary_value, info.ref_name.as_deref() == Some("Divine Orb"));
             let min = display_rounding(value.min, fraction, false);
             let max = display_rounding(value.max, fraction, false);
+            let mut line =
+                row().grow(1.0).justify_center().items_center().gap(theme::rem(0.25)).child(item_art()).child(arrow());
             line = line.child(text(min.clone()).key("trend-price").font(type_::BASE));
             if min != max {
                 line = line
@@ -241,28 +250,37 @@ fn trend(check: &PriceCheck, item: &Item) -> Option<El> {
                     .child(text(max).key("trend-price-max").font(type_::BASE));
             }
             line = line.child(text("×").key("trend-times").font(type_::BASE).color(theme::gray(600)));
-            line = line.child(icon_placeholder("trend-currency-icon", theme::rem(2.0), theme::rem(2.0)));
+            line = line.child(currency_icon(value.currency, theme::rem(2.0)).key("trend-currency-icon"));
             Some(row().key("trend").w_full().min_h(theme::rem(3.0)).pb(theme::rem(1.0)).items_center().child(line))
         }
         // `<div v-else-if="!item.info.craftable">`: `ItemQuickPrice` with no price and
         // `currency-text`, so the row is the icon, the arrow and a `?`.
         None if info.craftable.is_none() => Some(
-            row()
-                .key("trend")
-                .w_full()
-                .min_h(theme::rem(3.0))
-                .pb(theme::rem(1.0))
-                .items_center()
-                .child(line.child(text("?").key("trend-price").font(type_::BASE).px(theme::rem(0.25)))),
+            row().key("trend").w_full().min_h(theme::rem(3.0)).pb(theme::rem(1.0)).items_center().child(
+                row()
+                    .grow(1.0)
+                    .justify_center()
+                    .items_center()
+                    .gap(theme::rem(0.25))
+                    .child(item_art())
+                    .child(arrow())
+                    .child(text("?").key("trend-price").font(type_::BASE).px(theme::rem(0.25))),
+            ),
         ),
         None => None,
     }
 }
 
-/// The item's and the currency's images (`ItemQuickPrice.vue`): the game's CDN and
-/// upstream's `public/images` are not wired up yet, so a plain square stands in.
-fn icon_placeholder(key: &str, w: f32, h: f32) -> El {
-    el().key(key).size(w, h).radius(theme::ROUNDED).fill(theme::gray(700))
+/// `CoreCurrencyImg.vue`/`ItemQuickPrice.vue`'s image for a price's currency: `divine`,
+/// `chaos` and `annul` by name, `exa` for anything else (`exalted`).
+fn currency_icon(currency: &str, size: f32) -> El {
+    let name = match currency {
+        "div" => "divine.png",
+        "chaos" => "chaos.png",
+        "annul" => "annul.png",
+        _ => "exa.png",
+    };
+    art::local(wraex_core::GameId::Poe2, name, size)
 }
 
 /// `CheckedItem.vue`'s `!doSearch` row: the Search button, and the trade-site link for a

@@ -6,6 +6,7 @@ use crate::poe2::i18n;
 use crate::poe2::price_check::view::Project;
 use crate::poe2::price_check::{InputField, NumericFilter, NumericPart, PriceCheck};
 use crate::theme::{self, text as type_};
+use crate::ui::art;
 use crate::ui::icon;
 
 use super::{FieldStyle, LINE, number_field, number_width};
@@ -64,13 +65,14 @@ pub fn numeric<S: 'static>(check: &PriceCheck, which: NumericFilter, project: Pr
 }
 
 /// `FilterBtnLogical.vue`: one boolean chip. `active` overrides the filter's own state for
-/// the chips that are always on (Mirrored, Sanctified), `readonly` chips do nothing.
+/// the chips that are always on (Mirrored, Sanctified), `readonly` chips do nothing. `image`
+/// is the chip's `img` prop (an influence badge).
 pub fn logical<S: 'static>(
     key: &str,
     label: &str,
     active: Option<bool>,
     collapse: Option<bool>,
-    image: bool,
+    image: Option<art::Picture>,
     on_press: impl Fn(&mut S) + 'static,
 ) -> El {
     let mut chip = row()
@@ -87,8 +89,8 @@ pub fn logical<S: 'static>(
         .role("button")
         .label(label)
         .on_press(on_press);
-    if image {
-        chip = chip.child(super::image(theme::rem(1.25)));
+    if let Some(image) = image {
+        chip = chip.child(super::image(image, theme::rem(1.25)));
     }
     chip = chip.child(
         text(label).key(format!("btn-{key}-label")).font(type_::SM).color(theme::gray(200)).pl(theme::rem(0.25)),
@@ -109,7 +111,7 @@ pub fn logical<S: 'static>(
 /// A read-only chip: `:readonly` and `:filter="{ disabled: false }"` in `FiltersBlock.vue`,
 /// so it is drawn as active and a press does nothing.
 pub fn readonly<S: 'static>(key: &str, label: &str) -> El {
-    logical::<S>(key, label, Some(true), None, false, |_: &mut S| {})
+    logical::<S>(key, label, Some(true), None, None, |_: &mut S| {})
 }
 
 /// `t('item.item_level')` without its `{0}`: the value is the chip's own field.

@@ -20,6 +20,14 @@ pub fn reference_source() -> DirSource {
     DirSource::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/ee2/renderer/public/data"))
 }
 
+/// `ref/ee2/renderer/public/images/<name>`: the small art EE2's page serves (the core
+/// currency icons, the `404` fallback, the augments' sockets and runes), which the app
+/// draws through `wraex_app::ui::art`. Read from the reference like the data files; a
+/// release build would ship them instead.
+pub fn image_path(name: &str) -> std::path::PathBuf {
+    std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/ee2/renderer/public/images")).join(name)
+}
+
 /// EE2's snapshot of `/api/trade2/data/{items,stats}` (`renderer/specs/data/`),
 /// which its tests and the golden harness serve instead of the trade site.
 pub fn reference_trade_data() -> TradeData {

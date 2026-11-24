@@ -3,7 +3,8 @@
 //! A Rune shell over the core crates. It has one window per game: PoE1's price check
 //! ([`poe1::price_check`]) and PoE2's ([`poe2::price_check`]); the title bar and the widgets
 //! they are built from live in [`ui`] and [`theme`], and both windows trade through [`trade`]
-//! and the recorded answers of [`replay`].
+//! and the recorded answers of [`replay`]. The settings window ([`settings`]) opens over either
+//! game's check, one scene per page.
 //!
 //! `cargo run -p wraex-app` opens the window; `-- --snap out.png --scene <slug>` renders one of
 //! the corpus cases headlessly (`--list-scenes` lists them).
@@ -11,6 +12,7 @@
 pub mod poe1;
 pub mod poe2;
 pub mod replay;
+pub mod settings;
 pub mod theme;
 pub mod trade;
 pub mod ui;
@@ -19,6 +21,7 @@ use rune::{AppSpec, Cx, El, Waker};
 use wraex_core::GameId;
 
 use crate::poe1::price_check::{PriceCheck, WIDTH};
+use crate::settings::{Page, Settings};
 use crate::trade::Mode;
 
 /// The window's height, in points. Upstream's overlay spans the game's panel; the screenshots
@@ -37,6 +40,9 @@ pub struct App {
     pub price_check: PriceCheck,
     /// PoE2's window, once a PoE2 scene opened it.
     pub poe2: Option<poe2::price_check::PriceCheck>,
+    /// The settings window, while it is open over the game's price check. It edits a working
+    /// copy of the config (`settings::Settings`) and writes it only on Save.
+    pub settings: Option<Settings>,
     /// Where trade requests go: HTTPS in a window, recorded answers headless.
     mode: Mode,
     /// The waker `AppSpec::poll` gave the app, handed to whichever window is built later.
@@ -49,6 +55,7 @@ impl std::fmt::Debug for App {
             .field("game", &self.game)
             .field("price_check", &self.price_check)
             .field("poe2", &self.poe2)
+            .field("settings", &self.settings)
             .field("mode", &self.mode)
             .finish()
     }
@@ -62,7 +69,14 @@ impl App {
 
     /// [`App::from_text`] with the trade transport chosen.
     pub fn with_mode(text: &str, mode: Mode) -> Self {
-        Self { game: GameId::Poe1, price_check: PriceCheck::with_mode(text, mode), poe2: None, mode, waker: None }
+        Self {
+            game: GameId::Poe1,
+            price_check: PriceCheck::with_mode(text, mode),
+            poe2: None,
+            settings: None,
+            mode,
+            waker: None,
+        }
     }
 
     /// The app with PoE2's window opened on `text`.
@@ -73,10 +87,24 @@ impl App {
             // later switch back has something to show.
             price_check: PriceCheck::with_mode(text, mode),
             poe2: Some(poe2::price_check::PriceCheck::with_mode(text, mode)),
+            settings: None,
             mode,
             waker: None,
         };
         app.attach_waker();
+        app
+    }
+
+    /// The app with the settings window open on one of its pages, over the first scene's
+    /// price check. A scene never reads or writes the user's config file: [`Settings::scene`]
+    /// opens the default config on a temp-dir store.
+    pub fn settings_scene(game: GameId, page: Page) -> Self {
+        let mut app = match game {
+            GameId::Poe2 => Self::with_mode_poe2(&corpus_poe2("currency-djinn-barya"), Mode::Replay),
+            _ => Self::with_mode(&corpus(SCENES[0].0), Mode::Replay),
+        };
+        app.game = game;
+        app.settings = Some(Settings::scene(game, page));
         app
     }
 
@@ -98,6 +126,12 @@ impl App {
         self.price_check.start_search();
     }
 
+    /// `--scene settings-<game>-<page>` and the tests: replace the state with the settings
+    /// window on `page`.
+    pub fn settings_page(&mut self, game: GameId, page: Page) {
+        *self = Self::settings_scene(game, page);
+    }
+
     /// Reopen PoE2's price check on a PoE2 corpus case: `tools/golden/corpus/poe2/<slug>.txt`.
     pub fn load_poe2(&mut self, slug: &str) {
         self.game = GameId::Poe2;
@@ -117,6 +151,8 @@ impl App {
     /// The waker the window's trade and price answers use to run `poll`.
     pub fn set_waker(&mut self, waker: Waker) {
         self.price_check.set_waker(waker.clone());
+        // The image cache wakes the same window when a picture finishes decoding.
+        ui::art::install_waker(waker.clone());
         self.waker = Some(waker);
         self.attach_waker();
     }
@@ -152,8 +188,18 @@ fn project_poe2(app: &mut App) -> &mut poe2::price_check::PriceCheck {
     app.poe2.as_mut().expect("a PoE2 scene built the window")
 }
 
-/// The app's window: whichever game is open.
+/// `App` → the settings window, for its handlers.
+fn project_settings(app: &mut App) -> &mut Settings {
+    app.settings.as_mut().expect("a settings scene built the window")
+}
+
+/// The app's window: the settings window while it is open, else whichever game is open.
 pub fn view(app: &App, cx: &mut Cx<App>) -> El {
+    if let Some(settings) = &app.settings
+        && settings.open
+    {
+        return settings::window::view(settings, cx, project_settings);
+    }
     match app.game {
         GameId::Poe2 => {
             poe2::price_check::view::view(app.poe2.as_ref().expect("a PoE2 scene built the window"), cx, project_poe2)
@@ -187,6 +233,23 @@ pub const SCENES: &[Scene] = &[
     ("poe2-ee2-unique-item", |app| app.load_poe2("ee2-unique-item")),
     ("poe2-ee2-rare-map", |app| app.load_and_search_poe2("ee2-rare-map")),
     ("poe2-error-not-an-item", |app| app.load_poe2("error-not-an-item")),
+    // The settings window, one scene per menu page, for both games.
+    ("settings-poe1-hotkeys", |app| app.settings_page(GameId::Poe1, Page::Hotkeys)),
+    ("settings-poe1-chat", |app| app.settings_page(GameId::Poe1, Page::Chat)),
+    ("settings-poe1-general", |app| app.settings_page(GameId::Poe1, Page::General)),
+    ("settings-poe1-price-check", |app| app.settings_page(GameId::Poe1, Page::PriceCheck)),
+    ("settings-poe1-maps", |app| app.settings_page(GameId::Poe1, Page::Maps)),
+    ("settings-poe1-item-check", |app| app.settings_page(GameId::Poe1, Page::ItemCheck)),
+    ("settings-poe1-debug", |app| app.settings_page(GameId::Poe1, Page::Debug)),
+    ("settings-poe1-about", |app| app.settings_page(GameId::Poe1, Page::About)),
+    ("settings-poe2-hotkeys", |app| app.settings_page(GameId::Poe2, Page::Hotkeys)),
+    ("settings-poe2-chat", |app| app.settings_page(GameId::Poe2, Page::Chat)),
+    ("settings-poe2-general", |app| app.settings_page(GameId::Poe2, Page::General)),
+    ("settings-poe2-price-check", |app| app.settings_page(GameId::Poe2, Page::PriceCheck)),
+    ("settings-poe2-maps", |app| app.settings_page(GameId::Poe2, Page::Maps)),
+    ("settings-poe2-item-check", |app| app.settings_page(GameId::Poe2, Page::ItemCheck)),
+    ("settings-poe2-debug", |app| app.settings_page(GameId::Poe2, Page::Debug)),
+    ("settings-poe2-about", |app| app.settings_page(GameId::Poe2, Page::About)),
 ];
 
 /// The fixture corpus a scene loads (`tools/golden/corpus/poe1/<slug>.txt`).
@@ -231,12 +294,28 @@ mod tests {
     use super::*;
 
     fn runtime(slug: &str) -> Runtime<App> {
-        // A `poe2-` scene opens PoE2's window on its own corpus (`poe2-ee2-rare-item` →
+        // A `settings-<game>-<page>` scene opens the settings window; a `poe2-` scene opens
+        // PoE2's window on its own corpus (`poe2-ee2-rare-item` →
         // `corpus/poe2/ee2-rare-item.txt`); everything else is PoE1's, as before.
+        if let Some((game, page)) = settings_scene(slug) {
+            return runtime_app(App::settings_scene(game, page));
+        }
         match slug.strip_prefix("poe2-") {
             Some(case) => runtime_app(App::with_mode_poe2(&corpus_poe2(case), Mode::Replay)),
             None => runtime_app(App::replay(slug)),
         }
+    }
+
+    /// A `settings-poe1-maps` style slug: the game and the page.
+    fn settings_scene(slug: &str) -> Option<(GameId, Page)> {
+        let rest = slug.strip_prefix("settings-")?;
+        let (game, page) = rest.split_once('-')?;
+        let game = match game {
+            "poe1" => GameId::Poe1,
+            "poe2" => GameId::Poe2,
+            _ => return None,
+        };
+        Some((game, Page::from_slug(page)?))
     }
 
     fn runtime_app(app: App) -> Runtime<App> {
@@ -280,7 +359,16 @@ mod tests {
         assert!(App::replay(SCENES[0].0).price_check.item.is_ok());
         for (slug, _) in SCENES {
             let runtime = runtime(slug);
-            assert_eq!(text_of(&runtime, "titlebar-title").as_deref(), Some("Standard"), "{slug}");
+            if slug.starts_with("settings-") {
+                let title = if slug.starts_with("settings-poe2-") {
+                    "Settings - Exiled Exchange 2"
+                } else {
+                    "Settings - Awakened PoE Trade"
+                };
+                assert_eq!(text_of(&runtime, "titlebar-title").as_deref(), Some(title), "{slug}");
+            } else {
+                assert_eq!(text_of(&runtime, "titlebar-title").as_deref(), Some("Standard"), "{slug}");
+            }
             assert!(runtime.find("titlebar-close").is_some(), "{slug}: close button");
             assert!(!runtime.elements().is_empty());
         }
@@ -366,6 +454,12 @@ mod tests {
         assert_eq!(text_of(&runtime, "trend-price").as_deref(), Some("99"));
         assert_eq!(text_of(&runtime, "trend-change").as_deref(), Some("24\u{2009}%"));
         assert_eq!(text_of(&runtime, "dust-value-amount").as_deref(), Some("36,225"));
+        // `DustValue.vue`'s `<img src="/images/dust.png" class="w-5 -my-5 inline-block">`.
+        let elements = runtime.elements();
+        let dust = element(&elements, "dust-value-icon").expect("the dust icon");
+        assert_eq!(dust.role, "img");
+        assert_eq!(dust.label.as_deref(), Some("/images/dust.png"));
+        assert_eq!([dust.rect[2], dust.rect[3]], [20.0, 20.0], "`w-5`");
         assert!(runtime.find("search-label").is_none());
     }
 
@@ -698,6 +792,100 @@ mod tests {
         assert!(amulet.find("show-hidden").is_some());
     }
 
+    /// The images `PriceTrend.vue` and `ItemQuickPrice.vue` draw: the item's art from the
+    /// CDN (replayed from the screenshot harness's recordings) and the chaos/divine icons
+    /// from the reference's `public/images`, at the sizes the templates give them.
+    #[test]
+    fn a_scene_shows_the_item_art_and_the_currency_icons() {
+        let orb = runtime("currency-divine-orb");
+        let elements = orb.elements();
+        let art = element(&elements, "trend-item-icon").expect("the divine orb's art");
+        assert_eq!(art.role, "img", "a decoded image, not the placeholder");
+        assert!(
+            art.label.as_deref().is_some_and(|label| label.starts_with("https://web.poecdn.com/")),
+            "{:?}",
+            art.label
+        );
+        assert_eq!([art.rect[2], art.rect[3]], [32.0, 32.0], "`w-8 h-8`");
+
+        // `ItemQuickPrice.vue`'s `isValuable`: a chaos price gets `chaos.png`.
+        let currency = element(&elements, "trend-currency-icon").expect("the price's currency");
+        assert_eq!(currency.role, "img");
+        assert_eq!(currency.label.as_deref(), Some("/images/chaos.png"));
+        assert_eq!([currency.rect[2], currency.rect[3]], [32.0, 32.0]);
+
+        // `TradeBulk.vue`'s two totals: `chaos.png` and `divine.png`.
+        assert_eq!(
+            element(&elements, "bulk-currency-chaos-icon").and_then(|icon| icon.label.as_deref()),
+            Some("/images/chaos.png")
+        );
+        assert_eq!(
+            element(&elements, "bulk-currency-divine-icon").and_then(|icon| icon.label.as_deref()),
+            Some("/images/divine.png")
+        );
+
+        // The title bar's exchange-rate popover shows a divine beside the chaos rate.
+        let mut popped = runtime("currency-divine-orb");
+        click(&mut popped, "titlebar-exchange");
+        let elements = popped.elements();
+        assert_eq!(
+            element(&elements, "exchange-item-icon").and_then(|icon| icon.label.as_deref()),
+            Some("/images/divine.png")
+        );
+    }
+
+    /// `FilterModifier.vue`'s `rollTags` and the reference's influence badges: local art, so
+    /// the mirror's `ReflectingMist.png` and life's `increased.png` are drawn beside the rows.
+    #[test]
+    fn the_filter_rows_draw_their_roll_markers() {
+        let runtime = runtime("adv-rare-ring-mirrored-catalyst");
+        let elements = runtime.elements();
+        let labels: Vec<&str> =
+            elements.iter().filter(|e| e.role == "img").filter_map(|e| e.label.as_deref()).collect();
+        assert!(labels.contains(&"/images/ReflectingMist.png"), "{labels:?}");
+        assert!(labels.contains(&"/images/increased.png"), "{labels:?}");
+    }
+
+    /// `FilterModifierAnointment.vue`: the amulet's anointment is a hidden row, and once the
+    /// Hidden toggle shows it, its three oils carry their own art (`w-8 h-8`).
+    #[test]
+    fn the_anointment_row_draws_its_oils() {
+        let mut runtime = runtime("adv-rare-amulet-anointed");
+        assert!(runtime.find("anointment-oils").is_none(), "the row is hidden by default");
+        click(&mut runtime, "show-hidden");
+        let elements = runtime.elements();
+        for index in 0..3 {
+            let oil = element(&elements, &format!("anointment-oil-{index}")).expect("an oil's art");
+            assert_eq!(oil.role, "img", "oil {index}");
+            assert!(oil.label.as_deref().is_some_and(|label| label.starts_with("https://web.poecdn.com/")), "{index}");
+            assert_eq!([oil.rect[2], oil.rect[3]], [32.0, 32.0], "`w-8 h-8`");
+        }
+        assert!(element(&elements, "anointment-oil-3").is_none(), "three oils");
+    }
+
+    /// A CDN URL that was never recorded is the dark placeholder square: a replay never goes
+    /// to the network, and the window keeps its layout while the picture is missing.
+    #[test]
+    fn an_unrecorded_cdn_image_is_a_placeholder() {
+        use rune::{Cx, El};
+
+        // A test process never fetches: the scene's recordings are what it reads.
+        ui::art::set_mode(Mode::Replay);
+
+        fn view(_state: &(), _cx: &mut Cx<()>) -> El {
+            let url = "https://web.poecdn.com/gen/image/WzI1LDE0/nothing/NoSuchPicture.png";
+            rune::el().size(32.0, 32.0).child(ui::art::cdn(GameId::Poe1, url, (32.0, 32.0)).key("missing-image"))
+        }
+        let text = TextSystem::new(theme::FONTS, theme::FAMILIES);
+        let mut runtime = Runtime::with_text((), view, (32.0, 32.0), Env::new(true, 1.0), text);
+        runtime.frame(0.0);
+        let elements = runtime.elements();
+        let missing = element(&elements, "missing-image").expect("the element keeps its place");
+        assert_ne!(missing.role, "img", "no picture, so the placeholder");
+        assert_eq!(missing.label, None);
+        assert_eq!([missing.rect[2], missing.rect[3]], [32.0, 32.0]);
+    }
+
     // ---- PoE2 (`ref/ee2`'s price check) ------------------------------------------------
 
     /// `Exiled Exchange 2`'s window on the Djinn Barya check: the two chips a trial coin
@@ -830,6 +1018,30 @@ mod tests {
         assert!(runtime.find("tag-explicit").is_none(), "a unique's explicit mods show no tag");
         // A unique searches when it opens.
         assert_eq!(text_of(&runtime, "trade-matched-total").as_deref(), Some("866"));
+    }
+
+    /// EE2's images: the item's art beside the `?` row (`ItemQuickPrice.vue`'s `itemImg`),
+    /// and the item-editor button's `augments/empty-socket.png` (`FiltersBlock.vue`).
+    #[test]
+    fn the_poe2_window_shows_its_item_art_and_socket() {
+        let unique = runtime("poe2-ee2-unique-item");
+        let elements = unique.elements();
+        let art = element(&elements, "trend-item-icon").expect("the unique's art");
+        assert_eq!(art.role, "img");
+        assert!(
+            art.label.as_deref().is_some_and(|label| label.starts_with("https://web.poecdn.com/")),
+            "{:?}",
+            art.label
+        );
+
+        // A bow is a weapon the item editor can add runes to: the empty-socket art.
+        let bow = runtime("poe2-ee2-rare-item");
+        let elements = bow.elements();
+        let socket = element(&elements, "item-editor-icon").expect("the editor's socket");
+        assert_eq!(socket.role, "img");
+        assert_eq!(socket.label.as_deref(), Some("/images/augments/empty-socket.png"));
+        // No trend row for a craftable rare: the reference draws none, so no art is loaded.
+        assert!(element(&elements, "trend-item-icon").is_none());
     }
 
     /// EE2's waystone: the map tier chip, "Stats ignored", the Explicit toggle and the

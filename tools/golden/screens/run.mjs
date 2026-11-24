@@ -14,6 +14,7 @@ import { chromium } from 'playwright'
 import { ensureBuild } from './build.mjs'
 import { DEFAULT_CASES, REPO_ROOT, corpusFile, normalizeCase } from './cases.mjs'
 import { PROXY_HOSTS, startHost } from './host.mjs'
+import { imageDir, installImages, recordImage, waitForImages } from './images.mjs'
 
 // The fixture harness records `defaultConfig()` without a league; `Host.getConfig`
 // hands the renderer the same JSON. The only edit is leagueId, so the leagues
@@ -86,6 +87,10 @@ function usage () {
   --record            fetch proxy misses from the real trade site / poe.ninja and
                       save them under corpus/screens/<game>/proxy/ (one request
                       per second; needs network)
+  --image <url>       record one more item image (repeatable; needs --game and
+                      network), for art only a state no case reaches, e.g. the
+                      anointment oils of a hidden filter row: --game poe1 --image
+                      https://web.poecdn.com/gen/image/.../GoldenOil.png
   --rebuild           rebuild the renderer even if .screens-build/<game> exists
   --debug             print the page's console and errors while it runs
   -h, --help
@@ -95,7 +100,7 @@ and .txt.`)
 }
 
 function parseArgs (argv) {
-  const opts = { games: [], cases: [], rebuild: false, debug: false, record: false }
+  const opts = { games: [], cases: [], rebuild: false, debug: false, record: false, images: [] }
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
     if (arg === '--game') {
@@ -108,6 +113,10 @@ function parseArgs (argv) {
       opts.cases.push(slug)
     } else if (arg === '--record') {
       opts.record = true
+    } else if (arg === '--image') {
+      const url = argv[++i]
+      if (!url) throw new Error('--image needs a URL')
+      opts.images.push(url)
     } else if (arg === '--rebuild') {
       opts.rebuild = true
     } else if (arg === '--debug') {
@@ -121,6 +130,7 @@ function parseArgs (argv) {
   }
 
   if (!opts.games.length) opts.games = ['poe1', 'poe2']
+  if (opts.images.length && opts.games.length !== 1) throw new Error('--image needs exactly one --game')
   if (opts.cases.length) {
     if (opts.games.length !== 1) throw new Error('--case needs exactly one --game')
     for (const slug of opts.cases) {
@@ -151,11 +161,19 @@ async function startSearch (page, { game, slug }) {
 async function shoot ({ browser, host, game, testCase, clock, record, debug }) {
   const { slug, search } = testCase
   const text = fs.readFileSync(corpusFile(game, slug), 'utf8')
+  // The machine's own locale would reach the page (`toLocaleString` writes `1,2` under a
+  // da-DK format where en-US writes `1.2`), and the screenshots are compared with the
+  // port's en-US output. UTC keeps listing ages off the runner's time zone too.
   const context = await browser.newContext({
     viewport: { width: 1600, height: 900 },
-    deviceScaleFactor: 1
+    deviceScaleFactor: 1,
+    locale: 'en-US',
+    timezoneId: 'UTC'
   })
   const page = await context.newPage()
+  // Item art is the game CDN's, which the page fetches itself; serve it from (or record it
+  // to) `corpus/screens/<game>/images/`.
+  const images = await installImages(page, { game, record, userAgent: record ? userAgent() : '' })
 
   const logs = []
   page.on('console', (msg) => {
@@ -177,6 +195,9 @@ async function shoot ({ browser, host, game, testCase, clock, record, debug }) {
   // Registered before navigation, so no event can slip past.
   const clientReady = host.nextClient()
   const leaguesReady = host.nextProxyRequest('leagues')
+  // PoE1 reads `poe.ninja/poe1/.../dense/overviews`, PoE2 `api.exiledexchange2.dev/...`
+  // `overviewData.json`; either way it is the answer that fills the price database.
+  const pricesReady = host.nextProxyRequest(game === 'poe1' ? 'dense/overviews' : 'overviewData.json')
 
   try {
     await page.clock.setFixedTime(clock)
@@ -196,7 +217,20 @@ async function shoot ({ browser, host, game, testCase, clock, record, debug }) {
       console.error(`[screens] warning (${game}/${slug}): ${err.message}`)
     }
 
-    host.sendEvent({
+    // Selecting the league also asks poe.ninja for its price database (`Prices.ts`'s
+    // `watch(leagues.selectedId)`, `load(true)`), and the window must have it before the
+    // item arrives: `PriceTrend.vue` computes its row with `findPriceByQuery` and only
+    // re-runs when `xchgRate` changes, so an item sent first stays at `?` for good.
+    // Waiting here is what a person sees, whose price database has long been warm.
+    try {
+      await withTimeout(pricesReady, 60_000, 'poe.ninja price database')
+    } catch (err) {
+      console.error(`[screens] warning (${game}/${slug}): ${err.message}`)
+    }
+    await host.settled({ quietMs: 1000 })
+    await page.waitForTimeout(300)
+
+    const itemText = {
       name: 'MAIN->CLIENT::item-text',
       payload: {
         target: 'price-check',
@@ -204,7 +238,8 @@ async function shoot ({ browser, host, game, testCase, clock, record, debug }) {
         position: { x: 800, y: 450 },
         focusOverlay: false
       }
-    })
+    }
+    host.sendEvent(itemText)
 
     await page.waitForSelector('#price-window', { state: 'visible', timeout: 60_000 })
     // Let the item's own requests (poe.ninja, in-flight stats) land first.
@@ -228,6 +263,9 @@ async function shoot ({ browser, host, game, testCase, clock, record, debug }) {
       return Boolean(win.querySelector('tbody tr'))
     }, { timeout: 15_000 }).then(() => true).catch(() => false)
     if (!listed) console.error(`[screens] warning (${game}/${slug}): no listings in the window`)
+    // The window's pictures are served from disk, so they settle almost at once; waiting
+    // keeps the screenshot from catching a half-loaded `<img>`.
+    await waitForImages(page)
     await page.waitForTimeout(300)
 
     const outDir = path.join(REPO_ROOT, 'target/screens', game)
@@ -240,7 +278,11 @@ async function shoot ({ browser, host, game, testCase, clock, record, debug }) {
     })
     fs.writeFileSync(path.join(outDir, `${slug}.txt`), await element.innerText())
 
-    console.log(`[screens] ${game}/${slug} -> target/screens/${game}/${slug}.png`)
+    console.log(
+      `[screens] ${game}/${slug} -> target/screens/${game}/${slug}.png ` +
+      `(${images.stats.replayed} images replayed, ${images.stats.recorded} recorded` +
+      `${images.stats.missed.length ? `, ${images.stats.missed.length} NOT RECORDED` : ''})`
+    )
   } catch (err) {
     if (!debug) {
       console.error(`[screens] page log for ${game}/${slug}:`)
@@ -268,6 +310,15 @@ async function main () {
     : Object.fromEntries(
       Object.entries(DEFAULT_CASES).map(([game, cases]) => [game, cases.map(normalizeCase)])
     )
+
+  if (opts.images.length) {
+    const game = opts.games[0]
+    for (const url of opts.images) {
+      const { file, bytes } = await recordImage(url, { dir: imageDir(game), userAgent: userAgent() })
+      console.log(`[screens] recorded ${path.relative(REPO_ROOT, file)} (${bytes} bytes)`)
+    }
+    if (!opts.cases.length) return
+  }
 
   const agent = opts.record ? userAgent() : ''
   const browser = await chromium.launch()

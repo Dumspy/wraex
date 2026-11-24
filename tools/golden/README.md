@@ -172,6 +172,7 @@ npm run screens -- --game poe1                     # one game, default cases
 npm run screens -- --game poe2 --case ee2-rare-map # one case
 npm run screens -- --rebuild                       # after bumping a reference
 npm run screens -- --game poe2 --record            # fetch + save new answers (network)
+npm run screens -- --game poe1 --image <url>       # record one item image on its own
 ```
 
 It runs the reference's own `vite build` once per game, with cwd
@@ -247,6 +248,35 @@ dense blob) and `/api/trade2/data/stats` (855 KB, every modifier); the rest is a
 KB each. They are kept because the results and price areas need them; re-recording
 is manual, and stale answers are fine (the screenshots are a label, not a market
 feed).
+
+### Item images
+
+An item's picture is not proxied: the page's `<img>` loads it straight from the game's
+CDN (`https://web.poecdn.com/gen/image/...`), which comes from the game data's `icon`
+fields and from trade listings. `screens/images.mjs` routes those requests with
+`page.route`, so a run stays offline:
+
+```
+web.poecdn.com/gen/image/WzI1LDE0.../40b81baee3/LakeRing1.png
+  -> corpus/screens/<game>/images/1f462dd1-LakeRing1.png
+```
+
+The name is the first eight hex digits of the URL's SHA-1, then the URL's own file name
+(anything outside `[A-Za-z0-9._-]` becomes `_`). Both are pure functions of the URL, and
+`rust/crates/app/src/ui/art.rs` (`recorded_name`) rebuilds the same name, so the Rune
+replay mode reads what the harness recorded. With `--record` a miss is fetched once, at
+most one request per second, with Wraex's User-Agent (the proxy recordings' rules), and
+saved as the exact bytes; without it a miss is a `404` and a line on stderr. `--image
+<url>` records one URL without rendering a case: it is for art only a state the harness
+does not click reaches, such as the anointment oils of a filter row behind the Hidden
+toggle (all sixteen oils are recorded that way). The small art the page serves itself
+(`/images/chaos.png`, `stash.png`, `dust.png`, the influence badges) is the reference's
+own file and needs no fixture: the port reads it from
+`ref/<game>/renderer/public/images`.
+
+A context pins `locale: 'en-US'` and `timezoneId: 'UTC'`: the runner's own locale would
+otherwise reach the page, which formats `1.2` as `1,2` under a da-DK format and dates in
+its own time zone, and the port's output is en-US.
 
 ### Recording answers (`--record`)
 

@@ -10,6 +10,7 @@ pub mod config_upgrade;
 pub mod data;
 pub mod filters;
 pub mod game_files;
+pub mod images;
 pub mod js;
 pub mod js_regex;
 pub mod keys;

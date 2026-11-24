@@ -11,6 +11,7 @@ use crate::poe1::i18n;
 use crate::poe1::price_check::PriceCheck;
 use crate::poe1::price_check::view::Project;
 use crate::theme::{self, text as type_};
+use crate::ui::art;
 use crate::ui::icon;
 
 use super::online;
@@ -95,10 +96,14 @@ fn currency_button<S: 'static>(check: &PriceCheck, which: BulkCurrency, selected
         .role("button")
         .label(format!("{key} {label}"))
         .on_press(move |s: &mut S| project(s).select_currency(which))
-        // `$style.currencyIcon`: 1.75 rem, pulled in by its negative margins, greyscale.
         // `$style.currencyIcon`: 1.75 rem with -0.4375 rem above and below, so it does not
-        // grow the button.
-        .child(icon::image_placeholder(theme::rem(1.75)).mr(theme::rem(0.125)).my(-(theme::rem(0.4375))))
+        // grow the button (upstream also greys it out; Rune has no colour filter).
+        .child(
+            art::local(wraex_core::GameId::Poe1, &format!("{key}.png"), theme::rem(1.75))
+                .mr(theme::rem(0.125))
+                .my(-(theme::rem(0.4375)))
+                .key(format!("bulk-currency-{key}-icon")),
+        )
         .child(text(label).key(format!("bulk-currency-{key}-total")).font(type_::SM).color(theme::gray(200)))
 }
 

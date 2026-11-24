@@ -17,6 +17,14 @@ pub fn reference_source() -> DirSource {
     DirSource::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/apt/renderer/public/data"))
 }
 
+/// `ref/apt/renderer/public/images/<name>`: the small art upstream's page serves (the
+/// currency icons, the stash and dust badges, the influence and roll markers), which the
+/// app draws through `wraex_app::ui::art`. Read from the reference like the data files;
+/// a release build would ship them instead.
+pub fn image_path(name: &str) -> std::path::PathBuf {
+    std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/apt/renderer/public/images")).join(name)
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StatMatcher {
     pub string: String,

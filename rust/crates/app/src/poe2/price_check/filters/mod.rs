@@ -5,8 +5,9 @@
 //! editor button sits at the right of the chips, and the Hidden toggle is labelled
 //! `Explicit` for maps and waystones. The stat rows themselves are [`modifier`].
 //!
-//! Font Awesome is not available (see [`crate::ui::icon`]) and item/currency art is not
-//! wired up yet, so icons are drawn shapes and images are plain placeholder squares.
+//! Font Awesome is not available (see [`crate::ui::icon`]), so its glyphs are drawn shapes.
+//! The images are upstream's: the reference's `/images` files (the item editor's socket) and
+//! the items' CDN art, through [`crate::ui::art`].
 
 pub mod anointment;
 pub mod btn;
@@ -26,6 +27,7 @@ use crate::poe2::i18n;
 use crate::poe2::price_check::view::Project;
 use crate::poe2::price_check::{ElementalOption, InputField, ItemFlag, LogicalToggle, NumericFilter, PriceCheck};
 use crate::theme::{self, text as type_};
+use crate::ui::art;
 use crate::ui::{self, icon};
 
 /// `FilterModifier.vue`'s `.rollInput`: `w-12` (48 pt), 22 pt tall with its 1 pt border.
@@ -100,12 +102,14 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
     if let Some(influences) = &filters.influences {
         for (index, influence) in influences.iter().enumerate() {
             let label = influence_name(influence.value);
+            // `:img="`/images/influence-${influence.value}.png`"`
+            let picture = art::Picture::local(format!("influence-{label}.png"));
             chips = chips.child(btn::logical(
                 &format!("influence-{index}"),
                 label,
                 Some(!influence.disabled),
                 None,
-                true,
+                Some(picture),
                 |_: &mut S| {},
             ));
         }
@@ -116,7 +120,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             &i18n::t("item.unidentified_tier"),
             Some(!tier.disabled),
             None,
-            false,
+            None,
             move |s: &mut S| project(s).toggle_logical(LogicalToggle::UnidentifiedTier),
         ));
     } else if let Some(unidentified) = &filters.unidentified {
@@ -125,7 +129,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             &i18n::t("item.unidentified"),
             Some(!unidentified.disabled),
             None,
-            false,
+            None,
             move |s: &mut S| project(s).toggle_logical(LogicalToggle::Unidentified),
         ));
     }
@@ -135,7 +139,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             &i18n::t("item.veiled"),
             Some(!veiled.disabled),
             None,
-            false,
+            None,
             move |s: &mut S| project(s).set_item_flag(ItemFlag::Veiled),
         ));
     }
@@ -145,25 +149,25 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             &i18n::t("item.foil_unique"),
             Some(!foil.disabled),
             None,
-            false,
+            None,
             move |s: &mut S| project(s).set_item_flag(ItemFlag::Foil),
         ));
     }
     if let Some(mirrored) = &filters.mirrored {
         let label = i18n::t(if mirrored.disabled { "item.not_mirrored" } else { "item.mirrored" });
-        chips = chips.child(btn::logical("mirrored", &label, Some(true), None, false, move |s: &mut S| {
+        chips = chips.child(btn::logical("mirrored", &label, Some(true), None, None, move |s: &mut S| {
             project(s).set_item_flag(ItemFlag::Mirrored);
         }));
     }
     if let Some(sanctified) = &filters.sanctified {
         let label = i18n::t(if sanctified.disabled { "item.not_sanctified" } else { "item.sanctified" });
-        chips = chips.child(btn::logical("sanctified", &label, Some(true), None, false, move |s: &mut S| {
+        chips = chips.child(btn::logical("sanctified", &label, Some(true), None, None, move |s: &mut S| {
             project(s).set_item_flag(ItemFlag::Sanctified);
         }));
     }
     if let Some(hint) = &filters.ultimatum_hint {
         let label = i18n::t(&format!("item.{}", hint.value.to_lowercase()));
-        chips = chips.child(btn::logical("ultimatum", &label, Some(!hint.disabled), None, false, move |s: &mut S| {
+        chips = chips.child(btn::logical("ultimatum", &label, Some(!hint.disabled), None, None, move |s: &mut S| {
             project(s).toggle_logical(LogicalToggle::UltimatumHint);
         }));
     }
@@ -186,7 +190,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             &label,
             Some(selected > 0),
             Some(check.stats_collapsed),
-            false,
+            None,
             move |s: &mut S| project(s).toggle_stats_collapsed(),
         ));
     }
@@ -285,6 +289,10 @@ fn item_editor_button<S: 'static>(check: &PriceCheck, _project: Project<S>) -> O
     if !catalyst && !augment {
         return None;
     }
+    // `FiltersBlock.vue`'s item-editor button. A catalyst's own icon is not ported (the item
+    // editor itself is not), so the rune/empty-socket art stands in for its two other states.
+    let rune = item.augment_sockets.as_ref().is_some_and(|sockets| sockets.augments.iter().any(Option::is_some));
+    let name = if rune { "augments/rune.png" } else { "augments/empty-socket.png" };
     Some(
         row()
             .key("item-editor")
@@ -299,9 +307,7 @@ fn item_editor_button<S: 'static>(check: &PriceCheck, _project: Project<S>) -> O
             .focusable(true)
             .role("button")
             .label("item editor")
-            // The reference draws `/images/augments/empty-socket.png` (or the catalyst's
-            // icon), which the port has no art for: a socket ring stands in.
-            .child(icon::socket(theme::rem(1.75), theme::gray(600))),
+            .child(art::local(wraex_core::GameId::Poe2, name, theme::rem(1.75)).key("item-editor-icon")),
     )
 }
 
@@ -630,9 +636,10 @@ pub(super) fn elemental_options<S: 'static>(filter: &StatFilter, index: usize, p
     Some(out)
 }
 
-/// The item's or currency's image stand-in (see [`icon::image_placeholder`]).
-pub(super) fn image(size: f32) -> El {
-    icon::image_placeholder(size)
+/// The item's or currency's image (`FiltersBlock.vue`'s influence badges, `FilterModifier.vue`):
+/// the reference's own `/images` art, or an item's CDN icon.
+pub(super) fn image(picture: art::Picture, size: f32) -> El {
+    art::picture(wraex_core::GameId::Poe2, &picture, (size, size))
 }
 
 /// `Quality: {0}` and friends: the stat filter's own text, with internal trade ids

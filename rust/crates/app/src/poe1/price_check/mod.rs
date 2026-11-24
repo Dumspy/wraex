@@ -131,6 +131,9 @@ impl PriceCheck {
     /// [`PriceCheck::from_text`] with the transport chosen: recorded answers for a scene,
     /// test or headless render.
     pub fn with_mode(text: &str, mode: Mode) -> Self {
+        // Item art follows the window's switch: a live window fetches from the CDN, a
+        // replay reads the screenshot harness's recordings.
+        crate::ui::art::set_mode(mode);
         let data = data();
         let item = parse_clipboard(data, text).map_err(|fail| ParseError::Rejected { key: fail.0.into() });
         let presets = item.as_ref().ok().map(|item| create_presets(data, item, &preset_options()));

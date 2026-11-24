@@ -51,6 +51,7 @@ pub fn red(shade: u16) -> Color {
         500 => "#f56565",
         600 => "#e53e3e",
         700 => "#c53030",
+        800 => "#9b2c2c",
         _ => panic!("no `red.{shade}` in upstream's tailwind.config.js"),
     })
 }
@@ -71,6 +72,7 @@ pub fn orange(shade: u16) -> Color {
         300 => "#fbd38d",
         400 => "#f6ad55",
         500 => "#ed8936",
+        600 => "#dd6b20",
         _ => panic!("no `orange.{shade}` in upstream's tailwind.config.js"),
     })
 }
@@ -90,8 +92,17 @@ pub fn green(shade: u16) -> Color {
     c(match shade {
         100 => "#f0fff4",
         500 => "#48bb78",
+        700 => "#2f855a",
         900 => "#22543d",
         _ => panic!("no `green.{shade}` in upstream's tailwind.config.js"),
+    })
+}
+
+/// Tailwind's `slate` ramp (EE2's `settings.general` experimental-features box).
+pub fn slate(shade: u16) -> Color {
+    c(match shade {
+        800 => "#1e293b",
+        _ => panic!("no `slate.{shade}` in EE2's tailwind.config.js"),
     })
 }
 

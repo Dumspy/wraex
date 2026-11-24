@@ -13,6 +13,7 @@ use crate::poe1::i18n;
 use crate::poe1::price_check::view::Project;
 use crate::poe1::price_check::{InputField, NumericPart, PriceCheck, StatPath};
 use crate::theme::{self, text as type_};
+use crate::ui::art;
 use crate::ui::icon;
 
 use super::{
@@ -178,8 +179,9 @@ fn label<S: 'static>(filter: &StatFilter, mini: bool, path: StatPath, project: P
         .focusable(true)
         .role("button")
         .on_press(move |s: &mut S| project(s).smart_toggle_stat(path));
-    if filter.mercenary.as_ref().and_then(|mercenary| mercenary.icon.as_ref()).is_some() {
-        button = button.child(super::image(theme::rem(1.0)).mr(theme::rem(0.25)));
+    if let Some(icon) = filter.mercenary.as_ref().and_then(|mercenary| mercenary.icon.as_deref()) {
+        // `<img v-if="filter.mercenary?.icon" :src="filter.mercenary.icon">`
+        button = button.child(super::image(art::Picture::cdn(icon), theme::rem(1.0)).mr(theme::rem(0.25)));
     }
     if filter.not == Some(true) && mini {
         button = button.child(tag_badge(&i18n::t("filters.tag_not"), FilterTag::PSEUDO).mr(theme::rem(0.25)));
@@ -330,10 +332,13 @@ fn inputs<S: 'static>(check: &PriceCheck, filter: &StatFilter, item: &Item, path
     }
     let (volatile, reflecting, increased) = roll_tags(filter);
     if volatile || reflecting {
-        block = block.child(super::image(theme::rem(1.25)));
+        // `FilterModifier.vue`'s `rollTags`: `/images/VolatileVaalOrb.png` or
+        // `/images/ReflectingMist.png`.
+        let name = if volatile { "VolatileVaalOrb.png" } else { "ReflectingMist.png" };
+        block = block.child(super::image(art::Picture::local(name), theme::rem(1.25)));
     }
     if increased {
-        block = block.child(super::image(theme::rem(1.25)));
+        block = block.child(super::image(art::Picture::local("increased.png"), theme::rem(1.25)));
     }
     let min_field = InputField::Stat(path, NumericPart::Min);
     let max_field = InputField::Stat(path, NumericPart::Max);
