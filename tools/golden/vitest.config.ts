@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'node:path'
 import { defineConfig } from 'vitest/config'
 
@@ -8,9 +9,38 @@ const REF = {
   poe2: path.resolve(import.meta.dirname, '../../ref/ee2/renderer')
 }
 
+/**
+ * `WidgetItemSearch.vue` keeps `findItems` and `fuzzyFindHeistGem` in its plain
+ * `<script lang="ts">` block, which exports only the component spec. The item
+ * search fixtures need the matchers themselves, so this serves that block as a
+ * module of its own with the two functions exported after it: the block's text
+ * is unchanged, and its imports resolve through the project's aliases.
+ */
+function itemSearchMatcher (game: keyof typeof REF) {
+  const file = path.join(REF[game], 'src/web/item-search/WidgetItemSearch.vue')
+  const virtual = `virtual:golden-item-search-${game}`
+  // A real `.ts` path next to the .vue, so the loader transforms the block's
+  // types and its relative imports resolve like the component's own.
+  const resolved = `${file}.golden.ts`
+  return {
+    name: `golden-item-search-${game}`,
+    resolveId (id: string) {
+      return id === virtual ? resolved : undefined
+    },
+    load (id: string) {
+      if (id !== resolved) return
+      const sfc = fs.readFileSync(file, 'utf8')
+      const block = /<script lang="ts">\r?\n([\s\S]*?)\r?\n<\/script>/.exec(sfc)
+      if (!block) throw new Error(`golden: no plain <script lang="ts"> block in ${file}`)
+      return `${block[1]}\nexport { findItems, fuzzyFindHeistGem }\n`
+    }
+  }
+}
+
 function project (game: keyof typeof REF) {
   const ref = REF[game]
   return {
+    plugins: [itemSearchMatcher(game)],
     resolve: {
       alias: [
         { find: /^@\//, replacement: `${ref}/src/` },

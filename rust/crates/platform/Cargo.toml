@@ -8,9 +8,14 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+serde = { workspace = true }
 tray-icon = { workspace = true }
 ureq = { workspace = true }
 wraex-core = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+wraex-golden = { workspace = true }
 
 [lints]
 workspace = true

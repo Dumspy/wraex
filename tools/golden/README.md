@@ -38,6 +38,10 @@ fixtures/<poe1|poe2>/<case>/
 If `parseClipboard` fails, `parsed.json` is `{ "error": "<key>" }` and there are no
 presets or requests.
 
+Two outputs do not follow the per-case layout: `fixtures/listings/<game>/` holds
+answers to recorded trade site requests, and `fixtures/item-search/<game>.json`
+holds the item search widget's answers (see [Item search](#item-search)).
+
 JSON is `JSON.stringify` with recursively sorted keys, two-space indent and a
 trailing newline; numbers are JavaScript's shortest round-trip form. Rust reproduces
 it with `wraex_golden::canonical`, and a test round-trips every fixture through it,
@@ -103,6 +107,52 @@ The corpus files are derived from the recorded defaults by
 real config files from players should replace them. `presets.json`
 is written before any request is built, and the requests get the live preset objects
 like the app does (EE2 wraps some trade ids in proxies, which cannot be cloned).
+
+## Item search
+
+The `poe1` and `poe2` projects also run the item search widget's matcher
+(`WidgetItemSearch.vue`). The corpus is `corpus/item-search/<game>.json`:
+
+```json
+{
+  "lang": "en",
+  "searches": [
+    { "tab": "replica", "query": "head" },
+    { "tab": "replica", "language": "cmn-Hant", "query": "eadhunter" },
+    { "tab": "replica", "query": "replica\ufeffheadhunter" }
+  ],
+  "fuzzy": [{ "query": "anomalus empowered sparks i" }]
+}
+```
+
+`tab` is the widget's filter: `gem`/`replica` in PoE1, `gem`/`unique`/`base_item`
+in PoE2. `lang` is the data language `init()` loads, and `language` is
+`AppConfig().language`, which `findItems` reads for its `cmn-Hant` exemption;
+both default to the file's `lang` and are written per query, because the answer
+depends on them. The queries cover a found item, "too many" (`false`), no match,
+the three-character rule, the longest-word prefix rule, case, diacritics, the
+whitespace JavaScript's `trim()`/`split(/\s+/)` see but Rust's do not,
+apostrophes (`Kaom's`), every tab, and the `cmn-Hant` exemption (with English
+data, as in the phase 1 milestone).
+
+`fuzzy` is the OCR fallback: one noisy line per entry, matched against the gem
+names. The fixture is `fixtures/item-search/<game>.json`:
+
+```
+searches: [{ tab, query, lang, language, results }]  results: BaseType[] | false
+fuzzy:    [{ query, lang, result }]                  result:  { name, altQuality } | null
+```
+
+`results` is the reference's `BaseType[] | false` as `findItems` returns it,
+duplicates included (a unique with several data lines is listed once per line).
+`null` stands for `fuzzyFindHeistGem`'s `undefined`, when no gem is within five
+characters of the line's length.
+
+Both functions are private to the `.vue` file's plain `<script lang="ts">` block,
+so `vitest.config.ts` serves that block as a module of its own with `findItems`
+and `fuzzyFindHeistGem` exported after it (the block's text is unchanged) and the
+tests import `virtual:golden-item-search-<game>`. Nothing is exported from the
+component itself.
 
 ## Options are part of the fixture
 

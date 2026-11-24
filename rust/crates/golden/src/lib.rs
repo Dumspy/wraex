@@ -52,6 +52,20 @@ pub fn listing_fixture(game: GameId, name: &str) -> Value {
     serde_json::from_str(&text).unwrap_or_else(|e| panic!("{}: {e}", file.display()))
 }
 
+/// `fixtures/item-search/<game>.json`: the item search widget's answers to the
+/// queries in `corpus/item-search/<game>.json`, recorded from the reference's
+/// own `findItems` and `fuzzyFindHeistGem`.
+///
+/// `searches` is `[{ tab, query, lang, language, results }]`, where `results` is
+/// the matched `BaseType` list or `false` (too short a query, or more than
+/// `MAX_RESULTS` matches); `fuzzy` is `[{ query, lang, result }]`, where `result`
+/// is `{ name, altQuality }` or `null` for the reference's `undefined`.
+pub fn item_search_fixture(game: GameId) -> Value {
+    let file = fixtures_dir().join("item-search").join(format!("{}.json", game.as_str()));
+    let text = fs::read_to_string(&file).unwrap_or_else(|e| panic!("{}: {e}", file.display()));
+    serde_json::from_str(&text).unwrap_or_else(|e| panic!("{}: {e}", file.display()))
+}
+
 /// A settings case: `fixtures/config/<game>/<slug>/` (`tools/golden/src/config-cases.ts`).
 #[derive(Debug, Clone)]
 pub struct ConfigCase {

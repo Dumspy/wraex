@@ -12,6 +12,7 @@
 //! `heist-gems`). EE2's handler only inserts the gem, without the alternate-quality
 //! price upstream's does, but its matcher still walks `GEM_NS_NAMES`.
 
+use wraex_core::js;
 use wraex_core::levenshtein::distance;
 
 use crate::data::{BaseType, Data, Namespace};
@@ -80,20 +81,21 @@ pub fn find_items(
     namespace: Namespace,
     item_names: &[String],
 ) -> SearchResults {
-    let search = search.trim();
-    if utf16_len(search) < 3 {
+    let search = js::trim(search);
+    if js::length(search) < 3 {
         return SearchResults::TooMany;
     }
-    let mut parts: Vec<String> = search.to_lowercase().split_whitespace().map(str::to_owned).collect();
+    // `toLowerCase().split(/\s+/)`: JavaScript's whitespace, not Rust's.
+    let mut parts: Vec<String> = js::split_whitespace(&search.to_lowercase()).into_iter().map(str::to_owned).collect();
     // `sort((a, b) => b.length - a.length)`: longest first, in JavaScript's UTF-16 lengths.
-    parts.sort_by_key(|part| std::cmp::Reverse(utf16_len(part)));
+    parts.sort_by_key(|part| std::cmp::Reverse(js::length(part)));
     let longest = parts.first().map(String::as_str).unwrap_or("");
 
     let mut out = Vec::new();
     for item_name in item_names {
         let lower = item_name.to_lowercase();
         let matches = parts.iter().all(|part| lower.contains(part.as_str()))
-            && (language == "cmn-Hant" || lower.split_whitespace().any(|word| word.starts_with(longest)));
+            && (language == "cmn-Hant" || js::split_whitespace(&lower).iter().any(|word| word.starts_with(longest)));
         if !matches {
             continue;
         }
@@ -136,7 +138,7 @@ pub fn fuzzy_find_heist_gem(data: &Data, bad_str: &str) -> Option<FuzzyGem> {
         for (alt_quality, key) in qualities {
             let template = template(data.re(key).source());
             let exact = template.replacen("(.*)", name, 1).to_lowercase();
-            if utf16_len(&exact).abs_diff(utf16_len(&bad_str)) > 5 {
+            if js::length(&exact).abs_diff(js::length(&bad_str)) > 5 {
                 continue;
             }
             let dist = distance(&bad_str, &exact);
@@ -162,17 +164,75 @@ fn template(source: &str) -> String {
     String::from_utf16_lossy(&units[1.min(units.len())..units.len().saturating_sub(1)])
 }
 
-/// JavaScript's `String#length`: UTF-16 code units.
-fn utf16_len(text: &str) -> usize {
-    text.encode_utf16().count()
-}
-
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
+    use serde_json::{Value, json};
+    use wraex_core::GameId;
+
     use super::*;
 
     fn names(results: &SearchResults) -> Vec<Option<&str>> {
         results.items().iter().map(|item| item.name.as_deref()).collect()
+    }
+
+    /// `SearchResults` as the reference's `BaseType[] | false`.
+    fn json_results(results: &SearchResults) -> Value {
+        match results {
+            SearchResults::TooMany => Value::Bool(false),
+            SearchResults::Found(items) => wraex_core::js::json_value(items),
+        }
+    }
+
+    /// Every query in `corpus/item-search/poe2.json`, per tab, with the answer
+    /// the reference's own `findItems` and `fuzzyFindHeistGem` gave.
+    #[test]
+    fn searches_and_fuzzy_matches_equal_the_fixtures() {
+        let fixture = wraex_golden::item_search_fixture(GameId::Poe2);
+        let mut langs: HashMap<String, Data> = HashMap::new();
+        let mut failures = Vec::new();
+
+        let searches = fixture["searches"].as_array().expect("searches");
+        assert!(!searches.is_empty(), "no recorded searches: run `npm run regen` in tools/golden");
+        for entry in searches {
+            let lang = entry["lang"].as_str().unwrap();
+            let language = entry["language"].as_str().unwrap();
+            let tab = entry["tab"].as_str().unwrap();
+            let query = entry["query"].as_str().unwrap();
+            let data = langs
+                .entry(lang.to_owned())
+                .or_insert_with(|| Data::load(&crate::data::reference_source(), lang, None).unwrap());
+            let which = match tab {
+                "gem" => TypeFilter::Gem,
+                "unique" => TypeFilter::Unique,
+                "base_item" => TypeFilter::BaseItem,
+                other => panic!("unknown PoE2 item-search tab {other:?}"),
+            };
+            let actual = json_results(&find(data, language, query, which));
+            if let Some(diff) = wraex_golden::diff(&entry["results"], &actual) {
+                failures.push(format!("{tab} {query:?} (language {language}): {diff}"));
+            }
+        }
+
+        let fuzzy = fixture["fuzzy"].as_array().expect("fuzzy");
+        assert!(!fuzzy.is_empty(), "no recorded fuzzy lines: run `npm run regen` in tools/golden");
+        for entry in fuzzy {
+            let lang = entry["lang"].as_str().unwrap();
+            let query = entry["query"].as_str().unwrap();
+            let data = langs
+                .entry(lang.to_owned())
+                .or_insert_with(|| Data::load(&crate::data::reference_source(), lang, None).unwrap());
+            let actual = match fuzzy_find_heist_gem(data, query) {
+                None => Value::Null,
+                Some(gem) => json!({ "altQuality": gem.alt_quality, "name": gem.name }),
+            };
+            if let Some(diff) = wraex_golden::diff(&entry["result"], &actual) {
+                failures.push(format!("fuzzy {query:?}: {diff}"));
+            }
+        }
+
+        assert!(failures.is_empty(), "{} item-search answers differ:\n\n{}", failures.len(), failures.join("\n\n"));
     }
 
     /// The base-item tab, which the widget opens on: `ITEM_NS_NAMES` and
@@ -274,11 +334,5 @@ mod tests {
         let values: Vec<&str> = TypeFilter::ALL.iter().map(|f| f.as_str()).collect();
         assert_eq!(values, ["gem", "unique", "base_item"]);
         assert_eq!(TypeFilter::DEFAULT, TypeFilter::BaseItem);
-    }
-
-    #[test]
-    fn lengths_are_utf16_code_units() {
-        assert_eq!(utf16_len("abc"), 3);
-        assert_eq!(utf16_len("\u{1F600}"), 2, "an emoji is a surrogate pair");
     }
 }

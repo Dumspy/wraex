@@ -1,0 +1,32 @@
+{
+  "lang": "en",
+  "searches": [
+    { "tab": "replica", "query": "head" },
+    { "tab": "replica", "query": "hea" },
+    { "tab": "replica", "query": "headhunter" },
+    { "tab": "replica", "query": "  REPLICA HEADHUNTER  " },
+    { "tab": "replica", "query": "Replica  Headhunter" },
+    { "tab": "replica", "query": "replica w" },
+    { "tab": "replica", "query": "replica wi" },
+    { "tab": "replica", "query": "replica" },
+    { "tab": "replica", "query": "kaoms" },
+    { "tab": "replica", "query": "kaom's" },
+    { "tab": "replica", "query": "alphas" },
+    { "tab": "replica", "query": "alpha's" },
+    { "tab": "replica", "query": "he" },
+    { "tab": "replica", "query": " w " },
+    { "tab": "replica", "query": "\uFEFFhe" },
+    { "tab": "replica", "query": "replica\uFEFFheadhunter" },
+    { "tab": "replica", "query": "\u0085he" },
+    { "tab": "replica", "query": "zzzz" },
+    { "tab": "gem", "query": "empower" },
+    { "tab": "gem", "query": "anomalous" },
+    { "tab": "replica", "language": "cmn-Hant", "query": "eadhunter" },
+    { "tab": "replica", "language": "cmn-Hant", "query": "eplica" }
+  ],
+  "fuzzy": [
+    { "query": "Anomalous Empower Support" },
+    { "query": "anomalus firebal" },
+    { "query": "Divergent Arc" }
+  ]
+}

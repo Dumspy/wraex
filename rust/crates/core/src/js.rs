@@ -33,6 +33,29 @@ pub fn trim_end(s: &str) -> &str {
     s.trim_end_matches(is_whitespace)
 }
 
+/// `String.prototype.split(/\s+/)`: the parts between runs of JavaScript
+/// whitespace. A run at either end leaves an empty first or last part, as in
+/// JavaScript (`" a ".split(/\s+/)` is `["", "a", ""]`).
+pub fn split_whitespace(s: &str) -> Vec<&str> {
+    let mut out = Vec::new();
+    let mut rest = s;
+    loop {
+        let Some(at) = rest.find(is_whitespace) else {
+            out.push(rest);
+            return out;
+        };
+        out.push(&rest[..at]);
+        let after = &rest[at..];
+        match after.find(|c: char| !is_whitespace(c)) {
+            Some(next) => rest = &after[next..],
+            None => {
+                out.push("");
+                return out;
+            }
+        }
+    }
+}
+
 /// `str.length`: UTF-16 code units.
 pub fn length(s: &str) -> usize {
     s.encode_utf16().count()
@@ -355,6 +378,17 @@ mod tests {
         // U+0085 is Unicode whitespace but not JavaScript's.
         assert_eq!(trim("\u{85}a"), "\u{85}a");
         assert_eq!(length("😀a"), 3);
+    }
+
+    #[test]
+    fn splits_javascript_whitespace_runs() {
+        assert_eq!(split_whitespace("a  b\tc"), ["a", "b", "c"]);
+        assert_eq!(split_whitespace(""), [""]);
+        // The runs at the ends leave empty parts, as JavaScript's split does.
+        assert_eq!(split_whitespace(" a "), ["", "a", ""]);
+        // U+FEFF is JavaScript whitespace; U+0085 is not.
+        assert_eq!(split_whitespace("a\u{feff}b"), ["a", "b"]);
+        assert_eq!(split_whitespace("a\u{85}b"), ["a\u{85}b"]);
     }
 
     #[test]

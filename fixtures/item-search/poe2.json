@@ -1,0 +1,945 @@
+{
+  "fuzzy": [
+    {
+      "lang": "en",
+      "query": "Anomalous Empowered Sparks I",
+      "result": {
+        "altQuality": "Anomalous",
+        "name": "Empowered Sparks I"
+      }
+    },
+    {
+      "lang": "en",
+      "query": "anomalus empowered sparks i",
+      "result": {
+        "altQuality": "Anomalous",
+        "name": "Empowered Sparks I"
+      }
+    },
+    {
+      "lang": "en",
+      "query": "PHANTASMAL EMPOWERED SPARKS II",
+      "result": {
+        "altQuality": "Phantasmal",
+        "name": "Empowered Sparks II"
+      }
+    },
+    {
+      "lang": "en",
+      "query": "Divergent Spark",
+      "result": {
+        "altQuality": "Divergent",
+        "name": "Spark"
+      }
+    },
+    {
+      "lang": "en",
+      "query": "Anomalous Firebal",
+      "result": {
+        "altQuality": "Anomalous",
+        "name": "Fireball"
+      }
+    },
+    {
+      "lang": "en",
+      "query": "Phantasmal Lightning Arrow",
+      "result": {
+        "altQuality": "Phantasmal",
+        "name": "Lightning Arrow"
+      }
+    },
+    {
+      "lang": "en",
+      "query": "Anomalous this line of OCR text is far too long to be a gem",
+      "result": null
+    }
+  ],
+  "searches": [
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "gold ring",
+      "results": [
+        {
+          "craftable": {
+            "category": "Ring"
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvUmluZ3MvQmFzZXR5cGVzL0dvbGRSaW5nIiwidyI6MSwiaCI6MSwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/a138f2df65/GoldRing.png",
+          "name": "Gold Ring",
+          "namespace": "ITEM",
+          "refName": "Gold Ring",
+          "tags": [],
+          "w": 1
+        }
+      ],
+      "tab": "base_item"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "Gold  Ring",
+      "results": [
+        {
+          "craftable": {
+            "category": "Ring"
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvUmluZ3MvQmFzZXR5cGVzL0dvbGRSaW5nIiwidyI6MSwiaCI6MSwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/a138f2df65/GoldRing.png",
+          "name": "Gold Ring",
+          "namespace": "ITEM",
+          "refName": "Gold Ring",
+          "tags": [],
+          "w": 1
+        }
+      ],
+      "tab": "base_item"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "gold﻿ring",
+      "results": [
+        {
+          "craftable": {
+            "category": "Ring"
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvUmluZ3MvQmFzZXR5cGVzL0dvbGRSaW5nIiwidyI6MSwiaCI6MSwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/a138f2df65/GoldRing.png",
+          "name": "Gold Ring",
+          "namespace": "ITEM",
+          "refName": "Gold Ring",
+          "tags": [],
+          "w": 1
+        }
+      ],
+      "tab": "base_item"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "ring",
+      "results": false,
+      "tab": "base_item"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "grand regalia",
+      "results": [
+        {
+          "armour": {
+            "ar": [
+              182,
+              182
+            ],
+            "es": [
+              50,
+              50
+            ],
+            "ev": [
+              165,
+              165
+            ]
+          },
+          "craftable": {
+            "category": "Body Armour"
+          },
+          "h": 3,
+          "icon": "%NOT_FOUND%",
+          "name": "Grand Regalia",
+          "namespace": "ITEM",
+          "refName": "Grand Regalia",
+          "tags": [
+            "str_dex_int_armour"
+          ],
+          "w": 2
+        },
+        {
+          "armour": {
+            "ar": [
+              145,
+              145
+            ],
+            "es": [
+              40,
+              40
+            ],
+            "ev": [
+              132,
+              132
+            ]
+          },
+          "craftable": {
+            "category": "Body Armour"
+          },
+          "h": 3,
+          "icon": "%NOT_FOUND%",
+          "name": "Runemastered Grand Regalia",
+          "namespace": "ITEM",
+          "refName": "Runemastered Grand Regalia",
+          "tags": [
+            "str_dex_int_armour",
+            "runeforged"
+          ],
+          "w": 2
+        }
+      ],
+      "tab": "base_item"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "divine orb",
+      "results": [
+        {
+          "craftable": {
+            "category": "Currency"
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQ3VycmVuY3lNb2RWYWx1ZXMiLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/2986e220b3/CurrencyModValues.png",
+          "name": "Divine Orb",
+          "namespace": "ITEM",
+          "refName": "Divine Orb",
+          "tags": [],
+          "tradeTag": "divine",
+          "w": 1
+        }
+      ],
+      "tab": "base_item"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "mageblood",
+      "results": [],
+      "tab": "base_item"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "uncut skill gem",
+      "results": false,
+      "tab": "base_item"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "go",
+      "results": false,
+      "tab": "base_item"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "legacy of mjölner",
+      "results": [
+        {
+          "augment": [
+            {
+              "categories": [
+                "One Hand Mace"
+              ],
+              "socketBound": false,
+              "string": "# Intelligence Requirement",
+              "tradeId": [
+                "rune.stat_2153364323"
+              ],
+              "values": [
+                200,
+                3
+              ]
+            },
+            {
+              "categories": [
+                "One Hand Mace"
+              ],
+              "socketBound": false,
+              "string": "# to Level of all Lightning Skills",
+              "tradeId": [
+                "rune.stat_1147690586"
+              ],
+              "values": [
+                200,
+                3
+              ]
+            }
+          ],
+          "craftable": {
+            "category": "SoulCore"
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvRXhwZWRpdGlvbjIvR2FtZVdhcnBSdW5lVW5pcXVlRnJhZ21lbnQiLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/a24a0bdec3/GameWarpRuneUniqueFragment.png",
+          "name": "Legacy of Mjölner",
+          "namespace": "ITEM",
+          "refName": "Legacy of Mjölner",
+          "tags": [
+            "rune"
+          ],
+          "tradeTag": "legacy-of-mjölner",
+          "w": 1
+        }
+      ],
+      "tab": "base_item"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "mageblood",
+      "results": [
+        {
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvVW5pcXVlcy9NYWdlYmxvb2QiLCJ3IjoyLCJoIjoxLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/79ac3ce7d3/Mageblood.png",
+          "name": "Mageblood",
+          "namespace": "UNIQUE",
+          "refName": "Mageblood",
+          "tags": [],
+          "unique": {
+            "base": "Utility Belt"
+          },
+          "w": 2
+        }
+      ],
+      "tab": "unique"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "goldrim",
+      "results": [
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL1VuaXF1ZXMvR29sZHJpbSIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/0e0b09916b/Goldrim.png",
+          "name": "Goldrim",
+          "namespace": "UNIQUE",
+          "refName": "Goldrim",
+          "tags": [
+            "dex_armour",
+            "ezomyte_basetype"
+          ],
+          "unique": {
+            "base": "Felt Cap"
+          },
+          "w": 2
+        },
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL1VuaXF1ZXMvR29sZHJpbSIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/0e0b09916b/Goldrim.png",
+          "name": "Goldrim",
+          "namespace": "UNIQUE",
+          "refName": "Goldrim",
+          "tags": [
+            "dex_armour",
+            "ezomyte_basetype",
+            "runeforged"
+          ],
+          "unique": {
+            "base": "Runemastered Felt Cap"
+          },
+          "w": 2
+        },
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL1VuaXF1ZXMvR29sZHJpbSIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/0e0b09916b/Goldrim.png",
+          "name": "Goldrim",
+          "namespace": "UNIQUE",
+          "refName": "Goldrim",
+          "tags": [
+            "dex_armour",
+            "ezomyte_basetype"
+          ],
+          "unique": {
+            "base": "Felt Cap"
+          },
+          "w": 2
+        },
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL1VuaXF1ZXMvR29sZHJpbSIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/0e0b09916b/Goldrim.png",
+          "name": "Goldrim",
+          "namespace": "UNIQUE",
+          "refName": "Goldrim",
+          "tags": [
+            "dex_armour",
+            "ezomyte_basetype",
+            "runeforged"
+          ],
+          "unique": {
+            "base": "Runemastered Felt Cap"
+          },
+          "w": 2
+        }
+      ],
+      "tab": "unique"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "goldri",
+      "results": [
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL1VuaXF1ZXMvR29sZHJpbSIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/0e0b09916b/Goldrim.png",
+          "name": "Goldrim",
+          "namespace": "UNIQUE",
+          "refName": "Goldrim",
+          "tags": [
+            "dex_armour",
+            "ezomyte_basetype"
+          ],
+          "unique": {
+            "base": "Felt Cap"
+          },
+          "w": 2
+        },
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL1VuaXF1ZXMvR29sZHJpbSIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/0e0b09916b/Goldrim.png",
+          "name": "Goldrim",
+          "namespace": "UNIQUE",
+          "refName": "Goldrim",
+          "tags": [
+            "dex_armour",
+            "ezomyte_basetype",
+            "runeforged"
+          ],
+          "unique": {
+            "base": "Runemastered Felt Cap"
+          },
+          "w": 2
+        },
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL1VuaXF1ZXMvR29sZHJpbSIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/0e0b09916b/Goldrim.png",
+          "name": "Goldrim",
+          "namespace": "UNIQUE",
+          "refName": "Goldrim",
+          "tags": [
+            "dex_armour",
+            "ezomyte_basetype"
+          ],
+          "unique": {
+            "base": "Felt Cap"
+          },
+          "w": 2
+        },
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL1VuaXF1ZXMvR29sZHJpbSIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/0e0b09916b/Goldrim.png",
+          "name": "Goldrim",
+          "namespace": "UNIQUE",
+          "refName": "Goldrim",
+          "tags": [
+            "dex_armour",
+            "ezomyte_basetype",
+            "runeforged"
+          ],
+          "unique": {
+            "base": "Runemastered Felt Cap"
+          },
+          "w": 2
+        }
+      ],
+      "tab": "unique"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "the eternal spark",
+      "results": [
+        {
+          "h": 3,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvT2ZmaGFuZC9Gb2NpL1VuaXF1ZXMvRXRlcm5hbFNwYXJrIiwidyI6MiwiaCI6Mywic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/97e8b781ae/EternalSpark.png",
+          "name": "The Eternal Spark",
+          "namespace": "UNIQUE",
+          "refName": "The Eternal Spark",
+          "tags": [
+            "int_armour",
+            "maraketh_basetype"
+          ],
+          "unique": {
+            "base": "Crystal Focus"
+          },
+          "w": 2
+        },
+        {
+          "h": 3,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvT2ZmaGFuZC9Gb2NpL1VuaXF1ZXMvRXRlcm5hbFNwYXJrIiwidyI6MiwiaCI6Mywic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/97e8b781ae/EternalSpark.png",
+          "name": "The Eternal Spark",
+          "namespace": "UNIQUE",
+          "refName": "The Eternal Spark",
+          "tags": [
+            "int_armour",
+            "maraketh_basetype",
+            "runeforged"
+          ],
+          "unique": {
+            "base": "Runemastered Crystal Focus"
+          },
+          "w": 2
+        },
+        {
+          "h": 3,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvT2ZmaGFuZC9Gb2NpL1VuaXF1ZXMvRXRlcm5hbFNwYXJrIiwidyI6MiwiaCI6Mywic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/97e8b781ae/EternalSpark.png",
+          "name": "The Eternal Spark",
+          "namespace": "UNIQUE",
+          "refName": "The Eternal Spark",
+          "tags": [
+            "int_armour",
+            "maraketh_basetype"
+          ],
+          "unique": {
+            "base": "Crystal Focus"
+          },
+          "w": 2
+        },
+        {
+          "h": 3,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvT2ZmaGFuZC9Gb2NpL1VuaXF1ZXMvRXRlcm5hbFNwYXJrIiwidyI6MiwiaCI6Mywic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/97e8b781ae/EternalSpark.png",
+          "name": "The Eternal Spark",
+          "namespace": "UNIQUE",
+          "refName": "The Eternal Spark",
+          "tags": [
+            "int_armour",
+            "maraketh_basetype",
+            "runeforged"
+          ],
+          "unique": {
+            "base": "Runemastered Crystal Focus"
+          },
+          "w": 2
+        }
+      ],
+      "tab": "unique"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "ab aeterno",
+      "results": [
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9VbmlxdWVzL0FiQWV0ZXJubyIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/516b4991b9/AbAeterno.png",
+          "name": "Ab Aeterno",
+          "namespace": "UNIQUE",
+          "refName": "Ab Aeterno",
+          "tags": [
+            "str_dex_int_armour"
+          ],
+          "unique": {
+            "base": "Grand Cuisses"
+          },
+          "w": 2
+        },
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9VbmlxdWVzL0FiQWV0ZXJubyIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/516b4991b9/AbAeterno.png",
+          "name": "Ab Aeterno",
+          "namespace": "UNIQUE",
+          "refName": "Ab Aeterno",
+          "tags": [
+            "str_dex_int_armour",
+            "runeforged"
+          ],
+          "unique": {
+            "base": "Runemastered Grand Cuisses"
+          },
+          "w": 2
+        },
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9VbmlxdWVzL0FiQWV0ZXJubyIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/516b4991b9/AbAeterno.png",
+          "name": "Ab Aeterno",
+          "namespace": "UNIQUE",
+          "refName": "Ab Aeterno",
+          "tags": [
+            "str_dex_int_armour"
+          ],
+          "unique": {
+            "base": "Grand Cuisses"
+          },
+          "w": 2
+        },
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9VbmlxdWVzL0FiQWV0ZXJubyIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/516b4991b9/AbAeterno.png",
+          "name": "Ab Aeterno",
+          "namespace": "UNIQUE",
+          "refName": "Ab Aeterno",
+          "tags": [
+            "str_dex_int_armour",
+            "runeforged"
+          ],
+          "unique": {
+            "base": "Runemastered Grand Cuisses"
+          },
+          "w": 2
+        }
+      ],
+      "tab": "unique"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "eterno",
+      "results": [],
+      "tab": "unique"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "gr",
+      "results": false,
+      "tab": "unique"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "MJÖLNER",
+      "results": false,
+      "tab": "unique"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "mjolner",
+      "results": [],
+      "tab": "unique"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "Mórrigan",
+      "results": [
+        {
+          "craftable": {
+            "category": "Support Skill Gem"
+          },
+          "gem": {
+            "awakened": false,
+            "transfigured": false
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9OZXcvTmV3U3VwcG9ydC9MaW5lYWdlL01vcnJpZ2Fuc1JlZnVnZSIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/38291028f0/MorrigansRefuge.png",
+          "name": "Mórrigan's Insight",
+          "namespace": "GEM",
+          "refName": "Mórrigan's Insight",
+          "tags": [],
+          "tradeTag": "mórrigans-insight",
+          "w": 1
+        }
+      ],
+      "tab": "gem"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "morrigan",
+      "results": [],
+      "tab": "gem"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "empower",
+      "results": [
+        {
+          "craftable": {
+            "category": "Support Skill Gem"
+          },
+          "gem": {
+            "awakened": false,
+            "transfigured": false
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9OZXcvTmV3U3VwcG9ydC9FbXBvd2VyZWRTcGFya3NTdXBwb3J0R2VtIiwidyI6MSwiaCI6MSwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/7921331aa5/EmpoweredSparksSupportGem.png",
+          "name": "Empowered Sparks I",
+          "namespace": "GEM",
+          "refName": "Empowered Sparks I",
+          "tags": [],
+          "w": 1
+        },
+        {
+          "craftable": {
+            "category": "Support Skill Gem"
+          },
+          "gem": {
+            "awakened": false,
+            "transfigured": false
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9OZXcvTmV3U3VwcG9ydC9FbXBvd2VyZWRTcGFya3NTdXBwb3J0R2VtIiwidyI6MSwiaCI6MSwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/7921331aa5/EmpoweredSparksSupportGem.png",
+          "name": "Empowered Sparks II",
+          "namespace": "GEM",
+          "refName": "Empowered Sparks II",
+          "tags": [],
+          "w": 1
+        }
+      ],
+      "tab": "gem"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "empowered sparks",
+      "results": [
+        {
+          "craftable": {
+            "category": "Support Skill Gem"
+          },
+          "gem": {
+            "awakened": false,
+            "transfigured": false
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9OZXcvTmV3U3VwcG9ydC9FbXBvd2VyZWRTcGFya3NTdXBwb3J0R2VtIiwidyI6MSwiaCI6MSwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/7921331aa5/EmpoweredSparksSupportGem.png",
+          "name": "Empowered Sparks I",
+          "namespace": "GEM",
+          "refName": "Empowered Sparks I",
+          "tags": [],
+          "w": 1
+        },
+        {
+          "craftable": {
+            "category": "Support Skill Gem"
+          },
+          "gem": {
+            "awakened": false,
+            "transfigured": false
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9OZXcvTmV3U3VwcG9ydC9FbXBvd2VyZWRTcGFya3NTdXBwb3J0R2VtIiwidyI6MSwiaCI6MSwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/7921331aa5/EmpoweredSparksSupportGem.png",
+          "name": "Empowered Sparks II",
+          "namespace": "GEM",
+          "refName": "Empowered Sparks II",
+          "tags": [],
+          "w": 1
+        }
+      ],
+      "tab": "gem"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "sparks",
+      "results": [
+        {
+          "craftable": {
+            "category": "Support Skill Gem"
+          },
+          "gem": {
+            "awakened": false,
+            "transfigured": false
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9OZXcvTmV3U3VwcG9ydC9FbXBvd2VyZWRTcGFya3NTdXBwb3J0R2VtIiwidyI6MSwiaCI6MSwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/7921331aa5/EmpoweredSparksSupportGem.png",
+          "name": "Empowered Sparks I",
+          "namespace": "GEM",
+          "refName": "Empowered Sparks I",
+          "tags": [],
+          "w": 1
+        },
+        {
+          "craftable": {
+            "category": "Support Skill Gem"
+          },
+          "gem": {
+            "awakened": false,
+            "transfigured": false
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9OZXcvTmV3U3VwcG9ydC9FbXBvd2VyZWRTcGFya3NTdXBwb3J0R2VtIiwidyI6MSwiaCI6MSwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/7921331aa5/EmpoweredSparksSupportGem.png",
+          "name": "Empowered Sparks II",
+          "namespace": "GEM",
+          "refName": "Empowered Sparks II",
+          "tags": [],
+          "w": 1
+        }
+      ],
+      "tab": "gem"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "accelerated growth",
+      "results": [
+        {
+          "craftable": {
+            "category": "Support Skill Gem"
+          },
+          "gem": {
+            "awakened": false,
+            "transfigured": false
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9OZXcvTmV3U3VwcG9ydC9FeHBsb3NpdmVHcm93dGhTdXBwb3J0R2VtIiwidyI6MSwiaCI6MSwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/ec3dfa8df5/ExplosiveGrowthSupportGem.png",
+          "name": "Accelerated Growth",
+          "namespace": "GEM",
+          "refName": "Accelerated Growth",
+          "tags": [],
+          "w": 1
+        },
+        {
+          "craftable": {
+            "category": "Support Skill Gem"
+          },
+          "gem": {
+            "awakened": false,
+            "transfigured": false
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9OZXcvTmV3U3VwcG9ydC9FeHBsb3NpdmVHcm93dGhTdXBwb3J0R2VtIiwidyI6MSwiaCI6MSwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/ec3dfa8df5/ExplosiveGrowthSupportGem.png",
+          "name": "Accelerated Growth II",
+          "namespace": "GEM",
+          "refName": "Accelerated Growth II",
+          "tags": [],
+          "w": 1
+        }
+      ],
+      "tab": "gem"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "growth",
+      "results": [
+        {
+          "craftable": {
+            "category": "Support Skill Gem"
+          },
+          "gem": {
+            "awakened": false,
+            "transfigured": false
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9OZXcvTmV3U3VwcG9ydC9FeHBsb3NpdmVHcm93dGhTdXBwb3J0R2VtIiwidyI6MSwiaCI6MSwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/ec3dfa8df5/ExplosiveGrowthSupportGem.png",
+          "name": "Accelerated Growth",
+          "namespace": "GEM",
+          "refName": "Accelerated Growth",
+          "tags": [],
+          "w": 1
+        },
+        {
+          "craftable": {
+            "category": "Support Skill Gem"
+          },
+          "gem": {
+            "awakened": false,
+            "transfigured": false
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9OZXcvTmV3U3VwcG9ydC9FeHBsb3NpdmVHcm93dGhTdXBwb3J0R2VtIiwidyI6MSwiaCI6MSwic2NhbGUiOjEsInJlYWxtIjoicG9lMiJ9XQ/ec3dfa8df5/ExplosiveGrowthSupportGem.png",
+          "name": "Accelerated Growth II",
+          "namespace": "GEM",
+          "refName": "Accelerated Growth II",
+          "tags": [],
+          "w": 1
+        },
+        {
+          "craftable": {
+            "category": "Active Skill Gem"
+          },
+          "gem": {
+            "awakened": false,
+            "transfigured": false
+          },
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9OZXcvUG9pc29uQmxvb21Ta2lsbEdlbSIsInciOjEsImgiOjEsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/65bb9599a2/PoisonBloomSkillGem.png",
+          "name": "Toxic Growth",
+          "namespace": "GEM",
+          "refName": "Toxic Growth",
+          "tags": [],
+          "w": 1
+        }
+      ],
+      "tab": "gem"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "rowth",
+      "results": [],
+      "tab": "gem"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "uncut",
+      "results": [],
+      "tab": "gem"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "em",
+      "results": false,
+      "tab": "gem"
+    },
+    {
+      "lang": "en",
+      "language": "cmn-Hant",
+      "query": "eterno",
+      "results": [
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9VbmlxdWVzL0FiQWV0ZXJubyIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/516b4991b9/AbAeterno.png",
+          "name": "Ab Aeterno",
+          "namespace": "UNIQUE",
+          "refName": "Ab Aeterno",
+          "tags": [
+            "str_dex_int_armour"
+          ],
+          "unique": {
+            "base": "Grand Cuisses"
+          },
+          "w": 2
+        },
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9VbmlxdWVzL0FiQWV0ZXJubyIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/516b4991b9/AbAeterno.png",
+          "name": "Ab Aeterno",
+          "namespace": "UNIQUE",
+          "refName": "Ab Aeterno",
+          "tags": [
+            "str_dex_int_armour",
+            "runeforged"
+          ],
+          "unique": {
+            "base": "Runemastered Grand Cuisses"
+          },
+          "w": 2
+        },
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9VbmlxdWVzL0FiQWV0ZXJubyIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/516b4991b9/AbAeterno.png",
+          "name": "Ab Aeterno",
+          "namespace": "UNIQUE",
+          "refName": "Ab Aeterno",
+          "tags": [
+            "str_dex_int_armour"
+          ],
+          "unique": {
+            "base": "Grand Cuisses"
+          },
+          "w": 2
+        },
+        {
+          "h": 2,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9VbmlxdWVzL0FiQWV0ZXJubyIsInciOjIsImgiOjIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/516b4991b9/AbAeterno.png",
+          "name": "Ab Aeterno",
+          "namespace": "UNIQUE",
+          "refName": "Ab Aeterno",
+          "tags": [
+            "str_dex_int_armour",
+            "runeforged"
+          ],
+          "unique": {
+            "base": "Runemastered Grand Cuisses"
+          },
+          "w": 2
+        }
+      ],
+      "tab": "unique"
+    }
+  ]
+}

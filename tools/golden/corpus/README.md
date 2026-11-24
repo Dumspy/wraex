@@ -3,6 +3,18 @@
 Clipboard texts the fixtures are generated from, one `<slug>.txt` per case. Keep
 this list current when adding cases, so it is clear which ones are real copies.
 
+## item-search
+
+`item-search/<game>.json`: the queries the item search widget is asked (see
+[the harness README](../README.md#item-search)). Hand-picked from the English
+data to cover the matcher's rules: a found name, more than `MAX_RESULTS`
+matches, no match, the three-character rule, the longest-word prefix rule, case
+and trimming (including the U+FEFF/U+0085 differences between JavaScript's and
+Rust's whitespace), apostrophes, diacritics, every tab, and the `cmn-Hant`
+exemption (as the config language, on the English data the milestone uses). The
+`fuzzy` lines are OCR-like misspellings of gem names, plus one line too long for
+any gem.
+
 ## poe2
 
 - `ee2-*`: the item texts of `ref/ee2/renderer/specs/Parser/items.ts` at v0.16.3,

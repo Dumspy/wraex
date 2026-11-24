@@ -1,6 +1,6 @@
 // PoE1 (ref/apt): the pipeline CheckedItem.vue runs for a price check.
-import { beforeAll, describe, it } from 'vitest'
-import { init } from '@/assets/data'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { init, ALTQ_GEM_NAMES, REPLICA_UNIQUE_NAMES } from '@/assets/data'
 import { ItemCategory, ItemRarity, parseClipboard, type ParsedItem } from '@/parser'
 import { createPresets } from '@/web/price-check/filters/create-presets'
 import { apiToSatisfySearch } from '@/web/price-check/trade/common'
@@ -8,8 +8,19 @@ import { createTradeRequest } from '@/web/price-check/trade/pathofexile-trade'
 import { createTradeRequest as createBulkRequest } from '@/web/price-check/trade/pathofexile-bulk'
 import { prepareMapStat } from '@/web/map-check/prepare-map-stats'
 import { ModifierType } from '@/parser/modifiers'
-import { byLang, canonical, captureOutput, loadCases, pruneFixtures, writeFixture } from './fixtures'
+import {
+  byLang,
+  canonical,
+  captureOutput,
+  loadCases,
+  loadItemSearchCorpus,
+  pruneFixtures,
+  writeFixture,
+  writeItemSearchFixture
+} from './fixtures'
 import * as itemCheck from '@/web/item-check/hotkeyable-actions'
+// WidgetItemSearch.vue's private matchers, served by vitest.config.ts.
+import { findItems, fuzzyFindHeistGem } from 'virtual:golden-item-search-poe1'
 
 // TradeBulk.vue execSearch: the first exchange request a check sends.
 function optimisticHave (refName: string): string[] {
@@ -110,4 +121,53 @@ for (const [lang, group] of byLang(cases)) {
 
 it('prunes fixtures without a corpus case', () => {
   pruneFixtures('poe1', cases.map(c => c.slug))
+})
+
+// The item search widget (`WidgetItemSearch.vue`): `findItems` per tab and the
+// OCR fallback `fuzzyFindHeistGem`, for the queries in
+// `corpus/item-search/poe1.json`. Both functions are private to the file's script
+// block, which `vitest.config.ts` serves as a module so this runs the
+// reference's own code.
+describe('poe1 item search', () => {
+  it('records the reference answers', async () => {
+    const corpus = loadItemSearchCorpus('poe1')
+    let loaded = ''
+    // `init(lang)` once per data language, in corpus order.
+    const useLang = async (lang: string) => {
+      if (lang === loaded) return
+      await init(lang)
+      loaded = lang
+    }
+
+    const searches = []
+    for (const entry of corpus.searches) {
+      const lang = entry.lang ?? corpus.lang
+      await useLang(lang)
+      // `findItems` reads AppConfig().language for the cmn-Hant exemption.
+      const language = entry.language ?? lang
+      globalThis.__GOLDEN_CONFIG__ = { language, widgets: [] }
+      let results
+      if (entry.tab === 'gem') {
+        results = findItems({ search: entry.query, namespace: 'GEM', itemNames: ALTQ_GEM_NAMES })
+      } else if (entry.tab === 'replica') {
+        results = findItems({ search: entry.query, namespace: 'UNIQUE', itemNames: REPLICA_UNIQUE_NAMES })
+      } else {
+        throw new Error(`golden: unknown poe1 item-search tab ${entry.tab}`)
+      }
+      searches.push({ lang, language, tab: entry.tab, query: entry.query, results })
+    }
+
+    const fuzzy = []
+    for (const entry of corpus.fuzzy) {
+      const lang = entry.lang ?? corpus.lang
+      await useLang(lang)
+      globalThis.__GOLDEN_CONFIG__ = { language: lang, widgets: [] }
+      // The reference returns undefined when nothing is close enough.
+      fuzzy.push({ lang, query: entry.query, result: fuzzyFindHeistGem(entry.query) ?? null })
+    }
+
+    expect(searches.length).toBeGreaterThan(0)
+    expect(fuzzy.length).toBeGreaterThan(0)
+    writeItemSearchFixture('poe1', { searches, fuzzy })
+  })
 })

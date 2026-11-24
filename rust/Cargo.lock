@@ -5158,9 +5158,12 @@ dependencies = [
 name = "wraex-platform"
 version = "0.1.0"
 dependencies = [
+ "serde",
+ "serde_json",
  "tray-icon",
  "ureq",
  "wraex-core",
+ "wraex-golden",
 ]
 
 [[package]]

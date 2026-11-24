@@ -119,3 +119,35 @@ export function writeListingFixture (game: Game, name: string, content: string) 
   fs.mkdirSync(path.dirname(file), { recursive: true })
   fs.writeFileSync(file, content)
 }
+
+/**
+ * `corpus/item-search/<game>.json`: the queries the item search widget is asked.
+ *
+ * A search is `{ tab, query, lang?, language? }`: `tab` is the widget's filter
+ * (`gem`/`replica` in PoE1, `gem`/`unique`/`base_item` in PoE2), and `lang` is
+ * the data language `init()` loads, defaulting to the file's `lang`.
+ * `language` is `AppConfig().language`, which `findItems` reads for the
+ * `cmn-Hant` exemption, defaulting to `lang`. A fuzzy line is `{ query, lang? }`:
+ * one noisy OCR line for `fuzzyFindHeistGem`.
+ */
+export interface ItemSearchCorpus {
+  lang: string
+  searches: Array<{ tab: string, query: string, lang?: string, language?: string }>
+  fuzzy: Array<{ query: string, lang?: string }>
+}
+
+export function loadItemSearchCorpus (game: Game): ItemSearchCorpus {
+  const file = path.join(CORPUS, 'item-search', `${game}.json`)
+  return JSON.parse(fs.readFileSync(file, 'utf8')) as ItemSearchCorpus
+}
+
+/**
+ * Writes `fixtures/item-search/<game>.json`: each query with the reference's
+ * answer (the matched `BaseType`s, `false` for the widget's "too many", and the
+ * fuzzy matcher's `{ name, altQuality }`, or `null` where it found nothing).
+ */
+export function writeItemSearchFixture (game: Game, value: unknown) {
+  const file = path.join(ROOT, 'fixtures', 'item-search', `${game}.json`)
+  fs.mkdirSync(path.dirname(file), { recursive: true })
+  fs.writeFileSync(file, canonical(value))
+}

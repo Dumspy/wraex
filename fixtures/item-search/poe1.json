@@ -1,0 +1,345 @@
+{
+  "fuzzy": [
+    {
+      "lang": "en",
+      "query": "Anomalous Empower Support",
+      "result": null
+    },
+    {
+      "lang": "en",
+      "query": "anomalus firebal",
+      "result": null
+    },
+    {
+      "lang": "en",
+      "query": "Divergent Arc",
+      "result": null
+    }
+  ],
+  "searches": [
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "head",
+      "results": [
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvSGVhZGh1bnRlciIsInciOjIsImgiOjEsInNjYWxlIjoxfV0/e9542ec6ee/Headhunter.png",
+          "name": "Replica Headhunter",
+          "namespace": "UNIQUE",
+          "refName": "Replica Headhunter",
+          "unique": {
+            "base": "Leather Belt",
+            "disenchantValue": 316.7
+          }
+        }
+      ],
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "hea",
+      "results": [
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvSGVhZGh1bnRlciIsInciOjIsImgiOjEsInNjYWxlIjoxfV0/e9542ec6ee/Headhunter.png",
+          "name": "Replica Headhunter",
+          "namespace": "UNIQUE",
+          "refName": "Replica Headhunter",
+          "unique": {
+            "base": "Leather Belt",
+            "disenchantValue": 316.7
+          }
+        },
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9PbmVIYW5kV2VhcG9ucy9EYWdnZXJzL0hlYXJ0YnJlYWtlciIsInciOjEsImgiOjMsInNjYWxlIjoxfV0/fa73c4d5b4/Heartbreaker.png",
+          "name": "Replica Heartbreaker",
+          "namespace": "UNIQUE",
+          "refName": "Replica Heartbreaker",
+          "unique": {
+            "base": "Royal Skean",
+            "disenchantValue": 8.51
+          }
+        },
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL0hlYXRzaGl2ZXIiLCJ3IjoyLCJoIjoyLCJzY2FsZSI6MX1d/b1860c890e/Heatshiver.png",
+          "name": "Replica Heatshiver",
+          "namespace": "UNIQUE",
+          "refName": "Replica Heatshiver",
+          "unique": {
+            "base": "Leather Hood",
+            "disenchantValue": 3.51
+          }
+        },
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb2R5QXJtb3Vycy9Cb2R5U3RyM0NVbmlxdWUiLCJ3IjoyLCJoIjozLCJzY2FsZSI6MX1d/1027cdf1ad/BodyStr3CUnique.png",
+          "name": "Replica Kaom's Heart",
+          "namespace": "UNIQUE",
+          "refName": "Replica Kaom's Heart",
+          "unique": {
+            "base": "Glorious Plate",
+            "disenchantValue": 43.48
+          }
+        }
+      ],
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "headhunter",
+      "results": [
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvSGVhZGh1bnRlciIsInciOjIsImgiOjEsInNjYWxlIjoxfV0/e9542ec6ee/Headhunter.png",
+          "name": "Replica Headhunter",
+          "namespace": "UNIQUE",
+          "refName": "Replica Headhunter",
+          "unique": {
+            "base": "Leather Belt",
+            "disenchantValue": 316.7
+          }
+        }
+      ],
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "  REPLICA HEADHUNTER  ",
+      "results": [
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvSGVhZGh1bnRlciIsInciOjIsImgiOjEsInNjYWxlIjoxfV0/e9542ec6ee/Headhunter.png",
+          "name": "Replica Headhunter",
+          "namespace": "UNIQUE",
+          "refName": "Replica Headhunter",
+          "unique": {
+            "base": "Leather Belt",
+            "disenchantValue": 316.7
+          }
+        }
+      ],
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "Replica  Headhunter",
+      "results": [
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvSGVhZGh1bnRlciIsInciOjIsImgiOjEsInNjYWxlIjoxfV0/e9542ec6ee/Headhunter.png",
+          "name": "Replica Headhunter",
+          "namespace": "UNIQUE",
+          "refName": "Replica Headhunter",
+          "unique": {
+            "base": "Leather Belt",
+            "disenchantValue": 316.7
+          }
+        }
+      ],
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "replica w",
+      "results": false,
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "replica wi",
+      "results": [
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9Ud29IYW5kV2VhcG9ucy9Cb3dzL0VhZ2xlIiwidyI6MiwiaCI6NCwic2NhbGUiOjF9XQ/01fdf37ac0/Eagle.png",
+          "name": "Replica Windripper",
+          "namespace": "UNIQUE",
+          "refName": "Replica Windripper",
+          "unique": {
+            "base": "Imperial Bow",
+            "disenchantValue": 170.75
+          }
+        },
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvV2VhcG9ucy9PbmVIYW5kV2VhcG9ucy9PbmVIYW5kQXhlcy9FbnRyb3B5d2luZ3MiLCJ3IjoyLCJoIjo0LCJzY2FsZSI6MX1d/86e128789a/Entropywings.png",
+          "name": "Replica Wings of Entropy",
+          "namespace": "UNIQUE",
+          "refName": "Replica Wings of Entropy",
+          "unique": {
+            "base": "Ezomyte Axe",
+            "disenchantValue": 12.14
+          }
+        },
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQW11bGV0cy9XaW50ZXJIZWFydEFMVCIsInciOjEsImgiOjEsInNjYWxlIjoxfV0/ff8c8c67f2/WinterHeartALT.png",
+          "name": "Replica Winterheart",
+          "namespace": "UNIQUE",
+          "refName": "Replica Winterheart",
+          "unique": {
+            "base": "Gold Amulet",
+            "disenchantValue": 3.03
+          }
+        },
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzksMTQseyJmIjoiMkRJdGVtcy9GbGFza3MvV2l0Y2hGaXJlQnJldyIsInciOjEsImgiOjIsInNjYWxlIjoxLCJsZXZlbCI6MX1d/1696a739f5/WitchFireBrew.png",
+          "name": "Replica Witchfire Brew",
+          "namespace": "UNIQUE",
+          "refName": "Replica Witchfire Brew",
+          "unique": {
+            "base": "Stibnite Flask",
+            "disenchantValue": 4.31
+          }
+        }
+      ],
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "replica",
+      "results": false,
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "kaoms",
+      "results": [],
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "kaom's",
+      "results": [
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb2R5QXJtb3Vycy9Cb2R5U3RyM0NVbmlxdWUiLCJ3IjoyLCJoIjozLCJzY2FsZSI6MX1d/1027cdf1ad/BodyStr3CUnique.png",
+          "name": "Replica Kaom's Heart",
+          "namespace": "UNIQUE",
+          "refName": "Replica Kaom's Heart",
+          "unique": {
+            "base": "Glorious Plate",
+            "disenchantValue": 43.48
+          }
+        }
+      ],
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "alphas",
+      "results": [],
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "alpha's",
+      "results": [
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL1dvbGZoZWFkIiwidyI6MiwiaCI6Miwic2NhbGUiOjF9XQ/2acc10e593/Wolfhead.png",
+          "name": "Replica Alpha's Howl",
+          "namespace": "UNIQUE",
+          "refName": "Replica Alpha's Howl",
+          "unique": {
+            "base": "Sinner Tricorne",
+            "disenchantValue": 12.88
+          }
+        }
+      ],
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "he",
+      "results": false,
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": " w ",
+      "results": false,
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "﻿he",
+      "results": false,
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "replica﻿headhunter",
+      "results": [
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvSGVhZGh1bnRlciIsInciOjIsImgiOjEsInNjYWxlIjoxfV0/e9542ec6ee/Headhunter.png",
+          "name": "Replica Headhunter",
+          "namespace": "UNIQUE",
+          "refName": "Replica Headhunter",
+          "unique": {
+            "base": "Leather Belt",
+            "disenchantValue": 316.7
+          }
+        }
+      ],
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "he",
+      "results": [],
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "zzzz",
+      "results": [],
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "empower",
+      "results": [],
+      "tab": "gem"
+    },
+    {
+      "lang": "en",
+      "language": "en",
+      "query": "anomalous",
+      "results": [],
+      "tab": "gem"
+    },
+    {
+      "lang": "en",
+      "language": "cmn-Hant",
+      "query": "eadhunter",
+      "results": [
+        {
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvSGVhZGh1bnRlciIsInciOjIsImgiOjEsInNjYWxlIjoxfV0/e9542ec6ee/Headhunter.png",
+          "name": "Replica Headhunter",
+          "namespace": "UNIQUE",
+          "refName": "Replica Headhunter",
+          "unique": {
+            "base": "Leather Belt",
+            "disenchantValue": 316.7
+          }
+        }
+      ],
+      "tab": "replica"
+    },
+    {
+      "lang": "en",
+      "language": "cmn-Hant",
+      "query": "eplica",
+      "results": false,
+      "tab": "replica"
+    }
+  ]
+}
