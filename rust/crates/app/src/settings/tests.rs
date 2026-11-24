@@ -171,6 +171,13 @@ fn radios_and_fields_write_the_config() {
     click(&mut runtime, "general-language-select");
     assert_eq!(runtime.state.settings.as_ref().unwrap().select_open, Some("general-language-select"));
     assert!(runtime.find("general-language-select-list").is_some());
+    let (ox, oy) = (240.0f32, 130.0f32);
+    for e in runtime.elements() {
+        let [x, y, w, h] = e.rect;
+        if x <= ox && ox <= x + w && y <= oy && oy <= y + h {
+            eprintln!("contains: {:?} {:?} role={}", e.key, e.rect, e.role);
+        }
+    }
     click(&mut runtime, "general-language-select-option-ru");
     let settings = runtime.state.settings.as_ref().unwrap();
     assert_eq!(settings.string(Field::Root("language")), "ru");
@@ -413,4 +420,63 @@ fn save_through_the_window_writes_the_working_copy() {
     let loaded = load(GameId::Poe1, Some(&written));
     assert_eq!(loaded.config["restoreClipboard"], serde_json::json!(true));
     std::fs::remove_file(store.path()).ok();
+}
+
+/// `settings-patrons`: upstream's sidebar is as wide as its "Support development on" block;
+/// the port draws the thank-you box in its place, and it must stay inside the menu column
+/// (the box used to size itself to the label and spill over the page).
+#[test]
+fn the_thank_you_box_fits_the_menu_column() {
+    let runtime = scene(GameId::Poe1, Page::Hotkeys);
+    let elements = runtime.elements();
+    let find = |key: &str| {
+        elements.iter().find(|element| element.key.as_deref() == Some(key)).unwrap_or_else(|| panic!("no `{key}`"))
+    };
+    let menu = find("settings-menu");
+    let box_ = find("settings-thank-you");
+    let label = find("settings-thank-you-label");
+    assert!(box_.rect[0] >= menu.rect[0], "{:?} starts inside {:?}", box_.rect, menu.rect);
+    assert!(
+        box_.rect[0] + box_.rect[2] <= menu.rect[0] + menu.rect[2] + 0.5,
+        "the box ends at {} but the menu at {}",
+        box_.rect[0] + box_.rect[2],
+        menu.rect[0] + menu.rect[2]
+    );
+    // The label wraps inside the box rather than drawing past it.
+    assert!(label.rect[2] <= box_.rect[2] + 0.5, "{:?} vs {:?}", label.rect, box_.rect);
+    assert!(label.rect[1] + label.rect[3] <= box_.rect[1] + box_.rect[3] + 0.5);
+    assert!(label.rect[3] > theme::text::SM.line_px(), "the long label wraps onto a second line");
+}
+
+/// The about page's "Check now" hands the request to a worker: the press shows upstream's
+/// checking state at once (no blocking HTTPS call), the page draws it, and the answer lands
+/// through [`Settings::poll`].
+#[test]
+fn check_now_runs_on_a_worker() {
+    let mut app = App::settings_scene(GameId::Poe1, Page::About);
+    let settings = app.settings.as_mut().expect("the settings window");
+    assert_eq!(settings.update, UpdateInfo::Initial);
+
+    settings.begin_update_check();
+    assert_eq!(settings.update, UpdateInfo::CheckingForUpdate, "the press returns before the check");
+
+    // The page shows what `about.vue` shows while checking.
+    let runtime = page_runtime(app);
+    assert!(has_text(&runtime, "Checking for updates"), "{:?}", texts(&runtime));
+    assert!(has_text(&runtime, "Please wait"), "{:?}", texts(&runtime));
+
+    // The answer is in the `Latest`, not in the state: only `poll` applies it. A replay has
+    // no recorded answer for api.github.com, so the offline error is the expected result.
+    let mut app = runtime.state;
+    let settings = app.settings.as_mut().expect("the settings window");
+    let mut polled = false;
+    for _ in 0..400 {
+        if settings.poll() {
+            polled = true;
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(5));
+    }
+    assert!(polled, "the worker's answer lands in poll");
+    assert!(matches!(settings.update, UpdateInfo::Error { .. }), "{:?}", settings.update);
 }

@@ -12,9 +12,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { chromium } from 'playwright'
 import { ensureBuild } from './build.mjs'
-import { DEFAULT_CASES, REPO_ROOT, corpusFile, normalizeCase } from './cases.mjs'
+import { DEFAULT_CASES, DEFAULT_SETTINGS_CASES, REPO_ROOT, SETTINGS_LABELS, corpusFile, normalizeCase, normalizeSettingsCase, screenName, widgetId } from './cases.mjs'
 import { PROXY_HOSTS, startHost } from './host.mjs'
 import { imageDir, installImages, recordImage, waitForImages } from './images.mjs'
+import { shootSettings } from './settings.mjs'
 
 // The fixture harness records `defaultConfig()` without a league; `Host.getConfig`
 // hands the renderer the same JSON. The only edit is leagueId, so the leagues
@@ -84,23 +85,33 @@ function usage () {
 
   --game <poe1|poe2>  game to render (repeatable; default: both)
   --case <slug>       corpus case to render (repeatable; needs exactly one --game)
+  --settings <page>   settings window page to render (repeatable; needs exactly one
+                      --game): hotkeys, chat, general, price-check, maps, item-check,
+                      debug or about
+  --widget <name>     which overlay widget the item text opens: price-check (the
+                      default), map-check or item-check (both open item-check's
+                      widget, which draws the map check for a map-like item);
+                      filters the default cases
   --record            fetch proxy misses from the real trade site / poe.ninja and
                       save them under corpus/screens/<game>/proxy/ (one request
                       per second; needs network)
-  --image <url>       record one more item image (repeatable; needs --game and
-                      network), for art only a state no case reaches, e.g. the
-                      anointment oils of a hidden filter row: --game poe1 --image
+  --image <url>       record one more item or map image (repeatable; needs --game
+                      and network), for art only a state no case reaches, e.g. the
+                      anointment oils of a filter row: --game poe1 --image
                       https://web.poecdn.com/gen/image/.../GoldenOil.png
   --rebuild           rebuild the renderer even if .screens-build/<game> exists
   --debug             print the page's console and errors while it runs
   -h, --help
 
 Cases are tools/golden/corpus/<game>/<slug>.txt. Output: target/screens/<game>/<slug>.png
-and .txt.`)
+for the price check, <widget>-<slug>.png for the map and item checks, and
+settings-<page>.png for the settings window, each with a .txt of its innerText next to
+it.`)
 }
 
 function parseArgs (argv) {
-  const opts = { games: [], cases: [], rebuild: false, debug: false, record: false, images: [] }
+  const opts = { games: [], cases: [], settings: [], rebuild: false, debug: false, record: false, images: [], widget: null }
+  const widgets = ['price-check', 'map-check', 'item-check']
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
     if (arg === '--game') {
@@ -111,6 +122,14 @@ function parseArgs (argv) {
       const slug = argv[++i]
       if (!slug) throw new Error('--case needs a corpus slug')
       opts.cases.push(slug)
+    } else if (arg === '--settings') {
+      const page = argv[++i]
+      if (!page) throw new Error('--settings needs a page name')
+      opts.settings.push(page)
+    } else if (arg === '--widget') {
+      const widget = argv[++i]
+      if (!widgets.includes(widget)) throw new Error(`--widget must be one of ${widgets.join(', ')}, got ${widget}`)
+      opts.widget = widget
     } else if (arg === '--record') {
       opts.record = true
     } else if (arg === '--image') {
@@ -131,6 +150,15 @@ function parseArgs (argv) {
 
   if (!opts.games.length) opts.games = ['poe1', 'poe2']
   if (opts.images.length && opts.games.length !== 1) throw new Error('--image needs exactly one --game')
+  if (opts.settings.length) {
+    if (opts.games.length !== 1) throw new Error('--settings needs exactly one --game')
+    const known = Object.keys(SETTINGS_LABELS[opts.games[0]] ?? {})
+    for (const page of opts.settings) {
+      if (!known.includes(page)) {
+        throw new Error(`no ${opts.games[0]} settings page ${page} (known: ${known.join(', ')})`)
+      }
+    }
+  }
   if (opts.cases.length) {
     if (opts.games.length !== 1) throw new Error('--case needs exactly one --game')
     for (const slug of opts.cases) {
@@ -158,8 +186,15 @@ async function startSearch (page, { game, slug }) {
   }
 }
 
-async function shoot ({ browser, host, game, testCase, clock, record, debug }) {
-  const { slug, search } = testCase
+async function shoot ({ browser, host, game, testCase, clock, record, debug, itemCheckId }) {
+  const { slug, search, widget } = testCase
+  // `MAIN->CLIENT::item-text` opens one widget by `target`: the price check's own
+  // window, or `item-check`'s (which draws the map check for a map-like item).
+  const target = widget === 'price-check' ? 'price-check' : 'item-check'
+  // The price check is `#price-window`; an overlay widget is `#widget-<wmId>`, whose
+  // only child is the positioned card (the wrapper itself has no height).
+  const root = target === 'price-check' ? '#price-window' : `#widget-${itemCheckId}`
+  const card = target === 'price-check' ? root : `${root} > div`
   const text = fs.readFileSync(corpusFile(game, slug), 'utf8')
   // The machine's own locale would reach the page (`toLocaleString` writes `1,2` under a
   // da-DK format where en-US writes `1.2`), and the screenshots are compared with the
@@ -233,7 +268,7 @@ async function shoot ({ browser, host, game, testCase, clock, record, debug }) {
     const itemText = {
       name: 'MAIN->CLIENT::item-text',
       payload: {
-        target: 'price-check',
+        target,
         clipboard: text,
         position: { x: 800, y: 450 },
         focusOverlay: false
@@ -241,7 +276,7 @@ async function shoot ({ browser, host, game, testCase, clock, record, debug }) {
     }
     host.sendEvent(itemText)
 
-    await page.waitForSelector('#price-window', { state: 'visible', timeout: 60_000 })
+    await page.waitForSelector(card, { state: 'visible', timeout: 60_000 })
     // Let the item's own requests (poe.ninja, in-flight stats) land first.
     await host.settled({ quietMs: 1200 })
     await page.waitForTimeout(500)
@@ -257,29 +292,27 @@ async function shoot ({ browser, host, game, testCase, clock, record, debug }) {
     const quiet = await host.settled({ quietMs: record ? 3000 : 1500 })
     if (!quiet) console.error(`[screens] warning (${game}/${slug}): proxy traffic never went quiet`)
 
-    const listed = await page.waitForFunction(() => {
-      const win = document.querySelector('#price-window')
-      if (!win || win.querySelector('ui-error-box')) return false
-      return Boolean(win.querySelector('tbody tr'))
-    }, { timeout: 15_000 }).then(() => true).catch(() => false)
-    if (!listed) console.error(`[screens] warning (${game}/${slug}): no listings in the window`)
+    if (target === 'price-check') {
+      const listed = await page.waitForFunction(() => {
+        const win = document.querySelector('#price-window')
+        if (!win || win.querySelector('ui-error-box')) return false
+        return Boolean(win.querySelector('tbody tr'))
+      }, { timeout: 15_000 }).then(() => true).catch(() => false)
+      if (!listed) console.error(`[screens] warning (${game}/${slug}): no listings in the window`)
+    }
     // The window's pictures are served from disk, so they settle almost at once; waiting
     // keeps the screenshot from catching a half-loaded `<img>`.
-    await waitForImages(page)
+    await waitForImages(page, target === 'price-check' ? '#price-window' : card)
     await page.waitForTimeout(300)
 
-    const outDir = path.join(REPO_ROOT, 'target/screens', game)
-    fs.mkdirSync(outDir, { recursive: true })
-    const element = page.locator('#price-window')
-    await element.screenshot({
-      path: path.join(outDir, `${slug}.png`),
-      animations: 'disabled',
-      scale: 'css'
-    })
-    fs.writeFileSync(path.join(outDir, `${slug}.txt`), await element.innerText())
+    const base = screenName(game, testCase)
+    fs.mkdirSync(path.dirname(base), { recursive: true })
+    const element = page.locator(card)
+    await element.screenshot({ path: `${base}.png`, animations: 'disabled', scale: 'css' })
+    fs.writeFileSync(`${base}.txt`, await element.innerText())
 
     console.log(
-      `[screens] ${game}/${slug} -> target/screens/${game}/${slug}.png ` +
+      `[screens] ${game}/${path.basename(base)} -> ${path.relative(REPO_ROOT, base)}.png ` +
       `(${images.stats.replayed} images replayed, ${images.stats.recorded} recorded` +
       `${images.stats.missed.length ? `, ${images.stats.missed.length} NOT RECORDED` : ''})`
     )
@@ -294,22 +327,35 @@ async function shoot ({ browser, host, game, testCase, clock, record, debug }) {
   }
 }
 
-// `--case` keeps the options a default case has (its `search` flag), so
-// rendering one case behaves like the full run.
-function caseEntry (game, slug) {
+// `--case` keeps the options a default case has (its `search` flag and its
+// widget), so rendering one case behaves like the full run. With `--widget`, the
+// same slug can be several cases (a map is a price-check and a map-check case).
+function caseEntry (game, slug, widget) {
   const known = (DEFAULT_CASES[game] ?? [])
     .map(normalizeCase)
-    .find(entry => entry.slug === slug)
-  return known ?? { slug, search: false }
+    .find(entry => entry.slug === slug && (!widget || entry.widget === widget))
+  return known ?? { ...normalizeCase(slug), widget: widget ?? 'price-check' }
 }
 
 async function main () {
   const opts = parseArgs(process.argv.slice(2))
   const casesByGame = opts.cases.length
-    ? { [opts.games[0]]: opts.cases.map(slug => caseEntry(opts.games[0], slug)) }
-    : Object.fromEntries(
-      Object.entries(DEFAULT_CASES).map(([game, cases]) => [game, cases.map(normalizeCase)])
-    )
+    ? { [opts.games[0]]: opts.cases.map(slug => caseEntry(opts.games[0], slug, opts.widget)) }
+    : opts.settings.length
+      ? {}
+      : Object.fromEntries(
+        Object.entries(DEFAULT_CASES).map(([game, cases]) => [
+          game,
+          cases.map(normalizeCase).filter(entry => !opts.widget || entry.widget === opts.widget)
+        ])
+      )
+  const settingsByGame = opts.settings.length
+    ? { [opts.games[0]]: opts.settings.map(settings => ({ settings })) }
+    : opts.cases.length
+      ? {}
+      : Object.fromEntries(
+        Object.entries(DEFAULT_SETTINGS_CASES).map(([game, cases]) => [game, cases.map(normalizeSettingsCase)])
+      )
 
   if (opts.images.length) {
     const game = opts.games[0]
@@ -327,9 +373,10 @@ async function main () {
       const buildDir = ensureBuild(game, { rebuild: opts.rebuild })
       const proxyDir = path.join(REPO_ROOT, 'tools/golden/corpus/screens', game, 'proxy')
       const clock = pageClock(game, opts)
+      const config = loadConfig(game)
       const host = await startHost({
         buildDir,
-        config: loadConfig(game),
+        config,
         proxyDir,
         verbose: opts.debug,
         record: opts.record,
@@ -340,7 +387,30 @@ async function main () {
       if (opts.record) console.log(`[screens] ${game}: recording as ${agent}, one request per second`)
       try {
         for (const testCase of casesByGame[game] ?? []) {
-          await shoot({ browser, host, game, testCase, clock, record: opts.record, debug: opts.debug })
+          await shoot({
+            browser,
+            host,
+            game,
+            testCase,
+            clock,
+            record: opts.record,
+            debug: opts.debug,
+            itemCheckId: widgetId(config)
+          })
+          if (host.errors.length) throw new Error(host.errors[0])
+        }
+        for (const { settings } of settingsByGame[game] ?? []) {
+          await shootSettings({
+            browser,
+            host,
+            game,
+            pageSlug: settings,
+            config,
+            clock,
+            record: opts.record,
+            debug: opts.debug,
+            userAgent: agent
+          })
           if (host.errors.length) throw new Error(host.errors[0])
         }
       } finally {

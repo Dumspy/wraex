@@ -80,10 +80,14 @@ impl<S: 'static> TitleBar<S> {
     pub fn build(mut self) -> El {
         let mut bar =
             row().key("titlebar").w_full().h(theme::rem(1.5)).fill(theme::gray(900)).justify_between().center_y();
+        // `AppTitlebar`'s title `<button>` takes no width of its own: with a leading slot the
+        // space between it and the close button centres the title (the price check's `w-8`
+        // spacer and its rate), and without one (`settings`) the title sits at the left edge.
+        let centred = self.leading.is_some();
         if let Some(leading) = self.leading.take() {
             bar = bar.child(leading);
         }
-        bar = bar.child(title_button(self.title, self.on_title_press.take()));
+        bar = bar.child(title_button(self.title, self.on_title_press.take(), centred));
         if let Some(trailing) = self.trailing.take() {
             bar = bar.child(trailing);
         }
@@ -91,11 +95,15 @@ impl<S: 'static> TitleBar<S> {
     }
 }
 
-/// The title button: it takes the bar's remaining width and centres its text, as a `<button>`
-/// does, and truncates when the window is narrow.
-fn title_button<S: 'static>(title: String, on_press: Option<Handler<S>>) -> El {
+/// The title button: it centres its text as a `<button>` does, and truncates when the window
+/// is narrow. With `centred` it takes the bar's remaining width (a leading slot keeps the
+/// title in the middle); without one it stays content-sized at the bar's left.
+fn title_button<S: 'static>(title: String, on_press: Option<Handler<S>>, centred: bool) -> El {
     let label = text(title).key("titlebar-title").font(type_::SM).color(theme::gray(600)).truncate();
-    let mut button = row().key("titlebar-caption").h_full().grow(1.0).px(theme::rem(0.5)).pt(1.0).center();
+    let mut button = row().key("titlebar-caption").h_full().px(theme::rem(0.5)).pt(1.0).center();
+    if centred {
+        button = button.grow(1.0);
+    }
     if let Some(f) = on_press {
         // Upstream also lightens the text on hover; Rune's `hover` tints the fill only.
         button = button.hover(theme::gray(700)).focusable(true).role("button").on_press(move |s: &mut S| f(s));

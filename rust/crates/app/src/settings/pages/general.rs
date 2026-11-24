@@ -132,7 +132,9 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
         );
     }
 
-    // Font size: `w-16` number field, then `px`.
+    // Font size: `w-16` number field, then `px`. Upstream's `mt-4` collapses with the language
+    // block's `mb-2`; a Rune column adds margins instead (see the drift note in the module
+    // docs), so the gap is 8 + 16 pt here.
     page = page.child(
         col()
             .key("general-font-size")

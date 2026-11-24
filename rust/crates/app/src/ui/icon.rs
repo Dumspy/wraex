@@ -9,8 +9,10 @@
 //! `fa-arrow-right` (`ItemQuickPrice.vue`, the price row's "→ ?") and `fa-external-link-alt`
 //! (`TradeLinks.vue`). The filter block adds `fa-check-square`/`fa-square`, the tier chevrons,
 //! `UiToggle`'s `fa-toggle-on`/`fa-toggle-off`, `fa-eye-slash` and `fa-exclamation-triangle`.
+//! The item and map checks add `fa-skull-crossbones`, `fa-check`, `fa-eye-slash`,
+//! `fa-ellipsis-vertical` and `fa-dollar`.
 
-use rune::{Color, El, LineCap, Shape, canvas, el, row, text};
+use rune::{Color, El, LineCap, Shape, canvas, col, el, row, text, tok::TextStyle};
 
 use crate::theme::{self, text as type_};
 
@@ -27,6 +29,19 @@ pub fn close(size: f32, color: Color) -> El {
         LineCap::Round,
         color,
     );
+    canvas(shape).size(size, size).a11y_hidden()
+}
+
+/// `fas fa-trash-alt`: a lid, a body and its two slots (an outdated map-check stat's remove).
+pub fn trash(size: f32, color: Color) -> El {
+    let s = size;
+    let shape = Shape::new()
+        .line([0.1 * s, 0.22 * s], [0.9 * s, 0.22 * s], STROKE, LineCap::Round, color)
+        .line([0.38 * s, 0.22 * s], [0.42 * s, 0.1 * s], STROKE, LineCap::Round, color)
+        .line([0.62 * s, 0.22 * s], [0.58 * s, 0.1 * s], STROKE, LineCap::Round, color)
+        .stroke(vec![[0.2 * s, 0.3 * s], [0.25 * s, 0.9 * s], [0.75 * s, 0.9 * s], [0.8 * s, 0.3 * s]], STROKE, color)
+        .line([0.42 * s, 0.42 * s], [0.44 * s, 0.78 * s], STROKE, LineCap::Round, color)
+        .line([0.58 * s, 0.42 * s], [0.56 * s, 0.78 * s], STROKE, LineCap::Round, color);
     canvas(shape).size(size, size).a11y_hidden()
 }
 
@@ -63,6 +78,14 @@ pub fn radio(size: f32, checked: bool, color: Color) -> El {
         ring = ring.child(el().size(size * 0.45, size * 0.45).radius(size * 0.25).fill(color));
     }
     ring.a11y_hidden()
+}
+
+/// `fas fa-check-circle`: the solid disc with its check cut out (`UiRadio.vue`'s checked
+/// state), so `ink` shows through the circle and the page shows through the check.
+pub fn check_circle(size: f32, color: Color, ink: Color) -> El {
+    let s = size;
+    let shape = Shape::new().stroke(vec![[s * 0.26, s * 0.52], [s * 0.44, s * 0.72], [s * 0.76, s * 0.3]], 1.6, ink);
+    canvas(shape).size(size, size).radius(size / 2.0).fill(color).a11y_hidden()
 }
 
 /// `fas fa-external-link-alt`, `size` points square: a box a link opens out of.
@@ -196,6 +219,54 @@ pub fn warning(size: f32, color: Color) -> El {
         .line([s / 2.0, s * 0.32], [s / 2.0, s * 0.68], 1.5, LineCap::Round, color)
         .line([s / 2.0, s * 0.84], [s / 2.0, s * 0.86], 2.0, LineCap::Round, color);
     canvas(triangle).size(size, size).a11y_hidden()
+}
+
+/// `fas fa-skull-crossbones` (`MapStatButton.vue`'s deadly decision): a skull.
+pub fn skull(size: f32, color: Color) -> El {
+    let s = size - STROKE;
+    let eye = s * 0.17;
+    let head = el().size(s, s * 0.8).radius(s * 0.4).border(STROKE, color).child(
+        row()
+            .w_full()
+            .justify_center()
+            .pt(s * 0.26)
+            .gap(s * 0.2)
+            .child(el().size(eye, eye).radius(eye / 2.0).fill(color))
+            .child(el().size(eye, eye).radius(eye / 2.0).fill(color)),
+    );
+    let jaw = row()
+        .w_full()
+        .justify_center()
+        .child(el().size(s * 0.42, s * 0.16).radius(1.0).border(STROKE, color).fill(color.alpha(0.25)));
+    col().size(size, size).items_center().child(head).child(jaw).a11y_hidden()
+}
+
+/// `fas fa-check` (`MapStatButton.vue`'s good decision): a tick.
+pub fn check(size: f32, color: Color) -> El {
+    let s = size - STROKE;
+    let shape = Shape::new().line([s * 0.08, s * 0.52], [s * 0.4, s * 0.86], STROKE, LineCap::Round, color).line(
+        [s * 0.4, s * 0.86],
+        [s * 0.94, s * 0.16],
+        STROKE,
+        LineCap::Round,
+        color,
+    );
+    canvas(shape).size(size, size).a11y_hidden()
+}
+
+/// `fa-solid fa-ellipsis-vertical` (`ItemInfo.vue`'s separator): three dots.
+pub fn ellipsis_vertical(size: f32, color: Color) -> El {
+    let dot = 2.0;
+    let mut dots = col().size(size, size).items_center().justify_center().gap((size - 3.0 * dot) / 2.0);
+    for _ in 0..3 {
+        dots = dots.child(el().size(dot, dot).radius(dot / 2.0).fill(color));
+    }
+    dots.a11y_hidden()
+}
+
+/// `fas fa-dollar` (EE2's "find same price" button): the currency mark.
+pub fn dollar(size: f32, color: Color) -> El {
+    text("$").font(TextStyle::new(size * 0.8, 700.0).lh(size)).color(color).a11y_hidden()
 }
 
 /// A dark square for an image that is still loading or never arrived: an item's CDN art, a

@@ -441,18 +441,21 @@ fn stack_value(check: &PriceCheck) -> Option<El> {
         format!("{} {}", display_rounding(price.min, false), price.currency)
     };
 
+    // `<div class="flex text-gray-400 leading-none">`: a block in CSS, so each `w-1/2` half is
+    // half of the box. Rune's row is content-sized without `w_full`, which would shrink both
+    // halves to their text and pull the two readings together.
     let half = |key: &str| row().key(key.to_owned()).w_frac(0.5).min_w(0.0).items_center();
+    // `<i class="fas fa-arrow-right text-gray-600 px-1 text-xs"></i>`, with a space on each
+    // side of it in the template: 4 pt around a 12 pt glyph, plus the text's own space. A
+    // margin, because `.px` would sit inside the icon's fixed 12 pt box.
+    let arrow = || icon::arrow_right(theme::rem(0.75), theme::rem(0.75), theme::gray(600)).mx(theme::rem(0.5));
     let left = half("stack-value-have")
         .child(muted(i18n::t("trade_result.you_have")))
         .child(muted_times())
         .child(muted(format!(" {}", number_to_string(stack.value))).key("stack-value-have-amount"))
-        // `{{ value.have.amount }} <i …></i> {{ value.have.price }}`: the template keeps a
-        // space on each side of the arrow, so the line reads `You have × 3 → 2673 chaos`.
-        .child(muted(" "))
-        .child(icon::arrow_right(theme::rem(0.75), theme::rem(0.75), theme::gray(600)).px(theme::rem(0.25)))
-        .child(muted(" "))
+        .child(arrow())
         .child(muted(price_for(stack.value)).key("stack-value-have-price"));
-    let mut value = row().key("stack-value-row").child(left);
+    let mut value = row().key("stack-value-row").w_full().child(left);
     if let Some(max) = item.stack_size.as_ref().and_then(|stack| stack.max) {
         value = value.child(
             half("stack-value-stack")
@@ -460,9 +463,7 @@ fn stack_value(check: &PriceCheck) -> Option<El> {
                 .child(muted(i18n::t("trade_result.stack")))
                 .child(muted_times())
                 .child(muted(format!(" {}", number_to_string(max))).key("stack-value-stack-amount"))
-                .child(muted(" "))
-                .child(icon::arrow_right(theme::rem(0.75), theme::rem(0.75), theme::gray(600)).px(theme::rem(0.25)))
-                .child(muted(" "))
+                .child(arrow())
                 .child(muted(price_for(max)).key("stack-value-stack-price")),
         );
     }

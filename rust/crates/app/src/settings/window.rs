@@ -52,11 +52,14 @@ pub fn view<S: 'static>(settings: &Settings, cx: &mut Cx<S>, project: Project<S>
         })
 }
 
-/// The menu column: `pl-2 pt-2 bg-gray-900`, ten rem wide, one button per page.
+/// The menu column: `pl-2 pt-2 bg-gray-900`, one button per page. Upstream's column has
+/// `min-width: 10rem` but grows to its widest child (the support block's "Support
+/// development on", 11.25 rem); Wraex draws no support block, so the width is fixed there to
+/// keep the content column where the reference puts it.
 fn menu<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     let mut column = col()
         .key("settings-menu")
-        .w(theme::rem(10.0))
+        .w(theme::rem(11.25))
         .fill(theme::gray(900))
         .pl(theme::rem(0.5))
         .pt(theme::rem(0.5))
@@ -117,19 +120,27 @@ fn menu<S: 'static>(settings: &Settings, project: Project<S>) -> El {
             ),
     );
 
-    // The patrons strip: upstream scrolls the backers' names here. Wraex has no patrons data
-    // in the crate yet (`patrons.json` is deferred), so only the thank-you box is drawn.
+    // The patrons strip: upstream scrolls the backers' names in a bar under the window.
+    // Wraex has no patrons data in the crate yet (`patrons.json` is deferred), so only the
+    // thank-you box is drawn, at the bottom of the menu column where the reference puts its
+    // (equally static) "Support development on" block.
+    column = column.child(el().grow(1.0));
     column.child(
         row().key("settings-patrons").w_full().padding(theme::rem(0.25)).child(
             row()
                 .key("settings-thank-you")
+                .w_full()
                 .fill(theme::gray(800))
                 .radius(theme::ROUNDED)
                 .padding(theme::rem(0.25))
-                .center_y()
+                .center()
                 .child(
                     text(t(settings.game, "settings.thank_you"))
                         .key("settings-thank-you-label")
+                        .w_full()
+                        .wrap()
+                        .min_w(0.0)
+                        .align(rune::Align::Center)
                         .font(type_::SM)
                         .color(theme::gray(400)),
                 ),

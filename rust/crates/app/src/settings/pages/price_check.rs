@@ -248,20 +248,22 @@ fn poe1_body<S: 'static>(mut page: El, settings: &Settings, project: Project<S>)
 fn poe2_body<S: 'static>(mut page: El, settings: &Settings, project: Project<S>) -> El {
     // Primary base currency: `coreCurrency`, shown without poe.ninja's item icons.
     let core = settings.string(Field::Widget(PRICE_CHECK, "coreCurrency"));
-    let mut currency = col()
-        .key("price-check-core-currency")
-        .w_full()
-        .mb(theme::rem(1.0))
-        .child(label("price-check-core-currency-label", &tr(settings, "price_check.core_currency")))
-        .child(row().key("price-check-core-currency-radios").gap(theme::rem(1.0)).items_center());
+    let mut radios = row().key("price-check-core-currency-radios").gap(theme::rem(1.0)).items_center();
     for (key, value, name) in
         [("price-check-core-exalted", "exalted", "Exalted Orb"), ("price-check-core-chaos", "chaos", "Chaos Orb")]
     {
         let checked = core == value;
-        currency = currency.child(ui::radio(key, name, checked, false, move |s: &mut S| {
+        radios = radios.child(ui::radio(key, name, checked, false, move |s: &mut S| {
             project(s).set_string(Field::Widget(PRICE_CHECK, "coreCurrency"), value);
         }));
     }
+    // `mb-1 flex`: the radios sit side by side, each `mr-4`.
+    let currency = col()
+        .key("price-check-core-currency")
+        .w_full()
+        .mb(theme::rem(1.0))
+        .child(label("price-check-core-currency-label", &tr(settings, "price_check.core_currency")))
+        .child(radios);
     page = page.child(currency);
 
     page = page.child(row().key("price-check-remember-currency-row").mb(theme::rem(1.0)).child(checkbox(
@@ -300,12 +302,7 @@ fn poe2_body<S: 'static>(mut page: El, settings: &Settings, project: Project<S>)
 
     // Currency exchange volume.
     let volume = settings.string(Field::Widget(PRICE_CHECK, "currencyVolume"));
-    let mut volume_col = col()
-        .key("price-check-volume")
-        .w_full()
-        .mb(theme::rem(1.0))
-        .child(label("price-check-volume-label", &tr(settings, "price_check.show_volume")))
-        .child(row().key("price-check-volume-radios").gap(theme::rem(1.0)).items_center());
+    let mut volume_radios = row().key("price-check-volume-radios").gap(theme::rem(1.0)).items_center();
     for (key, value, name) in [
         ("price-check-volume-none", "none", "None"),
         ("price-check-volume-value", "value", "Currency / Hour"),
@@ -313,10 +310,16 @@ fn poe2_body<S: 'static>(mut page: El, settings: &Settings, project: Project<S>)
         ("price-check-volume-both", "both", "Both"),
     ] {
         let checked = volume == value;
-        volume_col = volume_col.child(ui::radio(key, name, checked, false, move |s: &mut S| {
+        volume_radios = volume_radios.child(ui::radio(key, name, checked, false, move |s: &mut S| {
             project(s).set_string(Field::Widget(PRICE_CHECK, "currencyVolume"), value);
         }));
     }
+    let volume_col = col()
+        .key("price-check-volume")
+        .w_full()
+        .mb(theme::rem(1.0))
+        .child(label("price-check-volume-label", &tr(settings, "price_check.show_volume")))
+        .child(volume_radios);
     page = page.child(volume_col);
 
     page = page.child(row().key("price-check-prediction-row").mb(theme::rem(1.0)).child(prediction(settings, project)));
@@ -329,12 +332,7 @@ fn poe2_body<S: 'static>(mut page: El, settings: &Settings, project: Project<S>)
     )));
 
     let tooltip = settings.string(Field::Widget(PRICE_CHECK, "itemHoverTooltip"));
-    let mut tooltip_col = col()
-        .key("price-check-tooltip")
-        .w_full()
-        .mb(theme::rem(1.0))
-        .child(label("price-check-tooltip-label", &tr(settings, "price_check.use_tooltip_hover")))
-        .child(row().key("price-check-tooltip-radios").gap(theme::rem(1.0)).items_center());
+    let mut tooltip_radios = row().key("price-check-tooltip-radios").gap(theme::rem(1.0)).items_center();
     for (key, value, name_key) in [
         ("price-check-tooltip-off", "off", "price_check.use_tooltip_off"),
         ("price-check-tooltip-keybind", "keybind", "price_check.use_tooltip_keybind"),
@@ -342,10 +340,16 @@ fn poe2_body<S: 'static>(mut page: El, settings: &Settings, project: Project<S>)
     ] {
         let checked = tooltip == value;
         let name = tr(settings, name_key);
-        tooltip_col = tooltip_col.child(ui::radio(key, &name, checked, false, move |s: &mut S| {
+        tooltip_radios = tooltip_radios.child(ui::radio(key, &name, checked, false, move |s: &mut S| {
             project(s).set_string(Field::Widget(PRICE_CHECK, "itemHoverTooltip"), value);
         }));
     }
+    let tooltip_col = col()
+        .key("price-check-tooltip")
+        .w_full()
+        .mb(theme::rem(1.0))
+        .child(label("price-check-tooltip-label", &tr(settings, "price_check.use_tooltip_hover")))
+        .child(tooltip_radios);
     page = page.child(tooltip_col);
 
     page = page.child(row().key("price-check-all-selected-row").mb(theme::rem(1.0)).child(checkbox(
@@ -401,18 +405,12 @@ fn poe2_body<S: 'static>(mut page: El, settings: &Settings, project: Project<S>)
 
 /// `requestPricePrediction`, with the `www.poeprices.info` badge beside it.
 fn prediction<S: 'static>(settings: &Settings, project: Project<S>) -> El {
-    row()
-        .key("price-check-prediction")
-        .gap(theme::rem(0.25))
-        .items_center()
-        .child(checkbox(
-            settings,
-            "price-check-prediction-toggle",
-            Field::Widget(PRICE_CHECK, "requestPricePrediction"),
-            &tr(settings, "price_check.show_prediction"),
-            project,
-        ))
-        .child(
+    ui::checkbox_with(
+        "price-check-prediction-toggle",
+        &tr(settings, "price_check.show_prediction"),
+        settings.bool(Field::Widget(PRICE_CHECK, "requestPricePrediction")),
+        false,
+        Some(
             row()
                 .key("price-check-prediction-site")
                 .px(theme::rem(0.25))
@@ -424,7 +422,12 @@ fn prediction<S: 'static>(settings: &Settings, project: Project<S>) -> El {
                         .font(type_::SM)
                         .color(theme::gray(400)),
                 ),
-        )
+        ),
+        move |s: &mut S| {
+            let checked = project(s).bool(Field::Widget(PRICE_CHECK, "requestPricePrediction"));
+            project(s).set_bool(Field::Widget(PRICE_CHECK, "requestPricePrediction"), !checked);
+        },
+    )
 }
 
 /// The builtin browser box, which turns orange while enabled.

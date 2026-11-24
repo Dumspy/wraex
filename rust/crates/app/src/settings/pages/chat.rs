@@ -91,6 +91,7 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     page = page.child(
         row()
             .key("chat-add")
+            .self_start()
             .px(theme::rem(0.5))
             .py(theme::rem(0.25))
             .radius(theme::ROUNDED)

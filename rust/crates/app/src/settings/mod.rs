@@ -18,9 +18,14 @@
 //! (`useLeagues`), the patrons strip's names, the debug log tail, and poe.ninja's currency
 //! icons on EE2's primary-currency radios.
 //!
-//! A scene renders at the app's window size (the price-check widget's 28.75 rem). Upstream's
-//! settings window is at most 50 rem wide, so pass `--size 900x700` when capturing one for
-//! comparison; at 28.75 rem the pages stay usable but long labels truncate.
+//! A scene renders at the settings window's own size ([`WIDTH`] × [`HEIGHT`], upstream's
+//! `.window` at most 50 × 38 rem): `--snap --scene settings-…` needs no `--size`, and the
+//! price-check scenes keep the price-check window's size.
+//!
+//! One known layout difference: upstream's page is a block in normal flow, where adjacent
+//! vertical margins collapse to the larger one, while Rune lays the page out as a flex column
+//! and adds them. A page with an `mt` next to an `mb` therefore runs a few points taller than
+//! its screenshot; the horizontal geometry, colours and labels match.
 
 pub mod hotkey;
 pub mod pages;
@@ -29,7 +34,7 @@ pub mod window;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
-use rune::TextEdit;
+use rune::{Latest, TextEdit, Waker};
 use serde_json::Value;
 use wraex_core::GameId;
 use wraex_core::config_store::ConfigStore;
@@ -187,6 +192,16 @@ pub fn fmt(game: GameId, key: &str, args: &[&str]) -> String {
     }
 }
 
+/// The about page's `checkForUpdates` request, off the UI thread: [`Latest`] has no `Debug`,
+/// and the window keeps its derive.
+struct Check(Latest<UpdateInfo>);
+
+impl std::fmt::Debug for Check {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Check")
+    }
+}
+
 /// The settings window's state.
 #[derive(Debug)]
 pub struct Settings {
@@ -213,6 +228,8 @@ pub struct Settings {
     pub mode: Mode,
     /// `Host.updateInfo`: the about page's update state.
     pub update: UpdateInfo,
+    /// The update check running off the UI thread; its answer lands in [`Settings::poll`].
+    check: Check,
     /// `settings-maps`' area mods, read from the game data the first time the page shows.
     pub area_mods: Option<Vec<pages::maps::AreaMod>>,
     /// `settings-maps`' search text and Only-selected toggle (view state, not config).
@@ -238,6 +255,7 @@ impl Settings {
             store,
             mode,
             update: UpdateInfo::Initial,
+            check: Check(Latest::default()),
             area_mods: None,
             maps_search: String::new(),
             maps_only_selected: false,
@@ -249,10 +267,10 @@ impl Settings {
     }
 
     /// A scene/test window: the default config (`config::default_config`), in a temp-dir store
-    /// so nothing reads or writes the user's real settings file.
+    /// so nothing reads or writes the user's real settings file. Its answers are the recorded
+    /// ones, like the price checks a scene opens beside it.
     pub fn scene(game: GameId, page: Page) -> Self {
-        let mode = Mode::for_run();
-        Self::new(game, page, default_config(game), temp_store(game), mode)
+        Self::new(game, page, default_config(game), temp_store(game), Mode::Replay)
     }
 
     /// A window over the user's config file: `initConfig()` (load, upgrade, or the defaults).
@@ -263,6 +281,27 @@ impl Settings {
         let mut settings = Self::new(game, Page::Hotkeys, loaded.config, store, mode);
         settings.save_temporary = loaded.save_temporary;
         settings
+    }
+
+    /// The waker a landed update check uses to run `AppSpec::poll`.
+    pub fn set_waker(&self, waker: Waker) {
+        self.check.0.set_waker(waker);
+    }
+
+    /// Takes a landed update check, if any: `poll` returns true when it applied one.
+    pub fn poll(&mut self) -> bool {
+        let Some(update) = self.check.0.take() else { return false };
+        self.update = update;
+        true
+    }
+
+    /// `checkForUpdates`: [`UpdateInfo::CheckingForUpdate`] shows at once, and the one request
+    /// runs on a worker (the answer lands in [`Settings::poll`]).
+    pub fn begin_update_check(&mut self) {
+        self.update = UpdateInfo::CheckingForUpdate;
+        let now = crate::trade::now(self.mode);
+        let mode = self.mode;
+        self.check.0.request((), move |()| update_check(mode, now));
     }
 
     /// `saveConfig()`: the working copy becomes the config, written as compact JSON.
@@ -420,6 +459,16 @@ impl Settings {
         {
             self.set(field, Value::Number(number));
         }
+    }
+}
+
+/// The update check's one request: GitHub over HTTPS in a window, the recorded answers in a
+/// headless run (there is none for `api.github.com`, so a scene's click shows the offline error
+/// rather than reaching the network).
+fn update_check(mode: Mode, now: u64) -> UpdateInfo {
+    match mode {
+        Mode::Live => wraex_core::updates::check(&wraex_platform::http::HttpTransport::default(), now, None),
+        Mode::Replay => wraex_core::updates::check(&crate::replay::ReplayTransport::poe1(), now, None),
     }
 }
 

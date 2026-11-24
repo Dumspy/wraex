@@ -8,4 +8,6 @@
 //! groups, the three bulk currencies) and its strings ([`i18n`]).
 
 pub mod i18n;
+pub mod item_check;
+pub mod map_check;
 pub mod price_check;

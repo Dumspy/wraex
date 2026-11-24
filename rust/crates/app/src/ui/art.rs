@@ -12,6 +12,9 @@
 //!   per URL on a worker thread ([`wraex_platform::http::HttpTransport::get_bytes`]) and keeps
 //!   the decoded image; a headless run reads the recording the screenshot harness made
 //!   (`tools/golden/corpus/screens/<game>/images/`), so a scene never touches the network.
+//! - **Map screenshots** (`MapCheck.vue`) are `https://i.imgur.com/...` URLs from the game
+//!   data's `area.screenshot`/`map.screenshot`, loaded the same way, and drawn filling a
+//!   21:9 box (`object-fit: cover`).
 //! - Anything not loaded yet, and anything that failed, is the dark square
 //!   [`icon::image_placeholder`] draws, so the layout never jumps.
 //!
@@ -29,7 +32,7 @@ use std::sync::{Arc, LazyLock, Mutex, OnceLock};
 
 use rune::{El, Image, ImageCache, SurfaceFit, Waker, el};
 use wraex_core::GameId;
-use wraex_core::images::is_cdn_url;
+use wraex_core::images::{is_cdn_url, is_map_screenshot_url};
 
 use crate::trade::Mode;
 use crate::ui::icon;
@@ -109,6 +112,8 @@ enum Source {
     Local { game: GameId, name: String },
     /// An item's art on the CDN (`web.poecdn.com`).
     Cdn { game: GameId, url: String },
+    /// A map's screenshot on imgur (`i.imgur.com`), from the game data's `area.screenshot`.
+    Screenshot { game: GameId, url: String },
 }
 
 impl Source {
@@ -121,6 +126,7 @@ impl Source {
         match self {
             Source::Local { game, name } => format!("{mode}/{}/images/{name}", game.as_str()),
             Source::Cdn { game, url } => format!("{mode}/{}/cdn/{url}", game.as_str()),
+            Source::Screenshot { game, url } => format!("{mode}/{}/screenshot/{url}", game.as_str()),
         }
     }
 
@@ -128,7 +134,16 @@ impl Source {
     fn label(&self) -> String {
         match self {
             Source::Local { name, .. } => format!("/images/{name}"),
-            Source::Cdn { url, .. } => url.clone(),
+            Source::Cdn { url, .. } | Source::Screenshot { url, .. } => url.clone(),
+        }
+    }
+
+    /// Whether `url` is the kind of remote image this source is.
+    fn accepts(&self, url: &str) -> bool {
+        match self {
+            Source::Cdn { .. } => is_cdn_url(url),
+            Source::Screenshot { .. } => is_map_screenshot_url(url),
+            Source::Local { .. } => false,
         }
     }
 }
@@ -146,6 +161,13 @@ pub fn local_sized(game: GameId, name: &str, size: (f32, f32)) -> El {
 /// An item's art at `url` (a `web.poecdn.com` image from the game data), `size` points.
 pub fn cdn(game: GameId, url: &str, size: (f32, f32)) -> El {
     draw(Source::Cdn { game, url: url.to_owned() }, size)
+}
+
+/// A map's screenshot at `url` (an `i.imgur.com` image from the game data's
+/// `area.screenshot`), filling `size` and cropping the overflow as `object-fit: cover`
+/// does (`MapCheck.vue`'s `FullscreenImage` in a 21:9 box).
+pub fn map_screenshot(game: GameId, url: &str, size: (f32, f32)) -> El {
+    draw_fit(Source::Screenshot { game, url: url.to_owned() }, size, SurfaceFit::Fill)
 }
 
 /// A picture a widget was handed, as `ItemQuickPrice.vue` takes its `itemImg` prop: either
@@ -181,9 +203,13 @@ pub fn picture(game: GameId, picture: &Picture, size: (f32, f32)) -> El {
 /// One picture: the decoded image when it is ready, the placeholder until then (and if it
 /// never loads). The caller keys the element and adds margins, as it would with an `<img>`.
 fn draw(source: Source, size: (f32, f32)) -> El {
+    draw_fit(source, size, SurfaceFit::Fit)
+}
+
+fn draw_fit(source: Source, size: (f32, f32), fit: SurfaceFit) -> El {
     let (w, h) = size;
     match ready(&source) {
-        Some(image) => el().size(w, h).pixels_fit(image.pixels(), SurfaceFit::Fit).role("img").label(source.label()),
+        Some(image) => el().size(w, h).pixels_fit(image.pixels(), fit).role("img").label(source.label()),
         None => icon::image_placeholder(w).size(w, h),
     }
 }
@@ -191,30 +217,39 @@ fn draw(source: Source, size: (f32, f32)) -> El {
 /// The decoded image for `source`, starting the load the first time it is asked for.
 fn ready(source: &Source) -> Option<Image> {
     let key = source.key();
-    {
+    let stored = {
         let mut registry = REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        if let Some(image) = registry.images.get(&key) {
-            // Still decoding: the cache's waker brings the next frame.
-            return (image.is_ready() && image.error().is_none()).then(|| image.clone());
-        }
-        if registry.failed.contains(&key) || !registry.pending.insert(key.clone()) {
+        if let Some(image) = registry.images.get(&key).cloned() {
+            Some(image)
+        } else if registry.failed.contains(&key) || !registry.pending.insert(key.clone()) {
             return None;
+        } else {
+            None
         }
+    };
+    if let Some(image) = stored {
+        // A picture another frame or another state started: still decoding here, and art read
+        // from disk (the reference's files, the harness's recordings) is waited for, so the
+        // frame that first draws it already shows the picture. A live CDN fetch is decoded on
+        // its worker too; the cache's waker brings the next frame if this one has to skip it.
+        return settle(image);
     }
     load(source, key);
-    // Art that is read from disk (the reference's files, the harness's recordings) is waited
-    // for, so the frame that first draws it already shows the picture: a `--snap` render and a
-    // test frame must not race the decoder. A live CDN fetch is not waited for; the cache's
-    // waker brings the next frame when it lands.
     let stored = REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).images.get(&source.key()).cloned();
-    if let Some(image) = stored {
-        let _ = image.wait();
-        if let Some(error) = image.error() {
-            eprintln!("wraex: image error for {}: {error}", source.label());
-        }
-        return (image.error().is_none()).then_some(image);
+    stored.and_then(settle)
+}
+
+/// An image that has finished decoding, waiting for it when it is still on its worker.
+fn settle(image: Image) -> Option<Image> {
+    if image.is_ready() {
+        return image.error().is_none().then_some(image);
     }
-    None
+    let _ = image.wait();
+    if let Some(error) = image.error() {
+        eprintln!("wraex: image error: {error}");
+        return None;
+    }
+    Some(image)
 }
 
 /// Load `source` and file the result under `key`, clearing its pending mark.
@@ -231,26 +266,30 @@ fn load(source: &Source, key: String) {
             let image = cache().file(&path, 16.0, 2.0);
             store(key, image);
         }
-        Source::Cdn { game, url } => {
-            if !is_cdn_url(url) {
-                fail(key, format!("{url} is not a web.poecdn.com image"));
-                return;
+        Source::Cdn { .. } | Source::Screenshot { .. } => remote(source, key),
+    }
+}
+
+/// A remote picture: the screenshot harness's recording in replay, the host in a live window.
+fn remote(source: &Source, key: String) {
+    let (Source::Cdn { game, url } | Source::Screenshot { game, url }) = source else { return };
+    if !source.accepts(url) {
+        fail(key, format!("{url} is not an image the app loads"));
+        return;
+    }
+    if mode() == Mode::Replay {
+        let path = recorded_path(*game, url);
+        match std::fs::read(&path) {
+            Ok(bytes) => {
+                let image = cache().load(bytes);
+                store(key, image);
             }
-            if mode() == Mode::Replay {
-                let path = recorded_path(*game, url);
-                match std::fs::read(&path) {
-                    Ok(bytes) => {
-                        let image = cache().load(bytes);
-                        store(key, image);
-                    }
-                    Err(error) => {
-                        fail(key, format!("{}: {error} (run `npm run screens -- --record`)", path.display()));
-                    }
-                }
-            } else {
-                fetch(key, url.clone());
+            Err(error) => {
+                fail(key, format!("{}: {error} (run `npm run screens -- --record`)", path.display()));
             }
         }
+    } else {
+        fetch(key, url.clone());
     }
 }
 
@@ -370,5 +409,20 @@ mod tests {
         let unrecorded =
             Source::Cdn { game: GameId::Poe1, url: "https://web.poecdn.com/gen/image/nothing/abc/none.png".to_owned() };
         assert!(ready(&unrecorded).is_none());
+    }
+
+    /// A map's screenshot is an imgur recording, drawn into a 21:9 box.
+    #[test]
+    fn a_map_screenshot_reads_its_recording() {
+        set_mode(Mode::Replay);
+        let url = "https://i.imgur.com/qZNQGdD.jpg";
+        let source = Source::Screenshot { game: GameId::Poe1, url: url.to_owned() };
+        assert!(source.accepts(url));
+        let image = ready(&source).expect("the Beach screenshot is recorded");
+        assert_eq!(source.label(), url);
+        assert!(image.size().is_some());
+        // Outside the recording is still a miss, not a network request.
+        let miss = Source::Screenshot { game: GameId::Poe1, url: "https://i.imgur.com/nope.jpg".to_owned() };
+        assert!(ready(&miss).is_none());
     }
 }

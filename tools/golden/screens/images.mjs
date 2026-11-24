@@ -1,8 +1,10 @@
-// Item art for the reference screenshots.
+// Item and map art for the reference screenshots.
 //
 // The reference renderer loads an item's picture straight from the game's CDN
-// (`https://web.poecdn.com/gen/image/...`), not through `/proxy`, so a screenshot run
-// has to answer those requests itself. Playwright routes them here:
+// (`https://web.poecdn.com/gen/image/...`) and a map's screenshot from imgur
+// (`https://i.imgur.com/...`, the `area.screenshot` of the game data), not through
+// `/proxy`, so a screenshot run has to answer those requests itself. Playwright
+// routes them here:
 //
 // - the file is `corpus/screens/<game>/images/<8 hex of sha1(url)>-<the file name>`,
 //   the name `rust/crates/app/src/ui/art.rs` (`recorded_name`) rebuilds, so the Rune
@@ -18,8 +20,10 @@ import https from 'node:https'
 import { createHash } from 'node:crypto'
 import { REPO_ROOT } from './cases.mjs'
 
-/** The only host item art comes from (`wraex_core::images::CDN_HOST`). */
-export const IMAGE_HOST = 'web.poecdn.com'
+/** The hosts the reference's `<img>` tags load art from: the item CDN and imgur (map screenshots). */
+export const IMAGE_HOSTS = ['web.poecdn.com', 'i.imgur.com']
+/** The item CDN (`wraex_core::images::CDN_HOST`). */
+export const IMAGE_HOST = IMAGE_HOSTS[0]
 
 // At most one fetched image per second, like the proxy recordings.
 const MIN_FETCH_INTERVAL_MS = 1000
@@ -96,14 +100,15 @@ function fetchImageOnce (url, userAgent) {
 /**
  * Record one image, wherever its URL came from: the screenshot cases' misses, and
  * `--image` for art only a state the harness does not click reaches (the anointment oils
- * of a hidden filter row, say). Returns the file's path.
+ * of a hidden filter row, a map screenshot, say). Returns the file's path.
  *
  * @param {string} url
  * @param {{dir: string, userAgent: string}} options
  */
 export async function recordImage (url, { dir, userAgent }) {
-  if (!url.startsWith(`https://${IMAGE_HOST}/`)) {
-    throw new Error(`${url} is not a ${IMAGE_HOST} image`)
+  const allowed = IMAGE_HOSTS.some(host => url.startsWith(`https://${host}/`))
+  if (!allowed) {
+    throw new Error(`${url} is not an image on ${IMAGE_HOSTS.join(' or ')}`)
   }
   await throttle()
   const answer = await fetchImageOnce(url, userAgent)
@@ -117,7 +122,7 @@ export async function recordImage (url, { dir, userAgent }) {
 }
 
 /**
- * Route `web.poecdn.com` on `page` to the recordings in `imageDir(game)`.
+ * Route the reference's image hosts on `page` to the recordings in `imageDir(game)`.
  *
  * @param {import('playwright').Page} page
  * @param {object} options
@@ -148,7 +153,7 @@ export async function installImages (page, { game, record = false, userAgent = '
     await route.fulfill({ status: 404, contentType: 'text/plain', body: 'no recorded image' })
   }
 
-  await page.route(url => url.hostname === IMAGE_HOST, async (route) => {
+  await page.route(url => IMAGE_HOSTS.includes(url.hostname), async (route) => {
     const url = route.request().url()
     const file = path.join(dir, imageFileName(url))
     if (fs.existsSync(file)) return fulfilFile(route, file)
@@ -173,9 +178,9 @@ export async function installImages (page, { game, record = false, userAgent = '
 }
 
 /** Wait until the window's `<img>` elements have all loaded (they are served from disk). */
-export async function waitForImages (page) {
-  await page.waitForFunction(() => {
-    const images = [...document.querySelectorAll('#price-window img')]
+export async function waitForImages (page, root = '#price-window') {
+  await page.waitForFunction((selector) => {
+    const images = [...document.querySelectorAll(`${selector} img`)]
     return images.every(image => image.complete)
-  }, undefined, { timeout: 5_000 }).catch(() => {})
+  }, root, { timeout: 5_000 }).catch(() => {})
 }

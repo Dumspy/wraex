@@ -24,7 +24,9 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
             .fill(theme::gray(700))
             .gap(theme::rem(0.25))
             .items_center()
-            .child(text("\u{2139}").key("hotkeys-info-icon").font(type_::SM).color(theme::gray(400)))
+            .child(
+                text("\u{2139}").key("hotkeys-info-icon").font(theme::leading_none(type_::SM)).color(theme::gray(400)),
+            )
             .child(
                 text(tr(settings, "settings.clear_hotkey"))
                     .key("hotkeys-info-label")

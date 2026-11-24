@@ -85,7 +85,12 @@ pub fn area_mods(game: GameId, mode: Mode) -> Vec<AreaMod> {
             }
         }
     }
-    out.sort_by(|a, b| a.tag.order().cmp(&b.tag.order()).then_with(|| a.matcher.cmp(&b.matcher)));
+    // `a.matchStr.localeCompare(b.matchStr)`: case-insensitive, and punctuation-weighted as ICU
+    // does, so "# metres…" sorts before "#% chance…". Folding case reproduces the reference's
+    // order for these English templates.
+    out.sort_by(|a, b| {
+        a.tag.order().cmp(&b.tag.order()).then_with(|| a.matcher.to_lowercase().cmp(&b.matcher.to_lowercase()))
+    });
     out
 }
 
@@ -239,7 +244,7 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
 
     let mut root = col().key("page-maps").w_full().h_full().min_h(0.0);
     let mut toolbar = row().key("maps-toolbar").w_full().padding(theme::rem(0.25)).items_center().flex_wrap();
-    toolbar = toolbar.child(row().key("maps-search-box").w(theme::rem(12.0)).child(search_field(settings, project)));
+    toolbar = toolbar.child(row().key("maps-search-box").w(theme::rem(8.4375)).child(search_field(settings, project)));
     toolbar = toolbar.child(row().key("maps-only-selected").mx(theme::rem(0.5)).child(ui::toggle(
         "maps-only-selected-toggle",
         &tr(settings, "map_check.search_selected"),
@@ -276,7 +281,9 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
             .key("maps-legend")
             .gap(theme::rem(0.25))
             .items_center()
-            .pr(theme::rem(1.0))
+            // `padding-right: calc(0.875rem + 2.350rem)`: the radios' 0.875 rem marker plus
+            // the two gaps and boxes the rows put to their right.
+            .pr(theme::rem(0.875 + 2.35))
             .child(legend("maps-legend-warn", theme::orange(600)))
             .child(legend("maps-legend-deadly", theme::red(700)))
             .child(legend("maps-legend-good", theme::green(700))),
@@ -309,7 +316,13 @@ fn entry<S: 'static>(settings: &Settings, area: &AreaMod, index: usize, profile:
     let game = settings.game;
     let matcher = area.matcher.clone();
 
-    let mut label = row().key(format!("maps-{index}-label")).grow(1.0).min_w(0.0).items_center().gap(theme::rem(0.25));
+    let mut label = row()
+        .key(format!("maps-{index}-label"))
+        .grow(1.0)
+        .min_w(0.0)
+        .px(theme::rem(0.5))
+        .items_center()
+        .gap(theme::rem(0.25));
     if area.tag != Tag::None {
         label = label.child(tag_badge(format!("maps-{index}-tag"), area.tag.label(game), area.tag));
     }
@@ -318,15 +331,24 @@ fn entry<S: 'static>(settings: &Settings, area: &AreaMod, index: usize, profile:
     );
 
     let mut controls = row().key(format!("maps-{index}-controls")).items_center().gap(theme::rem(1.0));
-    for (value, key) in [("w", "warn"), ("d", "deadly"), ("g", "good")] {
-        let checked = at == value;
-        let matcher = matcher.clone();
-        controls = controls.child(ui::radio(&format!("maps-{index}-{key}"), key, checked, false, move |s: &mut S| {
-            set_decision(project(s), &matcher, value)
-        }));
-    }
+    // `controls-auto-hide`: upstream lays the decision radios out but `.row:not(:hover)` hides
+    // them, so an undecided row shows only its text. A screenshot is never hovered.
     if removable {
+        for (value, key) in [("w", "warn"), ("d", "deadly"), ("g", "good")] {
+            let checked = at == value;
+            let matcher = matcher.clone();
+            controls =
+                controls.child(ui::radio_icon(&format!("maps-{index}-{key}"), key, checked, move |s: &mut S| {
+                    set_decision(project(s), &matcher, value)
+                }));
+        }
         let matcher = matcher.clone();
+        // `fa-trash-alt` for an outdated wording, `fa-times` otherwise.
+        let glyph = if area.tag == Tag::Outdated {
+            ui::icon::trash(16.0, theme::red(400))
+        } else {
+            ui::icon::close(12.0, theme::gray(400))
+        };
         controls = controls.child(
             row()
                 .key(format!("maps-{index}-remove"))
@@ -336,10 +358,7 @@ fn entry<S: 'static>(settings: &Settings, area: &AreaMod, index: usize, profile:
                 .role("button")
                 .label(tr(settings, "Remove"))
                 .on_press(move |s: &mut S| set_decision(project(s), &matcher, "---"))
-                .child(ui::icon::close(
-                    12.0,
-                    if area.tag == Tag::Outdated { theme::red(400) } else { theme::gray(400) },
-                )),
+                .child(glyph),
         );
     } else {
         controls = controls.child(el().w(theme::rem(1.5)));
@@ -349,7 +368,6 @@ fn entry<S: 'static>(settings: &Settings, area: &AreaMod, index: usize, profile:
         .key(format!("maps-{index}"))
         .w_full()
         .h(theme::rem(2.0))
-        .px(theme::rem(0.5))
         .items_center()
         .hover(theme::gray(700))
         .child(label)

@@ -160,16 +160,17 @@ rest.
 
 ## Screenshots (phase 5)
 
-`screens/` renders the *original* price-check window in headless Chromium and writes
-a PNG plus the element's `innerText`, so the Rune port can be compared with upstream
-before Rune's own widget exists. It is not a fixture: nothing it produces is
-committed or compared automatically.
+`screens/` renders the *original* windows (price check, map check, item check, settings) in
+headless Chromium and writes a PNG plus the element's `innerText`, so the Rune port can be
+compared with upstream before Rune's own widget exists. It is not a fixture: nothing it
+produces is committed or compared automatically.
 
 ```sh
 devenv tasks run golden:screens                    # both games, default cases
 cd tools/golden
 npm run screens -- --game poe1                     # one game, default cases
 npm run screens -- --game poe2 --case ee2-rare-map # one case
+npm run screens -- --game poe1 --settings general  # one settings page
 npm run screens -- --rebuild                       # after bumping a reference
 npm run screens -- --game poe2 --record            # fetch + save new answers (network)
 npm run screens -- --game poe1 --image <url>       # record one item image on its own
@@ -200,6 +201,25 @@ uniques and bulk currency (see `CheckedItem.vue`); for a rare or a map the windo
 renders a "Search" button instead, so a case that should show listings needs
 `search: true` and the harness clicks that button. A case that needs it but lacks it
 prints `no listings in the window` and its screenshot shows the pre-search window.
+
+### Map check and item check
+
+`{ slug, widget: 'map-check' }` (or `'item-check'`) sends the item text with
+`target: 'item-check'` instead, which opens `WidgetItemCheck.vue`: the map check for a
+map-like item and the item's info otherwise. Both write
+`target/screens/<game>/<widget>-<slug>.png` (the price check keeps `<slug>.png`), and
+`--widget <name>` filters the default cases to one of the three widgets (the same slug is
+a price-check and a map-check case, so the flag disambiguates `--case`):
+
+```sh
+npm run screens -- --game poe1 --widget map-check
+npm run screens -- --game poe1 --widget map-check --case real-map-valdo-foil
+```
+
+`DEFAULT_CASES` renders every PoE1 map case (`real-map-*`, `map-*`) and PoE2's two
+waystones this way, plus a rare, a unique, a gem and a weapon as item checks. The widget
+is `#widget-<wmId>` (`wmId` from the config's item-check widget); its card is the only
+child, because the outer wrapper has no height to screenshot.
 
 The page clock is frozen so listing ages and poe.ninja windows are stable. The date
 comes from `corpus/screens/<game>/recorded-at.txt` (ISO 8601, written by `--record`
@@ -253,12 +273,15 @@ feed).
 
 An item's picture is not proxied: the page's `<img>` loads it straight from the game's
 CDN (`https://web.poecdn.com/gen/image/...`), which comes from the game data's `icon`
-fields and from trade listings. `screens/images.mjs` routes those requests with
-`page.route`, so a run stays offline:
+fields and from trade listings. A map check's screenshot is loaded the same way, from
+`https://i.imgur.com/...` (the game data's `area.screenshot`/`map.screenshot`).
+`screens/images.mjs` routes both hosts with `page.route`, so a run stays offline:
 
 ```
 web.poecdn.com/gen/image/WzI1LDE0.../40b81baee3/LakeRing1.png
   -> corpus/screens/<game>/images/1f462dd1-LakeRing1.png
+i.imgur.com/qZNQGdD.jpg
+  -> corpus/screens/<game>/images/9e437611-qZNQGdD.jpg
 ```
 
 The name is the first eight hex digits of the URL's SHA-1, then the URL's own file name
@@ -277,6 +300,28 @@ own file and needs no fixture: the port reads it from
 A context pins `locale: 'en-US'` and `timezoneId: 'UTC'`: the runner's own locale would
 otherwise reach the page, which formats `1.2` as `1,2` under a da-DK format and dates in
 its own time zone, and the port's output is en-US.
+
+### Settings window
+
+`DEFAULT_SETTINGS_CASES` (`screens/cases.mjs`) renders upstream's settings window for every
+menu page of both games: hotkeys, chat, general, price check, map check, item info, debug and
+about. (EE2's Help and Leveling pages are left out: the port has no scene for them yet, see
+`rust/crates/app/src/settings/mod.rs`.) A case is `{ settings: 'hotkeys' }`; it needs no
+corpus file, because the host serves `fixtures/config/<game>/default/config.json` with the
+same `leagueId: Standard` edit the price-check cases get.
+
+The window is a widget like any other, hidden until it is shown: the run presses the widget
+menu's cog (`wm.show(settings)`), then the page's menu button (`t(component.name)`), and
+screenshots the inner `.window` (`max-width: 50rem; max-height: 38rem`, so 800x608) rather
+than the 1600x900 overlay page. The output is
+`target/screens/<game>/settings-<page>.png` plus a `.txt` of its `innerText`, the same slugs
+as the Rune scenes `settings-<game>-<page>`; those scenes now open at the settings window's
+own 800x608, so comparing needs no `--size`.
+
+```sh
+npm run screens -- --game poe1 --settings general
+npm run screens -- --settings hotkeys --settings about --game poe2
+```
 
 ### Recording answers (`--record`)
 

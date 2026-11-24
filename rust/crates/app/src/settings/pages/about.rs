@@ -4,12 +4,12 @@
 //! trackers); the layout and the update-state wording are upstream's.
 
 use rune::{El, col, el, row, text};
+use wraex_core::GameId;
 use wraex_core::updates::{NoDownloadReason, UpdateInfo};
 
 use crate::settings::pages::{tr as t_key, tr_fmt};
 use crate::settings::{Project, Settings};
 use crate::theme::{self, text as type_};
-use crate::trade::Mode;
 use crate::ui;
 
 const RELEASES: &str = "https://github.com/Dumspy/wraex/releases";
@@ -18,10 +18,15 @@ const ISSUES: &str = "https://github.com/Dumspy/wraex/issues";
 pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     let version = env!("CARGO_PKG_VERSION");
 
-    // The icon, name and version.
+    // The icon, name and version. The art is the reference's own `/images`: the orb in
+    // Awakened PoE Trade, the jeweler in EE2 (`w-12 h-12`).
+    let icon = match settings.game {
+        GameId::Poe2 => "jeweler.png",
+        _ => "TransferOrb.png",
+    };
     let mut page = col().key("page-about").w_full().h_full().padding(theme::rem(0.5)).items_center();
     let mut heading = col().key("about-heading").items_center().padding(theme::rem(0.5)).mb(theme::rem(1.0));
-    heading = heading.child(ui::icon::image_placeholder(theme::rem(3.0)).mb(theme::rem(0.25)));
+    heading = heading.child(ui::art::local(settings.game, icon, theme::rem(3.0)).key("about-icon"));
     heading = heading.child(text("Wraex").key("about-name").font(type_::BASE));
     heading = heading.child(text(tr_fmt(settings, "app.version", &[version])).key("about-version").font(type_::SM));
     heading = heading.child(
@@ -60,30 +65,57 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
                 .role("button")
                 .label(label.clone())
                 .on_press_tx(move |s: &mut S, tx: &mut rune::Tx| action(project(s), tx))
-                .child(text(label).key(key).font(type_::SM).color(theme::gray(300))),
+                .child(text(label).key(key).font(theme::leading_none(type_::SM)).color(theme::gray(300))),
         );
     }
     page = page.child(box_);
 
-    // The contact block, pinned to the bottom: `text-center mt-auto py-8`.
+    // The contact block, pinned to the bottom: `text-center mt-auto py-8`. EE2 names its own
+    // Discord handle and communities (there is no Forbidden Trove row).
     page = page.child(el().grow(1.0));
     let mut footer = col().key("about-contact").items_center().py(theme::rem(2.0));
     footer = footer.child(text(t_key(settings, "app.contact_me")).key("about-contact-text").font(type_::SM));
+    let handle = match settings.game {
+        GameId::Poe2 => "<@340233612064718851>",
+        _ => "<@295216259795124225>",
+    };
     footer = footer.child(
-        text("<@295216259795124225>")
-            .key("about-contact-handle")
-            .font(type_::SM.family(theme::FAMILY_EXO2))
-            .color(theme::gray(500)),
+        text(handle).key("about-contact-handle").font(type_::SM.family(theme::FAMILY_EXO2)).color(theme::gray(500)),
     );
-    footer = footer.child(
-        row()
-            .key("about-communities")
-            .gap(theme::rem(1.0))
-            .mt(theme::rem(0.5))
-            .child(link::<S>("about-forbidden-trove", "The Forbidden Trove", "https://discord.gg/tftrove"))
-            .child(link::<S>("about-reddit", "r/pathofexile", "https://discord.gg/pathofexile")),
-    );
-    page.child(footer)
+    let mut communities = row().key("about-communities").gap(theme::rem(1.0)).mt(theme::rem(0.5));
+    communities = match settings.game {
+        GameId::Poe2 => communities
+            .child(community::<S>(
+                settings,
+                "about-reddit",
+                "dc_reddit.png",
+                "r/pathofexile",
+                "https://old.reddit.com/r/pathofexile2",
+            ))
+            .child(community::<S>(
+                settings,
+                "about-discord",
+                "discord.png",
+                "pathofexile",
+                "https://discord.gg/pathofexile",
+            )),
+        _ => communities
+            .child(community::<S>(
+                settings,
+                "about-forbidden-trove",
+                "dc_tft.gif",
+                "The Forbidden Trove",
+                "https://discord.gg/tftrove",
+            ))
+            .child(community::<S>(
+                settings,
+                "about-reddit",
+                "dc_reddit.png",
+                "r/pathofexile",
+                "https://discord.gg/pathofexile",
+            )),
+    };
+    page.child(footer.child(communities))
 }
 
 /// The action a state's button runs.
@@ -127,17 +159,10 @@ fn update_state(settings: &Settings) -> (String, String, Option<(&'static str, S
     }
 }
 
-/// `checkForUpdates`: the update check over the app's transport. A window blocks for the one
-/// request (GitHub answers in a fraction of a second); a scene leaves the initial state alone.
+/// `checkForUpdates`: [`UpdateInfo::CheckingForUpdate`] shows at once, and the one request
+/// runs on a worker (the answer lands in [`Settings::poll`]).
 fn check_now(settings: &mut Settings, _tx: &mut rune::Tx) {
-    if settings.mode == Mode::Replay {
-        return;
-    }
-    settings.update = wraex_core::updates::check(
-        &wraex_platform::http::HttpTransport::default(),
-        crate::trade::now(Mode::Live),
-        None,
-    );
+    settings.begin_update_check();
 }
 
 /// `openDownloadPage`: the Wraex releases page (the app is notify-only, see `core::updates`).
@@ -158,4 +183,15 @@ fn link<S: 'static>(key: &str, label: &str, url: &'static str) -> El {
             let _ = tx.open_url(url);
         })
         .child(text(label.to_owned()).key(format!("{key}-label")).font(type_::SM))
+}
+
+/// `<li><img class="rounded inline" src="/images/…"> <a class="border-b">…</a></li>`: a
+/// community's 32 pt icon beside its link.
+fn community<S: 'static>(settings: &Settings, key: &str, icon: &str, label: &str, url: &'static str) -> El {
+    row()
+        .key(key.to_owned())
+        .gap(theme::rem(0.25))
+        .items_center()
+        .child(ui::art::local(settings.game, icon, theme::rem(2.0)).key(format!("{key}-icon")))
+        .child(link::<S>(&format!("{key}-link"), label, url))
 }

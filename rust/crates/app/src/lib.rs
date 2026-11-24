@@ -3,8 +3,10 @@
 //! A Rune shell over the core crates. It has one window per game: PoE1's price check
 //! ([`poe1::price_check`]) and PoE2's ([`poe2::price_check`]); the title bar and the widgets
 //! they are built from live in [`ui`] and [`theme`], and both windows trade through [`trade`]
-//! and the recorded answers of [`replay`]. The settings window ([`settings`]) opens over either
-//! game's check, one scene per page.
+//! and the recorded answers of [`replay`]. Each game's item check ([`poe1::item_check`],
+//! [`poe2::item_check`]) draws its map check ([`poe1::map_check`], [`poe2::map_check`]) for a
+//! map-like item. The settings window ([`settings`]) opens over either game's check, one scene
+//! per page.
 //!
 //! `cargo run -p wraex-app` opens the window; `-- --snap out.png --scene <slug>` renders one of
 //! the corpus cases headlessly (`--list-scenes` lists them).
@@ -43,6 +45,12 @@ pub struct App {
     /// The settings window, while it is open over the game's price check. It edits a working
     /// copy of the config (`settings::Settings`) and writes it only on Save.
     pub settings: Option<Settings>,
+    /// The item check window (`WidgetItemCheck.vue`) on PoE1: the map check for a map-like item,
+    /// the item's info otherwise. A scene or the item-check hotkey opens it; its top-level
+    /// buttons record their [`poe1::item_check::Action`] for the shell instead of running it.
+    pub item_check: Option<poe1::item_check::ItemCheck>,
+    /// The item check window on PoE2.
+    pub item_check_poe2: Option<poe2::item_check::ItemCheck>,
     /// Where trade requests go: HTTPS in a window, recorded answers headless.
     mode: Mode,
     /// The waker `AppSpec::poll` gave the app, handed to whichever window is built later.
@@ -56,6 +64,8 @@ impl std::fmt::Debug for App {
             .field("price_check", &self.price_check)
             .field("poe2", &self.poe2)
             .field("settings", &self.settings)
+            .field("item_check", &self.item_check)
+            .field("item_check_poe2", &self.item_check_poe2)
             .field("mode", &self.mode)
             .finish()
     }
@@ -74,6 +84,8 @@ impl App {
             price_check: PriceCheck::with_mode(text, mode),
             poe2: None,
             settings: None,
+            item_check: None,
+            item_check_poe2: None,
             mode,
             waker: None,
         }
@@ -88,6 +100,8 @@ impl App {
             price_check: PriceCheck::with_mode(text, mode),
             poe2: Some(poe2::price_check::PriceCheck::with_mode(text, mode)),
             settings: None,
+            item_check: None,
+            item_check_poe2: None,
             mode,
             waker: None,
         };
@@ -129,7 +143,13 @@ impl App {
     /// `--scene settings-<game>-<page>` and the tests: replace the state with the settings
     /// window on `page`.
     pub fn settings_page(&mut self, game: GameId, page: Page) {
+        let waker = self.waker.clone();
         *self = Self::settings_scene(game, page);
+        // The scenes' setup runs after this; a window that switches at run time keeps the
+        // waker its update check answers on.
+        if let Some(waker) = waker {
+            self.set_waker(waker);
+        }
     }
 
     /// Reopen PoE2's price check on a PoE2 corpus case: `tools/golden/corpus/poe2/<slug>.txt`.
@@ -148,9 +168,42 @@ impl App {
         }
     }
 
+    /// `--scene map-check-<case>` / `--scene item-check-<case>`: the item check on a PoE1 corpus
+    /// case. The widget picks its own half: the map check for a map-like item, the item info
+    /// otherwise, as `WidgetItemCheck.vue` does.
+    pub fn load_item_check(&mut self, slug: &str) {
+        *self = Self::item_check_scene(GameId::Poe1, slug);
+    }
+
+    /// [`App::load_item_check`] on PoE2's corpus (`poe2-map-check-<case>`, `poe2-item-check-<case>`).
+    pub fn load_item_check_poe2(&mut self, slug: &str) {
+        *self = Self::item_check_scene(GameId::Poe2, slug);
+    }
+
+    /// The app with only the item check window open on `slug`: a scene never reads or writes the
+    /// user's config or the network (the map check reads the game data only).
+    pub fn item_check_scene(game: GameId, slug: &str) -> Self {
+        let mut app = match game {
+            GameId::Poe2 => Self::with_mode_poe2(&corpus_poe2(slug), Mode::Replay),
+            _ => Self::with_mode(&corpus(slug), Mode::Replay),
+        };
+        app.game = game;
+        match game {
+            GameId::Poe2 => {
+                app.item_check_poe2 = Some(poe2::item_check::ItemCheck::from_text(&corpus_poe2(slug), Mode::Replay))
+            }
+            _ => app.item_check = Some(poe1::item_check::ItemCheck::from_text(&corpus(slug))),
+        }
+        app
+    }
+
     /// The waker the window's trade and price answers use to run `poll`.
     pub fn set_waker(&mut self, waker: Waker) {
         self.price_check.set_waker(waker.clone());
+        // The about page's update check lands on the same waker.
+        if let Some(settings) = &self.settings {
+            settings.set_waker(waker.clone());
+        }
         // The image cache wakes the same window when a picture finishes decoding.
         ui::art::install_waker(waker.clone());
         self.waker = Some(waker);
@@ -168,7 +221,8 @@ impl App {
     pub fn poll(&mut self) -> bool {
         let poe1 = self.price_check.poll();
         let poe2 = self.poe2.as_mut().is_some_and(|check| check.poll());
-        poe1 || poe2
+        let settings = self.settings.as_mut().is_some_and(|settings| settings.poll());
+        poe1 || poe2 || settings
     }
 }
 
@@ -193,12 +247,34 @@ fn project_settings(app: &mut App) -> &mut Settings {
     app.settings.as_mut().expect("a settings scene built the window")
 }
 
-/// The app's window: the settings window while it is open, else whichever game is open.
+/// `App` → the PoE1 item check, for its handlers.
+fn project_item_check(app: &mut App) -> &mut poe1::item_check::ItemCheck {
+    app.item_check.as_mut().expect("an item-check scene built the window")
+}
+
+/// `App` → the PoE2 item check, for its handlers.
+fn project_item_check_poe2(app: &mut App) -> &mut poe2::item_check::ItemCheck {
+    app.item_check_poe2.as_mut().expect("an item-check scene built the window")
+}
+
+/// The app's window: the settings window while it is open, else the item check, else whichever
+/// game's price check is open.
 pub fn view(app: &App, cx: &mut Cx<App>) -> El {
     if let Some(settings) = &app.settings
         && settings.open
     {
         return settings::window::view(settings, cx, project_settings);
+    }
+    // `WidgetItemCheck.vue` is an overlay card of its own, on top of the price check.
+    if let Some(check) = &app.item_check
+        && check.open
+    {
+        return poe1::item_check::view(check, cx, project_item_check);
+    }
+    if let Some(check) = &app.item_check_poe2
+        && check.open
+    {
+        return poe2::item_check::view(check, cx, project_item_check_poe2);
     }
     match app.game {
         GameId::Poe2 => {
@@ -226,6 +302,17 @@ pub const SCENES: &[Scene] = &[
     ("adv-magic-flask-charge-recovery", |app| app.load("adv-magic-flask-charge-recovery")),
     ("jewel-cluster-large", |app| app.load("jewel-cluster-large")),
     ("adv-rare-amulet-anointed", |app| app.load("adv-rare-amulet-anointed")),
+    // The item check (`WidgetItemCheck.vue`): the map check for every PoE1 map case, and the
+    // item info for a rare, a unique, a gem and a weapon.
+    ("map-check-real-map-rare-t16-max-res", |app| app.load_item_check("real-map-rare-t16-max-res")),
+    ("map-check-real-map-blighted-corrupted", |app| app.load_item_check("real-map-blighted-corrupted")),
+    ("map-check-real-map-valdo-foil", |app| app.load_item_check("real-map-valdo-foil")),
+    ("map-check-map-normal-t16", |app| app.load_item_check("map-normal-t16")),
+    ("map-check-map-rare-t16-corrupted", |app| app.load_item_check("map-rare-t16-corrupted")),
+    ("item-check-adv-rare-ring-mirrored-catalyst", |app| app.load_item_check("adv-rare-ring-mirrored-catalyst")),
+    ("item-check-adv-unique-timeless-jewel", |app| app.load_item_check("adv-unique-timeless-jewel")),
+    ("item-check-gem-support-empower", |app| app.load_item_check("gem-support-empower")),
+    ("item-check-adv-rare-sword-cannot-use", |app| app.load_item_check("adv-rare-sword-cannot-use")),
     // PoE2 (`tools/golden/screens/cases.mjs`'s `poe2` cases), plus its not-an-item text.
     ("poe2-currency-djinn-barya", |app| app.load_poe2("currency-djinn-barya")),
     // The harness clicks Search for these two, as it does for PoE1's rare and map.
@@ -233,6 +320,13 @@ pub const SCENES: &[Scene] = &[
     ("poe2-ee2-unique-item", |app| app.load_poe2("ee2-unique-item")),
     ("poe2-ee2-rare-map", |app| app.load_and_search_poe2("ee2-rare-map")),
     ("poe2-error-not-an-item", |app| app.load_poe2("error-not-an-item")),
+    // EE2's item check: the waystones (map check) and a slightly priced rare, a unique and an
+    // uncut gem (item info).
+    ("poe2-map-check-ee2-rare-map", |app| app.load_item_check_poe2("ee2-rare-map")),
+    ("poe2-map-check-ee2-rare-map-fake-all-props", |app| app.load_item_check_poe2("ee2-rare-map-fake-all-props")),
+    ("poe2-item-check-note-rare-bow", |app| app.load_item_check_poe2("note-rare-bow")),
+    ("poe2-item-check-ee2-unique-item", |app| app.load_item_check_poe2("ee2-unique-item")),
+    ("poe2-item-check-ee2-uncut-skill-gem", |app| app.load_item_check_poe2("ee2-uncut-skill-gem")),
     // The settings window, one scene per menu page, for both games.
     ("settings-poe1-hotkeys", |app| app.settings_page(GameId::Poe1, Page::Hotkeys)),
     ("settings-poe1-chat", |app| app.settings_page(GameId::Poe1, Page::Chat)),
@@ -268,8 +362,35 @@ pub fn corpus_poe2(slug: &str) -> String {
 
 const CORPUS_POE2: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../tools/golden/corpus/poe2");
 
+/// A `settings-poe1-maps` style scene slug: the game and the page.
+pub fn settings_scene(slug: &str) -> Option<(GameId, Page)> {
+    let rest = slug.strip_prefix("settings-")?;
+    let (game, page) = rest.split_once('-')?;
+    let game = match game {
+        "poe1" => GameId::Poe1,
+        "poe2" => GameId::Poe2,
+        _ => return None,
+    };
+    Some((game, Page::from_slug(page)?))
+}
+
+/// The window size a `--scene` renders at. A settings scene is the settings window: upstream's
+/// `.window` is at most 50 rem wide and 38 rem tall (`settings::WIDTH`/`HEIGHT`), so it renders
+/// at that size and needs no `--size`. A price check keeps the price-check window's size, and
+/// an explicit `--size` still wins.
+pub fn scene_size(scene: Option<&str>) -> (f32, f32) {
+    match scene.and_then(settings_scene) {
+        Some(_) => (settings::WIDTH, settings::HEIGHT),
+        None => (WIDTH, HEIGHT),
+    }
+}
+
 /// Runs the app: a window, or a headless render with Rune's `--snap`/`--scene`/`--tree`.
 pub fn main() {
+    // Read `--scene` before the window exists: a settings scene is a window of its own size.
+    // Rune parses the same flags again when it builds the window.
+    let args = rune::tooling::Args::parse();
+    let size = scene_size(args.scene.as_deref());
     rune::run(AppSpec::<App> {
         scenes: SCENES,
         fonts: theme::FONTS,
@@ -280,8 +401,8 @@ pub fn main() {
         poll: Some(|app, _t, _tx| app.poll()),
         // The window is exactly the widget: the price check is a fixed 28.75 rem wide, so the
         // window must not shrink past it. (As an overlay it won't be resizable at all.)
-        min_size: Some((WIDTH, HEIGHT)),
-        ..AppSpec::new("Wraex", (WIDTH, HEIGHT), App::default, view)
+        min_size: Some(size),
+        ..AppSpec::new("Wraex", size, App::default, view)
     });
 }
 
@@ -297,30 +418,31 @@ mod tests {
         // A `settings-<game>-<page>` scene opens the settings window; a `poe2-` scene opens
         // PoE2's window on its own corpus (`poe2-ee2-rare-item` →
         // `corpus/poe2/ee2-rare-item.txt`); everything else is PoE1's, as before.
+        let size = scene_size(Some(slug));
         if let Some((game, page)) = settings_scene(slug) {
-            return runtime_app(App::settings_scene(game, page));
+            return runtime_app(App::settings_scene(game, page), size);
+        }
+        if let Some(case) = slug.strip_prefix("poe2-map-check-").or_else(|| slug.strip_prefix("poe2-item-check-")) {
+            return runtime_app(App::item_check_scene(GameId::Poe2, case), size);
+        }
+        if let Some(case) = slug.strip_prefix("map-check-").or_else(|| slug.strip_prefix("item-check-")) {
+            return runtime_app(App::item_check_scene(GameId::Poe1, case), size);
         }
         match slug.strip_prefix("poe2-") {
-            Some(case) => runtime_app(App::with_mode_poe2(&corpus_poe2(case), Mode::Replay)),
-            None => runtime_app(App::replay(slug)),
+            Some(case) => runtime_app(App::with_mode_poe2(&corpus_poe2(case), Mode::Replay), size),
+            None => runtime_app(App::replay(slug), size),
         }
     }
 
-    /// A `settings-poe1-maps` style slug: the game and the page.
-    fn settings_scene(slug: &str) -> Option<(GameId, Page)> {
-        let rest = slug.strip_prefix("settings-")?;
-        let (game, page) = rest.split_once('-')?;
-        let game = match game {
-            "poe1" => GameId::Poe1,
-            "poe2" => GameId::Poe2,
-            _ => return None,
-        };
-        Some((game, Page::from_slug(page)?))
+    /// A `map-check-<case>` / `item-check-<case>` scene (with either game's prefix).
+    fn is_item_check_scene(slug: &str) -> bool {
+        ["map-check-", "item-check-"].iter().any(|prefix| slug.starts_with(prefix))
+            || ["poe2-map-check-", "poe2-item-check-"].iter().any(|prefix| slug.starts_with(prefix))
     }
 
-    fn runtime_app(app: App) -> Runtime<App> {
+    fn runtime_app(app: App, size: (f32, f32)) -> Runtime<App> {
         let text = TextSystem::new(theme::FONTS, theme::FAMILIES);
-        let mut runtime = Runtime::with_text(app, view, (WIDTH, HEIGHT), Env::new(true, 1.0), text);
+        let mut runtime = Runtime::with_text(app, view, size, Env::new(true, 1.0), text);
         // `AppSpec::poll` in a window; the tests drive frames themselves.
         runtime.poll = Some(|app: &mut App, _t: f64, _tx: &mut rune::Tx| app.poll());
         runtime.frame(0.0);
@@ -334,6 +456,20 @@ mod tests {
     fn text_of(runtime: &Runtime<App>, key: &str) -> Option<String> {
         let elements = runtime.elements();
         element(&elements, key)?.text.clone()
+    }
+
+    /// `fixtures/<game>/<case>/item-check.json`: what the reference's item check opens and sends.
+    fn item_check_fixture(game: &str, case: &str) -> serde_json::Value {
+        let path = format!("{}/../../../fixtures/{game}/{case}/item-check.json", env!("CARGO_MANIFEST_DIR"));
+        let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {path}: {e}"));
+        serde_json::from_str(&text).unwrap_or_else(|e| panic!("parse {path}: {e}"))
+    }
+
+    /// Let animated values (a decision row's colour) land: the first frame only starts them.
+    fn settle(runtime: &mut Runtime<App>) {
+        for _ in 0..40 {
+            runtime.frame(1.0 / 60.0);
+        }
     }
 
     fn click(runtime: &mut Runtime<App>, key: &str) {
@@ -366,12 +502,37 @@ mod tests {
                     "Settings - Awakened PoE Trade"
                 };
                 assert_eq!(text_of(&runtime, "titlebar-title").as_deref(), Some(title), "{slug}");
+                assert!(runtime.find("titlebar-close").is_some(), "{slug}: close button");
+            } else if is_item_check_scene(slug) {
+                // `WidgetItemCheck.vue` is an overlay card: upstream's overlay draws no title bar
+                // over it either (its hover actions panel is not ported).
+                assert!(runtime.find("titlebar").is_none(), "{slug}: no title bar");
             } else {
                 assert_eq!(text_of(&runtime, "titlebar-title").as_deref(), Some("Standard"), "{slug}");
+                assert!(runtime.find("titlebar-close").is_some(), "{slug}: close button");
             }
-            assert!(runtime.find("titlebar-close").is_some(), "{slug}: close button");
             assert!(!runtime.elements().is_empty());
         }
+    }
+
+    /// A settings scene renders in the settings window's own size, so `--snap --scene
+    /// settings-…` needs no `--size`; a price-check scene keeps the price-check window's.
+    #[test]
+    fn a_settings_scene_is_as_large_as_the_settings_window() {
+        assert_eq!(settings::WIDTH, 800.0, "`max-width: 50rem`");
+        assert_eq!(settings::HEIGHT, 608.0, "`max-height: 38rem`");
+        assert_eq!(scene_size(Some("settings-poe1-hotkeys")), (settings::WIDTH, settings::HEIGHT));
+        assert_eq!(scene_size(Some("settings-poe2-about")), (settings::WIDTH, settings::HEIGHT));
+        assert_eq!(scene_size(Some("currency-divine-orb")), (WIDTH, HEIGHT));
+        assert_eq!(scene_size(None), (WIDTH, HEIGHT));
+
+        // The window fills the scene, which is what `--size 900x700` used to centre in a
+        // larger canvas.
+        let runtime = runtime("settings-poe1-hotkeys");
+        let elements = runtime.elements();
+        let window = element(&elements, "settings-window").expect("the settings window");
+        assert_eq!([window.rect[0], window.rect[1]], [0.0, 0.0]);
+        assert_eq!([window.rect[2], window.rect[3]], [settings::WIDTH, settings::HEIGHT]);
     }
 
     /// A stackable currency: it searches straight away (`filters.preset_bulk`), so the
@@ -406,6 +567,19 @@ mod tests {
         // `StackValue.vue`: the stack on screen, and one full stack of twenty.
         assert_eq!(text_of(&runtime, "stack-value-have-price").as_deref(), Some("2673 chaos"));
         assert_eq!(text_of(&runtime, "stack-value-stack-price").as_deref(), Some("17818 chaos"));
+        // Each reading takes half the box (`w-1/2`), so the wide gap is the left half's
+        // leftover; and the arrow keeps a space's width on both sides (`px-1` + the template's
+        // spaces), so the price is not glued to the amount.
+        let elements = runtime.elements();
+        let box_ = element(&elements, "stack-value").expect("the box");
+        let have = element(&elements, "stack-value-have").expect("the left half");
+        let stack = element(&elements, "stack-value-stack").expect("the right half");
+        assert_eq!(have.rect[2], stack.rect[2], "two equal halves");
+        assert!(stack.rect[0] >= box_.rect[0] + box_.rect[2] / 2.0, "{:?} vs {:?}", stack.rect, box_.rect);
+        let amount = element(&elements, "stack-value-have-amount").expect("the amount");
+        let price = element(&elements, "stack-value-have-price").expect("the price");
+        let gap = price.rect[0] - (amount.rect[0] + amount.rect[2]);
+        assert!(gap >= 20.0, "the arrow needs its 8 pt on each side, not {gap} pt");
     }
 
     /// `PriceCheckWindow.vue`'s exchange-rate button, and the popover it opens.
@@ -886,6 +1060,205 @@ mod tests {
         assert_eq!([missing.rect[2], missing.rect[3]], [32.0, 32.0]);
     }
 
+    // ---- Item check / map check ----------------------------------------------------------
+
+    /// `MapCheck.vue` on a rare T16: the map's name, the profile buttons, every explicit stat
+    /// with the default profile's decision colours, and the outdated-wording notice the
+    /// reference shows for its own default stat list.
+    #[test]
+    fn the_map_check_lists_a_maps_stats_and_decisions() {
+        let runtime = runtime("map-check-real-map-rare-t16-max-res");
+        assert_eq!(text_of(&runtime, "map-check-name").as_deref(), Some("Map"));
+        assert_eq!(text_of(&runtime, "map-check-profile-label").as_deref(), Some("Profile"));
+        assert_eq!(text_of(&runtime, "map-check-profile-1-text").as_deref(), Some("I"));
+        for numeral in ["I", "II", "III"] {
+            assert!(runtime.find(&format!("map-check-profile-{numeral}")).is_none(), "keyed by number");
+        }
+        assert!(runtime.find("map-check-profile-3-text").is_some());
+        let expected = [
+            "Unique Boss deals 25% increased Damage",
+            "Unique Boss has 30% increased Attack and Cast Speed",
+            "28% increased Monster Movement Speed",
+            "35% increased Monster Attack Speed",
+            "37% increased Monster Cast Speed",
+            "Players have -12% to all maximum Resistances",
+            "Players are Cursed with Vulnerability",
+        ];
+        for (index, label) in expected.iter().enumerate() {
+            assert_eq!(text_of(&runtime, &format!("stat-{index}-text")).as_deref(), Some(*label), "row {index}");
+        }
+        assert!(runtime.find("stat-7").is_none(), "seven rows");
+        // `w` is a warning: `bg-orange-600`; an unmarked stat has no background of its own.
+        let elements = runtime.elements();
+        assert_eq!(element(&elements, "stat-5-cycle").expect("the warned row").fill, theme::orange(600));
+        assert_eq!(element(&elements, "stat-0-cycle").expect("a plain row").fill, rune::Color::TRANSPARENT);
+        assert_eq!(element(&elements, "stat-5-icon").expect("the warning icon").rect[2], 14.0);
+        assert!(runtime.find("stat-0-icon").is_none(), "no icon without a decision");
+        assert!(runtime.find("stat-5-seen-icon").is_none(), "`showNewStats` is off by default");
+        assert!(runtime.find("map-check-no-mods").is_none());
+        let outdated = text_of(&runtime, "map-check-outdated-text").expect("the wording notice");
+        assert!(outdated.starts_with("Wording of some stats has been changed."), "{outdated}");
+    }
+
+    /// `MapStatButton.vue`: the row cycles its profile's decision and the profile buttons switch
+    /// which character counts.
+    #[test]
+    fn a_map_stat_cycles_its_decision_per_profile() {
+        let mut runtime = runtime("map-check-real-map-rare-t16-max-res");
+        click(&mut runtime, "stat-5-cycle");
+        let maps = &runtime.state.item_check.as_ref().unwrap().maps;
+        assert_eq!(
+            maps.selected_stats.iter().find(|s| s.matcher.ends_with("maximum Resistances")).unwrap().decision,
+            "g--"
+        );
+        settle(&mut runtime);
+        assert_eq!(element(&runtime.elements(), "stat-5-cycle").unwrap().fill, theme::green(700));
+        click(&mut runtime, "stat-5-cycle");
+        assert_eq!(runtime.state.item_check.as_ref().unwrap().maps.selected_stats[0].decision, "s--");
+        settle(&mut runtime);
+        assert_eq!(element(&runtime.elements(), "stat-5-cycle").unwrap().fill, rune::Color::TRANSPARENT);
+
+        // Profile II has no decision for that stat, so the row loses its colour.
+        click(&mut runtime, "map-check-profile-2");
+        assert_eq!(runtime.state.item_check.as_ref().unwrap().maps.profile, 2);
+        settle(&mut runtime);
+        assert_eq!(element(&runtime.elements(), "stat-5-cycle").unwrap().fill, rune::Color::TRANSPARENT);
+        click(&mut runtime, "stat-5-cycle");
+        assert_eq!(runtime.state.item_check.as_ref().unwrap().maps.selected_stats[0].decision, "sd-");
+        settle(&mut runtime);
+        assert_eq!(element(&runtime.elements(), "stat-5-cycle").unwrap().fill, theme::red(700));
+    }
+
+    /// `toggleSeenStatus` only acts while the new-mods icon is on; the eye marks a stat seen.
+    #[test]
+    fn the_eye_marks_a_stat_seen_when_new_stats_are_shown() {
+        let mut runtime = runtime("map-check-real-map-rare-t16-max-res");
+        click(&mut runtime, "stat-0-seen");
+        assert!(
+            runtime.state.item_check.as_ref().unwrap().maps.selected_stats.iter().all(|stat| stat.decision != "s--")
+        );
+
+        // `showNewStats` is a settings toggle, not a widget control: set it, then press a profile
+        // button (the next frame draws the eye) as the settings window would have.
+        runtime.state.item_check.as_mut().unwrap().maps.show_new_stats = true;
+        click(&mut runtime, "map-check-profile-1");
+        assert!(runtime.find("stat-0-seen-icon").is_some(), "the eye for an undecided stat");
+        assert!(runtime.find("stat-5-seen-icon").is_none(), "not for a warned one");
+        click(&mut runtime, "stat-0-seen");
+        let found = runtime
+            .state
+            .item_check
+            .as_ref()
+            .unwrap()
+            .maps
+            .selected_stats
+            .iter()
+            .find(|stat| stat.matcher == "Unique Boss deals #% increased Damage");
+        assert_eq!(found.map(|stat| stat.decision.as_str()), Some("s--"), "a new entry, marked seen");
+        runtime.frame(1.0 / 60.0);
+        assert!(runtime.find("stat-0-seen-icon").is_none());
+    }
+
+    /// A map with a picture shows it (21:9, `object-fit: cover`); a blighted map hides it and
+    /// keeps the item's own name; a map with no mods says so.
+    #[test]
+    fn the_map_check_shows_a_maps_picture_and_its_empty_state() {
+        let valdo = runtime("map-check-real-map-valdo-foil");
+        assert_eq!(text_of(&valdo, "map-check-name").as_deref(), Some("Beach"));
+        let elements = valdo.elements();
+        let picture = element(&elements, "map-check-image-picture").expect("the map's screenshot");
+        assert_eq!(picture.role, "img");
+        assert!(
+            picture.label.as_deref().is_some_and(|url| url.starts_with("https://i.imgur.com/")),
+            "{:?}",
+            picture.label
+        );
+        let frame = element(&elements, "map-check-image").expect("the 21:9 box");
+        assert!((frame.rect[2] / frame.rect[3] - 21.0 / 9.0).abs() < 0.05, "{:?}", frame.rect);
+        assert_eq!(text_of(&valdo, "map-check-no-mods-text").as_deref(), Some("Item has no modifiers."));
+
+        // A blighted area has its own (unrecorded) picture and is named after the item.
+        let blighted = runtime("map-check-real-map-blighted-corrupted");
+        assert_eq!(text_of(&blighted, "map-check-name").as_deref(), Some("Blighted Map"));
+        assert!(blighted.find("map-check-image").is_none());
+        assert_eq!(text_of(&blighted, "stat-0-text").as_deref(), Some("Area is inhabited by ranged monsters"));
+        assert_eq!(text_of(&blighted, "stat-2-text").as_deref(), Some("20% increased Magic Monsters"));
+    }
+
+    /// `ItemInfo.vue`: the item's name, the three buttons a mirrored rare gets, and the empty
+    /// grey panel under them.
+    #[test]
+    fn the_item_check_shows_a_rare_rings_actions() {
+        let mut runtime = runtime("item-check-adv-rare-ring-mirrored-catalyst");
+        assert_eq!(text_of(&runtime, "item-check-name-text").as_deref(), Some("Diamond Ring"));
+        assert_eq!(text_of(&runtime, "item-check-wiki-label").as_deref(), Some("wiki"));
+        assert_eq!(text_of(&runtime, "item-check-poedb-label").as_deref(), Some("poedb"));
+        assert_eq!(text_of(&runtime, "item-check-stash-label").as_deref(), Some("Find in Stash"));
+        assert!(runtime.find("item-check-coe").is_none(), "a mirrored item is not craftable");
+        assert!(runtime.find("item-check-info").is_some(), "the empty gray-800 panel");
+        assert!(runtime.state.item_check.as_ref().unwrap().actions.is_empty(), "nothing runs by itself");
+
+        click(&mut runtime, "item-check-wiki");
+        click(&mut runtime, "item-check-poedb");
+        click(&mut runtime, "item-check-stash");
+        // `fixtures/poe1/adv-rare-ring-mirrored-catalyst/item-check.json`, the reference's own
+        // answer for this item.
+        let fixture = item_check_fixture("poe1", "adv-rare-ring-mirrored-catalyst");
+        assert_eq!(fixture["similar"]["name"].as_str(), Some("CLIENT->MAIN::user-action"));
+        let expected = vec![
+            poe1::item_check::Action::Open(fixture["wiki"].as_str().expect("the wiki URL").to_owned()),
+            poe1::item_check::Action::Open(fixture["poedb"].as_str().expect("the poedb URL").to_owned()),
+            poe1::item_check::Action::Send(wraex_poe1::item_check::UserAction {
+                name: "CLIENT->MAIN::user-action",
+                payload: wraex_poe1::item_check::StashSearch {
+                    action: "stash-search",
+                    text: fixture["similar"]["payload"]["text"].as_str().expect("the stash search").to_owned(),
+                },
+            }),
+        ];
+        assert_eq!(&runtime.state.item_check.as_ref().unwrap().actions, &expected);
+    }
+
+    /// A weapon gets its DPS grid and, being craftable, the CoE button, whose URL carries the
+    /// whole item text (`hotkeyable-actions.ts` `openCoE`).
+    #[test]
+    fn the_item_check_shows_a_weapons_dps_and_opens_craft_of_exile() {
+        let mut runtime = runtime("item-check-adv-rare-sword-cannot-use");
+        assert_eq!(text_of(&runtime, "item-check-name-text").as_deref(), Some("Jewelled Foil"));
+        assert_eq!(text_of(&runtime, "item-check-dps-0-label").as_deref(), Some("Physical DPS: "));
+        assert_eq!(text_of(&runtime, "item-check-dps-0-value").as_deref(), Some("137"));
+        assert_eq!(text_of(&runtime, "item-check-dps-1-value").as_deref(), Some("62"));
+        assert_eq!(text_of(&runtime, "item-check-dps-2-value").as_deref(), Some("199"));
+        assert_eq!(text_of(&runtime, "item-check-coe-label").as_deref(), Some("CoE"));
+
+        click(&mut runtime, "item-check-coe");
+        let fixture = item_check_fixture("poe1", "adv-rare-sword-cannot-use");
+        assert_eq!(
+            runtime.state.item_check.as_ref().unwrap().actions,
+            vec![poe1::item_check::Action::Open(
+                fixture["craftOfExile"].as_str().expect("the Craft of Exile URL").to_owned()
+            )]
+        );
+    }
+
+    /// A unique's dust value with its icon, and a gem, which has neither dust nor a craft page.
+    #[test]
+    fn the_item_check_shows_dust_and_a_gems_actions() {
+        let unique = runtime("item-check-adv-unique-timeless-jewel");
+        assert_eq!(text_of(&unique, "item-check-name-text").as_deref(), Some("Lethal Pride"));
+        assert_eq!(text_of(&unique, "item-check-dust-label").as_deref(), Some("Disenchanting"));
+        assert_eq!(text_of(&unique, "item-check-dust-amount").as_deref(), Some("36,225"));
+        let elements = unique.elements();
+        let icon = element(&elements, "item-check-dust-icon").expect("the dust icon");
+        assert_eq!(icon.label.as_deref(), Some("/images/dust.png"));
+
+        let gem = runtime("item-check-gem-support-empower");
+        assert_eq!(text_of(&gem, "item-check-name-text").as_deref(), Some("Empower Support"));
+        assert!(gem.find("item-check-coe").is_none());
+        assert!(gem.find("item-check-dps").is_none());
+        assert!(gem.find("item-check-dust").is_none());
+    }
+
     // ---- PoE2 (`ref/ee2`'s price check) ------------------------------------------------
 
     /// `Exiled Exchange 2`'s window on the Djinn Barya check: the two chips a trial coin
@@ -1122,7 +1495,7 @@ mod tests {
             }),
             ..Default::default()
         });
-        let runtime = runtime_app(app);
+        let runtime = runtime_app(app, scene_size(None));
         assert_eq!(text_of(&runtime, "bulk-currency-divine-total").as_deref(), Some("9"));
         assert_eq!(text_of(&runtime, "bulk-currency-exalted-total").as_deref(), Some("?"));
         assert_eq!(text_of(&runtime, "bulk-head-exchange-left").as_deref(), Some("div"));
@@ -1144,5 +1517,80 @@ mod tests {
         assert!(!runtime.state.poe2.as_ref().unwrap().open);
         assert!(runtime.state.price_check.open);
         assert!(runtime.find("titlebar").is_none());
+    }
+
+    // ---- PoE2's item check / map check ---------------------------------------------------
+
+    /// EE2's waystone check: every stat (with its type) and the unknown modifier the live trade
+    /// data leaves untranslated, plus the wording notice.
+    #[test]
+    fn the_poe2_map_check_lists_a_waystones_stats() {
+        let runtime = runtime("poe2-map-check-ee2-rare-map");
+        assert_eq!(text_of(&runtime, "map-check-name").as_deref(), Some("Waystone (Tier 14)"));
+        assert_eq!(text_of(&runtime, "map-check-profile-label").as_deref(), Some("Profile"));
+        let expected = [
+            "Area has patches of Shocked Ground",
+            "28% increased Monster Damage",
+            "Monsters fire 2 additional Projectiles",
+            "Monsters have 293% increased Critical Hit Chance",
+        ];
+        for (index, label) in expected.iter().enumerate() {
+            assert_eq!(text_of(&runtime, &format!("stat-{index}-text")).as_deref(), Some(*label), "row {index}");
+        }
+        assert!(runtime.find("stat-4").is_none(), "four prepared stats");
+        // The live trade data renames `#% to Monster Critical Damage Bonus`, so EE2's own page
+        // (which reads the same recorded answer) shows it as an unknown modifier too.
+        let unknown = text_of(&runtime, "map-check-unknown-0-text").expect("the unknown modifier line");
+        assert!(unknown.starts_with("Not recognized modifier \u{2014} "), "{unknown}");
+        assert!(unknown.ends_with("to Monster Critical Damage Bonus"), "{unknown}");
+        assert!(runtime.find("map-check-outdated-text").is_some());
+    }
+
+    /// EE2's item info on a rare with a price note: the DPS grid, CoE and the `$` button, whose
+    /// stash search sends the note and, with `samePricedType: "both"`, the item's name.
+    #[test]
+    fn the_poe2_item_check_searches_a_priced_rare() {
+        let mut runtime = runtime("poe2-item-check-note-rare-bow");
+        assert_eq!(text_of(&runtime, "item-check-name-text").as_deref(), Some("Rider Bow"));
+        assert_eq!(text_of(&runtime, "item-check-dps-0-value").as_deref(), Some("58"));
+        assert_eq!(text_of(&runtime, "item-check-dps-1-value").as_deref(), Some("103"));
+        assert_eq!(text_of(&runtime, "item-check-dps-2-value").as_deref(), Some("161"));
+        assert!(runtime.find("item-check-coe").is_some());
+        assert!(runtime.find("item-check-price").is_some(), "the price note shows the `$` button");
+
+        click(&mut runtime, "item-check-wiki");
+        click(&mut runtime, "item-check-poedb");
+        click(&mut runtime, "item-check-price");
+        click(&mut runtime, "item-check-stash");
+        let actions = &runtime.state.item_check_poe2.as_ref().unwrap().actions;
+        assert_eq!(actions[0], poe2::item_check::Action::Open("https://www.poe2wiki.net/wiki/Rider Bow".to_owned()));
+        assert_eq!(actions[1], poe2::item_check::Action::Open("https://poe2db.tw/us/Bows#ModifiersCalc".to_owned()));
+        match &actions[2] {
+            poe2::item_check::Action::Send(action) => {
+                assert_eq!(action.payload.action, "stash-search");
+                let text = action.payload.text.as_deref().expect("the note and the name");
+                assert_eq!(text, "\"~price 5 exalted\"\"Rider Bow\"");
+            }
+            other => panic!("{other:?}"),
+        }
+        match &actions[3] {
+            poe2::item_check::Action::Send(action) => assert_eq!(action.payload.text.as_deref(), Some("\"Rider Bow\"")),
+            other => panic!("{other:?}"),
+        }
+    }
+
+    /// A unique focus has no craft page and no DPS; an uncut gem has CoE but still no DPS.
+    #[test]
+    fn the_poe2_item_check_hides_what_the_item_lacks() {
+        let unique = runtime("poe2-item-check-ee2-unique-item");
+        assert_eq!(text_of(&unique, "item-check-name-text").as_deref(), Some("The Eternal Spark"));
+        assert!(unique.find("item-check-coe").is_none());
+        assert!(unique.find("item-check-price").is_none());
+        assert!(unique.find("item-check-dps").is_none());
+
+        let gem = runtime("poe2-item-check-ee2-uncut-skill-gem");
+        assert_eq!(text_of(&gem, "item-check-name-text").as_deref(), Some("Uncut Skill Gem (Level 19)"));
+        assert!(gem.find("item-check-coe").is_some());
+        assert!(gem.find("item-check-dps").is_none());
     }
 }

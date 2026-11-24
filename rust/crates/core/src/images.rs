@@ -11,16 +11,30 @@
 /// The host the game's item art lives on (`web.poecdn.com`).
 pub const CDN_HOST: &str = "web.poecdn.com";
 
+/// The host a map's screenshot lives on: the game data's `area.screenshot` /
+/// `map.screenshot` values are imgur links, which upstream's `FullscreenImage.vue`
+/// loads from the page.
+pub const SCREENSHOT_HOST: &str = "i.imgur.com";
+
 /// Whether `url` is an item image on [`CDN_HOST`]: `https://web.poecdn.com/<path>`.
 ///
 /// The app only ever loads images it recognises this way, whatever a data file or a trade
 /// answer claims, so a stray URL cannot make it talk to another host.
 pub fn is_cdn_url(url: &str) -> bool {
+    is_https_url_on(url, CDN_HOST)
+}
+
+/// Whether `url` is a map screenshot on [`SCREENSHOT_HOST`]: `https://i.imgur.com/<path>`.
+pub fn is_map_screenshot_url(url: &str) -> bool {
+    is_https_url_on(url, SCREENSHOT_HOST)
+}
+
+fn is_https_url_on(url: &str, host: &str) -> bool {
     let Some(rest) = url.strip_prefix("https://") else {
         return false;
     };
     match rest.split_once('/') {
-        Some((host, path)) => host == CDN_HOST && !path.is_empty(),
+        Some((found, path)) => found == host && !path.is_empty(),
         None => false,
     }
 }
@@ -39,5 +53,14 @@ mod tests {
         assert!(!is_cdn_url("https://web.poecdn.com.evil.test/x.png"));
         assert!(!is_cdn_url("https://www.pathofexile.com/x.png"));
         assert!(!is_cdn_url("/images/chaos.png"));
+    }
+
+    #[test]
+    fn only_imgur_is_a_map_screenshot() {
+        assert!(is_map_screenshot_url("https://i.imgur.com/qZNQGdD.jpg"));
+        assert!(!is_map_screenshot_url("https://i.imgur.com"), "no path");
+        assert!(!is_map_screenshot_url("https://i.imgur.com.evil.test/x.jpg"));
+        assert!(!is_map_screenshot_url("https://web.poecdn.com/gen/image/x.png"));
+        assert!(!is_map_screenshot_url("http://i.imgur.com/qZNQGdD.jpg"), "https only");
     }
 }

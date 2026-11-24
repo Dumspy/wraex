@@ -1,8 +1,9 @@
 //! The [`Transport`] the app sends requests with: `main/src/proxy.ts` without
 //! the proxy. Every request carries [`USER_AGENT`]; hosts are the trade proxy's
-//! [`ALLOWED_HOSTS`] plus the update check's [`UPDATE_HOST`] and the item art's
-//! [`CDN_HOST`]. Non-2xx answers come back as responses (the trade site's errors
-//! are JSON bodies), and the body is decoded (gzip) like `net.request` does.
+//! [`ALLOWED_HOSTS`] plus the update check's [`UPDATE_HOST`], the item art's
+//! [`CDN_HOST`] and the map screenshots' [`SCREENSHOT_HOST`]. Non-2xx answers come
+//! back as responses (the trade site's errors are JSON bodies), and the body is
+//! decoded (gzip) like `net.request` does.
 //!
 //! Item art is binary, so it goes through [`HttpTransport::get_bytes`] rather than
 //! [`Transport::send`], whose body is the decoded text the trade answers are.
@@ -10,7 +11,7 @@
 use std::time::Duration;
 
 use ureq::Agent;
-use wraex_core::images::CDN_HOST;
+use wraex_core::images::{CDN_HOST, SCREENSHOT_HOST};
 use wraex_core::trade::api::{ALLOWED_HOSTS, HttpRequest, HttpResponse, Method, Transport, USER_AGENT};
 use wraex_core::updates::UPDATE_HOST;
 
@@ -37,9 +38,9 @@ fn host(url: &str) -> Option<&str> {
     Some(rest.split(['/', '?']).next().unwrap_or(rest))
 }
 
-/// [`ALLOWED_HOSTS`] plus [`UPDATE_HOST`] and [`CDN_HOST`].
+/// [`ALLOWED_HOSTS`] plus [`UPDATE_HOST`], [`CDN_HOST`] and [`SCREENSHOT_HOST`].
 fn allowed(host: &str) -> bool {
-    ALLOWED_HOSTS.contains(&host) || host == UPDATE_HOST || host == CDN_HOST
+    ALLOWED_HOSTS.contains(&host) || host == UPDATE_HOST || host == CDN_HOST || host == SCREENSHOT_HOST
 }
 
 impl HttpTransport {
@@ -103,14 +104,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn only_the_proxy_hosts_the_update_host_and_the_cdn_are_reached() {
+    fn only_the_proxy_hosts_the_update_host_the_cdn_and_imgur_are_reached() {
         assert_eq!(host("https://www.pathofexile.com/api/trade/search/x"), Some("www.pathofexile.com"));
         assert_eq!(host("https://poe.ninja?x"), Some("poe.ninja"));
         assert_eq!(host("https://api.github.com/repos/Dumspy/wraex/releases/latest"), Some("api.github.com"));
         assert_eq!(host("https://web.poecdn.com/gen/image/x.png"), Some("web.poecdn.com"));
+        assert_eq!(host("https://i.imgur.com/qZNQGdD.jpg"), Some("i.imgur.com"));
         assert!(allowed("www.pathofexile.com"));
         assert!(allowed(UPDATE_HOST));
         assert!(allowed(CDN_HOST));
+        assert!(allowed(SCREENSHOT_HOST));
         assert!(!allowed("github.com"));
         assert!(!allowed("cdn.poecdn.com"));
         let request =
