@@ -4,3 +4,7 @@ fixtures/** text eol=lf
 tools/golden/corpus/** text eol=lf
 # Recorded images are bytes, not text.
 *.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
