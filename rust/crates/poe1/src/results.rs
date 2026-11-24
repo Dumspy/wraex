@@ -12,6 +12,9 @@ use wraex_core::trade::api::ExchangeResult;
 #[serde(rename_all = "camelCase")]
 pub struct Account {
     pub name: String,
+    /// Missing on a collapsed merchant listing (the trade site sends `online: null`
+    /// and no character name); upstream reads it as `undefined`.
+    #[serde(default)]
     pub last_character_name: String,
     #[serde(default)]
     pub online: Option<Online>,

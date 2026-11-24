@@ -298,8 +298,11 @@ impl<T: Transport, C: Clock> TradeClient<T, C> {
     }
 
     /// `requestTradeResultList`: a search, `POST /api/trade[2]/search/{league}`.
+    ///
+    /// The body is what `JSON.stringify` writes (`js::stringify`): the trade site
+    /// sees the reference's exact bytes, and the screenshot recordings key on them.
     pub fn search(&mut self, body: &impl Serialize, league: &str) -> Result<SearchResult, TradeError> {
-        let body = serde_json::to_string(body).map_err(|e| TradeError::Transport(e.to_string()))?;
+        let body = crate::js::stringify(body);
         let key = serde_json::json!(["search", body, league]).to_string();
         if let Some(cached) = self.cache.get(&key, self.clock.now()) {
             return parse_body(&cached, 200);
@@ -349,7 +352,7 @@ impl<T: Transport, C: Clock> TradeClient<T, C> {
         body: &impl Serialize,
         league: &str,
     ) -> Result<ExchangeResult<L>, TradeError> {
-        let body = serde_json::to_string(body).map_err(|e| TradeError::Transport(e.to_string()))?;
+        let body = crate::js::stringify(body);
         let key = serde_json::json!(["exchange", body, league]).to_string();
         if let Some(cached) = self.cache.get(&key, self.clock.now()) {
             return parse_body(&cached, 200);

@@ -10,14 +10,14 @@ use wraex_poe1::parser::meta::ItemCategory;
 use wraex_poe1::parser::modifiers::StatSource;
 
 use crate::poe1::i18n;
-use crate::poe1::price_check::filters::source_info;
 use crate::poe1::price_check::view::Project;
 use crate::poe1::price_check::{InputField, NumericPart, PriceCheck, StatPath};
 use crate::theme::{self, text as type_};
 use crate::ui::icon;
 
 use super::{
-    ROLL_WIDTH, is_mini, modifier_text, number_field, shows_quality, shows_tag, stat_text, tag_badge, tag_label,
+    FieldStyle, ROLL_WIDTH, is_mini, modifier_text, number_field, shows_quality, shows_tag, stat_text, tag_badge,
+    tag_label,
 };
 
 /// `FilterModifier.vue`.
@@ -46,20 +46,6 @@ pub fn view<S: 'static>(
     let options = roll_options(filter);
 
     let mut main = col().grow(1.0).min_w(0.0);
-    if shows_source_info(check, filter) {
-        let mut sources = col().key(format!("stat-{key}-sources")).w_full().pb(theme::rem(0.25));
-        for (index, source) in filter.stat_sources().enumerate() {
-            sources = sources.child(
-                row()
-                    .key(format!("stat-{key}-source-{index}"))
-                    .pl(theme::rem(1.25))
-                    .py(theme::rem(0.25))
-                    .child(source_info::view(filter, source)),
-            );
-        }
-        main = main.child(sources);
-    }
-
     let mut first = row().key(format!("stat-{key}-line")).w_full().min_w(0.0).items_center();
     let mut label_area = row().grow(1.0).shrink().items_center().mr(theme::rem(0.5));
     label_area = label_area.child(checkbox(filter, path, project));
@@ -145,6 +131,18 @@ pub fn view<S: 'static>(
         .items_center()
         .border_sides([0.0, 0.0, 1.0, 0.0], theme::gray(700))
         .border_layout();
+    // `FilterModifier.vue`'s `.filter:not(:hover) > .mods { display: none }`: the sources
+    // panel is drawn by the block (an anchored overlay) only while this row is hovered.
+    if shows_source_info(check, filter) {
+        root = root.on_hover_change(move |s: &mut S, inside: bool, _tx: &mut rune::Tx| {
+            let check = project(s);
+            if inside {
+                check.source_hover = Some(path);
+            } else if check.source_hover == Some(path) {
+                check.source_hover = None;
+            }
+        });
+    }
     if grouped {
         root = root.pl(theme::rem(1.25));
     }
@@ -349,6 +347,7 @@ fn inputs<S: 'static>(check: &PriceCheck, filter: &StatFilter, item: &Item, path
                 ROLL_WIDTH,
                 "min",
                 [theme::ROUNDED, 0.0, 0.0, theme::ROUNDED],
+                FieldStyle::Roll,
                 project,
             ))
             .child(number_field(
@@ -357,6 +356,7 @@ fn inputs<S: 'static>(check: &PriceCheck, filter: &StatFilter, item: &Item, path
                 ROLL_WIDTH,
                 "max",
                 [0.0, theme::ROUNDED, theme::ROUNDED, 0.0],
+                FieldStyle::Roll,
                 project,
             )),
     )
@@ -389,7 +389,7 @@ fn roll_tags(filter: &StatFilter) -> (bool, bool, bool) {
 }
 
 /// `FilterModifier.vue`'s `showSourceInfo`.
-fn shows_source_info(check: &PriceCheck, filter: &StatFilter) -> bool {
+pub(super) fn shows_source_info(check: &PriceCheck, filter: &StatFilter) -> bool {
     if !check.show_sources || filter.sources.is_empty() || filter.option.is_some() {
         return false;
     }

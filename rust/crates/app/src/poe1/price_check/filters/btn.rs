@@ -8,7 +8,7 @@ use crate::poe1::price_check::{InputField, NumericFilter, NumericPart, PriceChec
 use crate::theme::{self, text as type_};
 use crate::ui::icon;
 
-use super::{LINE, number_field, number_width};
+use super::{FieldStyle, LINE, number_field, number_width};
 
 /// `FilterBtnNumeric.vue`: the label toggles the filter, the min/max fields edit it.
 pub fn numeric<S: 'static>(check: &PriceCheck, which: NumericFilter, project: Project<S>) -> El {
@@ -46,7 +46,7 @@ pub fn numeric<S: 'static>(check: &PriceCheck, which: NumericFilter, project: Pr
                         .color(theme::gray(200)),
                 ),
         )
-        .child(number_field(check, min_field, min_width, "min", corners, project));
+        .child(number_field(check, min_field, min_width, "", corners, FieldStyle::Chip, project));
     if has_max {
         let max_field = InputField::Numeric(which, NumericPart::Max);
         let max_width = number_width(check.input(&max_field.key()).map_or("", |edit| edit.text.as_str()));
@@ -56,14 +56,16 @@ pub fn numeric<S: 'static>(check: &PriceCheck, which: NumericFilter, project: Pr
             max_width,
             "…",
             [0.0, theme::ROUNDED, theme::ROUNDED, 0.0],
+            FieldStyle::Chip,
             project,
         ));
     }
     chip
 }
 
-/// `FilterBtnLogical.vue`: one boolean chip. `collapse` draws the stats chip's chevron,
-/// pointing down while the block is collapsed.
+/// `FilterBtnLogical.vue`: one boolean chip. `collapse` is the stats chip's chevron: the
+/// reference passes `statsVisibility.disabled`, so the chevron is drawn only while the
+/// block is collapsed, pointing down.
 pub fn logical<S: 'static>(
     key: &str,
     label: &str,
@@ -92,8 +94,12 @@ pub fn logical<S: 'static>(
     chip = chip.child(
         text(label).key(format!("btn-{key}-label")).font(type_::SM).color(theme::gray(200)).pl(theme::rem(0.25)),
     );
-    if let Some(collapsed) = collapse {
-        chip = chip.child(icon::chevron(theme::rem(0.5), !collapsed, theme::gray(400)).pl(theme::rem(0.5)));
+    if collapse == Some(true) {
+        chip = chip.child(
+            icon::chevron(theme::rem(0.5), false, theme::gray(400))
+                .key(format!("btn-{key}-chevron"))
+                .pl(theme::rem(0.5)),
+        );
     }
     chip
 }

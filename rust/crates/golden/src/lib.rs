@@ -149,9 +149,31 @@ fn load(game: GameId, slug: String) -> Case {
 /// for the ASCII keys the references use. Numbers keep `serde_json`'s formatting;
 /// the round-trip test over every fixture is what pins it to JavaScript's.
 pub fn canonical(value: &Value) -> String {
-    let mut out = serde_json::to_string_pretty(value).expect("JSON values always serialise");
+    let mut value = value.clone();
+    sort_keys(&mut value);
+    let mut out = serde_json::to_string_pretty(&value).expect("JSON values always serialise");
     out.push('\n');
     out
+}
+
+/// Recursively sorts object keys: the harness writes `JSON.stringify` output with
+/// sorted keys, and `serde_json` keeps insertion order (`preserve_order`) for the
+/// trade request bodies the replay transport hashes.
+fn sort_keys(value: &mut Value) {
+    match value {
+        Value::Object(map) => {
+            map.sort_keys();
+            for value in map.values_mut() {
+                sort_keys(value);
+            }
+        }
+        Value::Array(items) => {
+            for value in items {
+                sort_keys(value);
+            }
+        }
+        _ => {}
+    }
 }
 
 /// Compares `actual` with a fixture value as canonical text. On mismatch, returns

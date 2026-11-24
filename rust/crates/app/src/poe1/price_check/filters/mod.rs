@@ -9,8 +9,12 @@
 //! up yet, so icons are drawn shapes and images are plain placeholder squares.
 //!
 //! Not ported yet: `StatRollSlider.vue` (a unique's second line keeps its min/max fields but no
-//! slider), `UiPopover.vue` (a hidden row's eye shows without its reason tooltip), the
+//! slider), the hidden row's `hiddenReason` tooltip (the eye is drawn, it opens nothing), the
 //! connecting line behind `FilterModifierLinks.vue`'s gem dots, and the anointment oil prices.
+//!
+//! The Mods toggle shows each row's sources as a hover overlay (`FilterModifier.vue`'s
+//! `.mods`): Rune has no `:hover` styling, so the row's `on_hover_change` records the hovered
+//! [`StatPath`] and the block draws the anchored panel below it.
 
 pub mod anointment;
 pub mod btn;
@@ -237,7 +241,40 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
         }
     }
     block = block.child(list).child(controls(check, filtered.len(), stats.len(), project));
-    root.child(block)
+    root = root.child(block);
+    // `FilterModifier.vue`'s `.mods`, which CSS shows only while its row is hovered.
+    if check.show_sources
+        && let Some(path) = check.source_hover
+        && let Some(filter) = check.stat(path)
+        && modifier::shows_source_info(check, filter)
+    {
+        root = root.child(sources_overlay(filter, path));
+    }
+    root
+}
+
+/// `FilterModifier.vue`'s sources overlay: the row's contributing modifiers on a gradient
+/// bar, below the row, 4 pt of `gray-500` along its bottom edge.
+fn sources_overlay(filter: &StatFilter, path: StatPath) -> El {
+    let mut panel = col()
+        .key(format!("stat-{}-sources", path.key()))
+        .w(super::WIDTH - theme::rem(1.0))
+        .px(theme::rem(1.0))
+        .gradient(theme::gray(800), theme::gray(900))
+        .border_sides([0.0, 0.0, 4.0, 0.0], theme::gray(500))
+        .border_layout()
+        .anchored(format!("stat-{}", path.key()), rune::Side::Bottom, rune::Align::Start, 0.0);
+    for (index, source) in filter.stat_sources().enumerate() {
+        panel = panel.child(
+            row()
+                .key(format!("stat-{}-source-{index}", path.key()))
+                .w_full()
+                .pl(theme::rem(1.25))
+                .py(theme::rem(0.25))
+                .child(source_info::view(filter, source)),
+        );
+    }
+    panel
 }
 
 /// One `filter-btn-numeric`, when the preset has that field.
@@ -355,8 +392,9 @@ fn controls<S: 'static>(check: &PriceCheck, filtered: usize, total: usize, proje
             .role("button")
             .label(i18n::t("filters.collapse"))
             .on_press(move |s: &mut S| project(s).toggle_stats_collapsed())
+            // `{{ t('filters.collapse') }} <i class="… pl-1">`: a space, then 4 pt.
             .child(
-                text(i18n::t("filters.collapse"))
+                text(format!("{} ", i18n::t("filters.collapse")))
                     .key("filters-collapse-label")
                     .font(theme::leading_none(type_::SM))
                     .color(theme::gray(400)),
@@ -437,37 +475,88 @@ pub(super) fn slug(label: &str) -> String {
     out.trim_end_matches('-').to_owned()
 }
 
+/// Where a min/max field sits: `FilterBtnNumeric.vue`'s chip input and
+/// `FilterModifier.vue`'s `.rollInput` are styled differently.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum FieldStyle {
+    /// `FilterBtnNumeric.vue`'s `.input`: transparent, so the chip's own background and
+    /// border show through; `text-gray-300`, placeholder `text-gray-400`; gray-700 while
+    /// the caret is in it.
+    Chip,
+    /// `FilterModifier.vue`'s `.rollInput`: a `bg-gray-900` box, placeholder `text-gray-700`
+    /// at 13 pt, gray-500 border while focused.
+    Roll,
+}
+
+impl FieldStyle {
+    fn height(self) -> f32 {
+        match self {
+            // The chip is 22 pt with its 1 pt border, so its content box is 20.
+            FieldStyle::Chip => LINE - 2.0,
+            FieldStyle::Roll => LINE,
+        }
+    }
+
+    fn fill(self, focused: bool) -> Color {
+        match self {
+            FieldStyle::Chip if focused => theme::gray(700),
+            FieldStyle::Chip => Color::TRANSPARENT,
+            FieldStyle::Roll => theme::gray(900),
+        }
+    }
+
+    fn placeholder_color(self) -> Color {
+        match self {
+            FieldStyle::Chip => theme::gray(400),
+            FieldStyle::Roll => theme::gray(700),
+        }
+    }
+
+    fn placeholder_font(self) -> TextStyle {
+        match self {
+            // `.input::placeholder` keeps the field's own 20 pt line, so it centres like the
+            // value does.
+            FieldStyle::Chip => TextStyle::new(14.0, 400.0).lh(20.0),
+            // `.rollInput::placeholder` is 13 pt on the field's 20 pt line.
+            FieldStyle::Roll => TextStyle::new(13.0, 400.0).lh(20.0),
+        }
+    }
+}
+
 /// A chip or row's min/max field: a Rune text field bound to the state, `w-12`/`w-auto`,
-/// `text-center`, `bg-gray-900`, with the placeholder in `text-gray-700`.
+/// `text-center`, styled by its [`FieldStyle`].
 pub(super) fn number_field<S: 'static>(
     check: &PriceCheck,
     field: InputField,
     width: f32,
     placeholder: &str,
     corners: [f32; 4],
+    style: FieldStyle,
     project: Project<S>,
 ) -> El {
     let key = field.key();
     let Some(edit) = check.input(&key) else {
-        return el().key(key).size(width, LINE);
+        return el().key(key).size(width, style.height());
     };
     let edit_key = key.clone();
     let change_key = key.clone();
     let focused = edit.focused;
     text_input(edit, type_::SM)
         .key(key)
-        .size(width, LINE)
+        .size(width, style.height())
         .align(Align::Center)
         .single_line()
         .label(placeholder)
-        .fill(theme::gray(900))
+        .fill(style.fill(focused))
         .corners(corners)
-        // `.rollInput:focus` / `.btn.active`: gray-500 only while the field holds the caret.
+        // `.rollInput:focus` / `.input:hover, .input:focus`: gray-500 only while the field
+        // holds the caret.
         .border(1.0, if focused { theme::gray(500) } else { Color::TRANSPARENT })
         .border_layout()
         .caret(theme::gray(300), theme::gray(400).alpha(0.35))
-        .placeholder(placeholder, theme::gray(700))
-        .placeholder_font(TextStyle::new(13.0, 400.0).lh(13.0))
+        .color(theme::gray(300))
+        .placeholder(placeholder, style.placeholder_color())
+        .placeholder_font(style.placeholder_font())
         .on_edit(move |s: &mut S| project(s).input_mut(&edit_key))
         .on_input_change(move |s: &mut S, _| {
             let text = project(s).input(&change_key).map(|edit| edit.text.clone()).unwrap_or_default();

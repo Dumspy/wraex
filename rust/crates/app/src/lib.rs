@@ -8,12 +8,15 @@
 //! the corpus cases headlessly (`--list-scenes` lists them).
 
 pub mod poe1;
+pub mod replay;
 pub mod theme;
+pub mod trade;
 pub mod ui;
 
 use rune::{AppSpec, Cx, El};
 
 use crate::poe1::price_check::{PriceCheck, WIDTH};
+use crate::trade::Mode;
 
 /// The window's height, in points. Upstream's overlay spans the game's panel; the screenshots
 /// in `tools/golden/screens` are 900 tall, so the port's window is too.
@@ -23,23 +26,42 @@ pub const HEIGHT: f32 = 900.0;
 #[derive(Debug)]
 pub struct App {
     pub price_check: PriceCheck,
+    /// Where trade requests go: HTTPS in a window, recorded answers headless.
+    mode: Mode,
 }
 
 impl App {
     /// The app with its price check opened on `text` (the game's copy key produced it).
     pub fn from_text(text: &str) -> Self {
-        Self { price_check: PriceCheck::from_text(text) }
+        Self::with_mode(text, Mode::for_run())
+    }
+
+    /// [`App::from_text`] with the trade transport chosen.
+    pub fn with_mode(text: &str, mode: Mode) -> Self {
+        Self { price_check: PriceCheck::with_mode(text, mode), mode }
+    }
+
+    /// A corpus case answered from the recorded screenshots, for tests.
+    pub fn replay(slug: &str) -> Self {
+        Self::with_mode(&corpus(slug), Mode::Replay)
     }
 
     /// Reopen the price check on a corpus case: `<slug>.txt`.
     pub fn load(&mut self, slug: &str) {
-        self.price_check = PriceCheck::from_text(&corpus(slug));
+        self.price_check = PriceCheck::with_mode(&corpus(slug), self.mode);
+    }
+
+    /// Reopen the price check and press Search, as the screenshot harness does for the
+    /// cases whose reference window does not search by itself (a rare, a map).
+    pub fn load_and_search(&mut self, slug: &str) {
+        self.load(slug);
+        self.price_check.start_search();
     }
 }
 
 impl Default for App {
     fn default() -> Self {
-        Self::from_text(&corpus(SCENES[0].0))
+        Self::with_mode(&corpus(SCENES[0].0), Mode::for_run())
     }
 }
 
@@ -63,9 +85,10 @@ pub type Scene = (&'static str, fn(&mut App));
 /// row).
 pub const SCENES: &[Scene] = &[
     ("currency-divine-orb", |app| app.load("currency-divine-orb")),
-    ("adv-rare-ring-mirrored-catalyst", |app| app.load("adv-rare-ring-mirrored-catalyst")),
+    // `tools/golden/screens/cases.mjs` marks these two `search: true`.
+    ("adv-rare-ring-mirrored-catalyst", |app| app.load_and_search("adv-rare-ring-mirrored-catalyst")),
     ("adv-unique-timeless-jewel", |app| app.load("adv-unique-timeless-jewel")),
-    ("real-map-rare-t16-max-res", |app| app.load("real-map-rare-t16-max-res")),
+    ("real-map-rare-t16-max-res", |app| app.load_and_search("real-map-rare-t16-max-res")),
     ("error-not-an-item", |app| app.load("error-not-an-item")),
     ("adv-magic-flask-charge-recovery", |app| app.load("adv-magic-flask-charge-recovery")),
     ("jewel-cluster-large", |app| app.load("jewel-cluster-large")),
@@ -86,6 +109,10 @@ pub fn main() {
         scenes: SCENES,
         fonts: theme::FONTS,
         families: theme::FAMILIES,
+        // A live search's answer lands from a worker thread; the waker runs `poll`, which
+        // applies it and redraws. Replay answers land in the handler, so `poll` is idle.
+        setup: Some(|app, waker| app.price_check.set_waker(waker)),
+        poll: Some(|app, _t, _tx| app.price_check.poll()),
         // The window is exactly the widget: the price check is a fixed 28.75 rem wide, so the
         // window must not shrink past it. (As an overlay it won't be resizable at all.)
         min_size: Some((WIDTH, HEIGHT)),
@@ -102,10 +129,11 @@ mod tests {
     use super::*;
 
     fn runtime(slug: &str) -> Runtime<App> {
-        let mut app = App::default();
-        app.load(slug);
+        let app = App::replay(slug);
         let text = TextSystem::new(theme::FONTS, theme::FAMILIES);
         let mut runtime = Runtime::with_text(app, view, (WIDTH, HEIGHT), Env::new(true, 1.0), text);
+        // `AppSpec::poll` in a window; the tests drive frames themselves.
+        runtime.poll = Some(|app: &mut App, _t: f64, _tx: &mut rune::Tx| app.price_check.poll());
         runtime.frame(0.0);
         runtime
     }
@@ -139,7 +167,7 @@ mod tests {
     #[test]
     fn every_scene_has_the_title_bar() {
         // With no `--scene`, the window opens on the first scene.
-        assert!(App::default().price_check.item.is_ok());
+        assert!(App::replay(SCENES[0].0).price_check.item.is_ok());
         for (slug, _) in SCENES {
             let runtime = runtime(slug);
             assert_eq!(text_of(&runtime, "titlebar-title").as_deref(), Some("Standard"), "{slug}");
@@ -148,30 +176,47 @@ mod tests {
         }
     }
 
-    /// A stackable currency: it searches straight away (`filters.preset_bulk`), so the Search
-    /// row is gone and the listings stand in for it.
+    /// A stackable currency: it searches straight away (`filters.preset_bulk`), so the
+    /// exchange table stands in for the Search row.
     #[test]
-    fn the_divine_orb_shows_its_base_type_and_searches_at_once() {
+    fn the_divine_orb_shows_its_exchange_table() {
         let runtime = runtime("currency-divine-orb");
         assert_eq!(text_of(&runtime, "filter-name-text").as_deref(), Some("Divine Orb"));
-        // The item's `?` price row, for everything the trade site has no price for yet.
+        // The item's `?` price row, for everything the trade site has no price yet.
         assert_eq!(text_of(&runtime, "trend-price").as_deref(), Some("?"));
-        assert!(runtime.find("listings-placeholder").is_some());
         assert!(runtime.find("search-label").is_none(), "no Search button once `doSearch`");
+        // `Matched:` counts the offers per currency: chaos was asked for, divine was not.
+        assert_eq!(text_of(&runtime, "trade-matched-label").as_deref(), Some("Matched:"));
+        assert_eq!(text_of(&runtime, "bulk-currency-chaos-total").as_deref(), Some("9"));
+        assert_eq!(text_of(&runtime, "bulk-currency-divine-total").as_deref(), Some("?"));
+        // The recorded exchange answer's first and last offers, cheapest first.
+        assert_eq!(text_of(&runtime, "bulk-0-price").as_deref(), Some("800"));
+        assert_eq!(text_of(&runtime, "bulk-0-exchange-left").as_deref(), Some("800"));
+        assert_eq!(text_of(&runtime, "bulk-0-date").as_deref(), Some("2 hr. ago"));
+        assert_eq!(text_of(&runtime, "bulk-8-price").as_deref(), Some("1800"));
+        assert!(runtime.find("bulk-9-price").is_none(), "nine offers, the rest of the table is empty");
     }
 
-    /// A rare searches by category and waits for the button.
+    /// A rare searches by category and waits for the button; pressing it lands the
+    /// recorded answer's twenty rows.
     #[test]
     fn a_rare_ring_labels_its_category_and_offers_search() {
         let mut runtime = runtime("adv-rare-ring-mirrored-catalyst");
         assert_eq!(text_of(&runtime, "filter-name-text").as_deref(), Some("Category: Ring"));
         assert_eq!(text_of(&runtime, "corrupted-label").as_deref(), Some("Not Corrupted"));
         assert_eq!(text_of(&runtime, "search-label").as_deref(), Some("Search"));
-        assert!(runtime.find("listings-placeholder").is_none());
+        assert!(runtime.find("trade-table").is_none());
 
         click(&mut runtime, "search");
         assert!(runtime.state.price_check.do_search);
-        assert!(runtime.find("listings-placeholder").is_some());
+        assert!(runtime.state.price_check.trade.error.is_none(), "{:?}", runtime.state.price_check.trade.error);
+        assert!(runtime.find("trade-table").is_some());
+        assert_eq!(text_of(&runtime, "trade-matched-total").as_deref(), Some("10000"));
+        assert_eq!(text_of(&runtime, "listing-0-price").as_deref(), Some("1 chaos"));
+        assert_eq!(text_of(&runtime, "listing-0-ilvl").as_deref(), Some("84"));
+        assert_eq!(text_of(&runtime, "listing-0-date").as_deref(), Some("2 days ago"));
+        assert_eq!(text_of(&runtime, "listing-19-price").as_deref(), Some("3 chaos"));
+        assert!(runtime.find("listing-20-price").is_none(), "twenty rows, no more");
     }
 
     /// A unique is searched by name, and has the price row.
@@ -335,14 +380,27 @@ mod tests {
         assert_eq!(text_of(&runtime, "stat-4-text").as_deref(), Some("Quality (Life and Mana Modifiers): 20%"));
     }
 
-    /// The Mods toggle shows `SourceInfo.vue` under a row whose sources deserve it.
+    /// The Mods toggle shows `SourceInfo.vue` as an overlay while a row whose sources
+    /// deserve it is hovered (`FilterModifier.vue`'s `.mods`).
     #[test]
-    fn the_mods_toggle_shows_a_rows_sources() {
+    fn the_mods_toggle_shows_a_rows_sources_on_hover() {
         let mut runtime = runtime("adv-rare-ring-mirrored-catalyst");
         assert!(runtime.find("source-info-mod").is_none());
         click(&mut runtime, "show-sources");
         assert!(runtime.state.price_check.show_sources);
+        assert!(runtime.find("source-info-mod").is_none(), "nothing while the pointer is away");
+
+        let (x, y) = runtime.find("stat-0").expect("the first row");
+        runtime.pointer_move(x, y);
+        runtime.frame(1.0 / 60.0);
+        assert_eq!(runtime.state.price_check.source_hover, Some(crate::poe1::price_check::StatPath::Top(0)));
+        assert!(runtime.find("stat-0-sources").is_some(), "the overlay under the hovered row");
         assert!(runtime.find("source-info-mod").is_some());
+
+        runtime.pointer_move(2.0, 2.0);
+        runtime.frame(1.0 / 60.0);
+        assert!(runtime.state.price_check.source_hover.is_none());
+        assert!(runtime.find("source-info-mod").is_none());
     }
 
     /// `FilterGroup.vue`: the chevron collapses the group and its label's `smartToggle`
@@ -383,6 +441,84 @@ mod tests {
             wraex_poe1::filters::FilterOrGroup::Group(group) => group.meta.disabled,
             wraex_poe1::filters::FilterOrGroup::Stat(_) => panic!("a group"),
         }
+    }
+
+    /// `FiltersBlock.vue` passes `statsVisibility.disabled` as the stats chip's `collapse`,
+    /// and `FilterBtnLogical.vue` only draws an icon when it is truthy.
+    #[test]
+    fn the_stats_chip_draws_its_chevron_only_when_collapsed() {
+        let mut runtime = runtime("real-map-rare-t16-max-res");
+        assert!(runtime.find("btn-stats-chevron").is_none());
+        click(&mut runtime, "btn-stats");
+        assert!(runtime.state.price_check.stats_collapsed);
+        assert!(runtime.find("btn-stats-chevron").is_some());
+        // The Collapse button is inside the block the chip just hid; the chip brings it back.
+        click(&mut runtime, "btn-stats");
+        assert!(!runtime.state.price_check.stats_collapsed);
+        assert!(runtime.find("btn-stats-chevron").is_none());
+    }
+
+    /// `{{ t('filters.collapse') }} <i>`: a space, then the chevron.
+    #[test]
+    fn collapse_keeps_a_space_before_its_chevron() {
+        let runtime = runtime("real-map-rare-t16-max-res");
+        assert_eq!(text_of(&runtime, "filters-collapse-label").as_deref(), Some("Collapse "));
+    }
+
+    /// `FilterBtnNumeric.vue`'s `.input` is transparent: the chip draws the background and
+    /// border, so a value like `Map Tier: 16` is plain text, not a box of its own.
+    #[test]
+    fn a_numeric_chip_draws_its_value_without_a_box() {
+        let runtime = runtime("real-map-rare-t16-max-res");
+        let elements = runtime.elements();
+        let field = element(&elements, "btn-map_tier-min").expect("the map tier field");
+        assert_eq!(field.text.as_deref(), Some("16"));
+        assert_eq!(field.fill, rune::Color::TRANSPARENT, "the chip's background shows through");
+        assert!((field.rect[3] - 20.0).abs() < 0.5, "inside the chip's 22 pt box: {:?}", field.rect);
+        // A stat row's roll keeps `FilterModifier.vue`'s gray-900 box.
+        let roll = element(&elements, "stat-0-max").expect("the first row's max field");
+        assert_eq!(roll.fill, theme::gray(900));
+    }
+
+    /// `FilterBtnNumeric.vue`'s `inputMinBlur`: an emptied min field shows 0 and turns its
+    /// filter off when the caret goes elsewhere.
+    #[test]
+    fn an_empty_min_field_shows_zero_and_turns_off_on_blur() {
+        use crate::poe1::price_check::NumericFilter;
+        let mut runtime = runtime("real-map-rare-t16-max-res");
+        click(&mut runtime, "btn-map_tier-min");
+        // `poll` records the focused field one frame after the click.
+        runtime.frame(1.0 / 60.0);
+        runtime.key(rune::KeyEvent { key: rune::Key::Command('a'), mods: rune::Mods::default() });
+        runtime.frame(1.0 / 60.0);
+        runtime.key(rune::KeyEvent { key: rune::Key::Backspace, mods: rune::Mods::default() });
+        runtime.frame(1.0 / 60.0);
+        assert_eq!(text_of(&runtime, "btn-map_tier-min").as_deref(), Some(""));
+
+        click(&mut runtime, "stat-0-max");
+        runtime.frame(1.0 / 60.0);
+        assert_eq!(text_of(&runtime, "btn-map_tier-min").as_deref(), Some("0"));
+        assert!(runtime.state.price_check.numeric(NumericFilter::MapTier).expect("the chip").disabled);
+    }
+
+    /// `OnlineFilter.vue`'s label opens `OnlineFilterCore.vue` under it.
+    #[test]
+    fn the_online_filter_opens_its_panel() {
+        let mut runtime = runtime("adv-rare-ring-mirrored-catalyst");
+        click(&mut runtime, "search");
+        assert!(runtime.find("online-filter-panel").is_none());
+        assert_eq!(text_of(&runtime, "online-filter-label").as_deref(), Some("Merchant Only"));
+
+        click(&mut runtime, "online-filter");
+        assert!(runtime.state.price_check.online_open);
+        let label = runtime.find("online-filter").expect("the label");
+        let panel = runtime.find("online-filter-panel").expect("the panel");
+        assert!(panel.1 > label.1, "under the label: {panel:?} vs {label:?}");
+        assert_eq!(text_of(&runtime, "online-filter-merchant-label").as_deref(), Some("Merchant Only"));
+        assert_eq!(text_of(&runtime, "online-filter-listed-1day-label").as_deref(), Some("1 Day Ago"));
+
+        click(&mut runtime, "online-filter");
+        assert!(runtime.find("online-filter-panel").is_none());
     }
 
     /// The extra scenes render their filter kinds: a magic flask's explicit rows, a cluster

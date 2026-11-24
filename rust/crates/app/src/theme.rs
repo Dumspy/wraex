@@ -49,6 +49,7 @@ pub fn red(shade: u16) -> Color {
         100 => "#fff5f5",
         400 => "#fc8181",
         500 => "#f56565",
+        600 => "#e53e3e",
         700 => "#c53030",
         _ => panic!("no `red.{shade}` in upstream's tailwind.config.js"),
     })
@@ -64,22 +65,30 @@ pub fn yellow(shade: u16) -> Color {
     })
 }
 
-/// Tailwind's `orange` ramp (a fractured tag).
+/// Tailwind's `orange` ramp (a fractured tag, an afk seller, a warned online filter).
 pub fn orange(shade: u16) -> Color {
     c(match shade {
         300 => "#fbd38d",
         400 => "#f6ad55",
+        500 => "#ed8936",
         _ => panic!("no `orange.{shade}` in upstream's tailwind.config.js"),
     })
 }
 
-/// Tailwind's `blue` ramp (crafted and synthesised tags).
+/// Tailwind's `blue` ramp (crafted and synthesised tags, a listing's quality).
 pub fn blue(shade: u16) -> Color {
     c(match shade {
         100 => "#ebf8ff",
+        400 => "#4299e1",
         600 => "#3182ce",
         _ => panic!("no `blue.{shade}` in upstream's tailwind.config.js"),
     })
+}
+
+/// `.table-stripped tbody tr:nth-child(odd)` in `web/App.vue`: #353f52, between
+/// `gray-800` and `gray-700`.
+pub fn table_stripe() -> Color {
+    c("#353f52")
 }
 
 /// Tailwind's `indigo` ramp (an enchant tag).

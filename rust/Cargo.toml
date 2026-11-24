@@ -23,7 +23,13 @@ rune = { git = "https://github.com/anomalyco/rune", rev = "209e119c27724f0f6449d
 serde = { version = "1", features = ["derive"] }
 # float_roundtrip: parse floats exactly. The default fast path can land on a
 # neighbouring double, so fixture values (JavaScript numbers) would not round-trip.
-serde_json = { version = "1", features = ["float_roundtrip"] }
+# preserve_order: JavaScript objects iterate in insertion order, and a trade request
+# body hashed for the screenshot recordings must serialise in the order upstream
+# built it. `wraex_golden::canonical` sorts keys itself, so fixtures are unaffected.
+serde_json = { version = "1", features = ["float_roundtrip", "preserve_order"] }
+# The screenshot harness names a recorded request after the first 8 hex digits of
+# its body's SHA-1 (`tools/golden/screens/host.mjs`); replay must build the same name.
+sha1 = "0.10"
 thiserror = "2"
 # Insertion-ordered maps: JavaScript objects iterate in insertion order, and the
 # ported logic walks data maps (`trade.ids`, ...) in that order.

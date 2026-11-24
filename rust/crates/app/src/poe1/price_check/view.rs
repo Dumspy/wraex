@@ -1,9 +1,10 @@
-//! `PriceCheckWindow.vue` and `CheckedItem.vue` in Rune: the window's frame and the top of
-//! the item it shows.
+//! `PriceCheckWindow.vue` and `CheckedItem.vue` in Rune: the window's frame and the item it
+//! shows.
 //!
-//! The trend and the listings are placeholders (PLAN phase 5's next steps); what is ported is
-//! the window itself, the title bar, the item header (`FilterName.vue`), the filters block
-//! (`FiltersBlock.vue`) and the Search row.
+//! Ported: the window itself, the title bar, the item header (`FilterName.vue`), the filters
+//! block (`FiltersBlock.vue`), the Search row and the listings (`TradeListing.vue`,
+//! `TradeBulk.vue`, `OnlineFilter.vue`, `TradeLinks.vue`). The trend row is still a `?`
+//! placeholder until poe.ninja prices are wired up.
 
 use rune::{Cx, El, col, el, row, text};
 use wraex_game::ParseError;
@@ -12,6 +13,7 @@ use wraex_poe1::filters::{ItemFilters, SearchFilter};
 use wraex_poe1::parser::item::Item;
 
 use crate::poe1::i18n;
+use crate::poe1::price_check::trade;
 use crate::poe1::price_check::{PriceCheck, WIDTH};
 use crate::theme::{self, text as type_};
 use crate::ui::{self, icon};
@@ -76,7 +78,8 @@ fn body<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
                 checked = checked.child(trend);
             }
             checked = checked.child(crate::poe1::price_check::filters::view(check, project));
-            checked = checked.child(if check.do_search { listings_placeholder() } else { search_row(project) });
+            checked =
+                checked.child(if check.do_search { listings(check, project) } else { search_row(check, project) });
             body = body.child(checked);
         }
     }
@@ -198,28 +201,21 @@ fn icon_placeholder(key: &str) -> El {
     el().key(key).size(theme::rem(2.0), theme::rem(2.0)).radius(theme::ROUNDED).fill(theme::gray(700))
 }
 
-/// `TradeBulk.vue` / `TradeListing.vue`: not ported yet.
-fn listings_placeholder() -> El {
-    placeholder("listings-placeholder", "Listings", theme::rem(6.0))
-}
-
-/// A dashed box where a part of the window isn't ported yet.
-fn placeholder(key: &str, label: &str, height: f32) -> El {
-    col()
-        .key(key)
-        .w_full()
-        .h(height)
-        .border(1.0, theme::gray(700))
-        .border_dash(4.0, 4.0)
-        .border_layout()
-        .radius(theme::ROUNDED)
-        .mb(theme::rem(0.5))
-        .center()
-        .child(text(label).key(format!("{key}-text")).font(type_::SM).color(theme::gray(600)))
+/// `TradeListing.vue` / `TradeBulk.vue`, and `OnlineFilter.vue`'s panel while open.
+fn listings<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
+    if check.item().is_none() {
+        return el().key("trade-area");
+    }
+    let api = check.trade.api(check);
+    let mut area = col().key("trade-area").w_full().min_h(0.0).child(trade::view(check, project));
+    if check.online_open {
+        area = area.child(trade::online::panel(check, api, project));
+    }
+    area
 }
 
 /// `CheckedItem.vue`'s `!doSearch` row: the Search button, and the trade-site link.
-fn search_row<S: 'static>(project: Project<S>) -> El {
+fn search_row<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
     row()
         .key("search-row")
         .w_full()
@@ -234,12 +230,6 @@ fn search_row<S: 'static>(project: Project<S>) -> El {
                     .on_press(move |s: &mut S| project(s).start_search()),
             ),
         )
-        // `TradeLinks.vue`: upstream opens the trade site with this. Building the link needs the
-        // trade request (`createTradeRequest`), so the button is drawn but inert for now.
-        .child(
-            ui::button("trade-link", "Trade")
-                .items_center()
-                .gap(theme::rem(0.25))
-                .child(icon::external_link(theme::rem(0.75), theme::gray(400))),
-        )
+        // `TradeLinks.vue`: the query URL until a search has an id.
+        .child(trade::links::trade_links(check, project))
 }

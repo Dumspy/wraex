@@ -78,16 +78,20 @@ pub struct Sort {
     pub price: &'static str,
 }
 
+/// The query object, in the order `createTradeRequest` builds it: `status`, `stats`
+/// and `filters` come from the object literal, and `name`/`type` are assigned after
+/// them. `serde_json` keeps that order (`preserve_order`), so a request body is
+/// byte-identical to the reference's `JSON.stringify` output.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Query {
     pub status: Status,
+    pub stats: Vec<StatGroup>,
+    /// Built path by path, as `dot-prop` does.
+    pub filters: Map<String, Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<NameQuery>,
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub kind: Option<NameQuery>,
-    pub stats: Vec<StatGroup>,
-    /// Built path by path, as `dot-prop` does.
-    pub filters: Map<String, Value>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -118,9 +122,11 @@ pub struct StatGroup {
     pub kind: &'static str,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<Range>,
-    pub filters: Vec<StatQuery>,
+    /// Upstream writes `{ type, value, disabled, filters }` for `count` groups and
+    /// `{ type, disabled, filters }` for `not` groups; one field order covers both.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disabled: Option<bool>,
+    pub filters: Vec<StatQuery>,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Serialize)]

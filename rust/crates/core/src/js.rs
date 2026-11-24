@@ -230,6 +230,15 @@ pub fn json_string(text: &str) -> String {
     serde_json::to_string(text).expect("strings serialise")
 }
 
+/// `JSON.stringify(value)`: compact JSON, keys in the order the value built them,
+/// numbers as JavaScript writes them (integral doubles without a fraction). This is
+/// what the trade site receives from the reference, and the screenshot recordings
+/// key on a hash of those exact bytes.
+pub fn stringify<T: Serialize + ?Sized>(value: &T) -> String {
+    let value = json_value(value);
+    serde_json::to_string(&value).expect("JSON values always serialise")
+}
+
 /// Serialises `value` and rewrites its numbers the way `JSON.stringify` writes
 /// them: integral doubles without a fraction (`9`, not `9.0`), `-0` as `0`,
 /// non-finite as `null`.

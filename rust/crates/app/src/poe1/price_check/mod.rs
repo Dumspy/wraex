@@ -1,16 +1,17 @@
 //! `web/price-check/PriceCheckWindow.vue`: the PoE1 price-check window.
 //!
-//! The window frame, the item header (`FilterName.vue`) and the filters block
-//! (`FiltersBlock.vue`) are ported. The trend and the listings are still placeholders
-//! (PLAN phase 5's next steps).
+//! The window frame, the item header (`FilterName.vue`), the filters block
+//! (`FiltersBlock.vue`) and the listings ([`trade`]) are ported. The trend row is still a
+//! placeholder: it needs poe.ninja prices, which [`wraex_poe1::prices`] has but no wiring.
 
 pub mod filters;
+pub mod trade;
 pub mod view;
 
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
-use rune::TextEdit;
+use rune::{TextEdit, Waker};
 use wraex_core::Rarity;
 use wraex_game::ParseError;
 use wraex_poe1::data::{Data, reference_source};
@@ -22,6 +23,9 @@ use wraex_poe1::filters::{
 use wraex_poe1::parser::item::Item;
 use wraex_poe1::parser::meta::ItemCategory;
 use wraex_poe1::parser::parse_clipboard;
+use wraex_poe1::trade::{Api, api_to_satisfy_search, create_bulk_request, create_trade_request};
+
+use crate::trade::Mode;
 
 /// `#price-window`'s width (`PriceCheckWindow.vue`): `width: 28.75rem`.
 pub const WIDTH: f32 = 28.75 * crate::theme::REM;
@@ -29,6 +33,12 @@ pub const WIDTH: f32 = 28.75 * crate::theme::REM;
 /// The league a fresh install prices in. Upstream fills in `leagues.selectedId` from the trade
 /// site's league list; the reference screenshots (`tools/golden/screens`) select Standard.
 pub const DEFAULT_LEAGUE: &str = "Standard";
+
+/// `getTradeEndpoint()` for `en` (`poeWebApi`).
+pub const TRADE_HOST: &str = "www.pathofexile.com";
+
+/// `PriceCheckWidget.apiLatencySeconds`: every rate-limit window is that much longer.
+pub const API_LATENCY_SECONDS: f64 = 2.0;
 
 /// What the title bar shows before a league is selected (`PriceCheckWindow.vue`'s `title`).
 pub const APP_NAME: &str = "Awakened PoE Trade";
@@ -89,11 +99,29 @@ pub struct PriceCheck {
     /// preset by [`PriceCheck::sync_inputs`]; the field's text is the source of truth while a
     /// person types, and each change is parsed back into the filters.
     pub inputs: HashMap<String, TextEdit>,
+    /// The listings under the filters block (`TradeListing.vue`/`TradeBulk.vue`).
+    pub trade: trade::Trade,
+    /// `OnlineFilter.vue`'s popover is open.
+    pub online_open: bool,
+    /// `FilterModifier.vue`'s `.mods`: the row whose sources are shown while the pointer is
+    /// on it (only with the Mods toggle on).
+    pub source_hover: Option<StatPath>,
+    /// The field that held the caret at the last poll. Rune has no focus-lost callback on a
+    /// text field, so `poll` compares `TextEdit::focused` from frame to frame and runs the
+    /// reference's blur rule for the field that lost it.
+    focused_field: Option<String>,
 }
 
 impl PriceCheck {
-    /// Parse `text` and build the presets the window opens with.
+    /// Parse `text` and build the presets the window opens with, searching over HTTPS when
+    /// the reference would search by itself.
     pub fn from_text(text: &str) -> Self {
+        Self::with_mode(text, Mode::for_run())
+    }
+
+    /// [`PriceCheck::from_text`] with the transport chosen: recorded answers for a scene,
+    /// test or headless render.
+    pub fn with_mode(text: &str, mode: Mode) -> Self {
         let data = data();
         let item = parse_clipboard(data, text).map_err(|fail| ParseError::Rejected { key: fail.0.into() });
         let presets = item.as_ref().ok().map(|item| create_presets(data, item, &preset_options()));
@@ -112,9 +140,160 @@ impl PriceCheck {
             show_hidden: false,
             show_sources: false,
             inputs: HashMap::new(),
+            trade: trade::Trade::new(mode, crate::trade::shared(mode, TRADE_HOST, API_LATENCY_SECONDS)),
+            online_open: false,
+            source_hover: None,
+            focused_field: None,
         };
         check.sync_inputs();
+        // `CheckedItem.vue`'s `watch(..., { immediate: true })` starts the search the
+        // reference makes by itself (a unique, bulk currency, ...).
+        if check.do_search {
+            check.search();
+        }
         check
+    }
+
+    /// The waker a landed live answer uses to run `AppSpec::poll`.
+    pub fn set_waker(&self, waker: Waker) {
+        self.trade.set_waker(waker);
+    }
+
+    /// `AppSpec::poll`: applies a landed search answer and the blur rule; true when
+    /// something changed.
+    pub fn poll(&mut self) -> bool {
+        let landed = self.trade.poll();
+        let blurred = self.sync_input_focus();
+        landed || blurred
+    }
+
+    /// `FilterBtnNumeric.vue`'s `@blur="inputMinBlur"`: Rune keeps `TextEdit::focused` for
+    /// us but has no per-field blur handler, so a change of the focused field between polls
+    /// is the blur.
+    fn sync_input_focus(&mut self) -> bool {
+        let focused = self.inputs.iter().find(|(_, edit)| edit.focused).map(|(key, _)| key.clone());
+        let previous = std::mem::replace(&mut self.focused_field, focused.clone());
+        match previous {
+            Some(previous) if focused.as_deref() != Some(previous.as_str()) => self.blur_input(&previous),
+            _ => false,
+        }
+    }
+
+    /// An empty or non-numeric chip min field shows `0` and turns its filter off.
+    fn blur_input(&mut self, key: &str) -> bool {
+        let Some(which) =
+            NumericFilter::ALL.into_iter().find(|which| InputField::Numeric(*which, NumericPart::Min).key() == key)
+        else {
+            return false;
+        };
+        if self.input(key).is_none_or(|edit| parse_number(&edit.text).is_some()) {
+            return false;
+        }
+        if let Some(edit) = self.inputs.get_mut(key) {
+            edit.replace_text("0");
+        }
+        if let Some(filter) = self.numeric_mut(which) {
+            filter.value = 0.0;
+            filter.disabled = true;
+        }
+        true
+    }
+
+    /// The current search's trade-site URL (`makeTradeLink`).
+    pub fn trade_link(&self) -> Option<String> {
+        trade::links::link(self)
+    }
+
+    /// `CheckedItem.vue`'s `@reset`: hide the results, back to the Search row.
+    pub fn reset_search(&mut self) {
+        self.do_search = false;
+    }
+
+    /// `OnlineFilter.vue`'s popover.
+    pub fn toggle_online_filter(&mut self) {
+        self.online_open = !self.online_open;
+    }
+
+    /// `OnlineFilterCore.vue`'s offline toggle: it also opens the listed range up.
+    pub fn set_offline(&mut self, offline: bool) {
+        if let Some(filters) = self.item_filters_mut() {
+            filters.trade.offline = offline;
+            filters.trade.listed = if offline { Some("2months".to_owned()) } else { None };
+        }
+        self.after_trade_change();
+    }
+
+    /// `OnlineFilterCore.vue`'s listed-time radio.
+    pub fn set_listed(&mut self, listed: Option<&str>) {
+        if let Some(filters) = self.item_filters_mut() {
+            filters.trade.listed = listed.map(str::to_owned);
+        }
+        self.after_trade_change();
+    }
+
+    /// `OnlineFilterCore.vue`'s merchant-only toggle.
+    pub fn toggle_merchant_only(&mut self) {
+        if let Some(filters) = self.item_filters_mut() {
+            filters.trade.merchant_only = !filters.trade.merchant_only;
+        }
+        self.after_trade_change();
+    }
+
+    /// `OnlineFilterCore.vue`'s in-league toggle (bulk).
+    pub fn toggle_online_in_league(&mut self) {
+        if let Some(filters) = self.item_filters_mut() {
+            filters.trade.online_in_league = !filters.trade.online_in_league;
+        }
+        self.after_trade_change();
+    }
+
+    /// `OnlineFilterCore.vue`'s currency radio.
+    pub fn set_currency(&mut self, currency: Option<&str>) {
+        if let Some(filters) = self.item_filters_mut() {
+            filters.trade.currency = currency.map(str::to_owned);
+        }
+        self.after_trade_change();
+    }
+
+    /// `TradeBulk.vue`'s currency buttons.
+    pub fn select_currency(&mut self, which: trade::BulkCurrency) {
+        self.trade.select_currency(which);
+    }
+
+    /// A trade filter changed: `CheckedItem.vue` re-runs the search
+    /// (`watch([item, JSON.stringify(itemFilters.trade)])`).
+    fn after_trade_change(&mut self) {
+        self.do_search = true;
+        self.search();
+    }
+
+    /// `CheckedItem.vue`'s `execSearch`: build the request and hand it to the trade state.
+    fn search(&mut self) {
+        let Some(item) = self.item() else { return };
+        let Some(filters) = self.item_filters().cloned() else { return };
+        let stats = self.item_stats().to_vec();
+        let league = filters.trade.league.clone();
+        let query = match api_to_satisfy_search(item, &stats) {
+            Api::Trade => {
+                self.trade.lazy_request = None;
+                let request = create_trade_request(data(), &filters, &stats).map_err(|error| error.to_string());
+                trade::Query::Trade { league, request, collapse_merchant: filters.trade.collapse_merchant }
+            }
+            Api::Bulk => {
+                // `TradeBulk.vue`'s optimistic search: at league start many players set the
+                // wrong price, so chaos and divine are asked for separately.
+                let have = match item.info().ref_name.as_str() {
+                    "Chaos Orb" => vec!["divine".to_owned()],
+                    "Divine Orb" => vec!["chaos".to_owned()],
+                    _ => vec!["divine".to_owned(), "chaos".to_owned()],
+                };
+                let request = create_bulk_request(&filters, item, have);
+                self.trade.lazy_request =
+                    Some(trade::LazyBulk { league: league.clone(), filters: filters.clone(), item: item.clone() });
+                trade::Query::Bulk { league, request }
+            }
+        };
+        self.trade.begin(query);
     }
 
     /// `PriceCheckWindow.vue`'s `title`: `leagues.selectedId.value || 'Awakened PoE Trade'`.
@@ -159,9 +338,11 @@ impl PriceCheck {
         }
     }
 
-    /// The Search button: `doSearch = true`, which fetches the listings instead.
+    /// The Search button (and Enter in a field): `doSearch = true`, which fetches the
+    /// listings instead, and the search itself.
     pub fn start_search(&mut self) {
         self.do_search = true;
+        self.search();
     }
 
     /// The close button (`closePriceCheck`): upstream hides the widget.
@@ -178,6 +359,9 @@ impl PriceCheck {
         }
         presets.active = id.to_owned();
         self.sync_inputs();
+        // `CheckedItem.vue`'s watch on the active preset: the results belong to the old
+        // one, so the Search button comes back.
+        self.do_search = false;
     }
 
     /// `statsVisibility.disabled = !statsVisibility.disabled` (Collapse, and the chip with

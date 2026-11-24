@@ -41,6 +41,30 @@ pub fn arrow_right(w: f32, h: f32, color: Color) -> El {
     canvas(shape).size(w, h).a11y_hidden()
 }
 
+/// `fas fa-history` (`OnlineFilter.vue`): a ring with a hand turned back to the left.
+pub fn history(size: f32, color: Color) -> El {
+    let ring = el().size(size, size).radius(size / 2.0).border(STROKE, color);
+    let hand = {
+        let s = size;
+        let shape = Shape::new()
+            .line([s * 0.5, s * 0.5], [s * 0.28, s * 0.5], STROKE, LineCap::Round, color)
+            .line([s * 0.28, s * 0.5], [s * 0.4, s * 0.34], STROKE, LineCap::Round, color)
+            .line([s * 0.28, s * 0.5], [s * 0.4, s * 0.66], STROKE, LineCap::Round, color);
+        canvas(shape).size(size, size).a11y_hidden()
+    };
+    row().a11y_hidden().child(ring).child(hand)
+}
+
+/// `far fa-circle` / `fas fa-check-circle` (`UiRadio.vue`), `size` points square. The
+/// checked one is a filled dot in its ring, close enough to the icon font's check.
+pub fn radio(size: f32, checked: bool, color: Color) -> El {
+    let mut ring = el().size(size, size).radius(size / 2.0).border(1.25, color).center();
+    if checked {
+        ring = ring.child(el().size(size * 0.45, size * 0.45).radius(size * 0.25).fill(color));
+    }
+    ring.a11y_hidden()
+}
+
 /// `fas fa-external-link-alt`, `size` points square: a box a link opens out of.
 pub fn external_link(size: f32, color: Color) -> El {
     let s = size - STROKE;
