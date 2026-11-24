@@ -1,10 +1,12 @@
 //! `web/price-check/PriceCheckWindow.vue`: the PoE1 price-check window.
 //!
-//! The window frame, the item header (`FilterName.vue`), the filters block
-//! (`FiltersBlock.vue`) and the listings ([`trade`]) are ported. The trend row is still a
-//! placeholder: it needs poe.ninja prices, which [`wraex_poe1::prices`] has but no wiring.
+//! The window frame, the title bar and its exchange-rate popover, the item header
+//! (`FilterName.vue`), the trend row (`PriceTrend.vue`), the filters block
+//! (`FiltersBlock.vue`) and the listings ([`trade`]) are ported. The prices those rows
+//! read come from poe.ninja through [`prices`] (`usePoeninja`).
 
 pub mod filters;
+pub mod prices;
 pub mod trade;
 pub mod view;
 
@@ -23,7 +25,9 @@ use wraex_poe1::filters::{
 use wraex_poe1::parser::item::Item;
 use wraex_poe1::parser::meta::ItemCategory;
 use wraex_poe1::parser::parse_clipboard;
+use wraex_poe1::prices::NinjaPrice;
 use wraex_poe1::trade::{Api, api_to_satisfy_search, create_bulk_request, create_trade_request};
+use wraex_poe1::trends::DetailsId;
 
 use crate::trade::Mode;
 
@@ -85,6 +89,9 @@ pub struct PriceCheck {
     pub do_search: bool,
     /// `leagues.selectedId`: the title bar shows it.
     pub league: String,
+    /// poe.ninja prices for the league (`usePoeninja`): the exchange rate, the trend
+    /// rows, the market ratio and the stack values all read them.
+    pub prices: prices::PriceList,
     /// The widget is shown. Closing it hides the window, as `wm.hide` does upstream.
     pub open: bool,
     /// `FiltersBlock.vue`'s `statsVisibility.disabled`: Collapse hides the stat rows (the chip
@@ -103,6 +110,8 @@ pub struct PriceCheck {
     pub trade: trade::Trade,
     /// `OnlineFilter.vue`'s popover is open.
     pub online_open: bool,
+    /// `PriceCheckWindow.vue`'s exchange-rate popover (`UiPopover` on the `⇄ 891` button).
+    pub exchange_open: bool,
     /// `FilterModifier.vue`'s `.mods`: the row whose sources are shown while the pointer is
     /// on it (only with the Mods toggle on).
     pub source_hover: Option<StatPath>,
@@ -135,6 +144,7 @@ impl PriceCheck {
             presets,
             do_search,
             league: DEFAULT_LEAGUE.to_owned(),
+            prices: prices::PriceList::new(mode),
             open: true,
             stats_collapsed: false,
             show_hidden: false,
@@ -142,10 +152,17 @@ impl PriceCheck {
             inputs: HashMap::new(),
             trade: trade::Trade::new(mode, crate::trade::shared(mode, TRADE_HOST, API_LATENCY_SECONDS)),
             online_open: false,
+            exchange_open: false,
             source_hover: None,
             focused_field: None,
         };
         check.sync_inputs();
+        // `PriceCheckWindow.vue`'s `if (item.value.isOk()) queuePricesFetch()`: the trend
+        // row, the title bar's rate and the market ratio all need the prices.
+        if check.item.is_ok() {
+            let league = check.league.clone();
+            check.prices.queue(&league, false);
+        }
         // `CheckedItem.vue`'s `watch(..., { immediate: true })` starts the search the
         // reference makes by itself (a unique, bulk currency, ...).
         if check.do_search {
@@ -156,15 +173,17 @@ impl PriceCheck {
 
     /// The waker a landed live answer uses to run `AppSpec::poll`.
     pub fn set_waker(&self, waker: Waker) {
-        self.trade.set_waker(waker);
+        self.trade.set_waker(waker.clone());
+        self.prices.set_waker(waker);
     }
 
     /// `AppSpec::poll`: applies a landed search answer and the blur rule; true when
     /// something changed.
     pub fn poll(&mut self) -> bool {
         let landed = self.trade.poll();
+        let priced = self.prices.poll();
         let blurred = self.sync_input_focus();
-        landed || blurred
+        landed || priced || blurred
     }
 
     /// `FilterBtnNumeric.vue`'s `@blur="inputMinBlur"`: Rune keeps `TextEdit::focused` for
@@ -212,6 +231,27 @@ impl PriceCheck {
     /// `OnlineFilter.vue`'s popover.
     pub fn toggle_online_filter(&mut self) {
         self.online_open = !self.online_open;
+    }
+
+    /// `PriceCheckWindow.vue`'s `stableOrbCost`: `Math.round(xchgRate)`, or none before
+    /// the prices arrived.
+    pub fn stable_orb_cost(&self) -> Option<f64> {
+        self.prices.xchg_rate().map(|rate| (rate + 0.5).floor())
+    }
+
+    /// The `⇄ 891` button's popover.
+    pub fn toggle_exchange(&mut self) {
+        self.exchange_open = !self.exchange_open;
+    }
+
+    /// `getDetailsId(item)`: what the item is on poe.ninja.
+    pub fn details_id(&self) -> Option<DetailsId> {
+        wraex_poe1::trends::get_details_id(self.item()?)
+    }
+
+    /// `findPriceByQuery(getDetailsId(item))`: the item's entry in the price blob.
+    pub fn price_info(&self) -> Option<NinjaPrice> {
+        self.prices.find_price(&self.details_id()?.query())
     }
 
     /// `OnlineFilterCore.vue`'s offline toggle: it also opens the listed range up.

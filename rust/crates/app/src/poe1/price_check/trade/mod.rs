@@ -12,6 +12,7 @@
 pub mod bulk;
 pub mod links;
 pub mod listing;
+pub mod market_ratio;
 pub mod online;
 
 use std::sync::Arc;
@@ -393,11 +394,16 @@ pub(super) fn error_box<S: 'static>(error: &str, project: Project<S>) -> El {
 }
 
 /// `CheckedItem.vue`'s `trade-listing`/`trade-bulk`: the table for the active API.
+///
+/// `TradeListing.vue` and `TradeBulk.vue` put their table in a `layout-column
+/// overflow-y-auto`, so a long table scrolls under the boxes below it instead of pushing
+/// them out of the window.
 pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
-    match check.trade.api(check) {
+    let content = match check.trade.api(check) {
         Api::Trade => listing::view(check, project),
         Api::Bulk => bulk::view(check, project),
-    }
+    };
+    rune::col().key("trade-scroll").w_full().min_h(0.0).scroll(rune::ScrollSpec { stick_bottom: false }).child(content)
 }
 
 #[cfg(test)]

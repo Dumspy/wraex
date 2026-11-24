@@ -14,6 +14,7 @@ pub mod parser;
 pub mod prices;
 pub mod results;
 pub mod trade;
+pub mod trends;
 
 use wraex_core::GameId;
 use wraex_game::{Game, ParseError};

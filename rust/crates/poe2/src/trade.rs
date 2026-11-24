@@ -66,16 +66,20 @@ pub struct Sort {
     pub price: &'static str,
 }
 
+/// The query, in the order `createTradeRequest` writes its keys: the literal
+/// starts with `status`, `stats` and `filters`, and `name`/`type` are assigned
+/// afterwards, so they come last. `JSON.stringify` keeps that order, and the
+/// recorded searches are keyed on it.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Query {
     pub status: Status,
+    pub stats: Vec<StatGroup>,
+    /// Built path by path, as `dot-prop` does.
+    pub filters: Map<String, Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<NameQuery>,
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub kind: Option<NameQuery>,
-    pub stats: Vec<StatGroup>,
-    /// Built path by path, as `dot-prop` does.
-    pub filters: Map<String, Value>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -102,15 +106,52 @@ fn name_to_query(name: &str, filters: &ItemFilters) -> NameQuery {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+/// A `stats[]` entry. Its keys are written in the order upstream's object
+/// literal has them (`type`, `value`, `disabled`, `filters`); the Mageblood
+/// helper assigns `value` after `filters`, hence [`StatGroup::value_after_filters`].
+#[derive(Debug, Clone, PartialEq)]
 pub struct StatGroup {
-    #[serde(rename = "type")]
     pub kind: &'static str,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<Range>,
-    pub filters: Vec<StatQuery>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub disabled: Option<bool>,
+    pub filters: Vec<StatQuery>,
+    /// `buildMageBloodNotFilter` sets `value` on an object that already has
+    /// `filters`, so that one group is `type`, `filters`, `value`.
+    pub value_after_filters: bool,
+}
+
+impl Serialize for StatGroup {
+    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeMap;
+
+        let value = self.value.map(|range| {
+            let mut out = Map::new();
+            if let Some(min) = range.min {
+                out.insert("min".to_owned(), json!(min));
+            }
+            if let Some(max) = range.max {
+                out.insert("max".to_owned(), json!(max));
+            }
+            Value::Object(out)
+        });
+        let mut map = s.serialize_map(None)?;
+        map.serialize_entry("type", self.kind)?;
+        if !self.value_after_filters
+            && let Some(value) = &value
+        {
+            map.serialize_entry("value", value)?;
+        }
+        if let Some(disabled) = self.disabled {
+            map.serialize_entry("disabled", &disabled)?;
+        }
+        map.serialize_entry("filters", &self.filters)?;
+        if self.value_after_filters
+            && let Some(value) = &value
+        {
+            map.serialize_entry("value", value)?;
+        }
+        map.end()
+    }
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Serialize)]
@@ -131,7 +172,7 @@ pub struct StatQuery {
 }
 
 fn group(kind: &'static str, value: Option<Range>, filters: Vec<StatQuery>, disabled: Option<bool>) -> StatGroup {
-    StatGroup { kind, value, filters, disabled }
+    StatGroup { kind, value, disabled, filters, value_after_filters: false }
 }
 
 /// `stat.tradeId`, which throws when used while `undefined`.
@@ -536,7 +577,9 @@ fn build_mage_blood_not_filter(
     legacies: &[&StatFilter],
     q_and: &mut Vec<StatQuery>,
 ) -> R<Option<StatGroup>> {
+    // `countFilter` is `{ type, filters }` and `value` is assigned afterwards.
     let mut count_filter = group("count", None, Vec::new(), None);
+    count_filter.value_after_filters = true;
     let push_all = |q_and: &mut Vec<StatQuery>, roll: Option<(f64, Option<f64>)>| -> R<()> {
         for s in legacies {
             q_and.push(build_filter_with_value(s, roll)?);

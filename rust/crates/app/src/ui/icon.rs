@@ -115,6 +115,36 @@ pub fn chevron(size: f32, up: bool, color: Color) -> El {
     canvas(shape).size(size, size).a11y_hidden()
 }
 
+/// `fas fa-exchange-alt` (`PriceCheckWindow.vue`'s `⇄`): two horizontal arrows.
+pub fn exchange(size: f32, color: Color) -> El {
+    let s = size - STROKE;
+    let (top, bottom) = (s * 0.3, s * 0.7);
+    let head = s * 0.24;
+    let shape = Shape::new()
+        .line([0.0, top], [s, top], STROKE, LineCap::Butt, color)
+        .line([s - head, top - head], [s, top], STROKE, LineCap::Butt, color)
+        .line([s - head, top + head], [s, top], STROKE, LineCap::Butt, color)
+        .line([s, bottom], [0.0, bottom], STROKE, LineCap::Butt, color)
+        .line([head, bottom - head], [0.0, bottom], STROKE, LineCap::Butt, color)
+        .line([head, bottom + head], [0.0, bottom], STROKE, LineCap::Butt, color);
+    canvas(shape).size(size, size).a11y_hidden()
+}
+
+/// `fas fa-angle-double-up` / `fa-angle-double-down` (`PriceTrend.vue`'s forecast): two
+/// chevrons stacked.
+pub fn chevrons(size: f32, up: bool, color: Color) -> El {
+    let s = size - STROKE;
+    let wing = s * 0.28;
+    // `up` draws two `^`, `down` two `v`.
+    let (first, second, tip) = if up { (s * 0.46, s * 0.86, -wing) } else { (s * 0.14, s * 0.54, wing) };
+    let shape = Shape::new()
+        .line([0.0, first], [s / 2.0, first + tip], STROKE, LineCap::Round, color)
+        .line([s / 2.0, first + tip], [s, first], STROKE, LineCap::Round, color)
+        .line([0.0, second], [s / 2.0, second + tip], STROKE, LineCap::Round, color)
+        .line([s / 2.0, second + tip], [s, second], STROKE, LineCap::Round, color);
+    canvas(shape).size(size, size).a11y_hidden()
+}
+
 /// `fas fa-chevron-right` (`size` points square), the collapsed group's marker.
 pub fn chevron_right(size: f32, color: Color) -> El {
     let s = size - STROKE;
@@ -172,6 +202,25 @@ pub fn warning(size: f32, color: Color) -> El {
 /// resolve yet (`<img>` tags in the reference).
 pub fn image_placeholder(size: f32) -> El {
     el().size(size, size).radius(theme::ROUNDED).fill(theme::gray(700)).a11y_hidden()
+}
+
+/// `/images/augments/empty-socket.png` (`FiltersBlock.vue`'s item-editor button): an empty
+/// socket's ring, which the reference draws as art the port does not ship.
+pub fn socket(size: f32, color: Color) -> El {
+    el().size(size, size).radius(size / 2.0).border(2.0, color).a11y_hidden()
+}
+
+/// `fas fa-question` (`TradeItem.vue`): a listing with no note.
+pub fn question(size: f32, color: Color) -> El {
+    let s = size - STROKE;
+    let shape = Shape::new()
+        // The hook of the `?`.
+        .line([s * 0.25, s * 0.3], [s * 0.5, s * 0.1], STROKE, LineCap::Round, color)
+        .line([s * 0.5, s * 0.1], [s * 0.75, s * 0.3], STROKE, LineCap::Round, color)
+        .line([s * 0.75, s * 0.3], [s * 0.5, s * 0.6], STROKE, LineCap::Round, color)
+        .line([s * 0.5, s * 0.6], [s * 0.5, s * 0.75], STROKE, LineCap::Round, color)
+        .line([s * 0.5, s * 0.92], [s * 0.5, s * 0.94], 2.0, LineCap::Round, color);
+    canvas(shape).size(size, size).a11y_hidden()
 }
 
 /// `text` in the tag style: a 12 pt uppercase-ish label (the app's small-caps face renders it

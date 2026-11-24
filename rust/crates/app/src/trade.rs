@@ -99,18 +99,69 @@ pub type Client = TradeClient<TargetTransport, TargetClock>;
 /// every rate-limit window (`PasswordCheckWidget.apiLatencySeconds`).
 pub fn client(mode: Mode, host: &str, latency_seconds: f64) -> Client {
     debug_assert!(ALLOWED_HOSTS.contains(&host), "{host} is not one of upstream's proxy hosts");
-    let (transport, clock) = match mode {
-        Mode::Live => (TargetTransport::Live(HttpTransport::default()), TargetClock::Live(LiveClock)),
-        Mode::Replay => (TargetTransport::Replay(ReplayTransport::poe1()), TargetClock::Replay(ReplayClock::poe1())),
-    };
+    let (transport, clock) = target(mode);
     TradeClient::new(transport, clock, host, TradeSite::Trade, latency_seconds)
+}
+
+/// Which game's trade site a client talks to, and which game's recordings it replays.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Site {
+    /// `/api/trade`, `corpus/screens/poe1/proxy`.
+    Poe1,
+    /// `/api/trade2`, `corpus/screens/poe2/proxy`.
+    Poe2,
+}
+
+/// The transport and clock a run sends with: HTTPS and the wall clock in a window, the
+/// recorded answers and the frozen recording time headless. The price data comes over
+/// the same [transport](Transport), so a scene replays poe.ninja too.
+pub fn target(mode: Mode) -> (TargetTransport, TargetClock) {
+    target_for(mode, Site::Poe1)
+}
+
+/// [`target`] for one game's trade site and recordings.
+pub fn target_for(mode: Mode, site: Site) -> (TargetTransport, TargetClock) {
+    match (mode, site) {
+        (Mode::Live, _) => (TargetTransport::Live(HttpTransport::default()), TargetClock::Live(LiveClock)),
+        (Mode::Replay, Site::Poe1) => {
+            (TargetTransport::Replay(ReplayTransport::poe1()), TargetClock::Replay(ReplayClock::poe1()))
+        }
+        (Mode::Replay, Site::Poe2) => {
+            (TargetTransport::Replay(ReplayTransport::poe2()), TargetClock::Replay(ReplayClock::poe2()))
+        }
+    }
+}
+
+/// A client that sends to one game's trade site.
+pub fn client_for(mode: Mode, host: &str, site: Site, latency_seconds: f64) -> Client {
+    debug_assert!(ALLOWED_HOSTS.contains(&host), "{host} is not one of upstream's proxy hosts");
+    let (transport, clock) = target_for(mode, site);
+    let trade_site = match site {
+        Site::Poe1 => TradeSite::Trade,
+        Site::Poe2 => TradeSite::Trade2,
+    };
+    TradeClient::new(transport, clock, host, trade_site, latency_seconds)
 }
 
 /// A client behind the lock a worker and the UI thread take turns on.
 pub type Shared = Arc<Mutex<Client>>;
 
 pub fn shared(mode: Mode, host: &str, latency_seconds: f64) -> Shared {
-    Arc::new(Mutex::new(client(mode, host, latency_seconds)))
+    shared_site(mode, host, Site::Poe1, latency_seconds)
+}
+
+/// [`shared`] for one game's trade site.
+pub fn shared_site(mode: Mode, host: &str, site: Site, latency_seconds: f64) -> Shared {
+    Arc::new(Mutex::new(client_for(mode, host, site, latency_seconds)))
+}
+
+/// Milliseconds since the epoch, as a window's requests see them: the wall clock in a
+/// window, the frozen recording time in a replay.
+pub fn now(mode: Mode) -> u64 {
+    match mode {
+        Mode::Live => LiveClock.now(),
+        Mode::Replay => ReplayClock::poe2().now(),
+    }
 }
 
 /// Locks a [`Shared`] client, ignoring a panic in another search (the state is plain

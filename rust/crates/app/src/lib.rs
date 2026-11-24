@@ -1,19 +1,22 @@
 //! The Wraex desktop app.
 //!
-//! A Rune shell over the core crates. So far it has one window, PoE1's price check
-//! ([`poe1::price_check`]); the title bar and the widgets it is built from live in [`ui`] and
-//! [`theme`], shared with the PoE2 windows that come later.
+//! A Rune shell over the core crates. It has one window per game: PoE1's price check
+//! ([`poe1::price_check`]) and PoE2's ([`poe2::price_check`]); the title bar and the widgets
+//! they are built from live in [`ui`] and [`theme`], and both windows trade through [`trade`]
+//! and the recorded answers of [`replay`].
 //!
 //! `cargo run -p wraex-app` opens the window; `-- --snap out.png --scene <slug>` renders one of
 //! the corpus cases headlessly (`--list-scenes` lists them).
 
 pub mod poe1;
+pub mod poe2;
 pub mod replay;
 pub mod theme;
 pub mod trade;
 pub mod ui;
 
-use rune::{AppSpec, Cx, El};
+use rune::{AppSpec, Cx, El, Waker};
+use wraex_core::GameId;
 
 use crate::poe1::price_check::{PriceCheck, WIDTH};
 use crate::trade::Mode;
@@ -22,12 +25,33 @@ use crate::trade::Mode;
 /// in `tools/golden/screens` are 900 tall, so the port's window is too.
 pub const HEIGHT: f32 = 900.0;
 
-/// The app's state. One window so far; each new widget adds a field here.
-#[derive(Debug)]
+/// The app's state: which game's window is open, and both games' price checks.
+///
+/// A window built for PoE1 has no PoE2 state until a PoE2 scene asks for one (its data and
+/// prices are not free), and vice versa: the other game's field is idle but keeps its state,
+/// as Rune keeps a window's state across closes.
 pub struct App {
+    /// Which game's price check the window shows.
+    pub game: GameId,
+    /// PoE1's window, as before.
     pub price_check: PriceCheck,
+    /// PoE2's window, once a PoE2 scene opened it.
+    pub poe2: Option<poe2::price_check::PriceCheck>,
     /// Where trade requests go: HTTPS in a window, recorded answers headless.
     mode: Mode,
+    /// The waker `AppSpec::poll` gave the app, handed to whichever window is built later.
+    waker: Option<Waker>,
+}
+
+impl std::fmt::Debug for App {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("App")
+            .field("game", &self.game)
+            .field("price_check", &self.price_check)
+            .field("poe2", &self.poe2)
+            .field("mode", &self.mode)
+            .finish()
+    }
 }
 
 impl App {
@@ -38,7 +62,22 @@ impl App {
 
     /// [`App::from_text`] with the trade transport chosen.
     pub fn with_mode(text: &str, mode: Mode) -> Self {
-        Self { price_check: PriceCheck::with_mode(text, mode), mode }
+        Self { game: GameId::Poe1, price_check: PriceCheck::with_mode(text, mode), poe2: None, mode, waker: None }
+    }
+
+    /// The app with PoE2's window opened on `text`.
+    pub fn with_mode_poe2(text: &str, mode: Mode) -> Self {
+        let app = Self {
+            game: GameId::Poe2,
+            // PoE1's window is not shown in this scene; it still parses the text so that a
+            // later switch back has something to show.
+            price_check: PriceCheck::with_mode(text, mode),
+            poe2: Some(poe2::price_check::PriceCheck::with_mode(text, mode)),
+            mode,
+            waker: None,
+        };
+        app.attach_waker();
+        app
     }
 
     /// A corpus case answered from the recorded screenshots, for tests.
@@ -46,8 +85,9 @@ impl App {
         Self::with_mode(&corpus(slug), Mode::Replay)
     }
 
-    /// Reopen the price check on a corpus case: `<slug>.txt`.
+    /// Reopen the PoE1 price check on a corpus case: `<slug>.txt`.
     pub fn load(&mut self, slug: &str) {
+        self.game = GameId::Poe1;
         self.price_check = PriceCheck::with_mode(&corpus(slug), self.mode);
     }
 
@@ -57,6 +97,43 @@ impl App {
         self.load(slug);
         self.price_check.start_search();
     }
+
+    /// Reopen PoE2's price check on a PoE2 corpus case: `tools/golden/corpus/poe2/<slug>.txt`.
+    pub fn load_poe2(&mut self, slug: &str) {
+        self.game = GameId::Poe2;
+        self.poe2 = Some(poe2::price_check::PriceCheck::with_mode(&corpus_poe2(slug), self.mode));
+        self.attach_waker();
+    }
+
+    /// [`App::load_poe2`] and press Search, for the cases the reference does not search by
+    /// itself (a rare bow, a waystone).
+    pub fn load_and_search_poe2(&mut self, slug: &str) {
+        self.load_poe2(slug);
+        if let Some(check) = &mut self.poe2 {
+            check.start_search();
+        }
+    }
+
+    /// The waker the window's trade and price answers use to run `poll`.
+    pub fn set_waker(&mut self, waker: Waker) {
+        self.price_check.set_waker(waker.clone());
+        self.waker = Some(waker);
+        self.attach_waker();
+    }
+
+    /// Hand the stored waker to the PoE2 window, when one exists.
+    fn attach_waker(&self) {
+        if let (Some(waker), Some(check)) = (&self.waker, &self.poe2) {
+            check.set_waker(waker.clone());
+        }
+    }
+
+    /// `AppSpec::poll`: a landed answer in whichever window is open; true when one applied.
+    pub fn poll(&mut self) -> bool {
+        let poe1 = self.price_check.poll();
+        let poe2 = self.poe2.as_mut().is_some_and(|check| check.poll());
+        poe1 || poe2
+    }
 }
 
 impl Default for App {
@@ -65,14 +142,24 @@ impl Default for App {
     }
 }
 
-/// `App` → the price check, for the window's handlers.
+/// `App` → the PoE1 price check, for the window's handlers.
 fn project(app: &mut App) -> &mut PriceCheck {
     &mut app.price_check
 }
 
-/// The app's single window, for now.
+/// `App` → the PoE2 price check, for the window's handlers.
+fn project_poe2(app: &mut App) -> &mut poe2::price_check::PriceCheck {
+    app.poe2.as_mut().expect("a PoE2 scene built the window")
+}
+
+/// The app's window: whichever game is open.
 pub fn view(app: &App, cx: &mut Cx<App>) -> El {
-    poe1::price_check::view::view(&app.price_check, cx, project)
+    match app.game {
+        GameId::Poe2 => {
+            poe2::price_check::view::view(app.poe2.as_ref().expect("a PoE2 scene built the window"), cx, project_poe2)
+        }
+        _ => poe1::price_check::view::view(&app.price_check, cx, project),
+    }
 }
 
 /// A named state for `--scene` (`AppSpec::scenes`).
@@ -93,6 +180,13 @@ pub const SCENES: &[Scene] = &[
     ("adv-magic-flask-charge-recovery", |app| app.load("adv-magic-flask-charge-recovery")),
     ("jewel-cluster-large", |app| app.load("jewel-cluster-large")),
     ("adv-rare-amulet-anointed", |app| app.load("adv-rare-amulet-anointed")),
+    // PoE2 (`tools/golden/screens/cases.mjs`'s `poe2` cases), plus its not-an-item text.
+    ("poe2-currency-djinn-barya", |app| app.load_poe2("currency-djinn-barya")),
+    // The harness clicks Search for these two, as it does for PoE1's rare and map.
+    ("poe2-ee2-rare-item", |app| app.load_and_search_poe2("ee2-rare-item")),
+    ("poe2-ee2-unique-item", |app| app.load_poe2("ee2-unique-item")),
+    ("poe2-ee2-rare-map", |app| app.load_and_search_poe2("ee2-rare-map")),
+    ("poe2-error-not-an-item", |app| app.load_poe2("error-not-an-item")),
 ];
 
 /// The fixture corpus a scene loads (`tools/golden/corpus/poe1/<slug>.txt`).
@@ -103,6 +197,14 @@ pub fn corpus(slug: &str) -> String {
 
 const CORPUS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../tools/golden/corpus/poe1");
 
+/// The PoE2 fixture corpus (`tools/golden/corpus/poe2/<slug>.txt`).
+pub fn corpus_poe2(slug: &str) -> String {
+    let path = format!("{CORPUS_POE2}/{slug}.txt");
+    std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {path}: {e}"))
+}
+
+const CORPUS_POE2: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../tools/golden/corpus/poe2");
+
 /// Runs the app: a window, or a headless render with Rune's `--snap`/`--scene`/`--tree`.
 pub fn main() {
     rune::run(AppSpec::<App> {
@@ -111,8 +213,8 @@ pub fn main() {
         families: theme::FAMILIES,
         // A live search's answer lands from a worker thread; the waker runs `poll`, which
         // applies it and redraws. Replay answers land in the handler, so `poll` is idle.
-        setup: Some(|app, waker| app.price_check.set_waker(waker)),
-        poll: Some(|app, _t, _tx| app.price_check.poll()),
+        setup: Some(|app, waker| app.set_waker(waker)),
+        poll: Some(|app, _t, _tx| app.poll()),
         // The window is exactly the widget: the price check is a fixed 28.75 rem wide, so the
         // window must not shrink past it. (As an overlay it won't be resizable at all.)
         min_size: Some((WIDTH, HEIGHT)),
@@ -129,11 +231,19 @@ mod tests {
     use super::*;
 
     fn runtime(slug: &str) -> Runtime<App> {
-        let app = App::replay(slug);
+        // A `poe2-` scene opens PoE2's window on its own corpus (`poe2-ee2-rare-item` →
+        // `corpus/poe2/ee2-rare-item.txt`); everything else is PoE1's, as before.
+        match slug.strip_prefix("poe2-") {
+            Some(case) => runtime_app(App::with_mode_poe2(&corpus_poe2(case), Mode::Replay)),
+            None => runtime_app(App::replay(slug)),
+        }
+    }
+
+    fn runtime_app(app: App) -> Runtime<App> {
         let text = TextSystem::new(theme::FONTS, theme::FAMILIES);
         let mut runtime = Runtime::with_text(app, view, (WIDTH, HEIGHT), Env::new(true, 1.0), text);
         // `AppSpec::poll` in a window; the tests drive frames themselves.
-        runtime.poll = Some(|app: &mut App, _t: f64, _tx: &mut rune::Tx| app.price_check.poll());
+        runtime.poll = Some(|app: &mut App, _t: f64, _tx: &mut rune::Tx| app.poll());
         runtime.frame(0.0);
         runtime
     }
@@ -182,8 +292,12 @@ mod tests {
     fn the_divine_orb_shows_its_exchange_table() {
         let runtime = runtime("currency-divine-orb");
         assert_eq!(text_of(&runtime, "filter-name-text").as_deref(), Some("Divine Orb"));
-        // The item's `?` price row, for everything the trade site has no price yet.
-        assert_eq!(text_of(&runtime, "trend-price").as_deref(), Some("?"));
+        // `PriceTrend.vue`: poe.ninja's 890.9 chaos, rounded for the row, with its graph.
+        assert_eq!(text_of(&runtime, "trend-price").as_deref(), Some("891"));
+        assert_eq!(text_of(&runtime, "trend-times").as_deref(), Some(" \u{d7}"));
+        assert_eq!(text_of(&runtime, "trend-change").as_deref(), Some("6\u{2009}%"));
+        assert_eq!(text_of(&runtime, "trend-change-label").as_deref(), Some("Last 7 days"));
+        assert!(runtime.find("trend-sparkline-chart").is_some(), "the 7-day sparkline");
         assert!(runtime.find("search-label").is_none(), "no Search button once `doSearch`");
         // `Matched:` counts the offers per currency: chaos was asked for, divine was not.
         assert_eq!(text_of(&runtime, "trade-matched-label").as_deref(), Some("Matched:"));
@@ -193,8 +307,32 @@ mod tests {
         assert_eq!(text_of(&runtime, "bulk-0-price").as_deref(), Some("800"));
         assert_eq!(text_of(&runtime, "bulk-0-exchange-left").as_deref(), Some("800"));
         assert_eq!(text_of(&runtime, "bulk-0-date").as_deref(), Some("2 hr. ago"));
-        assert_eq!(text_of(&runtime, "bulk-8-price").as_deref(), Some("1800"));
-        assert!(runtime.find("bulk-9-price").is_none(), "nine offers, the rest of the table is empty");
+        // `useMarketRatioFinder`'s row sits at its price: 890.9 chaos per divine, between
+        // the 880 and 900 chaos offers.
+        assert_eq!(text_of(&runtime, "bulk-3-market-ratio").as_deref(), Some("Market Ratio"));
+        assert_eq!(text_of(&runtime, "bulk-3-price").as_deref(), Some("890.9"));
+        assert_eq!(text_of(&runtime, "bulk-3-exchange-left").as_deref(), Some("890.9"));
+        assert_eq!(text_of(&runtime, "bulk-4-price").as_deref(), Some("900"));
+        assert_eq!(text_of(&runtime, "bulk-9-price").as_deref(), Some("1800"));
+        assert!(runtime.find("bulk-10-price").is_none(), "the rest of the table is empty");
+        // `StackValue.vue`: the stack on screen, and one full stack of twenty.
+        assert_eq!(text_of(&runtime, "stack-value-have-price").as_deref(), Some("2673 chaos"));
+        assert_eq!(text_of(&runtime, "stack-value-stack-price").as_deref(), Some("17818 chaos"));
+    }
+
+    /// `PriceCheckWindow.vue`'s exchange-rate button, and the popover it opens.
+    #[test]
+    fn the_title_bar_shows_the_exchange_rate() {
+        let mut runtime = runtime("currency-divine-orb");
+        assert_eq!(text_of(&runtime, "titlebar-exchange-rate").as_deref(), Some("891"));
+        assert!(runtime.find("exchange-popover").is_none(), "closed until pressed");
+        click(&mut runtime, "titlebar-exchange");
+        assert!(runtime.state.price_check.exchange_open);
+        assert_eq!(text_of(&runtime, "exchange-price").as_deref(), Some("891"));
+        assert_eq!(text_of(&runtime, "exchange-1").as_deref(), Some("0.1 div \u{21d2} 89 c"));
+        assert_eq!(text_of(&runtime, "exchange-9").as_deref(), Some("0.9 div \u{21d2} 802 c"));
+        click(&mut runtime, "titlebar-exchange");
+        assert!(runtime.find("exchange-popover").is_none());
     }
 
     /// A rare searches by category and waits for the button; pressing it lands the
@@ -219,14 +357,36 @@ mod tests {
         assert!(runtime.find("listing-20-price").is_none(), "twenty rows, no more");
     }
 
-    /// A unique is searched by name, and has the price row.
+    /// A unique is searched by name, and has the price row and the disenchant value.
     #[test]
     fn the_timeless_jewel_shows_its_unique_name() {
         let runtime = runtime("adv-unique-timeless-jewel");
         assert_eq!(text_of(&runtime, "filter-name-text").as_deref(), Some("Lethal Pride"));
         assert_eq!(text_of(&runtime, "corrupted-label").as_deref(), Some("Not Corrupted"));
-        assert_eq!(text_of(&runtime, "trend-price").as_deref(), Some("?"));
+        assert_eq!(text_of(&runtime, "trend-price").as_deref(), Some("99"));
+        assert_eq!(text_of(&runtime, "trend-change").as_deref(), Some("24\u{2009}%"));
+        assert_eq!(text_of(&runtime, "dust-value-amount").as_deref(), Some("36,225"));
         assert!(runtime.find("search-label").is_none());
+    }
+
+    /// `PriceTrend.vue`'s "Base item" slot: a rare ring prices by its base type.
+    #[test]
+    fn the_rare_ring_shows_its_base_types_trend() {
+        let runtime = runtime("adv-rare-ring-mirrored-catalyst");
+        assert_eq!(text_of(&runtime, "trend-base-item").as_deref(), Some("Base item"));
+        assert_eq!(text_of(&runtime, "trend-price").as_deref(), Some("3"));
+        // A flat graph: `±` and no chevrons.
+        assert_eq!(text_of(&runtime, "trend-change-sign").as_deref(), Some("\u{b1}"));
+        assert_eq!(text_of(&runtime, "trend-change").as_deref(), Some("0\u{2009}%"));
+    }
+
+    /// A map poe.ninja has no entry for, and which is craftable: it gets no trend row at
+    /// all (`showFallback` is false).
+    #[test]
+    fn a_map_has_no_trend_row() {
+        let runtime = runtime("real-map-rare-t16-max-res");
+        assert!(runtime.find("trend-price").is_none());
+        assert!(runtime.find("trend").is_none());
     }
 
     /// A map has no name to search by: `FilterName` shows its category.
@@ -536,5 +696,241 @@ mod tests {
         let amulet = runtime("adv-rare-amulet-anointed");
         assert_eq!(text_of(&amulet, "stat-0-text").as_deref(), Some("77% total Elemental Resistance"));
         assert!(amulet.find("show-hidden").is_some());
+    }
+
+    // ---- PoE2 (`ref/ee2`'s price check) ------------------------------------------------
+
+    /// `Exiled Exchange 2`'s window on the Djinn Barya check: the two chips a trial coin
+    /// gets, no stats chip, and the trade table the reference searched by itself.
+    #[test]
+    fn the_poe2_trial_coin_shows_its_area_level_and_listings() {
+        let runtime = runtime("poe2-currency-djinn-barya");
+        assert_eq!(text_of(&runtime, "filter-name-text").as_deref(), Some("Djinn Barya"));
+        assert!(runtime.find("corrupted").is_none(), "a currency has no corruption state");
+        // `awardedAscendancyPoints` and `areaLevel`, in `FiltersBlock.vue`'s chip order.
+        assert_eq!(text_of(&runtime, "btn-ascendancy_points-label").as_deref(), Some("Points:"));
+        assert_eq!(text_of(&runtime, "btn-ascendancy_points-min").as_deref(), Some("3"));
+        assert_eq!(text_of(&runtime, "btn-area_level-label").as_deref(), Some("Area Level:"));
+        assert_eq!(text_of(&runtime, "btn-area_level-min").as_deref(), Some("65"));
+        assert!(runtime.find("btn-stats").is_none(), "it has no stat filters");
+        // The header's poe.ninja rate, `Math.round(xchgRate)`.
+        assert_eq!(text_of(&runtime, "titlebar-rate-text").as_deref(), Some("132"));
+        // `listingType: 'securable'` is the reference's `Instant`.
+        assert_eq!(text_of(&runtime, "online-filter-label").as_deref(), Some("Instant"));
+        assert!(runtime.find("search-label").is_none(), "it searches as soon as it opens");
+        assert_eq!(text_of(&runtime, "trade-matched-total").as_deref(), Some("26"));
+        // `TradeItem.vue`: the price, with the normalised price in divines where it differs.
+        assert_eq!(text_of(&runtime, "listing-0-price").as_deref(), Some("3 divine"));
+        assert_eq!(text_of(&runtime, "listing-1-price").as_deref(), Some("11111 exalted (84 div)"));
+        assert_eq!(text_of(&runtime, "listing-15-price").as_deref(), Some("1 mirror (9970 div)"));
+        assert_eq!(text_of(&runtime, "listing-19-price").as_deref(), Some("30000 divine"));
+        assert!(runtime.find("listing-20-price").is_none(), "twenty rows, no more");
+    }
+
+    /// EE2's rare item: its two presets, the flat stat rows with their tags and tiers, the
+    /// elemental-dps buttons, and the twenty listings the Search button fetches.
+    #[test]
+    fn the_poe2_rare_bow_lists_its_stat_rows() {
+        let mut runtime = runtime("poe2-ee2-rare-item");
+        assert_eq!(text_of(&runtime, "filter-name-text").as_deref(), Some("Category: Bow"));
+        assert_eq!(text_of(&runtime, "corrupted-label").as_deref(), Some("Not Corrupted"));
+        assert_eq!(text_of(&runtime, "btn-item_level-label").as_deref(), Some("Item Level:"));
+        assert_eq!(text_of(&runtime, "btn-item_level-min").as_deref(), Some("80"));
+        assert_eq!(text_of(&runtime, "btn-stats-label").as_deref(), Some("2 of 8, stats"));
+        // `createPresets` returns the pseudo and the base-item preset for it.
+        assert_eq!(text_of(&runtime, "preset-0-label").as_deref(), Some("Pseudo"));
+        assert_eq!(text_of(&runtime, "preset-1-label").as_deref(), Some("Base item"));
+
+        // `FilterModifier.vue`: the label carries the roll, in `ItemModifierText`'s face.
+        let rows = [
+            (0, "Total DPS: 173"),
+            (1, "Elemental DPS: 103"),
+            (3, "Attacks per Second: 1.2"),
+            (4, "Critical Hit Chance: 5%"),
+            (5, "57 to Accuracy Rating"),
+            (6, "15% increased Light Radius"),
+        ];
+        for (index, label) in rows {
+            assert_eq!(text_of(&runtime, &format!("stat-{index}-text")).as_deref(), Some(label), "row {index}");
+        }
+        assert!(runtime.find("stat-2").is_none(), "Physical DPS is hidden by default");
+        assert!(runtime.find("stat-7").is_none(), "so is the empty-modifier count");
+        // The q20 notice and the roll fields (`wc` 155, `max` empty).
+        assert_eq!(text_of(&runtime, "stat-0-quality-text").as_deref(), Some("Q 20%"));
+        assert_eq!(text_of(&runtime, "stat-0-min").as_deref(), Some("155"));
+        // The max field is empty and shows `FilterModifier.vue`'s placeholder.
+        assert_eq!(text_of(&runtime, "stat-0-max").as_deref(), Some(""));
+        assert_eq!(runtime.find("stat-0-max").map(|_| "max"), Some("max"));
+        // `FilterModifierTiers.vue` and the tag beside it.
+        assert_eq!(text_of(&runtime, "tier-tier-1-0-text").as_deref(), Some("Tier 1"));
+        assert_eq!(text_of(&runtime, "tag-explicit-text").as_deref(), Some("explicit"));
+        // `FilterModifierItemIsElemental.vue`: the "Any" option is the one the presets chose.
+        assert!(runtime.find("stat-1-element-lightning").is_some());
+
+        // A rare waits for the Search button; pressing it lands the recorded answer.
+        assert_eq!(text_of(&runtime, "search-label").as_deref(), Some("Search"));
+        assert!(runtime.find("trade-table").is_none());
+        click(&mut runtime, "search");
+        assert!(
+            runtime.state.poe2.as_ref().unwrap().trade.error.is_none(),
+            "{:?}",
+            runtime.state.poe2.as_ref().unwrap().trade.error
+        );
+        assert_eq!(text_of(&runtime, "trade-matched-total").as_deref(), Some("10000"));
+        assert_eq!(text_of(&runtime, "listing-0-price").as_deref(), Some("1 exalted"));
+        assert_eq!(text_of(&runtime, "listing-0-ilvl").as_deref(), Some("66"));
+        assert_eq!(text_of(&runtime, "listing-0-date").as_deref(), Some("5 mo. ago"));
+        assert_eq!(text_of(&runtime, "listing-19-price").as_deref(), Some("1 exalted"));
+        assert!(runtime.find("listing-20-price").is_none(), "twenty rows, no more");
+
+        // Choosing an element swaps in that element's roll; the search body changes with
+        // it, which is why the click comes after the recorded answer's assertions.
+        click(&mut runtime, "stat-1-element-lightning");
+        assert_eq!(
+            runtime
+                .state
+                .poe2
+                .as_ref()
+                .and_then(|check| check.stat(1))
+                .and_then(|stat| stat.option)
+                .and_then(|o| o.value),
+            Some(3.0)
+        );
+    }
+
+    /// `FiltersBlock.vue`'s preset tabs: the base-item preset replaces the pseudo rows.
+    #[test]
+    fn the_poe2_preset_tabs_replace_the_rows() {
+        let mut runtime = runtime("poe2-ee2-rare-item");
+        click(&mut runtime, "preset-1");
+        let check = runtime.state.poe2.as_ref().unwrap();
+        assert_eq!(check.active_preset().map(|preset| preset.id.as_str()), Some("filters.preset_base_item"));
+        assert_eq!(text_of(&runtime, "stat-0-text").as_deref(), Some("Adds 43 to 43 Lightning Damage"));
+        // The results belonged to the old preset, so the Search button is back.
+        assert!(runtime.find("search-label").is_some());
+    }
+
+    /// EE2's unique: no tag line (a unique's explicit mods carry no tag), the roll sliders
+    /// under the min/max fields, and the `?` a poe.ninja-less unique keeps.
+    #[test]
+    fn the_poe2_unique_shows_its_roll_sliders() {
+        let runtime = runtime("poe2-ee2-unique-item");
+        assert_eq!(text_of(&runtime, "filter-name-text").as_deref(), Some("The Eternal Spark"));
+        assert_eq!(text_of(&runtime, "corrupted-label").as_deref(), Some("Not Corrupted"));
+        assert_eq!(text_of(&runtime, "trend-price").as_deref(), Some("?"));
+        assert_eq!(text_of(&runtime, "btn-stats-label").as_deref(), Some("2 of 5, stats"));
+        assert_eq!(text_of(&runtime, "stat-0-text").as_deref(), Some("56% increased Energy Shield"));
+        // The third stat is the second visible row: the constant rolls between are hidden.
+        assert_eq!(text_of(&runtime, "stat-2-text").as_deref(), Some("26% to Lightning Resistance"));
+        // `StatRollSlider.vue`: the bounds at its ends, the roll's fields above it.
+        assert_eq!(text_of(&runtime, "stat-0-min").as_deref(), Some("54"));
+        assert_eq!(text_of(&runtime, "stat-0-slider-min").as_deref(), Some("50"));
+        assert_eq!(text_of(&runtime, "stat-0-slider-max").as_deref(), Some("70"));
+        assert!(runtime.find("stat-0-slider-tick").is_some());
+        assert!(runtime.find("tag-explicit").is_none(), "a unique's explicit mods show no tag");
+        // A unique searches when it opens.
+        assert_eq!(text_of(&runtime, "trade-matched-total").as_deref(), Some("866"));
+    }
+
+    /// EE2's waystone: the map tier chip, "Stats ignored", the Explicit toggle and the
+    /// unknown modifier with its reload button.
+    #[test]
+    fn the_poe2_waystone_shows_its_unknown_modifier() {
+        let mut runtime = runtime("poe2-ee2-rare-map");
+        assert_eq!(text_of(&runtime, "filter-name-text").as_deref(), Some("Category: Map"));
+        assert_eq!(text_of(&runtime, "btn-map_tier-label").as_deref(), Some("Map Tier:"));
+        assert_eq!(text_of(&runtime, "btn-map_tier-min").as_deref(), Some("14"));
+        assert_eq!(text_of(&runtime, "btn-stats-label").as_deref(), Some("Stats ignored"));
+        assert_eq!(text_of(&runtime, "show-hidden-label").as_deref(), Some("Explicit"));
+        // The revives row is hidden (`filters.hide_revives`), so the visible rows start at 1.
+        let rows = [(1, "Monster Pack Size: 34%"), (2, "Monster Rarity: 28%"), (3, "Waystone Drop Chance: 75%")];
+        for (index, label) in rows {
+            assert_eq!(text_of(&runtime, &format!("stat-{index}-text")).as_deref(), Some(label), "row {index}");
+        }
+        // The trade site's data has no stat for the last line: it stays unknown.
+        let text = text_of(&runtime, "unknown-0-text").unwrap_or_default();
+        assert!(text.contains("Monster Critical Damage Bonus"), "{text}");
+        assert_eq!(text_of(&runtime, "unknown-0-type").as_deref(), Some("explicit — "));
+        assert_eq!(text_of(&runtime, "unknown-0-unrecognized").as_deref(), Some("Not recognized modifier"));
+        assert!(runtime.find("unknown-0-reload-button").is_some());
+        // A waystone waits for Search too.
+        click(&mut runtime, "search");
+        assert_eq!(text_of(&runtime, "trade-matched-total").as_deref(), Some("9002"));
+        assert!(runtime.find("listing-head-ilvl").is_none(), "no iLvl filter, no iLvl column");
+    }
+
+    /// Text that isn't a PoE2 item: the error box and the raw block, with EE2's reload
+    /// button among the error's actions.
+    #[test]
+    fn a_poe2_text_that_is_not_an_item_shows_the_error() {
+        let runtime = runtime("poe2-error-not-an-item");
+        assert_eq!(text_of(&runtime, "error-name").as_deref(), Some("An error occurred while parsing the item"));
+        assert_eq!(
+            text_of(&runtime, "error-message").as_deref(),
+            Some("This is probably a bug and you can report it on GitHub.")
+        );
+        assert!(runtime.find("error-reload").is_some());
+        let raw = text_of(&runtime, "error-raw-text").expect("the raw text block");
+        assert!(raw.contains("This is not an item"), "{raw}");
+        assert!(runtime.find("filter-name-text").is_none());
+    }
+
+    /// EE2's bulk table (`TradeBulk.vue`): the three currency buttons and the selected
+    /// table's eight rows. A screenshot case never reaches it (no exchange answer was
+    /// recorded for PoE2), so the state is built here from an `execBulkSearch` result.
+    #[test]
+    fn the_poe2_bulk_table_shows_a_currencys_offers() {
+        use crate::poe2::price_check::trade::bulk::{BulkPricingResult, BulkSearch};
+        use crate::poe2::price_check::trade::{BulkCurrency, BulkResults};
+        use wraex_poe2::results::AccountStatus;
+
+        let mut app = App::with_mode_poe2(&corpus_poe2("ee2-uncut-skill-gem"), Mode::Replay);
+        let check = app.poe2.as_mut().expect("the PoE2 window");
+        assert_eq!(check.trade.api(check), wraex_poe2::trade::Api::Bulk, "an uncut gem trades in bulk");
+        let row = |id: &str, exchange: f64, item: f64, stock: f64| BulkPricingResult {
+            id: id.to_owned(),
+            relative_date: "1 day ago".to_owned(),
+            exchange_amount: exchange,
+            item_amount: item,
+            stock,
+            account_status: AccountStatus::Online,
+            is_mine: false,
+            account_name: "someone".to_owned(),
+            ign: "Someone".to_owned(),
+        };
+        check.trade.error = None;
+        check.do_search = true;
+        check.trade.selected = BulkCurrency::Divine;
+        check.trade.bulk = Some(BulkResults {
+            divine: Some(BulkSearch {
+                query_id: "query".to_owned(),
+                have_tag: "divine".to_owned(),
+                total: 9.0,
+                listed: vec![row("a", 2.0, 1.0, 12.0), row("b", 4.0, 2.0, 3.0)],
+            }),
+            ..Default::default()
+        });
+        let runtime = runtime_app(app);
+        assert_eq!(text_of(&runtime, "bulk-currency-divine-total").as_deref(), Some("9"));
+        assert_eq!(text_of(&runtime, "bulk-currency-exalted-total").as_deref(), Some("?"));
+        assert_eq!(text_of(&runtime, "bulk-head-exchange-left").as_deref(), Some("div"));
+        // `Number((exchangeAmount / itemAmount).toFixed(4))` and the amounts as sent.
+        assert_eq!(text_of(&runtime, "bulk-0-price").as_deref(), Some("2"));
+        assert_eq!(text_of(&runtime, "bulk-0-exchange-left").as_deref(), Some("2"));
+        assert_eq!(text_of(&runtime, "bulk-1-price").as_deref(), Some("2"));
+        assert_eq!(text_of(&runtime, "bulk-1-exchange-right").as_deref(), Some("2"));
+        assert_eq!(text_of(&runtime, "bulk-0-stock").as_deref(), Some("12"));
+        assert_eq!(text_of(&runtime, "bulk-1-fulfill").as_deref(), Some("1"));
+        assert!(runtime.find("bulk-2-price").is_none(), "two offers, the rest of the table is empty");
+    }
+
+    /// Closing one game's window leaves the other's state alone.
+    #[test]
+    fn the_poe2_window_closes_on_its_own() {
+        let mut runtime = runtime("poe2-ee2-unique-item");
+        click(&mut runtime, "titlebar-close");
+        assert!(!runtime.state.poe2.as_ref().unwrap().open);
+        assert!(runtime.state.price_check.open);
+        assert!(runtime.find("titlebar").is_none());
     }
 }

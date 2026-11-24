@@ -1,8 +1,7 @@
 //! `TradeBulk.vue`: the currency exchange table, its two totals and the market ratio.
 //!
-//! Not ported: the market ratio row (`useMarketRatioFinder`), which needs a poe.ninja
-//! price lookup and `getDetailsId`, and the seller column (`showSeller: false` by
-//! default in the reference too).
+//! `useMarketRatioFinder`'s row sits among the offers at its price ([`market_ratio`]).
+//! Not ported: the seller column (`showSeller: false` by default in the reference too).
 
 use rune::{Color, El, col, el, row, text};
 use wraex_core::js;
@@ -15,7 +14,7 @@ use crate::theme::{self, text as type_};
 use crate::ui::icon;
 
 use super::online;
-use super::{BulkCurrency, listing};
+use super::{BulkCurrency, listing, market_ratio};
 
 /// The price column's width, from the reference screenshot.
 const PRICE_WIDTH: f32 = 57.0;
@@ -119,31 +118,52 @@ fn table(check: &PriceCheck) -> El {
         .child(heading_cell("bulk-head-fulfill", &i18n::t("trade_result.fulfill"), FULFILL_WIDTH))
         .child(heading_listed("bulk-head-listed"));
 
-    let rows: &[BulkPricingResult] = check
-        .trade
-        .bulk
-        .as_ref()
-        .and_then(|results| match check.trade.selected {
-            BulkCurrency::Chaos => results.chaos.as_ref(),
-            BulkCurrency::Stable => results.stable.as_ref(),
-        })
-        .map_or(&[], |group| group.listed.as_slice());
+    let columns = if stable {
+        check.trade.bulk.as_ref().and_then(|results| results.stable.as_ref())
+    } else {
+        check.trade.bulk.as_ref().and_then(|results| results.chaos.as_ref())
+    };
+    let listed: &[BulkPricingResult] = columns.map_or(&[], |group| group.listed.as_slice());
+
+    // `selectedResults`: the ratio merged into the first nineteen offers, twenty rows in all.
+    let rows = match market_ratio_row(check) {
+        Some(ratio) => market_ratio::merge(&listed[..listed.len().min(19)], ratio),
+        None => (0..listed.len().min(listing::SHOW_RESULTS)).map(market_ratio::Row::Offer).collect(),
+    };
 
     let mut body = col().key("bulk-rows").w_full();
-    for (index, result) in rows.iter().enumerate() {
-        body = body.child(
-            listing::row_for(index)
-                .child(price_cell(index, result))
-                .child(exchange_cell(index, result))
-                .child(number_cell(result.stock, &format!("bulk-{index}-stock"), STOCK_WIDTH, true))
-                .child(fulfill_cell(index, result))
-                .child(listed_cell(index, result)),
-        );
+    for (index, row) in rows.iter().enumerate() {
+        let line = match row {
+            market_ratio::Row::Offer(offer) => {
+                let result = &listed[*offer];
+                listing::row_for(index)
+                    .child(price_cell(index, &result.exchange_amount, &result.item_amount))
+                    .child(exchange_cell(index, &result.exchange_amount, &result.item_amount))
+                    .child(number_cell(result.stock, &format!("bulk-{index}-stock"), STOCK_WIDTH, true))
+                    .child(fulfill_cell(index, result))
+                    .child(listed_cell(index, result))
+            }
+            market_ratio::Row::Ratio(ratio) => ratio_row(index, ratio),
+        };
+        body = body.child(line);
     }
     for index in rows.len()..listing::SHOW_RESULTS {
         body = body.child(listing::empty_row(index));
     }
     col().key("bulk-table").w_full().min_h(0.0).child(heading).child(body)
+}
+
+/// `useMarketRatioFinder`'s row for the open item, when the league and the price data
+/// allow one.
+fn market_ratio_row(check: &PriceCheck) -> Option<market_ratio::MarketRatio> {
+    let item = check.item()?;
+    let filters = check.item_filters()?;
+    // `if (filters.trade.league !== defaultLeague.value?.id) return`
+    if filters.trade.league != check.league {
+        return None;
+    }
+    let rows = market_ratio::find(check.prices.prices(), item);
+    market_ratio::for_currency(rows, check.trade.selected == BulkCurrency::Stable)
 }
 
 fn heading_cell(key: &str, label: &str, width: f32) -> El {
@@ -196,8 +216,8 @@ fn heading_listed(key: &str) -> El {
 }
 
 /// `Number((exchangeAmount / itemAmount).toFixed(4))`.
-fn price_cell(index: usize, result: &BulkPricingResult) -> El {
-    let price = result.exchange_amount / result.item_amount;
+fn price_cell(index: usize, exchange_amount: &f64, item_amount: &f64) -> El {
+    let price = exchange_amount / item_amount;
     let label =
         js::to_fixed(price, 4).parse::<f64>().map_or_else(|_| js::number_to_string(price), js::number_to_string);
     row()
@@ -207,8 +227,64 @@ fn price_cell(index: usize, result: &BulkPricingResult) -> El {
         .child(text(label).key(format!("bulk-{index}-price")).font(type_::SM).color(theme::gray(200)))
 }
 
+/// The market ratio's own row (`.marketRatioRow`): `bg-gray-700` with a `gray-600` rim,
+/// and its label across the columns an offer fills.
+fn ratio_row(index: usize, ratio: &market_ratio::MarketRatio) -> El {
+    let amount = |value: f64| {
+        js::to_fixed(value, 1).parse::<f64>().map_or_else(|_| js::number_to_string(value), js::number_to_string)
+    };
+    listing::row_for(index)
+        .fill(theme::gray(700))
+        .border(1.0, theme::gray(600))
+        .child(price_cell(index, &ratio.exchange_amount, &ratio.item_amount))
+        .child(
+            row()
+                .key(format!("bulk-{index}-exchange"))
+                .w(EXCHANGE_WIDTH)
+                .pl(theme::rem(0.25))
+                .pr(theme::rem(0.5))
+                .items_center()
+                .child(
+                    text(amount(ratio.exchange_amount))
+                        .key(format!("bulk-{index}-exchange-left"))
+                        .font(type_::SM)
+                        .color(theme::gray(200))
+                        .w(theme::rem(2.0))
+                        .align(rune::Align::End),
+                )
+                .child(
+                    text("\u{2009}/\u{2009}")
+                        .key(format!("bulk-{index}-exchange-sep"))
+                        .font(type_::SM)
+                        .color(theme::gray(200)),
+                )
+                .child(
+                    text(amount(ratio.item_amount))
+                        .key(format!("bulk-{index}-exchange-right"))
+                        .font(type_::SM)
+                        .color(theme::gray(200))
+                        .w(theme::rem(2.0)),
+                ),
+        )
+        // `<td :colspan="3" class="pl-1 pr-2 whitespace-nowrap text-center">`
+        .child(
+            row()
+                .key(format!("bulk-{index}-ratio-cell"))
+                .grow(1.0)
+                .pl(theme::rem(0.25))
+                .pr(theme::rem(0.5))
+                .justify_center()
+                .child(
+                    text(i18n::t("trade_result.market_ratio"))
+                        .key(format!("bulk-{index}-market-ratio"))
+                        .font(type_::SM)
+                        .color(theme::gray(200)),
+                ),
+        )
+}
+
 /// `Number(exchange.toFixed(1))` over a thin-space slash over `Number(item.toFixed(1))`.
-fn exchange_cell(index: usize, result: &BulkPricingResult) -> El {
+fn exchange_cell(index: usize, exchange_amount: &f64, item_amount: &f64) -> El {
     let amount = |value: f64| {
         js::to_fixed(value, 1).parse::<f64>().map_or_else(|_| js::number_to_string(value), js::number_to_string)
     };
@@ -219,7 +295,7 @@ fn exchange_cell(index: usize, result: &BulkPricingResult) -> El {
         .pr(theme::rem(0.5))
         .items_center()
         .child(
-            text(amount(result.exchange_amount))
+            text(amount(*exchange_amount))
                 .key(format!("bulk-{index}-exchange-left"))
                 .font(type_::SM)
                 .color(theme::gray(200))
@@ -230,7 +306,7 @@ fn exchange_cell(index: usize, result: &BulkPricingResult) -> El {
             text("\u{2009}/\u{2009}").key(format!("bulk-{index}-exchange-sep")).font(type_::SM).color(theme::gray(200)),
         )
         .child(
-            text(amount(result.item_amount))
+            text(amount(*item_amount))
                 .key(format!("bulk-{index}-exchange-right"))
                 .font(type_::SM)
                 .color(theme::gray(200))

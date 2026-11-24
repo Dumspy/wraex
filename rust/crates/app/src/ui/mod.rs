@@ -7,11 +7,13 @@ pub mod button;
 pub mod error_box;
 pub mod icon;
 pub mod item_modifier_text;
+pub mod item_quick_price;
 pub mod title_bar;
 pub mod toggle;
 
 pub use button::button;
 pub use error_box::{actions, error_box};
 pub use item_modifier_text::item_modifier_text;
+pub use item_quick_price::ItemQuickPrice as QuickPrice;
 pub use title_bar::{TitleBar, title_bar};
 pub use toggle::toggle;

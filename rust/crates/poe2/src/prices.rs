@@ -295,6 +295,85 @@ impl Prices {
     /// (`load` after the requests). Unparsable or unknown ones are skipped. A
     /// preferred core currency the data lacks falls back to exalted.
     pub fn loaded(&mut self, d: &Data, overviews: &[(&str, &str)], now: u64) {
+        let parsed = overviews.iter().filter_map(|(kind, body)| {
+            let overview = serde_json::from_str::<ExchangeOverview>(body).ok()?;
+            let kind = NINJA_TYPES.iter().find(|(t, _, _)| t == kind).map(|(t, _, _)| *t)?;
+            Some((kind, overview))
+        });
+        self.apply_overviews(d, parsed.collect(), now);
+    }
+
+    /// Upstream's own price database: the `overviewData.json` its server hands out, which
+    /// lists the dense info per line instead of poe.ninja's separate `items` array.
+    ///
+    /// Wraex asks poe.ninja directly, so this reads the answer the screenshot harness
+    /// recorded (`corpus/screens/poe2/proxy`) and nothing else. False when it does not
+    /// parse; overview types the app does not ask poe.ninja for are skipped.
+    pub fn loaded_upstream(&mut self, d: &Data, league: &str, body: &str, now: u64) -> bool {
+        #[derive(Deserialize)]
+        struct Upstream {
+            core: OverviewCore,
+            #[serde(rename = "itemOverviews")]
+            item_overviews: Vec<UpstreamOverview>,
+        }
+
+        #[derive(Deserialize)]
+        struct UpstreamOverview {
+            #[serde(rename = "type")]
+            kind: String,
+            lines: Vec<UpstreamLine>,
+        }
+
+        /// A line with its item's name and details id on it (poe.ninja keeps them apart).
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct UpstreamLine {
+            id: String,
+            name: String,
+            details_id: String,
+            primary_value: f64,
+            #[serde(default)]
+            volume_primary_value: Option<f64>,
+            #[serde(default)]
+            max_volume_currency: Option<String>,
+            #[serde(default)]
+            max_volume_rate: Option<f64>,
+            sparkline: Sparkline,
+        }
+
+        let Ok(blob) = serde_json::from_str::<Upstream>(body) else { return false };
+        if self.league_id.as_deref() != Some(league) {
+            self.xchg_rate = None;
+            self.database.clear();
+            self.league_id = Some(league.to_owned());
+        }
+        let overviews = blob
+            .item_overviews
+            .into_iter()
+            .filter_map(|overview| {
+                let kind = NINJA_TYPES.iter().find(|(t, _, _)| *t == overview.kind).map(|(t, _, _)| *t)?;
+                let mut items = Vec::with_capacity(overview.lines.len());
+                let mut lines = Vec::with_capacity(overview.lines.len());
+                for line in overview.lines {
+                    items.push(ExchangeItem { id: line.id.clone(), name: line.name, details_id: line.details_id });
+                    lines.push(ExchangeLine {
+                        id: line.id,
+                        primary_value: line.primary_value,
+                        volume_primary_value: line.volume_primary_value,
+                        max_volume_currency: line.max_volume_currency,
+                        max_volume_rate: line.max_volume_rate,
+                        sparkline: line.sparkline,
+                    });
+                }
+                Some((kind, ExchangeOverview { core: blob.core.clone(), lines, items }))
+            })
+            .collect();
+        self.apply_overviews(d, overviews, now);
+        true
+    }
+
+    /// `load`'s body once the answers are parsed: rebuild the database from them.
+    fn apply_overviews(&mut self, d: &Data, overviews: Vec<(&'static str, ExchangeOverview)>, now: u64) {
         self.available_core_currencies = available_core_currencies(d);
         let selected_id = self.selected_core_currency_id();
         if !self.available_core_currencies.iter().any(|c| c.id == selected_id) {
@@ -303,9 +382,8 @@ impl Prices {
 
         let mut rates = None;
         self.database.clear();
-        for (kind, body) in overviews {
-            let Some(&(_, ns, url)) = NINJA_TYPES.iter().find(|(t, _, _)| t == kind) else { continue };
-            let Ok(overview) = serde_json::from_str::<ExchangeOverview>(body) else { continue };
+        for (kind, overview) in overviews {
+            let Some(&(_, ns, url)) = NINJA_TYPES.iter().find(|(t, _, _)| *t == kind) else { continue };
             rates.get_or_insert(overview.core.rates.clone());
             let entries = overview
                 .lines
@@ -543,6 +621,26 @@ mod tests {
         chaos_prices.loaded(d, &[("Currency", CURRENCY)], 0);
         // 1.86 chaos per divine is below upstream's threshold of 5: exalted.
         assert_eq!(chaos_prices.xchg_rate_currency, Some("exalted"));
+    }
+
+    /// Upstream's `overviewData.json` holds the item's name and details id on each line;
+    /// `loaded_upstream` turns it into the database `find_price` searches.
+    #[test]
+    fn the_upstream_blob_becomes_the_price_database() {
+        let blob = r#"{"core":{"rates":{"exalted":131.7,"chaos":2.24},"primary":"divine","secondary":"chaos"},
+            "itemOverviews":[
+              {"type":"Currency","lines":[{"name":"Exalted Orb","primaryValue":0.007594,"detailsId":"exalted-orb","id":"exalted","sparkline":{"totalChange":0,"data":[]}}]},
+              {"type":"Ultimatum","lines":[{"name":"Something","primaryValue":1,"detailsId":"x","id":"x","sparkline":{"totalChange":0,"data":[]}}]}]}"#;
+        let mut prices = Prices { core_currency: Some("exalted".into()), ..Default::default() };
+        assert!(prices.loaded_upstream(en(), "Standard", blob, 0));
+        // `Math.round(xchgRate)`: the title bar's number.
+        assert_eq!((prices.xchg_rate, prices.xchg_rate_currency), (Some(131.7), Some("exalted")));
+        let query = DbQuery { ns: "ITEM".into(), name: "Exalted Orb".into(), variant: None };
+        let price = prices.find_price(&query).expect("the currency's line");
+        assert_eq!(price.url, "https://poe.ninja/poe2/economy/standard/currency/exalted-orb");
+        // An overview type the app does not ask poe.ninja for is skipped, not an error.
+        assert!(!prices.is_empty());
+        assert!(!prices.loaded_upstream(en(), "Standard", "{", 0), "a broken blob is not applied");
     }
 
     #[test]

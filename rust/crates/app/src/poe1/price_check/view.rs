@@ -1,16 +1,20 @@
 //! `PriceCheckWindow.vue` and `CheckedItem.vue` in Rune: the window's frame and the item it
 //! shows.
 //!
-//! Ported: the window itself, the title bar, the item header (`FilterName.vue`), the filters
+//! Ported: the window itself, the title bar with its `⇄ rate` popover, the item header
+//! (`FilterName.vue`), the trend row (`PriceTrend.vue`, `ItemQuickPrice.vue`), the filters
 //! block (`FiltersBlock.vue`), the Search row and the listings (`TradeListing.vue`,
-//! `TradeBulk.vue`, `OnlineFilter.vue`, `TradeLinks.vue`). The trend row is still a `?`
-//! placeholder until poe.ninja prices are wired up.
+//! `TradeBulk.vue`, `OnlineFilter.vue`, `TradeLinks.vue`), and the expected-value boxes
+//! (`StackValue.vue`, `DustValue.vue`).
 
-use rune::{Cx, El, col, el, row, text};
+use rune::{Align, Color, Cx, El, Shape, Side, canvas, col, el, rich, row, text};
+use wraex_core::js::number_to_string;
 use wraex_game::ParseError;
 use wraex_poe1::filters::create_item_filters::category_to_trade_id;
 use wraex_poe1::filters::{ItemFilters, SearchFilter};
 use wraex_poe1::parser::item::Item;
+use wraex_poe1::prices::{CurrencyValue, display_rounding};
+use wraex_poe1::trends::{Forecast, TrendChange, delta_from_graph, is_valuable_basetype};
 
 use crate::poe1::i18n;
 use crate::poe1::price_check::trade;
@@ -33,12 +37,72 @@ pub fn view<S: 'static>(check: &PriceCheck, cx: &mut Cx<S>, project: Project<S>)
     // `text-gray-200` on `#price-window`, inherited by everything inside it.
     cx.foreground(theme::gray(200));
     let title_bar = ui::title_bar(check.title())
-        // `PriceCheckWindow.vue`'s `<div class="w-8" />`: room for the divine-orb rate, until
-        // the price data is ported.
-        .leading(el().key("titlebar-slot").w(theme::rem(2.0)).h_full())
+        // `PriceCheckWindow.vue`'s title-bar slot: the `⇄ 891` exchange-rate button,
+        // which opens the divine-orb table, or an empty `w-8` spacer.
+        .leading(title_leading(check, project))
         .on_close(move |s: &mut S| project(s).close())
         .build();
-    col().key("price-check").w(WIDTH).h_full().fill(theme::gray(800)).child(title_bar).child(body(check, project))
+    let mut root =
+        col().key("price-check").w(WIDTH).h_full().fill(theme::gray(800)).child(title_bar).child(body(check, project));
+    if check.exchange_open {
+        root = root.child(exchange_popover(check));
+    }
+    root
+}
+
+/// `PriceCheckWindow.vue`'s `<ui-popover v-if="stableOrbCost">`: the chaos-per-divine
+/// button, with the `0.1 … 0.9 div` table in its popover.
+fn title_leading<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
+    let Some(rate) = check.stable_orb_cost() else {
+        // `v-else-if="xchgRateLoading()"` spins a glyph; the spacer stands in for both.
+        return el().key("titlebar-slot").w(theme::rem(2.0)).h_full();
+    };
+    let label = number_to_string(rate);
+    row()
+        .key("titlebar-exchange")
+        .h_full()
+        .px(theme::rem(0.5))
+        .pt(1.0)
+        .items_center()
+        .gap(theme::rem(0.25))
+        .focusable(true)
+        .role("button")
+        .label(format!("\u{21c4} {label}"))
+        .on_press(move |s: &mut S| project(s).toggle_exchange())
+        .child(icon::exchange(theme::rem(0.75), theme::gray(600)))
+        .child(text(label).key("titlebar-exchange-rate").font(type_::SM).color(theme::gray(600)))
+}
+
+/// The exchange-rate popover: `ItemQuickPrice` for one divine, then `0.1 … 0.9 div ⇒ N c`.
+fn exchange_popover(check: &PriceCheck) -> El {
+    let Some(rate) = check.stable_orb_cost() else { return el() };
+    let mut content = col().key("exchange-popover-content");
+    content = content.child(
+        ui::QuickPrice::new("exchange", Some(CurrencyValue { min: rate, max: rate, currency: "chaos" }))
+            .color(theme::gray(900))
+            .build(),
+    );
+    for tenth in 1..=9 {
+        let divine = tenth as f64 / 10.0;
+        // `Math.round(stableOrbCost * i / 10)`
+        let chaos = (rate * divine + 0.5).floor();
+        content = content.child(
+            row().key(format!("exchange-row-{tenth}")).pl(theme::rem(0.25)).child(
+                text(format!("{} div \u{21d2} {} c", number_to_string(divine), number_to_string(chaos)))
+                    .key(format!("exchange-{tenth}"))
+                    .font(type_::BASE)
+                    .color(theme::gray(900)),
+            ),
+        );
+    }
+    // tippy's light theme: a white frame with four points of padding.
+    row()
+        .key("exchange-popover")
+        .padding(theme::rem(0.25))
+        .radius(theme::ROUNDED)
+        .fill(Color::WHITE)
+        .child(content)
+        .anchored("titlebar-exchange", Side::Bottom, Align::Start, 4.0)
 }
 
 /// The part under the title bar: an error, or the item.
@@ -71,15 +135,22 @@ fn body<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             let mut checked = col()
                 .key("checked-item")
                 .w_full()
+                .grow(1.0)
                 .padding(theme::rem(1.0))
                 .min_h(0.0)
                 .child(filter_name(check.item_filters(), project));
-            if let Some(trend) = trend(item) {
+            if let Some(trend) = trend(check, project) {
                 checked = checked.child(trend);
             }
             checked = checked.child(crate::poe1::price_check::filters::view(check, project));
             checked =
                 checked.child(if check.do_search { listings(check, project) } else { search_row(check, project) });
+            if let Some(stack) = stack_value(check) {
+                checked = checked.child(stack);
+            }
+            if let Some(dust) = dust_value(item) {
+                checked = checked.child(dust);
+            }
             body = body.child(checked);
         }
     }
@@ -172,33 +243,144 @@ fn active_search(filters: &ItemFilters) -> &SearchFilter {
     }
 }
 
-/// `PriceTrend.vue`'s fallback row: the item's icon, an arrow and the price — `?` until the
-/// poe.ninja prices are ported. Items the reference draws no trend row for get none here either.
-fn trend(item: &Item) -> Option<El> {
+/// `PriceTrend.vue`: the item's price from poe.ninja with the 7-day sparkline, or the
+/// fallback row that just names the item. `None` where the reference draws no row.
+fn trend<S: 'static>(check: &PriceCheck, _project: Project<S>) -> Option<El> {
+    let item = check.item()?;
     let info = item.info();
-    if info.craftable.is_some() || info.ref_name == "Mercenary Warrant" || info.ref_name == "Viscera" {
-        return None;
+    // `fraction`: `filters.stackSize != null`
+    let fraction = check.item_filters().is_some_and(|filters| filters.stack_size.is_some());
+
+    let Some(price) = check.price_info() else {
+        // `showFallback`: a craftable item, a Mercenary Warrant and Viscera get no row.
+        let fallback = info.craftable.is_none() && info.ref_name != "Mercenary Warrant" && info.ref_name != "Viscera";
+        if !fallback {
+            return None;
+        }
+        let base = item.unique_base.as_ref().unwrap_or(info);
+        return Some(
+            row().key("trend").w_full().min_h(theme::rem(3.0)).pb(theme::rem(1.0)).items_center().child(
+                ui::QuickPrice::new("trend", None)
+                    .currency_text()
+                    .item_size(base.w, base.h)
+                    .build()
+                    .grow(1.0)
+                    .justify_center(),
+            ),
+        );
+    };
+
+    // `item.info.refName === 'Divine Orb'` keeps its chaos price; anything else switches to
+    // divines once it is worth one (`autoCurrency`).
+    let currency = if info.ref_name == "Divine Orb" {
+        CurrencyValue { min: price.info.chaos, max: price.info.chaos, currency: "chaos" }
+    } else {
+        check.prices.prices().auto_currency(price.info.chaos)
+    };
+    let mut quick = ui::QuickPrice::new("trend", Some(currency)).fraction(fraction);
+    quick = if is_valuable_basetype(item) {
+        // `<template #item><span class="text-gray-400">{{ t(':base_item') }}</span></template>`
+        quick.slot(
+            text(i18n::t("trade_result.base_item")).key("trend-base-item").font(type_::BASE).color(theme::gray(400)),
+        )
+    } else {
+        // `:item-base="item.uniqueBase ?? item.info"`
+        let base = item.unique_base.as_ref().unwrap_or(info);
+        quick.item_size(base.w, base.h)
+    };
+
+    let mut line = row()
+        .key("trend")
+        .w_full()
+        .min_h(theme::rem(3.0))
+        .pb(theme::rem(1.0))
+        .items_center()
+        .child(quick.build().grow(1.0).justify_center());
+    // The trend button keeps its natural width beside the centred price row.
+    if let Some(change) = delta_from_graph(&price.info.graph) {
+        line = line.child(trend_change::<S>(&change, &price.url));
     }
-    // `min-height: 3rem` with `pb-4`, centred: `ItemQuickPrice` with no price to show.
-    Some(
-        row().key("trend").w_full().min_h(theme::rem(3.0)).pb(theme::rem(1.0)).items_center().child(
-            row()
-                .grow(1.0)
-                .justify_center()
-                .items_center()
-                .gap(theme::rem(0.25))
-                .child(icon_placeholder("trend-item-icon"))
-                .child(icon::arrow_right(theme::rem(0.875), theme::rem(0.875), theme::gray(600)).mx(theme::rem(0.25)))
-                .child(text("?").key("trend-price").font(type_::BASE).px(theme::rem(0.25)))
-                .child(icon_placeholder("trend-currency-icon")),
-        ),
-    )
+    Some(line)
 }
 
-/// The item's and the currency's 32×32 images (`ItemQuickPrice.vue`): the game's CDN and
-/// upstream's `public/images` are not wired up yet, so a plain square stands in.
-fn icon_placeholder(key: &str) -> El {
-    el().key(key).size(theme::rem(2.0), theme::rem(2.0)).radius(theme::ROUNDED).fill(theme::gray(700))
+/// `PriceTrend.vue`'s `trend-btn`: the forecast, the label and the sparkline. It opens
+/// the item's poe.ninja page.
+fn trend_change<S: 'static>(change: &TrendChange, url: &str) -> El {
+    let unavailable = url.to_owned();
+    let mut button = row()
+        .key("trend-change-button")
+        .items_center()
+        .gap(theme::rem(0.5))
+        .my(-(theme::rem(0.125)))
+        .py(theme::rem(0.125))
+        .px(theme::rem(0.25))
+        .radius(theme::ROUNDED)
+        .hover(theme::gray(700))
+        .focusable(true)
+        .role("button")
+        .label(format!("{} {}", change.text, i18n::t("trade_result.graph_7d")));
+    if !unavailable.is_empty() {
+        // `openNinja`: the item's poe.ninja page.
+        button = button.on_press_tx(move |_s: &mut S, tx: &mut rune::Tx| {
+            let _ = tx.open_url(&unavailable);
+        });
+    }
+
+    let mut text_line = row().key("trend-change-line").items_center();
+    match change.forecast {
+        // `fa-angle-double-down pr-1 text-red-600`, `fa-angle-double-up pr-1 text-green-500`
+        Forecast::Down => {
+            text_line = text_line.child(icon::chevrons(theme::rem(0.875), false, theme::red(600)).mr(theme::rem(0.25)));
+        }
+        Forecast::Up => {
+            text_line =
+                text_line.child(icon::chevrons(theme::rem(0.875), true, theme::green(500)).mr(theme::rem(0.25)));
+        }
+        // `<span class="pr-1 text-gray-600 font-sans leading-none">±</span>`
+        Forecast::Const => {
+            text_line = text_line.child(
+                rune::rich("\u{b1}", vec![rune::Span::new(0, 2).mono().color(theme::gray(600))])
+                    .key("trend-change-sign")
+                    .font(theme::leading_none(type_::SM))
+                    .mr(theme::rem(0.25)),
+            );
+        }
+    }
+    text_line = text_line.child(text(change.text.clone()).key("trend-change").font(type_::BASE));
+
+    let column = col().key("trend-change-text").items_center().child(text_line).child(
+        text(i18n::t("trade_result.graph_7d"))
+            .key("trend-change-label")
+            .font(theme::leading_none(type_::XS))
+            .color(theme::gray(500)),
+    );
+
+    button.child(column).child(sparkline(change))
+}
+
+/// The 7-day graph: an area under a thin line, in the `w-12 h-8` box ApexCharts draws it
+/// in. The plot is the box's lower 16 points, as the reference's chart is.
+fn sparkline(change: &TrendChange) -> El {
+    const W: f32 = 48.0;
+    const H: f32 = 16.0;
+    let span = (change.draw_max - change.draw_min).max(f64::MIN_POSITIVE);
+    let last = change.points.len().saturating_sub(1).max(1) as f32;
+    let points: Vec<[f32; 2]> = change
+        .points
+        .iter()
+        .enumerate()
+        .map(|(index, value)| [index as f32 * W / last, ((change.draw_max - value) / span * f64::from(H)) as f32])
+        .collect();
+    let mut area = points.clone();
+    area.push([W, H]);
+    area.push([0.0, H]);
+    let shape = Shape::new().fill(area, theme::gray(700).alpha(0.85)).stroke(points, 1.0, theme::gray(500));
+    col()
+        .key("trend-sparkline")
+        .w(theme::rem(3.0))
+        .h(theme::rem(2.0))
+        .justify_end()
+        .child(canvas(shape).key("trend-sparkline-chart").size(W, H))
 }
 
 /// `TradeListing.vue` / `TradeBulk.vue`, and `OnlineFilter.vue`'s panel while open.
@@ -232,4 +414,107 @@ fn search_row<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
         )
         // `TradeLinks.vue`: the query URL until a search has an id.
         .child(trade::links::trade_links(check, project))
+}
+
+/// `StackValue.vue`: what the stack on screen is worth, and what one full stack is.
+///
+/// `v-if="show"`: a stack-size filter, a poe.ninja entry and a price for it.
+fn stack_value(check: &PriceCheck) -> Option<El> {
+    let filters = check.item_filters()?;
+    let stack = filters.stack_size.as_ref()?;
+    let item = check.item()?;
+    let one = check.price_info()?;
+
+    let price_for = |count: f64| {
+        let chaos = count * one.info.chaos;
+        // A divine's own stack stays in chaos; everything else switches once it is worth one.
+        let price = if item.info().ref_name == "Divine Orb" {
+            CurrencyValue { min: chaos, max: chaos, currency: "chaos" }
+        } else {
+            check.prices.prices().auto_currency(chaos)
+        };
+        format!("{} {}", display_rounding(price.min, false), price.currency)
+    };
+
+    let half = |key: &str| row().key(key.to_owned()).w_frac(0.5).min_w(0.0).items_center();
+    let left = half("stack-value-have")
+        .child(muted(i18n::t("trade_result.you_have")))
+        .child(muted_times())
+        .child(muted(format!(" {}", number_to_string(stack.value))).key("stack-value-have-amount"))
+        .child(icon::arrow_right(theme::rem(0.75), theme::rem(0.75), theme::gray(600)).px(theme::rem(0.25)))
+        .child(muted(price_for(stack.value)).key("stack-value-have-price"));
+    let mut value = row().key("stack-value-row").child(left);
+    if let Some(max) = item.stack_size.as_ref().and_then(|stack| stack.max) {
+        value = value.child(
+            half("stack-value-stack")
+                .pl(theme::rem(0.5))
+                .child(muted(i18n::t("trade_result.stack")))
+                .child(muted_times())
+                .child(muted(format!(" {}", number_to_string(max))).key("stack-value-stack-amount"))
+                .child(icon::arrow_right(theme::rem(0.75), theme::rem(0.75), theme::gray(600)).px(theme::rem(0.25)))
+                .child(muted(price_for(max)).key("stack-value-stack-price")),
+        );
+    }
+
+    Some(dashed_box("stack-value").child(value))
+}
+
+/// `p-2 border-dashed border border-gray-600 rounded mt-2 text-gray-400 leading-none`.
+fn dashed_box(key: &str) -> El {
+    row()
+        .key(key.to_owned())
+        .w_full()
+        .mt(theme::rem(0.5))
+        .padding(theme::rem(0.5))
+        .radius(theme::ROUNDED)
+        .border(1.0, theme::gray(600))
+        .border_dash(4.0, 4.0)
+        .border_layout()
+}
+
+/// A `text-gray-400 leading-none` run inside an expected-value box.
+fn muted(label: impl Into<String>) -> El {
+    text(label).font(theme::leading_none(type_::SM)).color(theme::gray(400))
+}
+
+/// `<span class="font-sans">×</span>`, with the space the template puts before it.
+fn muted_times() -> El {
+    rich(" \u{d7}", vec![rune::Span::new(0, 3).mono().color(theme::gray(400))]).font(theme::leading_none(type_::SM))
+}
+
+/// `DustValue.vue`: `Disenchanting → 36,225 × dust` for an item with a dust value.
+fn dust_value(item: &Item) -> Option<El> {
+    let dust = item.dust_equivalent?;
+    Some(
+        dashed_box("dust-value")
+            .items_center()
+            .child(muted(i18n::t("item.disenchanting")))
+            .child(icon::arrow_right(theme::rem(0.75), theme::rem(0.75), theme::gray(600)).px(theme::rem(0.25)))
+            .child(muted(grouped(dust)).key("dust-value-amount"))
+            .child(muted_times())
+            // `<img class="w-5 -my-5 inline-block">`: the dust icon, pulled out of the line.
+            .child(icon::image_placeholder(theme::rem(1.25)).my(-(theme::rem(1.25)))),
+    )
+}
+
+/// `Number#toLocaleString()`'s grouping for a whole number ("36,225").
+fn grouped(value: f64) -> String {
+    let negative = value < 0.0;
+    let text = number_to_string(value.abs().trunc());
+    let (whole, fraction) = text.split_once('.').unwrap_or((text.as_str(), ""));
+    let mut out = String::with_capacity(whole.len() + whole.len() / 3);
+    for (index, digit) in whole.chars().enumerate() {
+        if index > 0 && (whole.len() - index).is_multiple_of(3) {
+            out.push(',');
+        }
+        out.push(digit);
+    }
+    if negative {
+        out.insert(0, '-');
+    }
+    if !fraction.is_empty() {
+        out.push('.');
+        out.push_str(fraction);
+    }
+    out
 }

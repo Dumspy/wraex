@@ -127,6 +127,11 @@ impl ReplayTransport {
     pub fn poe1() -> Self {
         Self::new(format!("{CORPUS}/poe1/proxy"))
     }
+
+    /// PoE2's recorded answers (`tools/golden/corpus/screens/poe2/proxy`).
+    pub fn poe2() -> Self {
+        Self::new(format!("{CORPUS}/poe2/proxy"))
+    }
 }
 
 impl Transport for ReplayTransport {
@@ -156,6 +161,11 @@ impl ReplayClock {
     /// The clock at `tools/golden/corpus/screens/poe1/recorded-at.txt`.
     pub fn poe1() -> Self {
         Self::new(recorded_at("poe1"))
+    }
+
+    /// The clock at `tools/golden/corpus/screens/poe2/recorded-at.txt`.
+    pub fn poe2() -> Self {
+        Self::new(recorded_at("poe2"))
     }
 }
 

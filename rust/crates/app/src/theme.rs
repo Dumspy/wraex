@@ -85,6 +85,16 @@ pub fn blue(shade: u16) -> Color {
     })
 }
 
+/// Tailwind's `green` ramp (`PriceTrend.vue`'s up chevrons, EE2's desecrated tag).
+pub fn green(shade: u16) -> Color {
+    c(match shade {
+        100 => "#f0fff4",
+        500 => "#48bb78",
+        900 => "#22543d",
+        _ => panic!("no `green.{shade}` in upstream's tailwind.config.js"),
+    })
+}
+
 /// `.table-stripped tbody tr:nth-child(odd)` in `web/App.vue`: #353f52, between
 /// `gray-800` and `gray-700`.
 pub fn table_stripe() -> Color {
@@ -97,6 +107,47 @@ pub fn indigo(shade: u16) -> Color {
         200 => "#c3dafe",
         _ => panic!("no `indigo.{shade}` in upstream's tailwind.config.js"),
     })
+}
+
+/// Tailwind's `pink` ramp (`account-status.online` in EE2's `TradeListing.vue`).
+pub fn pink(shade: u16) -> Color {
+    c(match shade {
+        400 => "#f687b3",
+        _ => panic!("no `pink.{shade}` in EE2's tailwind.config.js"),
+    })
+}
+
+/// Tailwind's `purple` ramp (an enchant tag in EE2's `FilterModifier.vue`).
+pub fn purple(shade: u16) -> Color {
+    c(match shade {
+        100 => "#faf5ff",
+        600 => "#805ad5",
+        _ => panic!("no `purple.{shade}` in EE2's tailwind.config.js"),
+    })
+}
+
+/// Tailwind's `rose` ramp (a mutated tag in EE2's `FilterModifier.vue`).
+pub fn rose(shade: u16) -> Color {
+    c(match shade {
+        900 => "#881337",
+        _ => panic!("no `rose.{shade}` in EE2's tailwind.config.js"),
+    })
+}
+
+/// EE2's `colors.fire` (`#c80000`): the elemental-dps option button. APT's
+/// `tailwind.config.js` has no elemental colours, so these only appear in a PoE2 window.
+pub fn fire() -> Color {
+    c("#c80000")
+}
+
+/// EE2's `colors.cold` (`#5aadff`).
+pub fn cold() -> Color {
+    c("#5aadff")
+}
+
+/// EE2's `colors.lightning` (`#ffff00`).
+pub fn lightning() -> Color {
+    c("#ffff00")
 }
 
 /// Tailwind's `text-*` sizes: font size and line height, both in points.
