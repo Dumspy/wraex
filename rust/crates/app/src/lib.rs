@@ -375,6 +375,25 @@ pub fn view(app: &App, cx: &mut Cx<App>) -> El {
     if app.live.is_some() && app.shown() == shell::Shown::None {
         return rune::el();
     }
+    let card = card(app, cx);
+    match app.overlay_offset() {
+        // The window is the overlay over the game (Windows, PLAN.md phase 2): the widget is
+        // placed inside it where the cursor asked for it, or centred for the tray's windows.
+        Some((x, y)) => {
+            let mut placed = card.absolute(x, y);
+            // The card's own height is `h_full` in a window it used to fill; the overlay is
+            // the game's size, so it gets the size the shell reserved for it.
+            if let Some((width, height)) = shell::window_size(&app.shown()) {
+                placed = placed.w(width).h(height);
+            }
+            rune::col().w_full().h_full().child(placed)
+        }
+        None => card,
+    }
+}
+
+/// The widget the window shows, at its own size.
+fn card(app: &App, cx: &mut Cx<App>) -> El {
     // An overlay widget is a card of its own, at its own size; a hidden one shows the window
     // under it (the item search hands the window to the price check its pick opened).
     if let Some(overlay) = &app.widgets
@@ -549,6 +568,9 @@ pub fn main() {
     let args = rune::tooling::Args::parse();
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let game = shell::game_from_args(&argv);
+    // Where the data, images and tray icon come from: the packaged `assets/` directory, or
+    // the reference checkouts in development (`wraex_core::assets`). Resolved here, once.
+    eprintln!("wraex: assets {}", wraex_core::assets::Assets::get().summary());
     // A live run is the app proper: tray, hotkeys, a window on demand. Everything else — a
     // scene, a snapshot, a scripted run — is the port's screenshot mode, unchanged.
     if !rune::is_headless() && args.scene.is_none() {

@@ -11,12 +11,14 @@
 //! - [`overlay`]: the overlay's interactive/click-through state and the events it
 //!   sends the renderer (`OverlayWindow.ts`, `OverlayVisibility.ts`,
 //!   `WidgetAreaTracker.ts`).
-//! - [`window`]: following the game window's focus and rectangle (`GameWindow.ts`).
+//! - [`window`]: following the game window's focus and rectangle (`GameWindow.ts`), with the
+//!   Win32 hook that finds and follows the window behind [`window::Watcher`].
 //!
-//! Choosing and writing the OS implementations — Win32, X11, Wayland, macOS — is
-//! the phase 2 spike's job (PLAN.md), so this crate names no platform crate for
-//! them; [`http`] sends the trade API's requests and [`tray`] owns the system tray
-//! icon.
+//! Choosing and writing the OS implementations is the phase 2 spike's job (PLAN.md): Win32
+//! exists (the `windows` crate, `cfg(windows)` only); macOS, X11 and Wayland have no window
+//! hook yet, so [`window::Watcher::start`] reports
+//! [`window::WatchError::Unsupported`] there and the app keeps its ordinary windows.
+//! [`http`] sends the trade API's requests and [`tray`] owns the system tray icon.
 
 pub mod clipboard;
 pub mod http;

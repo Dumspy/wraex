@@ -30,6 +30,58 @@ fn a_window_is_sized_for_what_it_draws() {
     assert_eq!(window_size(&Shown::Widget("unknown".to_owned())), None);
 }
 
+/// The settings window is upstream's ordinary window, not the overlay: it must never hide
+/// with the game (that is what the overlay library's blur rule does to widgets).
+#[test]
+fn only_widgets_are_the_overlay() {
+    assert!(is_overlay(&Shown::PriceCheck));
+    assert!(is_overlay(&Shown::Poe2));
+    assert!(is_overlay(&Shown::ItemCheck));
+    assert!(is_overlay(&Shown::Widget(widgets::Kind::Menu.name().to_owned())));
+    assert!(!is_overlay(&Shown::Settings));
+    assert!(!is_overlay(&Shown::None));
+}
+
+/// A widget placed inside the overlay: at the cursor, or centred, always inside the card's
+/// bounds of the game's client area, in points rather than physical pixels.
+#[test]
+fn the_widget_is_placed_inside_the_game_in_points() {
+    let bounds = Bounds { x: 100.0, y: 50.0, width: 1600.0, height: 1200.0 };
+    let size = (400.0, 300.0);
+
+    // 12 px below and right of the cursor, relative to the game's client area.
+    assert_eq!(widget_offset(Some(Placement::Cursor(Point { x: 300.0, y: 250.0 })), size, bounds, 1.0), (212.0, 212.0));
+    // At 150 % the game is 1600 physical px wide but the widget is laid out in points.
+    assert_eq!(widget_offset(Some(Placement::Cursor(Point { x: 400.0, y: 350.0 })), size, bounds, 1.5), (212.0, 212.0));
+    // A cursor near the bottom right corner: the card is pulled back inside the game.
+    assert_eq!(
+        widget_offset(Some(Placement::Cursor(Point { x: 1690.0, y: 1240.0 })), size, bounds, 1.0),
+        (1200.0, 900.0)
+    );
+    // Above and left of the game: still inside it.
+    assert_eq!(widget_offset(Some(Placement::Cursor(Point { x: 0.0, y: 0.0 })), size, bounds, 1.0), (0.0, 0.0));
+    // Centred for a window the tray opened.
+    assert_eq!(widget_offset(Some(Placement::Centred), size, bounds, 1.0), (600.0, 450.0));
+    assert_eq!(widget_offset(None, size, bounds, 1.0), (600.0, 450.0));
+    // A card taller than the game starts at the top rather than at a negative offset.
+    assert_eq!(widget_offset(None, (400.0, 1500.0), bounds, 1.0), (600.0, 0.0));
+}
+
+/// The live window is the overlay on Windows and the port's ordinary window elsewhere.
+#[test]
+fn the_windows_window_is_the_overlay() {
+    let options = window_options();
+    let windows = cfg!(target_os = "windows");
+    assert_eq!(options.transparent, windows);
+    assert_eq!(options.borderless, windows);
+    assert_eq!(options.click_through, windows);
+    assert_eq!(options.always_on_top, windows);
+    assert_eq!(options.min_size, windows.then_some((0.0, 0.0)));
+    if !windows {
+        assert_eq!(options.min_size, None, "other platforms keep Rune's minimum");
+    }
+}
+
 /// The price check's width is the same in both games (`#price-window`'s 28.75 rem), so one
 /// window serves both.
 #[test]

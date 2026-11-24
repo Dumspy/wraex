@@ -18,14 +18,36 @@
 //!
 //! Delays are real sleeps: `Shortcuts` asks for upstream's `setTimeout` gaps (EE2 holds the
 //! copy keys for 10 ms so the game reads them).
+//!
+//! # When keys may be pressed
+//!
+//! Upstream presses keys only while the game window is focused: its hotkeys are registered on
+//! the game's `active-change` and unregistered when it loses the focus, so a press always lands
+//! in the game. Wraex keeps that rule, and it decides whether [`OSSender`] synthesizes at all:
+//!
+//! - **The game's window is tracked** (Windows today, `wraex_platform::window::Watcher`;
+//!   [`OSSender::set_game_focus_tracking`]): presses are safe by default, because the shell
+//!   only registers the hotkeys while the game is focused and unregisters them the moment the
+//!   overlay takes the keys.
+//! - **No tracking** (macOS, X11, Wayland): the shell's hotkeys are system-wide, so a press
+//!   would go to whatever application has the focus. Synthesis stays opt-in with
+//!   `WRAEX_KEY_SYNTHESIS=1`, and without it a copy hotkey prices the item already on the
+//!   clipboard instead (the shell's fallback).
+//!
+//! `WRAEX_KEY_SYNTHESIS=1` also turns synthesis on where tracking exists, which is what a
+//! developer wants while testing a single piece of the chain.
 
 use wraex_core::trade::rate_limit::Millis;
+use wraex_platform::overlay::OverlayInput;
 use wraex_platform::shortcuts::KeySender;
 
 /// The keys a hotkey can press, mapped per platform below. Upstream's names
 /// ([`wraex_core::keys::KEY_TO_CODE`]) are the input.
 #[derive(Debug, Default)]
 pub struct OSSender {
+    /// The game's window is followed, so hotkeys only exist while it is focused
+    /// ([`OSSender::set_game_focus_tracking`]).
+    game_focus_tracking: bool,
     #[cfg(target_os = "macos")]
     flags: u64,
 }
@@ -35,16 +57,21 @@ impl OSSender {
         Self::default()
     }
 
+    /// The shell started following the game's window (`wraex_platform::window::Watcher`):
+    /// from here on a press can only happen while the game is focused, so synthesis no longer
+    /// needs `WRAEX_KEY_SYNTHESIS`. See the module's note.
+    pub fn set_game_focus_tracking(&mut self) {
+        self.game_focus_tracking = true;
+    }
+
     /// Whether this build can press keys into the focused application. Where it cannot, the
     /// shell prices the item already on the clipboard instead of pressing the game's copy
     /// key ([`crate::shell`]).
-    ///
-    /// Off unless `WRAEX_KEY_SYNTHESIS=1`: upstream presses keys only while the game is
-    /// focused, and until the game window is tracked (PLAN phase 2) the shell registers its
-    /// hotkeys system-wide, so a press would go to whatever application has focus. With it
-    /// off, every press below is dropped and the hotkeys price the clipboard instead.
     pub fn can_synthesize(&self) -> bool {
-        std::env::var_os("WRAEX_KEY_SYNTHESIS").is_some_and(|value| value == "1") && platform::can_synthesize()
+        if !platform::can_synthesize() {
+            return false;
+        }
+        self.game_focus_tracking || std::env::var_os("WRAEX_KEY_SYNTHESIS").is_some_and(|value| value == "1")
     }
 }
 
@@ -518,18 +545,66 @@ pub fn cursor_position() -> Option<(f64, f64)> {
     })
 }
 
+/// A key pressed in the overlay window, as `OverlayWindow.handleExtraCommands` reads it
+/// (Electron's `before-input-event` `input.code`, which [`OverlayInput::hotkey`] turns into a
+/// hotkey string). Only the keys that handler reacts to are mapped: Escape, Ctrl+W, and the
+/// overlay key, which is a letter or Space.
+///
+/// Rune reports a letter with its primary modifier as `Key::Command` (Ctrl off macOS, ⌘ on
+/// it) and Space as `Key::Text(" ")`; `mods` still says which modifiers were held, so
+/// Ctrl+W off macOS arrives as `Command('w')` with `ctrl` set.
+pub fn overlay_input(event: &rune::KeyEvent) -> Option<OverlayInput> {
+    let code = match &event.key {
+        rune::Key::Escape => "Escape".to_owned(),
+        rune::Key::Command(letter) if letter.is_ascii_alphabetic() => {
+            format!("Key{}", letter.to_ascii_uppercase())
+        }
+        rune::Key::Text(text) if text == " " => "Space".to_owned(),
+        _ => return None,
+    };
+    Some(OverlayInput { code, ctrl: event.mods.ctrl, shift: event.mods.shift, alt: event.mods.alt })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rune::{Key, KeyEvent, Mods};
+
+    /// The keys `OverlayWindow.handleExtraCommands` handles reach it in Rune's shape.
+    #[test]
+    fn the_overlays_keys_are_mapped_from_runes_names() {
+        let event = |key: Key, mods: Mods| KeyEvent { key, mods };
+        let ctrl = Mods { cmd: true, ctrl: true, ..Mods::default() };
+
+        let escape = overlay_input(&event(Key::Escape, Mods::default())).expect("Escape is handled");
+        assert_eq!(escape.hotkey(), "Escape");
+        // Ctrl+W off macOS: `Command('w')` with `ctrl` (and `cmd`) set, which upstream's
+        // `input.code` spells `KeyW` + control.
+        let ctrl_w = overlay_input(&event(Key::Command('w'), ctrl)).expect("Ctrl+W is handled");
+        assert_eq!(ctrl_w.hotkey(), "Ctrl + W");
+        // Shift+Space, the default overlay key.
+        let overlay_key = overlay_input(&event(Key::Text(" ".to_owned()), Mods { shift: true, ..Mods::default() }))
+            .expect("Space is handled");
+        assert_eq!(overlay_key.hotkey(), "Shift + Space");
+        // Anything else is left to the widget (a typed letter, a scroll key).
+        assert!(overlay_input(&event(Key::Text("a".to_owned()), Mods::default())).is_none());
+        assert!(overlay_input(&event(Key::Enter, Mods::default())).is_none());
+        assert!(overlay_input(&event(Key::Command('1'), Mods::default())).is_none());
+    }
 
     #[test]
     fn the_sender_can_press_keys_where_it_is_implemented() {
         let sender = OSSender::new();
         // macOS without Input Monitoring permission cannot post either, so the build's
-        // support is the upper bound, not the answer.
+        // support is the upper bound, not the answer. Without game tracking the environment
+        // decides (see the module's note); a test may run with it set.
         if !cfg!(any(target_os = "macos", target_os = "windows")) {
             assert!(!sender.can_synthesize());
         }
+        let mut tracked = OSSender::new();
+        tracked.set_game_focus_tracking();
+        // Tracking makes synthesis the platform's answer alone.
+        assert_eq!(tracked.can_synthesize(), platform::can_synthesize());
     }
 
     /// A press of a key the platform does not know must not panic (it logs instead).

@@ -18,7 +18,7 @@ use std::sync::OnceLock;
 use rune::{Latest, TextEdit, Waker};
 use wraex_core::Rarity;
 use wraex_game::ParseError;
-use wraex_poe2::data::{Data, TradeData, reference_source};
+use wraex_poe2::data::{Data, TradeData, source};
 use wraex_poe2::filters::create_item_filters::{CreateOptions, category_to_trade_id};
 use wraex_poe2::filters::{
     CreatePresetsOptions, FilterError, FilterNumeric, FilterPreset, ItemFilters, Presets, StatFilter, create_presets,
@@ -67,7 +67,7 @@ pub fn data(mode: Mode) -> &'static Data {
 }
 
 fn load_with(trade: Option<TradeData>) -> Data {
-    Data::load(&reference_source(), "en", trade).expect("load `en` game data from ref/ee2")
+    Data::load(&source(), "en", trade).expect("load `en` game data from the assets root")
 }
 
 /// `www.pathofexile.com/api/trade2/data/{items,stats}`, as the screenshots recorded them.

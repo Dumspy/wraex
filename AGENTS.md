@@ -63,6 +63,9 @@ beyond `main/build/apprun-patch.test.mjs`, and no npm script for its indexes
 - `rust/crates/golden` — loads fixtures and compares Rust output with them.
 - `tools/golden` — the fixture harness (vitest, runs the references); its README is
   the contract. Corpus in `tools/golden/corpus/`, fixtures in `fixtures/<game>/<case>/`.
+- `tools/package` — the release packager (Python): `cargo build --release` plus
+  `dist/wraex-<version>-<target>/` with the binary, `assets/` and `licences/`.
+  `rust/crates/core/src/assets.rs` is where the app finds that directory at runtime.
 
 Item names and serialisation follow upstream's `ParsedItem` (`rawText`, `"Rare"`).
 Add fields only with the module that produces them; do not guess at the shape.

@@ -4,9 +4,10 @@
 //! Rune element:
 //!
 //! - **Local art** (`/images/chaos.png`, `stash.png`, `dust.png`, the influence badges, the
-//!   oils' and catalysts' art) ships in `ref/<game>/renderer/public/images`. The port reads it
-//!   from the reference through the data layer ([`wraex_poe1::data::image_path`],
-//!   [`wraex_poe2::data::image_path`]), the way it reads the data files.
+//!   oils' and catalysts' art) ships in the reference's `renderer/public/images` and is read
+//!   from the assets root (`wraex_core::assets`; the reference checkout in development,
+//!   `assets/<game>/images` in a release) through [`wraex_poe1::data::image_path`],
+//!   [`wraex_poe2::data::image_path`].
 //! - **Item art** is a `https://web.poecdn.com/...` URL from the game data (an item's `icon`)
 //!   that the reference's browser fetches itself, outside `/proxy`. A window fetches it once
 //!   per URL on a worker thread ([`wraex_platform::http::HttpTransport::get_bytes`]) and keeps
@@ -287,7 +288,10 @@ fn load(source: &Source, key: String) {
         Source::Local { game, name } => {
             let path = image_path(*game, name);
             if !path.is_file() {
-                fail(key, format!("{}/{name} is not in the reference's public/images", game.as_str()));
+                fail(
+                    key,
+                    format!("{} does not exist (the assets' {}/images directory)", path.display(), game.as_str()),
+                );
                 return;
             }
             // `cache.file` reads and decodes on its worker; PNG art ignores the size, and
@@ -358,7 +362,8 @@ fn wake() {
     }
 }
 
-/// `ref/<game>/renderer/public/images/<name>` (see the per-game data modules).
+/// `assets/<game>/images/<name>` (or the reference checkout in development): see the
+/// per-game data modules.
 fn image_path(game: GameId, name: &str) -> std::path::PathBuf {
     match game {
         GameId::Poe1 => wraex_poe1::data::image_path(name),

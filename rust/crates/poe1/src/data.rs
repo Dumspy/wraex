@@ -4,6 +4,9 @@
 //! [`DataSource`]; the hash indexes are built in memory by `wraex_core::data`.
 //! `item-drop.json` and `patrons.json` are not loaded yet: item-check and the
 //! about page need them, not the parser.
+//!
+//! Where those files come from is [`wraex_core::assets`]: a packaged install ships them in
+//! `assets/poe1/data`, a development build reads the reference checkout ([`reference_source`]).
 
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
@@ -12,23 +15,46 @@ use wraex_core::data::{ClientStrings, DataError, DataSource, DirSource, ItemTabl
 /// The languages upstream ships data for (`make-index-files.mjs`).
 pub const LANGUAGES: [&str; 4] = ["en", "ru", "cmn-Hant", "ko"];
 
-/// `ref/apt/renderer/public/data`, the data upstream ships.
+/// `ref/apt/renderer/public`, the source tree's copy of what upstream ships.
+///
+/// Only a development build reads this: a release reads the copy in
+/// [`wraex_core::assets`]' root. The path is fixed at compile time, so `cargo run`, the
+/// tests and the golden harness work from any directory.
+const REFERENCE_PUBLIC: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/apt/renderer/public");
+
+/// The `data` files the running app reads: `assets/poe1/data` in a packaged install (see
+/// [`wraex_core::assets`]), the reference checkout in development.
+pub fn source() -> DirSource {
+    match wraex_core::assets::Assets::get().path("poe1/data") {
+        Some(root) => DirSource::new(root),
+        None => reference_source(),
+    }
+}
+
+/// `ref/apt/renderer/public/data`, the data upstream ships: the reference checkout itself,
+/// for tests and development. The app reads [`source`], which is this in development.
 pub fn reference_source() -> DirSource {
-    DirSource::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/apt/renderer/public/data"))
+    DirSource::new(format!("{REFERENCE_PUBLIC}/data"))
 }
 
-/// `ref/apt/renderer/public/images/<name>`: the small art upstream's page serves (the
-/// currency icons, the stash and dust badges, the influence and roll markers), which the
-/// app draws through `wraex_app::ui::art`. Read from the reference like the data files;
-/// a release build would ship them instead.
+/// The small art upstream's page serves (the currency icons, the stash and dust badges, the
+/// influence and roll markers), which the app draws through `wraex_app::ui::art`: read from
+/// `assets/poe1/images/<name>` in a packaged install, from the reference in development.
 pub fn image_path(name: &str) -> std::path::PathBuf {
-    std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/apt/renderer/public/images")).join(name)
+    match wraex_core::assets::Assets::get().path("poe1/images") {
+        Some(dir) => dir.join(name),
+        None => std::path::Path::new(REFERENCE_PUBLIC).join("images").join(name),
+    }
 }
 
-/// `ref/apt/renderer/public/icon.png`: the product icon upstream ships, which the app puts
-/// in the system tray (`main/build/icon.png` becomes this on install).
+/// The product icon upstream ships, which the app puts in the system tray
+/// (`main/build/icon.png` becomes this on install): `assets/poe1/icon.png` in a packaged
+/// install, `ref/apt/renderer/public/icon.png` in development.
 pub fn icon_path() -> std::path::PathBuf {
-    std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/apt/renderer/public/icon.png")).to_owned()
+    match wraex_core::assets::Assets::get().path("poe1/icon.png") {
+        Some(path) => path,
+        None => std::path::Path::new(REFERENCE_PUBLIC).join("icon.png"),
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

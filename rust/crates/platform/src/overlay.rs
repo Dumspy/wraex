@@ -351,14 +351,30 @@ impl OverlayController {
         }
     }
 
-    /// A window event from [`crate::window`]: the game's focus changes and the
-    /// attach result both end up here.
+    /// A window event from [`crate::window`]: the game's focus changes, the attach result and
+    /// the game window going away all end up here.
     pub fn on_window_event(&mut self, event: &WindowEvent, window: &GameWindow, handle: &mut dyn OverlayHandle) {
         match event {
             WindowEvent::ActiveChanged { is_active } => self.on_game_active_change(*is_active, window, handle),
             WindowEvent::Attached { has_access } => self.on_attached(*has_access, window, handle),
+            WindowEvent::Detached { was_active } => self.on_detached(*was_active, window, handle),
             WindowEvent::BoundsChanged { .. } => {}
         }
+    }
+
+    /// `electron-overlay-window`'s `detach`: the game's window is gone. The overlay keeps its
+    /// state — Wraex stays in the tray — but a game that was in front reports losing it, and
+    /// EE2's hide-on-blur has something to hide.
+    fn on_detached(&mut self, was_active: bool, window: &GameWindow, handle: &mut dyn OverlayHandle) {
+        if was_active {
+            self.events.push(OverlayEvent::FocusChange {
+                game: false,
+                overlay: self.is_interactable,
+                using_hotkey: self.is_overlay_key_used,
+            });
+            self.is_overlay_key_used = false;
+        }
+        self.sync_window_visibility(window, handle);
     }
 
     /// `handlePoeWindowActiveChange`: report who has the focus. A game that came
@@ -650,6 +666,26 @@ mod tests {
             controller.take_events(),
             vec![OverlayEvent::FocusChange { game: true, overlay: false, using_hotkey: false }]
         );
+    }
+
+    #[test]
+    fn a_closed_game_window_reports_the_focus_it_lost() {
+        let (mut controller, mut window, mut handle, _clock) = fresh(GameId::Poe1);
+        forward(&mut controller, &mut window, &mut handle, GameWindowEvents::Attach { has_access: Some(true) });
+        forward(&mut controller, &mut window, &mut handle, GameWindowEvents::Focus);
+        controller.take_events();
+
+        forward(&mut controller, &mut window, &mut handle, GameWindowEvents::Detach);
+        assert!(!window.is_tracking());
+        assert!(!window.is_active());
+        assert_eq!(
+            controller.take_events(),
+            vec![OverlayEvent::FocusChange { game: false, overlay: false, using_hotkey: false }]
+        );
+
+        // The OS layer reports a destruction once; the overlay keeps its state either way.
+        forward(&mut controller, &mut window, &mut handle, GameWindowEvents::Detach);
+        assert!(controller.take_events().is_empty());
     }
 
     #[test]

@@ -19,13 +19,29 @@
 //! 6. **Actions** ([`dispatch`]): the widgets record what their buttons ask for; the shell
 //!    opens the browser, types a stash search or quits.
 //!
-//! What is *not* here is PLAN.md's phase 2: finding and following the game window, a real
-//! click-through overlay, and low-level key/wheel hooks. The window is an ordinary Rune
-//! window placed near the cursor ([`keys::cursor_position`]), hotkeys are registered all the
-//! time instead of only while the game is focused, and [`OverlayWindow`] only records what
-//! [`OverlayController`] asks for. Where a hotkey cannot be synthesized (Linux, or macOS
-//! without Input Monitoring permission), a price check prices the item already on the
-//! clipboard instead of pressing the game's copy key.
+//! # The game's window (PLAN.md phase 2)
+//!
+//! On Windows the shell starts [`wraex_platform::window::Watcher`], the Win32 hook that finds
+//! the game's window by the config's `windowTitle` and reports its focus, moves and
+//! destruction (`electron-overlay-window`'s native half). Everything upstream hangs off that
+//! follows from it:
+//!
+//! - **The window is the overlay.** It is transparent, borderless, on top and click-through
+//!   (`window_options()`), covers the game's client area, and the widget is drawn inside it
+//!   at the cursor ([`App::overlay_offset`]). [`OverlayController`] turns the click-through
+//!   off when a widget takes the mouse and the overlay handle gives the game its focus back.
+//! - **Hotkeys exist only while the game is focused**: [`Shortcuts::on_game_active`], as
+//!   upstream's `active-change` listener, so a press can never land in another application.
+//!   That is what lets `keys::OSSender` synthesize keys by default here (see its
+//!   documentation for the platforms without tracking).
+//! - **The window follows the game**: moves and resizes re-place it, and it hides while the
+//!   game is unfocused, as the overlay library does.
+//!
+//! macOS, X11 and Wayland have no window hook yet, so there the app keeps its earlier shape:
+//! an ordinary window placed next to the cursor, hotkeys registered all the time, and key
+//! synthesis opt-in (`WRAEX_KEY_SYNTHESIS=1`). `wraex_platform::window` documents the
+//! follow-ups. Where a hotkey cannot be synthesized, a price check prices the item already on
+//! the clipboard instead of pressing the game's copy key.
 //!
 //! None of this runs in a scene, a `--snap` render or a test: [`run`] is only reached from
 //! `main` when Rune is not headless and no `--scene` was given, and every entry point checks
@@ -40,6 +56,7 @@ pub mod tray;
 pub mod updates;
 
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex};
 
 use rune::{AppHandle, AppSpec, Tx};
@@ -49,10 +66,15 @@ use wraex_core::game_files::{self, Os, UserDirs};
 use wraex_core::leagues::{LeagueSource, Leagues};
 use wraex_core::updates::{NoDownloadReason, UpdateInfo};
 use wraex_platform::clipboard::{Clipboard, is_poe_item};
-use wraex_platform::overlay::{OverlayController, OverlayHandle};
-use wraex_platform::shortcuts::{Action, HostConfig, ItemText, PressContext, ShortcutAction, ShortcutEvent, Shortcuts};
+use wraex_platform::overlay::{OverlayController, OverlayEvent, OverlayHandle};
+use wraex_platform::shortcuts::{
+    Action, HostConfig, ItemText, PressContext, Registration, ShortcutAction, ShortcutEvent, Shortcuts,
+};
 use wraex_platform::tray::{Tray, TrayAction};
-use wraex_platform::window::{GameWindow, Point};
+use wraex_platform::window::{self, Bounds, GameWindow, Point};
+
+#[cfg(target_os = "windows")]
+use wraex_platform::window::WindowTarget;
 
 use crate::settings::{self, Settings};
 use crate::trade::{LiveClock, Mode};
@@ -70,6 +92,11 @@ const TRADE_HOST: &str = "www.pathofexile.com";
 /// How far below and right of the cursor a widget opens, in physical pixels.
 const CURSOR_OFFSET: i32 = 12;
 
+/// How many frames a focus the overlay asked for counts as "in front", at 60 fps about a
+/// second and a half: `electron-overlay-window` waits for the `focus` event, and this is the
+/// bound on waiting for one that never comes.
+const FOCUS_PATIENCE: u8 = 90;
+
 /// Which window the app is showing, for the native window's size and placement.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Shown {
@@ -80,6 +107,41 @@ pub enum Shown {
     PriceCheck,
     Poe2,
     Widget(String),
+}
+
+/// Where a shown window goes: next to the cursor that asked for it (a hotkey), or in the
+/// middle of whatever it is over (the tray's settings and widgets).
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Placement {
+    Cursor(Point),
+    Centred,
+}
+
+/// Whether what is shown is a widget over the game (the overlay), as opposed to the settings
+/// window, which upstream draws in an ordinary window of its own.
+fn is_overlay(shown: &Shown) -> bool {
+    matches!(shown, Shown::PriceCheck | Shown::Poe2 | Shown::ItemCheck | Shown::Widget(_))
+}
+
+/// Where a widget goes inside the overlay window: at the cursor that asked for it (12 px below
+/// and right, as the ordinary window has always opened) or centred for a window the tray
+/// opened, then clamped so the whole card stays inside the game's client area.
+///
+/// `bounds` is the game's client area in physical pixels and `scale` the window's DPI scale,
+/// which is what turns both into the points Rune lays the widget out in.
+fn widget_offset(placement: Option<Placement>, size: (f32, f32), bounds: Bounds, scale: f64) -> (f32, f32) {
+    let (width, height) = (f64::from(size.0), f64::from(size.1));
+    let (client_width, client_height) = (bounds.width / scale, bounds.height / scale);
+    let (x, y) = match placement {
+        Some(Placement::Cursor(point)) => (
+            (point.x - bounds.x) / scale + f64::from(CURSOR_OFFSET),
+            (point.y - bounds.y) / scale + f64::from(CURSOR_OFFSET),
+        ),
+        _ => ((client_width - width) / 2.0, (client_height - height) / 2.0),
+    };
+    // A widget taller than the game (a card at a small window size) starts at the top edge.
+    let clamp = |value: f64, limit: f64| value.clamp(0.0, limit.max(0.0)) as f32;
+    (clamp(x, client_width - width), clamp(y, client_height - height))
 }
 
 /// The live app's OS-facing half. Held by [`App`] as `App::live`; `None` in a scene or a
@@ -95,6 +157,25 @@ pub struct Live {
     pub keys: keys::OSSender,
     pub handle: AppHandle<App>,
     pub tray: Option<Tray>,
+    /// The OS layer that finds and follows the game's window (`electron-overlay-window`'s
+    /// native half). `Some` once [`Live::boot`] started it; Windows only for now.
+    pub watcher: Option<window::Watcher>,
+    /// The window title the watcher was started with, to notice a changed config.
+    watched_title: Option<String>,
+    /// The overlay's window and the game's, shared with every `OverlayPanel`.
+    panel: Arc<Panel>,
+    /// Where the next window goes, and where the current one went.
+    placement: Option<Placement>,
+    /// The widget's offset inside the overlay window, in points ([`App::overlay_offset`]).
+    overlay_offset: Option<(f32, f32)>,
+    /// The game rectangle the window was last placed over.
+    placed: Option<Bounds>,
+    /// A widget opened under the cursor takes the mouse as soon as it is on screen
+    /// (`Live::sync_window`).
+    activate_on_show: bool,
+    /// Whether the overlay window itself has the focus (`AppSpec::on_focus`): the library's
+    /// blur rule hides the overlay when neither it nor the game is in front.
+    pub overlay_focused: bool,
     /// Tray clicks, queued by the tray's native menu callback for [`Live::poll`].
     tray_actions: Arc<Mutex<Vec<TrayAction>>>,
     registered: Vec<rune::ShortcutId>,
@@ -113,8 +194,6 @@ pub struct Live {
     /// either way the app re-reads its file.
     settings_was_open: bool,
     shown: Shown,
-    /// The next window belongs at the cursor (a hotkey opened it), not where the last one was.
-    at_cursor: bool,
 }
 
 impl std::fmt::Debug for Live {
@@ -130,8 +209,9 @@ impl std::fmt::Debug for Live {
 
 impl Live {
     /// The shell's state for a live run: the config, its host half, the idle OS traits and
-    /// the prices the first price check will use.
-    pub fn new(handle: AppHandle<App>, startup: config::Startup) -> Self {
+    /// the prices the first price check will use. `panel` is the overlay's window, created
+    /// before the app because Rune hands the window over on creation.
+    pub fn new(handle: AppHandle<App>, startup: config::Startup, panel: Arc<Panel>) -> Self {
         let game = startup.game;
         let os = current_os();
         let host = host_config(game, &startup.config);
@@ -175,6 +255,14 @@ impl Live {
             keys: keys::OSSender::new(),
             handle,
             tray: None,
+            watcher: None,
+            watched_title: None,
+            panel,
+            placement: None,
+            overlay_offset: None,
+            placed: None,
+            activate_on_show: false,
+            overlay_focused: false,
             tray_actions: Arc::new(Mutex::new(Vec::new())),
             registered: Vec::new(),
             warnings,
@@ -185,7 +273,6 @@ impl Live {
             poe2_prices: None,
             settings_was_open: false,
             shown: Shown::None,
-            at_cursor: false,
         }
     }
 
@@ -196,11 +283,123 @@ impl Live {
         self.warnings.push(message);
     }
 
-    /// The first turn of the event loop: the tray and the configured hotkeys, both of which
-    /// need Rune's host to exist (the tray's native menu on macOS, `register_shortcut`).
+    /// The first turn of the event loop: the tray, the game window's hook, and the configured
+    /// hotkeys, all of which need Rune's host to exist (the tray's native menu on macOS,
+    /// `register_shortcut`).
     pub fn boot(&mut self) {
         self.start_tray();
-        self.register_hotkeys();
+        self.start_game_window();
+        // With the game's window followed, the hotkeys belong to its focus
+        // (`poll_game_window` registers them); before the first report there is nothing to
+        // register them for.
+        if self.hotkeys_follow_game() {
+            self.register_hotkeys();
+        }
+    }
+
+    /// Start following the game's window, by the config's `windowTitle` (`OverlayWindow`'s
+    /// `updateOpts(overlayKey, windowTitle)`). The watcher finds it now or when it appears.
+    #[cfg(target_os = "windows")]
+    fn start_game_window(&mut self) {
+        if self.watcher.is_some() {
+            return;
+        }
+        let title = self.host.window_title.clone();
+        if title.is_empty() {
+            return self.warn("the config has no window title: the game's window cannot be followed");
+        }
+        let handle = self.handle.clone();
+        match window::Watcher::start(WindowTarget::new(title.clone()), Box::new(move || handle.wake())) {
+            Ok(watcher) => {
+                eprintln!("wraex: following the \"{title}\" window");
+                self.watcher = Some(watcher);
+                self.watched_title = Some(title);
+                // Hotkeys now exist only while the game is focused, so pressing keys is safe
+                // without the environment variable (`keys` documentation).
+                self.keys.set_game_focus_tracking();
+            }
+            Err(error) => self.warn(error.to_string()),
+        }
+    }
+
+    /// macOS, X11 and Wayland keep the earlier behaviour: an ordinary window, system-wide
+    /// hotkeys and opt-in key synthesis. `wraex_platform::window` documents the follow-ups.
+    #[cfg(not(target_os = "windows"))]
+    fn start_game_window(&mut self) {}
+
+    /// The OS layer's reports: the game gained or lost the focus, moved, was minimised or
+    /// closed. The window state machine turns them into the changes the rest of the host
+    /// acts on, and the hotkeys follow the focus as upstream's `active-change` does.
+    fn poll_game_window(&mut self) -> bool {
+        let Some(watcher) = &mut self.watcher else { return false };
+        let events = watcher.drain();
+        if events.is_empty() {
+            return false;
+        }
+        let game = watcher.hwnd();
+        if let Ok(mut current) = self.panel.game.lock() {
+            *current = game;
+        }
+        let mut panel = OverlayPanel::new(self.panel.clone());
+        let mut changed = false;
+        for event in events {
+            if let Some(change) = self.window.feed(event) {
+                self.overlay.on_window_event(&change, &self.window, &mut panel);
+                changed = true;
+            }
+        }
+        // The game is in front again: a focus the overlay asked for is settled either way.
+        if self.window.is_active() {
+            self.panel.focus_settled();
+        }
+        // One registration decision per batch: the overlay may itself have taken the focus
+        // while handling these (`assert_overlay_active` → `set_active(false)`), which
+        // unregisters the hotkeys exactly like a real blur does upstream.
+        if self.sync_registration() {
+            changed = true;
+        }
+        changed
+    }
+
+    /// The overlay's own events (`MAIN->OVERLAY::*`). Upstream's renderer listens for them;
+    /// this port has no such channel yet, so the ones a person has to see are logged — the
+    /// administrator-rights error above all (`OverlayWindow.handleOverlayAttached`).
+    fn drain_overlay_events(&mut self) {
+        for event in self.overlay.take_events() {
+            match event {
+                OverlayEvent::NoAccess => self.warn(
+                    "the game is running with administrator rights: start Wraex as administrator too, \
+                     or the overlay cannot reach its window",
+                ),
+                OverlayEvent::Attached => eprintln!("wraex: overlay attached to the game window"),
+                OverlayEvent::FocusChange { game, overlay, using_hotkey } => {
+                    eprintln!("wraex: focus game={game} overlay={overlay} hotkey={using_hotkey}");
+                }
+                // The renderer's own: the Alt peek and the exclusive widget closing.
+                OverlayEvent::Visibility { .. } | OverlayEvent::HideExclusiveWidget => {}
+            }
+        }
+    }
+
+    /// `Shortcuts::on_game_active`: upstream's `active-change` listener. Registers the
+    /// configured hotkeys while the game is focused and unregisters them the moment it is
+    /// not — including when the overlay takes the keyboard itself.
+    fn sync_registration(&mut self) -> bool {
+        // Without a window hook the hotkeys stay system-wide, as the port has always done.
+        if self.watcher.is_none() {
+            return false;
+        }
+        match self.shortcuts.on_game_active(self.window.is_active()) {
+            Registration::Register => {
+                self.register_hotkeys();
+                true
+            }
+            Registration::UnregisterAll => {
+                self.unregister_hotkeys();
+                true
+            }
+            Registration::None => false,
+        }
     }
 
     /// `AppTray.ts`: the icon and its menu. Created on the UI thread inside the event loop,
@@ -321,12 +520,31 @@ impl Live {
             self.warn(warning.to_string());
         }
         self.overlay.update_from(&self.host);
+        // `electron-overlay-window` takes the title once, at init; a config that renamed the
+        // window gets a fresh hook instead (upstream restarts the app for it).
+        if self.watched_title.as_deref().is_some_and(|title| title != self.host.window_title) {
+            self.watcher = None;
+            self.watched_title = None;
+            if let Some(change) = self.window.feed(window::GameWindowEvents::Detach) {
+                let mut panel = OverlayPanel::new(self.panel.clone());
+                self.overlay.on_window_event(&change, &self.window, &mut panel);
+            }
+            self.start_game_window();
+        }
         if let Some(tray) = &mut self.tray
             && let Err(error) = tray.set_overlay_key(self.host.overlay_key.clone())
         {
             self.warn(format!("rebuilding the tray menu failed: {error}"));
         }
-        self.register_hotkeys();
+        if self.hotkeys_follow_game() {
+            self.register_hotkeys();
+        }
+    }
+
+    /// Whether the hotkeys may be registered now: without a window hook they are system-wide
+    /// (the earlier behaviour), with one they exist only while the game has the focus.
+    fn hotkeys_follow_game(&self) -> bool {
+        self.watcher.is_none() || self.window.is_active()
     }
 
     /// A press of one configured hotkey: upstream's `Shortcuts.press`, then whatever the
@@ -355,7 +573,7 @@ impl Live {
         }
 
         let show_mods = show_mods_key(self.game, &self.startup.config);
-        let mut overlay_handle = OverlayWindow::default();
+        let mut overlay_handle = OverlayPanel::new(self.panel.clone());
         let events = {
             let Live { shortcuts, clipboard, keys, window, overlay, .. } = self;
             shortcuts.press(
@@ -373,7 +591,13 @@ impl Live {
             )
         };
         self.deliver(app, dispatch::shortcut_requests(events));
-        self.at_cursor = true;
+        self.placement = Some(Placement::Cursor(cursor));
+        // The widget opens under the cursor, so it is hovered the moment it appears: upstream's
+        // `WidgetAreaTracker` activates the overlay on the mouse move onto it, and this stands
+        // in for that move (`sync_window`).
+        self.activate_on_show = true;
+        // `focus-overlay` may have taken the focus from the game.
+        self.sync_registration();
     }
 
     /// Run the shell's side of a press's or a widget's requests, oldest first.
@@ -420,7 +644,7 @@ impl Live {
     fn stash_search(&mut self, text: &str) {
         let show_mods = show_mods_key(self.game, &self.startup.config);
         let cursor = cursor_point();
-        let mut overlay_handle = OverlayWindow::default();
+        let mut overlay_handle = OverlayPanel::new(self.panel.clone());
         let Live { shortcuts, clipboard, keys, window, overlay, .. } = self;
         shortcuts.user_stash_search(
             text,
@@ -435,40 +659,144 @@ impl Live {
                 show_mods_key: &show_mods,
             },
         );
+        self.sync_registration();
     }
 
-    /// The native window's visibility and size follow what the app draws. Closing a widget
-    /// hides the window (the app stays in the tray); opening one shows it, at the cursor when
-    /// a hotkey asked for it.
+    /// A key pressed while the overlay window has the keyboard (`OverlayWindow`'s
+    /// `handleExtraCommands`): Escape and Ctrl+W give the game back its focus, the overlay key
+    /// toggles, and a key nothing handles stays the widget's. `true` means it was handled.
+    fn overlay_key(&mut self, event: &rune::KeyEvent) -> bool {
+        if !self.overlay.is_interactable() {
+            return false;
+        }
+        let Some(input) = keys::overlay_input(event) else { return false };
+        let mut panel = OverlayPanel::new(self.panel.clone());
+        let handled = self.overlay.on_overlay_input(&input, &mut self.window, &mut panel);
+        if handled {
+            self.sync_registration();
+        }
+        handled
+    }
+
+    /// The native window's visibility, size and placement follow what the app draws.
+    ///
+    /// With the game's window followed (Windows), the window *is* the overlay: it covers the
+    /// game's client area in physical pixels and the widget is drawn inside it at the cursor
+    /// ([`App::overlay_offset`]); the overlay library hides it while the game is unfocused.
+    /// Without a hook it is the ordinary window the port has had: sized to the widget, next
+    /// to the cursor when a hotkey asked for it.
     fn sync_window(&mut self, app: &App, tx: &mut Tx) {
         let shown = app.shown();
-        if shown != self.shown {
+        let opened = shown != self.shown;
+        let over_game = self.game_bounds();
+        if opened {
             self.shown = shown.clone();
-            if let Some((width, height)) = window_size(&shown) {
+            // The overlay's size comes from the game, not from the widget.
+            if over_game.is_none()
+                && let Some((width, height)) = window_size(&shown)
+            {
                 tx.resize_window_instant((width, height));
             }
         }
+
         if shown == Shown::None {
-            if self.handle.is_visible() {
-                self.handle.hide();
+            // Nothing to draw: the next hotkey places its widget afresh.
+            self.placement = None;
+            self.overlay_offset = None;
+            self.activate_on_show = false;
+            return self.hide_panel();
+        }
+        // `electron-overlay-window`'s `blur` handler: hide the overlay when neither the game
+        // nor the overlay window itself is in front. (`focusNext`: a focus we asked for is not
+        // a blur yet.) The settings window is not the overlay — upstream gives it an ordinary
+        // window of its own — so it stays while the game is in the background.
+        let in_front = self.window.is_active() || self.overlay_focused || self.panel.expects_focus();
+        if is_overlay(&shown) && self.watcher.is_some() && !in_front {
+            self.overlay_offset = None;
+            return self.hide_panel();
+        }
+
+        let Some(bounds) = over_game else {
+            // No game window to be over: the widget's own window, at the cursor.
+            self.overlay_offset = None;
+            self.activate_on_show = false;
+            self.placed = None;
+            if !self.handle.is_visible() {
+                if let Some(Placement::Cursor(point)) = self.placement {
+                    self.handle
+                        .set_position((point.x.round() as i32 + CURSOR_OFFSET, point.y.round() as i32 + CURSOR_OFFSET));
+                }
+                self.placement = None;
+                self.handle.open();
+                self.panel.visible.store(true, Ordering::Relaxed);
+            }
+            // Without a game to be over, the settings window is still the only way in: it has
+            // to take the mouse and the keyboard (the overlay window is click-through by
+            // default, `window_options`).
+            if shown == Shown::Settings && opened {
+                let mut panel = OverlayPanel::new(self.panel.clone());
+                self.overlay.assert_overlay_active(&mut self.window, &mut panel);
             }
             return;
-        }
-        if !self.handle.is_visible() {
-            if self.at_cursor
-                && let Some((x, y)) = keys::cursor_position()
-            {
-                self.handle.set_position((x.round() as i32 + CURSOR_OFFSET, y.round() as i32 + CURSOR_OFFSET));
+        };
+
+        self.overlay_offset = self.offset_over(&shown, bounds);
+        if self.placed != Some(bounds) || !self.handle.is_visible() {
+            if !self.handle.is_visible() {
+                self.handle.open();
+                self.panel.visible.store(true, Ordering::Relaxed);
             }
-            self.at_cursor = false;
-            self.handle.open();
+            // The window may not exist yet (Rune creates it on `open`); the next poll places
+            // it, because `placed` only records a window that was really moved.
+            self.placed =
+                self.panel.overlay_hwnd().and_then(|hwnd| window::place_overlay(hwnd, bounds).then_some(bounds));
         }
+
+        // The settings window always takes the mouse and the keyboard; a widget does when the
+        // cursor is already on it (upstream's `WidgetAreaTracker` reacts to a mouse move, and
+        // a widget that opens under the cursor has had one — see `Live::press`).
+        if (shown == Shown::Settings && opened) || std::mem::take(&mut self.activate_on_show) {
+            let mut panel = OverlayPanel::new(self.panel.clone());
+            self.overlay.assert_overlay_active(&mut self.window, &mut panel);
+            self.sync_registration();
+        }
+
+        // The overlay library's `focus` handler makes the window click-through again; the
+        // controller can clear `isInteractable` without telling the window (the game came back
+        // through the OS hook), so the two are reconciled here.
+        if is_overlay(&shown) {
+            let wanted = !self.overlay.is_interactable();
+            if self.panel.click_through() != Some(wanted) {
+                OverlayPanel::new(self.panel.clone()).set_click_through(wanted);
+            }
+        }
+    }
+
+    /// Where the widget goes inside the overlay window, in logical points: at the cursor that
+    /// asked for it (clamped into the window), or centred for a window the tray opened.
+    fn offset_over(&self, shown: &Shown, bounds: Bounds) -> Option<(f32, f32)> {
+        let size = window_size(shown)?;
+        Some(widget_offset(self.placement, size, bounds, self.panel.scale()))
+    }
+
+    /// The game's client area while the OS layer follows the window, in physical pixels.
+    fn game_bounds(&self) -> Option<Bounds> {
+        self.watcher.as_ref()?;
+        self.window.bounds().filter(|bounds| bounds.width > 0.0 && bounds.height > 0.0)
+    }
+
+    fn hide_panel(&mut self) {
+        self.placed = None;
+        if self.handle.is_visible() {
+            self.handle.hide();
+        }
+        self.panel.visible.store(false, Ordering::Relaxed);
     }
 
     /// `AppSpec::poll`'s live half: tray clicks, update answers, landed prices, the windows'
     /// recorded actions, and the window itself.
     fn poll(&mut self, app: &mut App, tx: &mut Tx) -> bool {
-        let mut changed = false;
+        let mut changed = self.poll_game_window();
 
         let actions: Vec<TrayAction> =
             self.tray_actions.lock().map(|mut queue| std::mem::take(&mut *queue)).unwrap_or_default();
@@ -513,6 +841,7 @@ impl Live {
         }
         self.settings_was_open = settings_open;
 
+        self.drain_overlay_events();
         self.sync_window(app, tx);
         changed
     }
@@ -551,6 +880,13 @@ impl App {
         let live_changed = live.poll(self, tx);
         self.live = Some(live);
         self.poll(clock) || live_changed
+    }
+
+    /// [`App::shown`]'s widget inside the overlay window: where it goes, in points, when the
+    /// window covers the game (Windows with the game's window followed). `None` when the
+    /// window is the widget itself.
+    pub fn overlay_offset(&self) -> Option<(f32, f32)> {
+        self.live.as_ref().and_then(|live| live.overlay_offset)
     }
 
     /// What the window draws, in [`crate::view`]'s order.
@@ -623,6 +959,26 @@ impl App {
         self.live = Some(live);
     }
 
+    /// `AppSpec::on_focus`: whether the overlay window itself has the focus. The library's
+    /// `blur` rule needs it — a widget whose window is in front stays while the game is not —
+    /// and it settles a focus the overlay asked for (`focusNext`).
+    pub fn on_focus(&mut self, focused: bool, _tx: &mut Tx) {
+        if let Some(live) = &mut self.live {
+            live.overlay_focused = focused;
+            live.panel.focus_settled();
+        }
+    }
+
+    /// `AppSpec::on_key`: keys the window's widget did not take. While the overlay holds the
+    /// keyboard they are upstream's `handleExtraCommands` (Escape and Ctrl+W give the game its
+    /// focus, the overlay key toggles); otherwise the widget keeps them.
+    pub fn on_key(&mut self, event: &rune::KeyEvent, _tx: &mut Tx) -> bool {
+        let Some(mut live) = self.live.take() else { return false };
+        let handled = live.overlay_key(event);
+        self.live = Some(live);
+        handled
+    }
+
     /// The tray's "Settings/League", a widget's edit button, or `wm.show` on the settings
     /// widget: upstream's settings window, over the game's widget.
     fn open_settings(&mut self, live: &mut Live) {
@@ -633,7 +989,8 @@ impl App {
         }
         live.settings_was_open = true;
         self.settings = Some(settings);
-        live.at_cursor = false;
+        live.placement = Some(Placement::Centred);
+        live.activate_on_show = true;
     }
 
     /// `MAIN->CLIENT::item-text` for `price-check`: the window for the copied item, in the
@@ -644,7 +1001,7 @@ impl App {
         let league = live.league.clone();
         self.open_price_check_for(live.game, &league, Mode::Live, text, warm, overviews);
         self.settings = None;
-        live.at_cursor = true;
+        // The press recorded where the cursor was; that is where the widget goes.
     }
 
     /// [`App::open_price_check`] without the shell: the window itself, which a test drives
@@ -701,7 +1058,7 @@ impl App {
             || self.item_check_poe2.as_ref().is_some_and(|check| check.open)
         {
             self.settings = None;
-            live.at_cursor = true;
+            // The press recorded where the cursor was (see `Live::press`).
         } else {
             live.warn(format!("the copied text is not a {:?} item", live.game));
             return;
@@ -788,7 +1145,8 @@ impl App {
         if let Some(wm_id) = shown {
             overlay.focus(wm_id, Mode::Live);
         }
-        live.at_cursor = false;
+        live.placement = Some(Placement::Centred);
+        live.activate_on_show = true;
     }
 
     /// Draw a widget of `wm_type` in the overlay window (`wm.show(wmId)` from the menu).
@@ -800,7 +1158,8 @@ impl App {
             let id = overlay.create(wm_type);
             overlay.focus(id, Mode::Live);
         }
-        live.at_cursor = false;
+        live.placement = Some(Placement::Centred);
+        live.activate_on_show = true;
     }
 
     /// The update worker's answer, for the settings window's About page (`Host.updateInfo`).
@@ -888,7 +1247,7 @@ pub fn default_league(game: GameId) -> &'static str {
 
 /// The native window's size for what it draws. The price check is a fixed 28.75 rem column;
 /// the settings window is upstream's 50 × 38 rem.
-fn window_size(shown: &Shown) -> Option<(f32, f32)> {
+pub(crate) fn window_size(shown: &Shown) -> Option<(f32, f32)> {
     match shown {
         Shown::None => None,
         Shown::Settings => Some((crate::settings::WIDTH, crate::settings::HEIGHT)),
@@ -939,31 +1298,163 @@ fn cursor_point() -> Point {
     keys::cursor_position().map(|(x, y)| Point { x, y }).unwrap_or(Point { x: 0.0, y: 0.0 })
 }
 
-/// The overlay's OS half, as far as this milestone goes: what [`OverlayController`] asked
-/// for, without an overlay window (PLAN.md phase 2 owns the window, click-through and focus).
-#[derive(Debug, Default)]
-struct OverlayWindow {
-    click_through: bool,
-    visible: bool,
+/// The overlay's own native window and the game window it sits over. Created in [`run`]
+/// before the app, because Rune hands the window over when it creates it (`on_window`), and
+/// shared with every [`OverlayPanel`], which lives as long as one press.
+#[derive(Default)]
+pub struct Panel {
+    /// The Rune window, once it exists.
+    window: Mutex<Option<rune::WindowHandle>>,
+    /// Its native handle (unused off Windows).
+    overlay: Mutex<Option<isize>>,
+    /// The tracked game window's handle, for [`OverlayHandle::focus_game`].
+    game: Mutex<Option<isize>>,
+    /// What [`OverlayHandle::is_visible`] answers: the shell's own bookkeeping, since Rune
+    /// has no query for it.
+    visible: AtomicBool,
+    /// The click-through the overlay last asked for, `None` until it asks once. Kept because
+    /// the request can arrive before Rune has created the window (`Live::press` activates it
+    /// straight away), and re-applied if the window is re-created.
+    click_through: Mutex<Option<bool>>,
+    /// The overlay is the one taking the keys, so a window created now takes the focus
+    /// (`activateOverlay`'s `electronWindow.focus()`).
+    take_focus: AtomicBool,
+    /// Frames left in which a focus the overlay asked for counts as "in front": the window is
+    /// not hidden in between (`electron-overlay-window`'s `focusNext`). A countdown, because a
+    /// focus Windows refuses is never answered, and the window must not stay in front forever.
+    expect_focus: AtomicU8,
 }
 
-impl OverlayHandle for OverlayWindow {
+impl std::fmt::Debug for Panel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Panel")
+            .field("overlay", &self.overlay_hwnd())
+            .field("game", &self.game.lock().ok().and_then(|game| *game))
+            .field("visible", &self.visible.load(Ordering::Relaxed))
+            .field("click_through", &self.click_through.lock().ok().and_then(|click_through| *click_through))
+            .finish_non_exhaustive()
+    }
+}
+
+impl Panel {
+    /// Rune created (or re-created) the window: keep it, and on Windows make it the tool
+    /// window an overlay should be (no taskbar button, no Alt+Tab entry).
+    pub fn attach(&self, window: &rune::WindowHandle) {
+        let hwnd = window
+            .with_raw_handle(|handle| match handle.as_raw() {
+                rune::raw_window_handle::RawWindowHandle::Win32(win32) => Some(win32.hwnd.get()),
+                _ => None,
+            })
+            .ok()
+            .flatten();
+        if let Some(hwnd) = hwnd {
+            window::configure_overlay(hwnd);
+        }
+        if let Ok(mut current) = self.window.lock() {
+            *current = Some(window.clone());
+        }
+        if let Ok(mut current) = self.overlay.lock() {
+            *current = hwnd;
+        }
+        // A click-through request may have arrived before the window existed.
+        if let Some(click_through) = self.click_through.lock().ok().and_then(|click_through| *click_through)
+            && let Err(error) = window.set_click_through(click_through)
+        {
+            eprintln!("wraex: the overlay's click-through could not be set: {error}");
+        }
+        if self.take_focus.load(Ordering::Relaxed) {
+            window.focus();
+        }
+    }
+
+    fn window(&self) -> Option<rune::WindowHandle> {
+        self.window.lock().ok().and_then(|window| window.clone())
+    }
+
+    fn overlay_hwnd(&self) -> Option<isize> {
+        self.overlay.lock().ok().and_then(|hwnd| *hwnd)
+    }
+
+    fn click_through(&self) -> Option<bool> {
+        self.click_through.lock().ok().and_then(|click_through| *click_through)
+    }
+
+    /// Whether the focus was asked for and has not arrived (yet): `focusNext`. Counted down,
+    /// so a focus Windows refuses cannot hold the overlay in front.
+    fn expects_focus(&self) -> bool {
+        let left = self.expect_focus.try_update(Ordering::Relaxed, Ordering::Relaxed, |left| left.checked_sub(1));
+        left.unwrap_or(0) > 0
+    }
+
+    /// The focus question was answered — the window or the game took it — so `focusNext` no
+    /// longer holds the overlay on screen.
+    fn focus_settled(&self) {
+        self.expect_focus.store(0, Ordering::Relaxed);
+    }
+
+    /// The window's DPI scale, for turning the hook's physical pixels into points.
+    fn scale(&self) -> f64 {
+        self.overlay_hwnd().map_or(1.0, window::dpi_scale)
+    }
+}
+
+/// [`OverlayHandle`] over the live window: what [`OverlayController`] asks the OS for — show,
+/// hide, click-through, the game's focus back.
+#[derive(Debug)]
+struct OverlayPanel {
+    panel: Arc<Panel>,
+}
+
+impl OverlayPanel {
+    fn new(panel: Arc<Panel>) -> Self {
+        Self { panel }
+    }
+}
+
+impl OverlayHandle for OverlayPanel {
     fn show(&mut self) {
-        self.visible = true;
+        if let Some(window) = self.panel.window() {
+            window.show();
+        }
+        self.panel.visible.store(true, Ordering::Relaxed);
     }
 
     fn hide(&mut self) {
-        self.visible = false;
+        if let Some(window) = self.panel.window() {
+            window.hide();
+        }
+        self.panel.visible.store(false, Ordering::Relaxed);
     }
 
+    /// `activateOverlay`/`focusTarget`: taking the mouse also takes the keyboard, and giving
+    /// the mouse back gives the game the focus.
     fn set_click_through(&mut self, click_through: bool) {
-        self.click_through = click_through;
+        if let Ok(mut current) = self.panel.click_through.lock() {
+            *current = Some(click_through);
+        }
+        // The overlay takes the keyboard while it takes the mouse.
+        self.panel.take_focus.store(!click_through, Ordering::Relaxed);
+        self.panel.expect_focus.store(if click_through { 0 } else { FOCUS_PATIENCE }, Ordering::Relaxed);
+        // No window yet: `Panel::attach` applies both when Rune creates one.
+        let Some(window) = self.panel.window() else { return };
+        if let Err(error) = window.set_click_through(click_through) {
+            eprintln!("wraex: the overlay's click-through could not be changed: {error}");
+            return;
+        }
+        if !click_through {
+            window.focus();
+        }
     }
 
-    fn focus_game(&mut self) {}
+    fn focus_game(&mut self) {
+        let Some(game) = self.panel.game.lock().ok().and_then(|game| *game) else { return };
+        if !window::focus_window(game) && cfg!(target_os = "windows") {
+            eprintln!("wraex: could not give the game's window its focus back");
+        }
+    }
 
     fn is_visible(&self) -> bool {
-        self.visible
+        self.panel.visible.load(Ordering::Relaxed)
     }
 }
 
@@ -1012,19 +1503,29 @@ pub fn run(game: GameId) {
         families: crate::theme::FAMILIES,
         setup: Some(|app, waker| app.set_waker(waker)),
         poll: Some(|app, clock, tx| app.poll_with(clock, tx)),
-        on_key: None,
+        on_key: Some(App::on_key),
     };
+    // The overlay's window, and the game's, are handed to `Live` as one shared value: Rune
+    // passes the window over when it creates it, before `Live` exists.
+    let panel = Arc::new(Panel::default());
+    let window_panel = panel.clone();
     let mut app = rune::App::new(spec)
         // Nothing shows until a hotkey or the tray opens a widget; the app lives in the tray.
         .windowless()
         .keep_running()
+        // Transparent, borderless, on top and click-through: the widget window is the
+        // overlay's (`electron-overlay-window`'s `OVERLAY_WINDOW_OPTS`).
+        .window_options(window_options())
+        .on_window(move |window| window_panel.attach(window))
+        // The overlay's own focus, for the library's hide-on-blur rule (`App::on_focus`).
+        .on_focus(App::on_focus)
         // Upstream binds `Shift + Space` by default, which Rune's parser refuses without ⌘/⌃/⌥.
         .allow_unmodified_shortcuts()
         .standard_menus()
         .on_close(|app, _tx| app.close_windows());
     let handle = app.handle();
 
-    let live = Live::new(handle.clone(), startup);
+    let live = Live::new(handle.clone(), startup, panel);
     for warning in &live.warnings {
         eprintln!("wraex: {warning}");
     }
@@ -1041,6 +1542,23 @@ pub fn run(game: GameId) {
     spawn_startup_work(handle.clone(), game, configured_league);
     spawn_update_check(handle.clone());
     app.run();
+}
+
+/// The app window's native options. On Windows the window is the overlay over the game:
+/// transparent, borderless, always on top, click-through, never focused on open and with no
+/// minimum size (the widget inside it is placed by the shell). Off Windows it is the ordinary
+/// window the port has always had.
+fn window_options() -> rune::WindowOptions {
+    let mut options = rune::WindowOptions::default();
+    if cfg!(target_os = "windows") {
+        options.transparent = true;
+        options.borderless = true;
+        options.click_through = true;
+        options.always_on_top = true;
+        options.resizable = false;
+        options.min_size = Some((0.0, 0.0));
+    }
+    options
 }
 
 /// [`Live::poll`]'s startup work on a worker: the trade site's leagues, the game data EE2's

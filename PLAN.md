@@ -289,6 +289,14 @@ Visual similarity, not pixel identity.
 ## Phase 6: release + upstream tracking
 
 - Windows installer + portable build, Linux AppImage.
+  **Packaging done** (2026-11-24): `rust/crates/core/src/assets.rs` resolves one
+  assets root (`WRAEX_ASSETS`, else next to the executable, else a macOS bundle's
+  `Contents/Resources/assets`, else the source tree), and every runtime read (game
+  data, images, tray icon, i18n) goes through it; `tools/package/package.py` builds a
+  release directory with the assets and licence notices, and
+  `.github/workflows/release.yml` drafts a release from a `v*` tag. Still open: an
+  installer, code signing, and a macOS bundle (the packager writes a portable
+  directory for now).
 - Per upstream or EE2 release: bump the `ref/` submodule → `golden regen` → diff
   fixtures → port changed logic → update UI where their UI changed → release.
 - Corpus keeps growing: every bug report with item text becomes a fixture.

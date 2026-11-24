@@ -1,9 +1,10 @@
-//! The tray icon's pixels: the reference's `renderer/public/icon.png`, decoded to RGBA.
+//! The tray icon's pixels: the game data's `icon.png`, decoded to RGBA.
 //!
 //! `AppTray.ts` builds it with Electron's `nativeImage.createFromPath(icon.png).resize({width:
 //! 22, height: 22})` on macOS; the other platforms take the file as it ships. The path comes
 //! from the game's data layer ([`wraex_poe1::data::icon_path`],
-//! [`wraex_poe2::data::icon_path`]) like every other reference asset.
+//! [`wraex_poe2::data::icon_path`]): `assets/<game>/icon.png` in a packaged install, the
+//! reference's `renderer/public/icon.png` in development.
 //!
 //! A missing or undecodable icon is not fatal: the tray shows a text-only menu instead
 //! (`Tray::new` wants pixels, so the shell then starts without a tray and says so).

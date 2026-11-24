@@ -5164,6 +5164,7 @@ dependencies = [
  "serde_json",
  "tray-icon",
  "ureq",
+ "windows",
  "wraex-core",
  "wraex-golden",
 ]

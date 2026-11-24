@@ -1,7 +1,8 @@
 //! The `en` UI strings upstream ships with.
 //!
-//! Read through the data layer from `ref/apt/renderer/public/data/en/app_i18n.json`, the same
-//! file the reference loads, and looked up by a dotted key (`item.not_corrupted`,
+//! Read through the data layer from the game data root's `en/app_i18n.json`
+//! (`ref/apt/renderer/public/data` in development, `assets/poe1/data` in a release), the
+//! same file the reference loads, and looked up by a dotted key (`item.not_corrupted`,
 //! `item_category.prop`) the way `vue-i18n` resolves it. A key that isn't there prints as
 //! itself, as `vue-i18n` does.
 //!
@@ -12,15 +13,15 @@ use std::sync::OnceLock;
 
 use serde_json::Value;
 use wraex_core::data::DataSource;
-use wraex_poe1::data::reference_source;
+use wraex_poe1::data::source;
 
-/// The `en` messages, relative to the reference's `public/data` (`poe1::data::reference_source`).
+/// The `en` messages, relative to the game data root (`poe1::data::source`).
 const PATH: &str = "en/app_i18n.json";
 
 fn strings() -> &'static Value {
     static STRINGS: OnceLock<Value> = OnceLock::new();
     STRINGS.get_or_init(|| {
-        let text = reference_source().read_string(PATH).unwrap_or_else(|e| panic!("read {PATH}: {e}"));
+        let text = source().read_string(PATH).unwrap_or_else(|e| panic!("read {PATH}: {e}"));
         serde_json::from_str(&text).unwrap_or_else(|e| panic!("parse {PATH}: {e}"))
     })
 }

@@ -1,0 +1,194 @@
+# Release: on a `v*` tag (or by hand), build Wraex on Windows and Linux, lay out the
+# binary with the assets it reads at runtime (`tools/package/package.py`), and attach
+# the results to a **draft** GitHub release (tags only; a manual run just uploads the
+# packages as workflow artifacts, for testing). Publishing the draft is a human decision.
+#
+# The setup steps mirror ci.yml: the references are submodules (they hold the game
+# data and images the package ships), and the Linux build needs the same dev
+# packages. No Node step: the references' `*.index.bin` files are a TypeScript
+# artifact, and the Rust data layer builds its indexes in memory, so packaging
+# ships nothing generated (see tools/package/package.py).
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to build (defaults to rust/Cargo.toml's workspace version)
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  package:
+    name: package (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            python: python
+            archive: zip
+          - name: linux
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            python: python3
+            archive: tar.gz
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # The references have no .gitattributes; keep their data files byte for byte
+      # as shipped instead of converting them to CRLF (as ci.yml does).
+      - name: No CRLF conversion
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf false
+        working-directory: ${{ github.workspace }}
+
+      - uses: actions/checkout@v6
+        with:
+          # The game data and images the package copies out of ref/apt and ref/ee2.
+          submodules: true
+
+      - name: Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libxkbcommon-dev libwayland-dev pkg-config
+          # The tray icon's default AppIndicator backend (tray-icon README).
+          sudo apt-get install -y --no-install-recommends libgtk-3-dev libayatana-appindicator3-dev
+          # appimagetool's own runtime; the AppImage build below extracts it anyway.
+          sudo apt-get install -y --no-install-recommends libfuse2
+
+      - run: rustup toolchain install
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ -n "$INPUT_VERSION" ]]; then
+            version="$INPUT_VERSION"
+          elif [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version=$(sed -n 's/^version = "\(.*\)"/\1/p' rust/Cargo.toml | head -n 1)
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # `cargo build --release` plus dist/wraex-<version>-<target>/ with assets/ and
+      # licences/, then the archive the release attaches.
+      - name: Package
+        run: |
+          ${{ matrix.python }} tools/package/package.py \
+            --version "${{ steps.version.outputs.version }}" \
+            --target "${{ matrix.target }}" \
+            --archive "${{ matrix.archive }}"
+
+      # An AppImage is a directory image of the same layout: `usr/bin/` holds the
+      # binary with `assets/` next to it, which is exactly what `wraex_core::assets`
+      # looks for. It carries no Linux libraries of its own (wgpu loads Vulkan, Rune
+      # X11/Wayland and the tray GTK through the system), which is why the tarball is
+      # uploaded too: it is the artifact for a distro that lacks them.
+      - name: AppImage
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          name="wraex-${{ steps.version.outputs.version }}-${{ matrix.target }}"
+          appdir=AppDir
+          rm -rf "$appdir"
+          mkdir -p "$appdir/usr/bin"
+          cp -R "dist/$name/." "$appdir/usr/bin/"
+          cp "$appdir/usr/bin/assets/poe1/icon.png" "$appdir/wraex.png"
+          cp "$appdir/wraex.png" "$appdir/.DirIcon"
+          cat > "$appdir/wraex.desktop" <<'EOF'
+          [Desktop Entry]
+          Type=Application
+          Name=Wraex
+          Comment=Path of Exile price check for PoE1 and PoE2
+          Exec=wraex
+          Icon=wraex
+          Categories=Utility;Game;
+          Terminal=false
+          EOF
+          curl -fsSL -o appimagetool \
+            https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool
+          APPIMAGE_EXTRACT_AND_RUN=1 ARCH=x86_64 ./appimagetool "$appdir" "dist/$name.AppImage"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wraex-${{ matrix.name }}
+          path: |
+            dist/*.zip
+            dist/*.tar.gz
+            dist/*.AppImage
+          if-no-files-found: error
+
+  release:
+    name: draft release
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      # For the version fallback (rust/Cargo.toml) on a manual run.
+      - uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ -n "$INPUT_VERSION" ]]; then
+            version="$INPUT_VERSION"
+          elif [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version=$(sed -n 's/^version = "\(.*\)"/\1/p' rust/Cargo.toml | head -n 1)
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          name: Wraex v${{ steps.version.outputs.version }}
+          tag_name: v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          append_body: true
+          files: dist/*
+          body: |
+            Wraex ${{ steps.version.outputs.version }}.
+
+            - **Windows**: unzip `wraex-*-x86_64-pc-windows-msvc.zip` anywhere and run
+              `wraex.exe`. `assets/` must stay next to the executable.
+            - **Linux**: `tar xf wraex-*-x86_64-unknown-linux-gnu.tar.gz` and run
+              `wraex-*/wraex`, or use the AppImage (it needs the distro's Vulkan,
+              X11/Wayland and GTK 3; the tarball is for systems without them).
+
+            The layout inside the archive is the app plus `assets/` (game data, images,
+            tray icon) and `licences/`; set `WRAEX_ASSETS` to point at another assets
+            directory.

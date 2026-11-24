@@ -16,7 +16,7 @@ use std::sync::OnceLock;
 use rune::{TextEdit, Waker};
 use wraex_core::Rarity;
 use wraex_game::ParseError;
-use wraex_poe1::data::{Data, reference_source};
+use wraex_poe1::data::{Data, source};
 use wraex_poe1::filters::create_item_filters::{CreateOptions, category_to_trade_id};
 use wraex_poe1::filters::{
     CreatePresetsOptions, FilterError, FilterNumeric, FilterOrGroup, FilterPreset, ItemFilters, Presets, StatFilter,
@@ -50,7 +50,7 @@ pub const APP_NAME: &str = "Awakened PoE Trade";
 /// The `en` game data, loaded once (`init("en")` in the reference).
 pub fn data() -> &'static Data {
     static DATA: OnceLock<Data> = OnceLock::new();
-    DATA.get_or_init(|| Data::load(&reference_source(), "en").expect("load `en` game data from ref/apt"))
+    DATA.get_or_init(|| Data::load(&source(), "en").expect("load `en` game data from the assets root"))
 }
 
 /// The options `CheckedItem.vue` hands `createPresets`, at a fresh install's defaults:

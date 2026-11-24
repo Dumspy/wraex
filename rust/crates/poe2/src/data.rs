@@ -6,6 +6,9 @@
 //! Not here yet: `TRADE_ITEM_BY_REF`, which builds items from `ItemCategory` and
 //! `ItemRarity` and arrives with `parser/meta.ts`; `item-drop.json` and
 //! `patrons.json`, which item-check and the about page need.
+//!
+//! Where those files come from is [`wraex_core::assets`]: a packaged install ships them in
+//! `assets/poe2/data`, a development build reads the reference checkout ([`reference_source`]).
 
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
@@ -15,22 +18,45 @@ use wraex_core::data::{ClientStrings, DataError, DataSource, DirSource, ItemTabl
 /// text only.
 pub const LANGUAGES: [&str; 9] = ["en", "ru", "cmn-Hant", "ko", "ja", "de", "es", "pt", "fr"];
 
-/// `ref/ee2/renderer/public/data`, the data EE2 ships.
+/// `ref/ee2/renderer/public`, the source tree's copy of what EE2 ships.
+///
+/// Only a development build reads this: a release reads the copy in
+/// [`wraex_core::assets`]' root. The path is fixed at compile time, so `cargo run`, the
+/// tests and the golden harness work from any directory.
+const REFERENCE_PUBLIC: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/ee2/renderer/public");
+
+/// The game data the running app reads: `assets/poe2/data` in a packaged install (see
+/// [`wraex_core::assets`]), the reference checkout in development.
+pub fn source() -> DirSource {
+    match wraex_core::assets::Assets::get().path("poe2/data") {
+        Some(root) => DirSource::new(root),
+        None => reference_source(),
+    }
+}
+
+/// `ref/ee2/renderer/public/data`, the data EE2 ships: the reference checkout itself, for
+/// tests and development. The app reads [`source`], which is this in development.
 pub fn reference_source() -> DirSource {
-    DirSource::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/ee2/renderer/public/data"))
+    DirSource::new(format!("{REFERENCE_PUBLIC}/data"))
 }
 
-/// `ref/ee2/renderer/public/images/<name>`: the small art EE2's page serves (the core
-/// currency icons, the `404` fallback, the augments' sockets and runes), which the app
-/// draws through `wraex_app::ui::art`. Read from the reference like the data files; a
-/// release build would ship them instead.
+/// The small art EE2's page serves (the core currency icons, the `404` fallback, the
+/// augments' sockets and runes), which the app draws through `wraex_app::ui::art`: read from
+/// `assets/poe2/images/<name>` in a packaged install, from the reference in development.
 pub fn image_path(name: &str) -> std::path::PathBuf {
-    std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/ee2/renderer/public/images")).join(name)
+    match wraex_core::assets::Assets::get().path("poe2/images") {
+        Some(dir) => dir.join(name),
+        None => std::path::Path::new(REFERENCE_PUBLIC).join("images").join(name),
+    }
 }
 
-/// `ref/ee2/renderer/public/icon.png`: EE2's product icon, which the app puts in the tray.
+/// EE2's product icon, which the app puts in the tray: `assets/poe2/icon.png` in a packaged
+/// install, `ref/ee2/renderer/public/icon.png` in development.
 pub fn icon_path() -> std::path::PathBuf {
-    std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/ee2/renderer/public/icon.png")).to_owned()
+    match wraex_core::assets::Assets::get().path("poe2/icon.png") {
+        Some(path) => path,
+        None => std::path::Path::new(REFERENCE_PUBLIC).join("icon.png"),
+    }
 }
 
 /// EE2's snapshot of `/api/trade2/data/{items,stats}` (`renderer/specs/data/`),

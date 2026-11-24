@@ -27,6 +27,7 @@ rust/                    Cargo workspace (all Rust code)
 ref/apt/                 git submodule: SnosMe/awakened-poe-trade (PoE1 reference)
 ref/ee2/                 git submodule: Kvan7/Exiled-Exchange-2 (PoE2 reference)
 tools/golden/            fixture harness that runs the TypeScript reference code
+tools/package/           builds a release: binary + the assets it reads at runtime
 fixtures/<game>/<case>/  golden fixtures: input.txt, options.json, parsed.json, presets.json, trade/
 ```
 
@@ -61,6 +62,23 @@ git submodule update --init --depth 1
 `EE2_TAG=v0.16.3 devenv tasks run ref:ee2:release` moves the PoE2 reference to a
 release tag. Either way, bumping a reference is how drift shows up: regenerate the
 fixtures and diff them.
+
+## Packaging a release
+
+A development build reads the game data, images and tray icon from the `ref/`
+checkouts. A release ships those files beside the binary, so it runs wherever it is
+unpacked:
+
+```sh
+python3 tools/package/package.py                  # host target -> dist/wraex-<version>-<target>/
+python3 tools/package/package.py --archive zip    # plus dist/wraex-<version>-<target>.zip
+```
+
+The app looks for `assets/` next to its executable (or `Contents/Resources/assets` in
+a macOS bundle); `WRAEX_ASSETS` points it at another directory. `assets/<game>/` holds
+the reference's `data/<lang>/`, `images/` and `icon.png`, and `licences/` the notices.
+`.github/workflows/release.yml` runs the script on Windows and Linux for a `v*` tag
+and attaches the archives to a draft release.
 
 ## Porting rules
 
