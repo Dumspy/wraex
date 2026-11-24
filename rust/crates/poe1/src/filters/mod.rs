@@ -385,6 +385,22 @@ impl FilterTag {
     pub const IMPLICIT: FilterTag = FilterTag::Type(ModifierType::Implicit);
     pub const ENCHANT: FilterTag = FilterTag::Type(ModifierType::Enchant);
     pub const FRACTURED: FilterTag = FilterTag::Type(ModifierType::Fractured);
+
+    /// The tag's value, as [`Serialize`] writes it and as `filters.tag_<tag>` spells its key.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            FilterTag::Type(t) => t.as_str(),
+            FilterTag::Mechanic(m) => m.as_str(),
+            FilterTag::Variant => "variant",
+            FilterTag::Property => "property",
+            FilterTag::Brick => "brick",
+            FilterTag::MercenaryPrimary => "mercenary-primary",
+            FilterTag::MercenarySecondary => "mercenary-secondary",
+            FilterTag::MercenaryUtility => "mercenary-utility",
+            FilterTag::MercenarySupport => "mercenary-support",
+            FilterTag::FilterGroup => "filter-group",
+        }
+    }
 }
 
 impl Serialize for FilterTag {

@@ -214,6 +214,31 @@ pub enum ModifierMechanic {
     Essence,
 }
 
+impl ModifierMechanic {
+    /// The value, as the tag's `filters.tag_<tag>` key spells it.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            ModifierMechanic::Synthesised => "synthesised",
+            ModifierMechanic::Corruption => "corrupted",
+            ModifierMechanic::Eldritch => "eldritch",
+            ModifierMechanic::Foulborn => "foulborn",
+            ModifierMechanic::Vestigial => "vestigial",
+            ModifierMechanic::RareOnly => "explicit-rareonly",
+            ModifierMechanic::Shaper => "explicit-shaper",
+            ModifierMechanic::Elder => "explicit-elder",
+            ModifierMechanic::Crusader => "explicit-crusader",
+            ModifierMechanic::Hunter => "explicit-hunter",
+            ModifierMechanic::Redeemer => "explicit-redeemer",
+            ModifierMechanic::Warlord => "explicit-warlord",
+            ModifierMechanic::Delve => "explicit-delve",
+            ModifierMechanic::Unveiled => "explicit-veiled",
+            ModifierMechanic::Incursion => "explicit-incursion",
+            ModifierMechanic::Infamous => "explicit-infamous",
+            ModifierMechanic::Essence => "explicit-essence",
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

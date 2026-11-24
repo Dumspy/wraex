@@ -21,6 +21,20 @@ pub enum ItemInfluence {
     Warlord,
 }
 
+impl ItemInfluence {
+    /// The value, as the trade site and `influence-<value>.png` spell it.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            ItemInfluence::Crusader => "Crusader",
+            ItemInfluence::Elder => "Elder",
+            ItemInfluence::Hunter => "Hunter",
+            ItemInfluence::Redeemer => "Redeemer",
+            ItemInfluence::Shaper => "Shaper",
+            ItemInfluence::Warlord => "Warlord",
+        }
+    }
+}
+
 /// `IncursionRoom`: values match the trade site's options.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IncursionRoom {

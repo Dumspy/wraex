@@ -46,9 +46,47 @@ pub fn gray(shade: u16) -> Color {
 /// Tailwind's `red` ramp; the shades the ported widgets use so far.
 pub fn red(shade: u16) -> Color {
     c(match shade {
+        100 => "#fff5f5",
         400 => "#fc8181",
         500 => "#f56565",
+        700 => "#c53030",
         _ => panic!("no `red.{shade}` in upstream's tailwind.config.js"),
+    })
+}
+
+/// Tailwind's `yellow` ramp (`filters` tier badges, `variant` tags).
+pub fn yellow(shade: u16) -> Color {
+    c(match shade {
+        100 => "#fffff0",
+        500 => "#ecc94b",
+        700 => "#b7791f",
+        _ => panic!("no `yellow.{shade}` in upstream's tailwind.config.js"),
+    })
+}
+
+/// Tailwind's `orange` ramp (a fractured tag).
+pub fn orange(shade: u16) -> Color {
+    c(match shade {
+        300 => "#fbd38d",
+        400 => "#f6ad55",
+        _ => panic!("no `orange.{shade}` in upstream's tailwind.config.js"),
+    })
+}
+
+/// Tailwind's `blue` ramp (crafted and synthesised tags).
+pub fn blue(shade: u16) -> Color {
+    c(match shade {
+        100 => "#ebf8ff",
+        600 => "#3182ce",
+        _ => panic!("no `blue.{shade}` in upstream's tailwind.config.js"),
+    })
+}
+
+/// Tailwind's `indigo` ramp (an enchant tag).
+pub fn indigo(shade: u16) -> Color {
+    c(match shade {
+        200 => "#c3dafe",
+        _ => panic!("no `indigo.{shade}` in upstream's tailwind.config.js"),
     })
 }
 
@@ -91,8 +129,10 @@ pub const FAMILY_EXO2: Family = Family::Named("Exo 2");
 /// table (name ID 16/1) is what a font collection registers, and that is
 /// `Fontin SmallCaps`, `Fontin`, `Exo 2` and `FrizQuadrataITC`.
 ///
-/// Upstream has no monospaced face, so the mono slot holds Fontin; nothing draws in it yet.
-pub const FAMILIES: (&str, &str) = ("Fontin SmallCaps, FrizQuadrataITC", "Fontin, FrizQuadrataITC");
+/// Upstream has no monospaced face. Rune's styled text has no per-span family, only a `mono`
+/// flag selecting this slot, so the slot holds Exo 2: `ItemModifierText.vue` draws rolled
+/// numbers in `font-exo2 font-semibold`, and a span can reach that face through `mono`.
+pub const FAMILIES: (&str, &str) = ("Fontin SmallCaps, FrizQuadrataITC", "Exo 2");
 
 /// The fonts `ref/apt/renderer/src/assets/font` ships, compiled in.
 ///

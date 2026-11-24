@@ -1,9 +1,9 @@
 //! `PriceCheckWindow.vue` and `CheckedItem.vue` in Rune: the window's frame and the top of
 //! the item it shows.
 //!
-//! The trend, the filter block and the listings are placeholders (PLAN phase 5's next steps);
-//! what is ported is the window itself, the title bar, the item header (`FilterName.vue`) and
-//! the Search row.
+//! The trend and the listings are placeholders (PLAN phase 5's next steps); what is ported is
+//! the window itself, the title bar, the item header (`FilterName.vue`), the filters block
+//! (`FiltersBlock.vue`) and the Search row.
 
 use rune::{Cx, El, col, el, row, text};
 use wraex_game::ParseError;
@@ -75,7 +75,7 @@ fn body<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             if let Some(trend) = trend(item) {
                 checked = checked.child(trend);
             }
-            checked = checked.child(filters_placeholder(check));
+            checked = checked.child(crate::poe1::price_check::filters::view(check, project));
             checked = checked.child(if check.do_search { listings_placeholder() } else { search_row(project) });
             body = body.child(checked);
         }
@@ -196,17 +196,6 @@ fn trend(item: &Item) -> Option<El> {
 /// upstream's `public/images` are not wired up yet, so a plain square stands in.
 fn icon_placeholder(key: &str) -> El {
     el().key(key).size(theme::rem(2.0), theme::rem(2.0)).radius(theme::ROUNDED).fill(theme::gray(700))
-}
-
-/// `FiltersBlock.vue`: not ported yet.
-fn filters_placeholder(check: &PriceCheck) -> El {
-    let note = match &check.presets {
-        Some(Err(error)) => format!("Filters unavailable: {error}"),
-        _ => "Filters".to_owned(),
-    };
-    // A stand-in height, picked so the Search row below it lands where upstream's does for a
-    // fully packed rare (`adv-rare-ring-mirrored-catalyst`); the real block sizes to its rows.
-    placeholder("filters-placeholder", &note, theme::rem(15.0))
 }
 
 /// `TradeBulk.vue` / `TradeListing.vue`: not ported yet.

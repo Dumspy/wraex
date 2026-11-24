@@ -57,13 +57,19 @@ pub fn view(app: &App, cx: &mut Cx<App>) -> El {
 pub type Scene = (&'static str, fn(&mut App));
 
 /// The PoE1 corpus cases the reference screenshots render
-/// (`tools/golden/screens/cases.mjs`), plus a text that isn't an item.
+/// (`tools/golden/screens/cases.mjs`), plus a text that isn't an item and three cases that
+/// exercise the other kinds of filter row: a magic flask (explicit stats), a cluster jewel
+/// (enchant and hidden stats, two presets) and an anointed amulet (pseudo stats and the oil
+/// row).
 pub const SCENES: &[Scene] = &[
     ("currency-divine-orb", |app| app.load("currency-divine-orb")),
     ("adv-rare-ring-mirrored-catalyst", |app| app.load("adv-rare-ring-mirrored-catalyst")),
     ("adv-unique-timeless-jewel", |app| app.load("adv-unique-timeless-jewel")),
     ("real-map-rare-t16-max-res", |app| app.load("real-map-rare-t16-max-res")),
     ("error-not-an-item", |app| app.load("error-not-an-item")),
+    ("adv-magic-flask-charge-recovery", |app| app.load("adv-magic-flask-charge-recovery")),
+    ("jewel-cluster-large", |app| app.load("jewel-cluster-large")),
+    ("adv-rare-amulet-anointed", |app| app.load("adv-rare-amulet-anointed")),
 ];
 
 /// The fixture corpus a scene loads (`tools/golden/corpus/poe1/<slug>.txt`).
@@ -117,6 +123,15 @@ mod tests {
         let (x, y) = runtime.find(key).unwrap_or_else(|| panic!("no element keyed `{key}`"));
         runtime.pointer_down(x, y);
         runtime.pointer_up(x, y);
+        runtime.frame(1.0 / 60.0);
+    }
+
+    /// Focus a text field, select its contents and paste `text` over them.
+    fn replace_input(runtime: &mut Runtime<App>, key: &str, text: &str) {
+        click(runtime, key);
+        runtime.key(rune::KeyEvent { key: rune::Key::Command('a'), mods: rune::Mods::default() });
+        runtime.frame(1.0 / 60.0);
+        runtime.paste(text);
         runtime.frame(1.0 / 60.0);
     }
 
@@ -208,5 +223,182 @@ mod tests {
         click(&mut runtime, "titlebar-close");
         assert!(!runtime.state.price_check.open);
         assert!(runtime.find("titlebar").is_none());
+    }
+
+    /// `FiltersBlock.vue` for the rare ring: its three visible rows, with upstream's labels
+    /// and the rolls `ItemModifierText.vue` substitutes.
+    #[test]
+    fn the_rare_ring_lists_its_stat_rows() {
+        let runtime = runtime("adv-rare-ring-mirrored-catalyst");
+        // Stats 0, 2 and 3 are the visible rows; 1 (Fire Resistance) and 4 (Quality) are hidden.
+        let expected = [
+            (0, "94% total Elemental Resistance"),
+            (2, "98 total maximum Life"),
+            (3, "25% Global Critical Strike Chance"),
+        ];
+        for (index, label) in expected {
+            assert_eq!(text_of(&runtime, &format!("stat-{index}-text")).as_deref(), Some(label), "row {index}");
+        }
+        assert!(runtime.find("stat-1").is_none());
+        let stats = runtime.state.price_check.item_stats();
+        let rolls: Vec<Option<f64>> = stats
+            .iter()
+            .filter_map(|stat| match stat {
+                wraex_poe1::filters::FilterOrGroup::Stat(filter) => Some(filter.roll.as_ref().map(|roll| roll.value)),
+                wraex_poe1::filters::FilterOrGroup::Group(_) => None,
+            })
+            .collect();
+        assert_eq!(rolls, [Some(94.0), Some(66.0), Some(98.0), Some(25.0), Some(20.0)]);
+        // The hidden Fire Resistance and Quality rows stay out of the list until `Hidden`.
+        assert!(runtime.find("stat-1").is_none());
+        assert!(runtime.find("stat-4").is_none());
+        assert_eq!(text_of(&runtime, "btn-stats-label").as_deref(), Some("2 of 5, stats"));
+    }
+
+    /// `FilterModifier.vue`'s checkbox writes `filter.disabled`.
+    #[test]
+    fn a_stat_row_toggles_its_filter() {
+        let mut runtime = runtime("adv-rare-ring-mirrored-catalyst");
+        let disabled = |runtime: &Runtime<App>, index: usize| match &runtime.state.price_check.item_stats()[index] {
+            wraex_poe1::filters::FilterOrGroup::Stat(filter) => filter.disabled,
+            wraex_poe1::filters::FilterOrGroup::Group(group) => group.meta.disabled,
+        };
+        assert!(disabled(&runtime, 3));
+        click(&mut runtime, "stat-3-toggle");
+        assert!(!disabled(&runtime, 3));
+        assert_eq!(text_of(&runtime, "btn-stats-label").as_deref(), Some("3 of 5, stats"));
+        click(&mut runtime, "stat-3-toggle");
+        assert!(disabled(&runtime, 3));
+    }
+
+    /// Typing in a row's min field parses the number back into `filter.roll.min`.
+    #[test]
+    fn a_stat_row_parses_its_min_field() {
+        let mut runtime = runtime("adv-rare-ring-mirrored-catalyst");
+        assert_eq!(
+            runtime.state.price_check.item_stats().first().and_then(|stat| match stat {
+                wraex_poe1::filters::FilterOrGroup::Stat(filter) => filter.roll.as_ref().and_then(|roll| roll.min),
+                wraex_poe1::filters::FilterOrGroup::Group(_) => None,
+            }),
+            Some(84.0)
+        );
+        replace_input(&mut runtime, "stat-0-min", "100");
+        let roll = match &runtime.state.price_check.item_stats()[0] {
+            wraex_poe1::filters::FilterOrGroup::Stat(filter) => filter.roll.clone().expect("a roll"),
+            wraex_poe1::filters::FilterOrGroup::Group(_) => panic!("a stat row"),
+        };
+        assert_eq!(roll.min, Some(100.0));
+        assert!(!runtime.state.price_check.item_stats().first().is_some_and(|stat| match stat {
+            wraex_poe1::filters::FilterOrGroup::Stat(filter) => filter.disabled,
+            wraex_poe1::filters::FilterOrGroup::Group(_) => true,
+        }));
+        // Enter submits the form (`@submit` → `doSearch`).
+        click(&mut runtime, "stat-0-max");
+        runtime.key(rune::KeyEvent { key: rune::Key::Enter, mods: rune::Mods::default() });
+        runtime.frame(1.0 / 60.0);
+        assert!(runtime.state.price_check.do_search);
+    }
+
+    /// `FiltersBlock.vue`'s preset tabs replace the rows.
+    #[test]
+    fn switching_preset_replaces_the_rows() {
+        let mut runtime = runtime("real-map-rare-t16-max-res");
+        assert_eq!(text_of(&runtime, "stat-0-text").as_deref(), Some("Atlas Drops: 67%"));
+        assert!(runtime.find("stat-0").is_some());
+        click(&mut runtime, "preset-1");
+        assert_eq!(
+            runtime.state.price_check.active_preset().map(|preset| preset.id.as_str()),
+            Some("filters.preset_bulk")
+        );
+        assert!(runtime.find("stat-0").is_none());
+        assert_eq!(text_of(&runtime, "btn-stats-label").as_deref(), Some("Stats ignored"));
+        click(&mut runtime, "preset-0");
+        assert_eq!(text_of(&runtime, "stat-0-text").as_deref(), Some("Atlas Drops: 67%"));
+    }
+
+    /// Collapse hides the rows (the chip and the button both toggle it) and Hidden shows the
+    /// rows upstream hides for a reason.
+    #[test]
+    fn collapse_and_hidden_switch_what_the_block_lists() {
+        let mut runtime = runtime("adv-rare-ring-mirrored-catalyst");
+        click(&mut runtime, "filters-collapse");
+        assert!(runtime.state.price_check.stats_collapsed);
+        assert!(runtime.find("stat-0").is_none());
+        click(&mut runtime, "btn-stats");
+        assert!(!runtime.state.price_check.stats_collapsed);
+        assert!(runtime.find("stat-0").is_some());
+
+        assert!(runtime.find("stat-1").is_none());
+        click(&mut runtime, "show-hidden");
+        assert!(runtime.state.price_check.show_hidden);
+        assert_eq!(text_of(&runtime, "stat-1-text").as_deref(), Some("66% total to Fire Resistance"));
+        assert_eq!(text_of(&runtime, "stat-4-text").as_deref(), Some("Quality (Life and Mana Modifiers): 20%"));
+    }
+
+    /// The Mods toggle shows `SourceInfo.vue` under a row whose sources deserve it.
+    #[test]
+    fn the_mods_toggle_shows_a_rows_sources() {
+        let mut runtime = runtime("adv-rare-ring-mirrored-catalyst");
+        assert!(runtime.find("source-info-mod").is_none());
+        click(&mut runtime, "show-sources");
+        assert!(runtime.state.price_check.show_sources);
+        assert!(runtime.find("source-info-mod").is_some());
+    }
+
+    /// `FilterGroup.vue`: the chevron collapses the group and its label's `smartToggle`
+    /// closes an open, enabled group.
+    #[test]
+    fn a_group_expands_and_collapses() {
+        let mut runtime = runtime("adv-unique-timeless-jewel");
+        // The group sits at index 1 (a hidden `explicit` row comes first).
+        assert!(runtime.find("stat-1-0").is_some());
+        click(&mut runtime, "stat-1m-expand");
+        assert!(!group_expanded(&runtime, 1));
+        assert!(runtime.find("stat-1-0").is_none());
+        click(&mut runtime, "stat-1m-expand");
+        assert!(group_expanded(&runtime, 1));
+
+        // Its label is enabled and open, so the first press only closes it.
+        click(&mut runtime, "stat-1m-label");
+        assert!(!group_expanded(&runtime, 1));
+        assert!(!group_disabled(&runtime, 1));
+        // Pressing it again turns the group off; a third press turns it back on and opens it.
+        click(&mut runtime, "stat-1m-label");
+        assert!(group_disabled(&runtime, 1));
+        assert!(!group_expanded(&runtime, 1));
+        click(&mut runtime, "stat-1m-label");
+        assert!(!group_disabled(&runtime, 1));
+        assert!(group_expanded(&runtime, 1));
+    }
+
+    fn group_expanded(runtime: &Runtime<App>, index: usize) -> bool {
+        match &runtime.state.price_check.item_stats()[index] {
+            wraex_poe1::filters::FilterOrGroup::Group(group) => group.expanded,
+            wraex_poe1::filters::FilterOrGroup::Stat(_) => panic!("a group"),
+        }
+    }
+
+    fn group_disabled(runtime: &Runtime<App>, index: usize) -> bool {
+        match &runtime.state.price_check.item_stats()[index] {
+            wraex_poe1::filters::FilterOrGroup::Group(group) => group.meta.disabled,
+            wraex_poe1::filters::FilterOrGroup::Stat(_) => panic!("a group"),
+        }
+    }
+
+    /// The extra scenes render their filter kinds: a magic flask's explicit rows, a cluster
+    /// jewel's enchant rows and two presets, and an amulet's pseudo rows.
+    #[test]
+    fn the_extra_scenes_render_their_filter_rows() {
+        let flask = runtime("adv-magic-flask-charge-recovery");
+        assert_eq!(text_of(&flask, "stat-0-text").as_deref(), Some("51% increased Charge Recovery"));
+        assert_eq!(text_of(&flask, "stat-1-text").as_deref(), Some("#% reduced effect"));
+
+        let jewel = runtime("jewel-cluster-large");
+        assert_eq!(text_of(&jewel, "stat-0-text").as_deref(), Some("Adds 8 Passive Skills"));
+        assert!(jewel.find("preset-1").is_some());
+
+        let amulet = runtime("adv-rare-amulet-anointed");
+        assert_eq!(text_of(&amulet, "stat-0-text").as_deref(), Some("77% total Elemental Resistance"));
+        assert!(amulet.find("show-hidden").is_some());
     }
 }
