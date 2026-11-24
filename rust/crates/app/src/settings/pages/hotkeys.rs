@@ -24,9 +24,8 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
             .fill(theme::gray(700))
             .gap(theme::rem(0.25))
             .items_center()
-            .child(
-                text("\u{2139}").key("hotkeys-info-icon").font(theme::leading_none(type_::SM)).color(theme::gray(400)),
-            )
+            // `fas fa-info-circle`, inside the `text-wrap` hint row.
+            .child(ui::icon::info_circle(type_::SM.size, theme::gray(100)).key("hotkeys-info-icon"))
             .child(
                 text(tr(settings, "settings.clear_hotkey"))
                     .key("hotkeys-info-label")

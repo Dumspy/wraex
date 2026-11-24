@@ -8,10 +8,10 @@
 //! (`JSON.stringify(AppConfig())`, so compact JSON).
 //!
 //! The pages are [`Page`]s, each with its own `settings-poe1-<page>` / `settings-poe2-<page>`
-//! scene. How the app opens the window (the tray's `settings` action, or a problem report's
-//! `reopen-settings`) is still to be wired: [`Settings::open_live`] loads the user's file, but
-//! nothing calls it yet. Save also stops at the store: upstream follows it with `updateConfig`
-//! and `pushHostConfig`, and the app has no live config or host process to hand those to.
+//! scene. The live shell opens the window with [`Settings::open_live`] (the tray's
+//! "Settings/League", a widget's edit button), and after it closes re-reads the file and
+//! re-applies the host half, which is upstream's `updateConfig`/`pushHostConfig`
+//! ([`crate::shell::Live`]). Save itself still stops at the store.
 //!
 //! Ported for both games: general, hotkeys (with the recorder), price check, chat, map check,
 //! item check, debug and about. Still missing: EE2's Help and Leveling pages, the league list
@@ -274,7 +274,7 @@ impl Settings {
     }
 
     /// A window over the user's config file: `initConfig()` (load, upgrade, or the defaults).
-    /// Not called yet: the tray's settings action is still to be wired.
+    /// The live shell opens it from the tray and from a widget's edit button.
     pub fn open_live(game: GameId, mode: Mode) -> Self {
         let store = ConfigStore::new(config_path(game).unwrap_or_else(|| fallback_path(game)));
         let loaded = load(game, store.load().as_deref());
@@ -503,16 +503,20 @@ pub fn load(game: GameId, contents: Option<&str>) -> Loaded {
 /// Where Wraex keeps its settings: Electron's `appData` under `Wraex/<the game's folder>`,
 /// beside the folder the reference uses (which [`ConfigStore::load`] can import from).
 pub fn config_path(game: GameId) -> Option<PathBuf> {
-    let app_data = app_data_dir()?;
+    Some(config_path_in(game, &app_data_dir()?))
+}
+
+/// [`config_path`] under an explicit `appData`, so a test can point it at a temp dir.
+pub fn config_path_in(game: GameId, app_data: &std::path::Path) -> PathBuf {
     let folder = match game {
         GameId::Poe2 => "Path of Exile 2",
         _ => "Path of Exile",
     };
-    Some(app_data.join("Wraex").join(folder).join("config.json"))
+    app_data.join("Wraex").join(folder).join("config.json")
 }
 
 /// `app.getPath('appData')`.
-fn app_data_dir() -> Option<PathBuf> {
+pub fn app_data_dir() -> Option<PathBuf> {
     if cfg!(target_os = "windows") {
         std::env::var_os("APPDATA").map(PathBuf::from)
     } else if cfg!(target_os = "macos") {

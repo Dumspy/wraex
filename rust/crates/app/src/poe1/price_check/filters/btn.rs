@@ -97,7 +97,7 @@ pub fn logical<S: 'static>(
     );
     if collapse == Some(true) {
         chip = chip.child(
-            icon::chevron(theme::rem(0.5), false, theme::gray(400))
+            icon::chevron(theme::rem(0.75), false, theme::gray(400))
                 .key(format!("btn-{key}-chevron"))
                 .pl(theme::rem(0.5)),
         );

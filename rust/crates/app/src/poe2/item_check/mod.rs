@@ -56,9 +56,9 @@ pub struct ItemCheck {
     pub actions: Vec<Action>,
 }
 
-/// `defaultConfig()`'s item-check widget and the app's language.
-fn widget_config() -> (MapCheckConfig, String, SamePricedType) {
-    let config = wraex_poe2::config::default_config();
+/// The item-check widget's `maps`, the app's language and `samePricedType`, from a config: a
+/// scene reads `defaultConfig()`, a live window the config the shell loaded.
+fn widget_config_from(config: &serde_json::Value) -> (MapCheckConfig, String, SamePricedType) {
     let language = config.get("language").and_then(|value| value.as_str()).unwrap_or("en").to_owned();
     let widget = config
         .get("widgets")
@@ -78,9 +78,15 @@ fn widget_config() -> (MapCheckConfig, String, SamePricedType) {
 impl ItemCheck {
     /// The widget on `text`, with the default config and the game data from `mode`.
     pub fn from_text(text: &str, mode: Mode) -> Self {
+        Self::from_config(text, &wraex_poe2::config::default_config(), mode)
+    }
+
+    /// The widget on `text` over the config the app loaded (`WidgetItemCheck.vue`'s
+    /// `props.config` and `AppConfig().language`).
+    pub fn from_config(text: &str, config: &serde_json::Value, mode: Mode) -> Self {
         let data = crate::poe2::price_check::data(mode);
         let item = parse_clipboard(data, text).map_err(|fail| ParseError::Rejected { key: fail.0 });
-        let (maps, language, same_priced_type) = widget_config();
+        let (maps, language, same_priced_type) = widget_config_from(config);
         Self {
             text: text.to_owned(),
             open: item.is_ok(),
@@ -230,8 +236,9 @@ fn actions<S: 'static>(item: &Item, project: Project<S>) -> El {
                 .on_press(move |s: &mut S| project(s).open_coe()),
         );
     }
-    buttons =
-        buttons.child(icon::ellipsis_vertical(theme::rem(0.5), theme::gray(600)).key("item-check-separator")).child(
+    buttons = buttons
+        .child(icon::ellipsis_vertical(theme::text::SM.size, theme::gray(600)).key("item-check-separator"))
+        .child(
             ui::button("item-check-stash", &i18n::t("item.find_in_stash"))
                 .grow(1.0)
                 .justify_center()

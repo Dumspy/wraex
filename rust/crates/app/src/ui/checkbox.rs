@@ -1,6 +1,6 @@
 //! `web/ui/UiCheckbox.vue`: a check square and its label.
 
-use rune::{Color, El, row, text};
+use rune::{El, row, text};
 
 use crate::theme::{self, text as type_};
 use crate::ui::icon;
@@ -28,8 +28,10 @@ pub fn checkbox_with<S: 'static>(
     trailing: Option<El>,
     on_press: impl Fn(&mut S) + 'static,
 ) -> El {
-    // The check is cut out of the white box, so a checked box draws a dark check.
-    let ink = if checked { theme::gray(800) } else { theme::gray(500) };
+    // `fas fa-check-square` is a filled square with the check as a hole, so a checked box is the
+    // page's `text-gray-100` with a dark check; `far fa-square` is a `gray-500` outline.
+    let ink = theme::gray(500);
+    let paper = theme::gray(100);
     let mut button = row()
         .key(key)
         .w_full()
@@ -52,7 +54,7 @@ pub fn checkbox_with<S: 'static>(
         // An empty slot takes the row's width, so the label's own truncation is at its end.
         text_ = text_.grow(1.0);
     }
-    button = button.child(icon::checkbox(14.0, checked, ink, Color::WHITE)).child(text_);
+    button = button.child(icon::checkbox(14.0, checked, ink, paper)).child(text_);
     match trailing {
         Some(extra) => button.child(extra),
         None => button,

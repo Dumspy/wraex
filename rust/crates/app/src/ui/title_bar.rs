@@ -11,8 +11,8 @@ use crate::ui::icon;
 /// A press handler, as the bar's builder methods take them.
 type Handler<S> = Rc<dyn Fn(&mut S)>;
 
-/// The title bar's close glyph (`fa-window-close`) at the body size.
-const GLYPH: f32 = 12.0;
+/// The title bar's close glyph (`fa-window-close`), at the 14 pt `text-sm` the bar inherits.
+const GLYPH: f32 = 14.0;
 
 /// One widget's title bar: the `<slot />` `AppTitlebar` leads with, its title button and its
 /// close button, built in that order as the component lays them out.

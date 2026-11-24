@@ -403,7 +403,7 @@ fn controls<S: 'static>(check: &PriceCheck, filtered: usize, total: usize, proje
                     .font(theme::leading_none(type_::SM))
                     .color(theme::gray(400)),
             )
-            .child(icon::chevron(theme::rem(0.5), true, theme::gray(600)).pl(theme::rem(0.25))),
+            .child(icon::chevron(theme::rem(0.75), true, theme::gray(600)).pl(theme::rem(0.25))),
     );
     if filtered != total {
         row = row.child(ui::toggle::toggle(

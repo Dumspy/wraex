@@ -7,7 +7,8 @@ use crate::ui::icon;
 
 /// `UiRadio.vue`: `far fa-circle` / `fas fa-check-circle`. The root is keyed `key` and its label
 /// `{key}-label`. `disabled` greys the icon and the text (`:disabled`), as upstream's
-/// `forcedIntlSite` radio does.
+/// `forcedIntlSite` radio does; otherwise the marker is the page's own `text-gray-100`
+/// (`SettingsWindow.vue`), the icon having no colour class of its own.
 pub fn radio<S: 'static>(
     key: &str,
     label: &str,
@@ -15,7 +16,7 @@ pub fn radio<S: 'static>(
     disabled: bool,
     on_press: impl Fn(&mut S) + 'static,
 ) -> El {
-    let color = if disabled { theme::gray(600) } else { theme::gray(400) };
+    let color = if disabled { theme::gray(600) } else { theme::gray(100) };
     let mut button = row()
         .key(key)
         .gap(theme::rem(0.25))
@@ -43,10 +44,11 @@ pub fn radio_icon<S: 'static>(key: &str, label: &str, checked: bool, on_press: i
         .a11y_value(if checked { "checked" } else { "unchecked" })
         .label(label.to_owned())
         .on_press(on_press)
-        .child(marker(checked, theme::gray(400)))
+        .child(marker(checked, theme::gray(100)))
 }
 
-/// `far fa-circle` or `fas fa-check-circle`; the check borrows the page's own `bg-gray-800`.
+/// `far fa-circle` or `fas fa-check-circle`; the check is a hole in the disc, so the page's own
+/// `bg-gray-800` shows through it.
 fn marker(checked: bool, color: rune::Color) -> El {
     let size = theme::rem(0.875);
     if checked { icon::check_circle(size, color, theme::gray(800)) } else { icon::radio(size, false, color) }

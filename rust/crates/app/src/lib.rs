@@ -9,13 +9,17 @@
 //! per page. The overlay's own widgets ([`widgets`]) — the menu, the stopwatch, the image strip,
 //! the delve grid, the item search and the stash search — are one scene each.
 //!
-//! `cargo run -p wraex-app` opens the window; `-- --snap out.png --scene <slug>` renders one of
-//! the corpus cases headlessly (`--list-scenes` lists them).
+//! `cargo run -p wraex-app` runs the app: a tray, the config's global hotkeys and a window
+//! opened on demand ([`shell`]). `-- --game poe2` picks the other game. Anything else —
+//! `-- --snap out.png --scene <slug>`, `--tree`, a script — is the port's screenshot mode,
+//! which renders one corpus case headlessly and touches no OS state (`--list-scenes` lists
+//! the cases).
 
 pub mod poe1;
 pub mod poe2;
 pub mod replay;
 pub mod settings;
+pub mod shell;
 pub mod theme;
 pub mod trade;
 pub mod ui;
@@ -54,13 +58,18 @@ pub struct App {
     /// The item check window on PoE2.
     pub item_check_poe2: Option<poe2::item_check::ItemCheck>,
     /// An overlay widget (`widgets`): the menu, the stopwatch, the image strip, the delve grid,
-    /// the item search or the stash search, one per scene. The app itself would draw every
-    /// widget whose `wmWants` is `show`.
+    /// the item search or the stash search, one per scene. A live window draws one widget at a
+    /// time — the one a hotkey or the widget menu asks for — because it is an ordinary window,
+    /// where upstream's overlay paints every `show` widget over the game (phase 2).
     pub widgets: Option<widgets::Overlay>,
     /// Where trade requests go: HTTPS in a window, recorded answers headless.
     mode: Mode,
     /// The waker `AppSpec::poll` gave the app, handed to whichever window is built later.
     waker: Option<Waker>,
+    /// The running app's OS half: the tray, the hotkeys, the clipboard and the startup work
+    /// ([`shell`]). `None` in a scene, a `--snap` render and a test, which is what keeps every
+    /// side effect out of them.
+    pub live: Option<shell::Live>,
 }
 
 impl std::fmt::Debug for App {
@@ -74,6 +83,7 @@ impl std::fmt::Debug for App {
             .field("item_check_poe2", &self.item_check_poe2)
             .field("widgets", &self.widgets)
             .field("mode", &self.mode)
+            .field("live", &self.live)
             .finish()
     }
 }
@@ -96,6 +106,7 @@ impl App {
             widgets: None,
             mode,
             waker: None,
+            live: None,
         }
     }
 
@@ -113,6 +124,7 @@ impl App {
             widgets: None,
             mode,
             waker: None,
+            live: None,
         };
         app.attach_waker();
         app
@@ -233,6 +245,10 @@ impl App {
     /// The waker the window's trade and price answers use to run `poll`.
     pub fn set_waker(&mut self, waker: Waker) {
         self.price_check.set_waker(waker.clone());
+        // The live shell's startup price fetch lands on the same waker.
+        if let Some(prices) = self.live.as_ref().and_then(|live| live.prices.as_ref()) {
+            prices.set_waker(waker.clone());
+        }
         // The about page's update check lands on the same waker.
         if let Some(settings) = &self.settings {
             settings.set_waker(waker.clone());
@@ -294,6 +310,9 @@ impl App {
             widgets::item_search::Picked::Poe1(item) => {
                 self.game = GameId::Poe1;
                 self.price_check = PriceCheck::with_item(*item, self.mode);
+                if let Some(waker) = &self.waker {
+                    self.price_check.set_waker(waker.clone());
+                }
             }
             widgets::item_search::Picked::Poe2(item) => {
                 self.game = GameId::Poe2;
@@ -351,6 +370,11 @@ fn project_item_check_poe2(app: &mut App) -> &mut poe2::item_check::ItemCheck {
 /// The app's window: the settings window while it is open, else the item check, else whichever
 /// game's price check is open.
 pub fn view(app: &App, cx: &mut Cx<App>) -> El {
+    // A live window with nothing to draw is hidden by the shell (`shell::Live::sync_window`);
+    // this only keeps the frame it was hidden in from drawing a widget.
+    if app.live.is_some() && app.shown() == shell::Shown::None {
+        return rune::el();
+    }
     // An overlay widget is a card of its own, at its own size; a hidden one shows the window
     // under it (the item search hands the window to the price check its pick opened).
     if let Some(overlay) = &app.widgets
@@ -519,9 +543,19 @@ pub fn scene_size(scene: Option<&str>) -> (f32, f32) {
 
 /// Runs the app: a window, or a headless render with Rune's `--snap`/`--scene`/`--tree`.
 pub fn main() {
-    // Read `--scene` before the window exists: a settings scene is a window of its own size.
-    // Rune parses the same flags again when it builds the window.
+    // Read `--game` and `--scene` before the window exists: the game picks the config and the
+    // data, and a settings scene is a window of its own size. Rune parses the same flags again
+    // when it builds the window.
     let args = rune::tooling::Args::parse();
+    let argv: Vec<String> = std::env::args().skip(1).collect();
+    let game = shell::game_from_args(&argv);
+    // A live run is the app proper: tray, hotkeys, a window on demand. Everything else — a
+    // scene, a snapshot, a scripted run — is the port's screenshot mode, unchanged.
+    if !rune::is_headless() && args.scene.is_none() {
+        shell::run(game);
+        return;
+    }
+    let _ = game;
     let size = scene_size(args.scene.as_deref());
     rune::run(AppSpec::<App> {
         scenes: SCENES,
@@ -530,7 +564,7 @@ pub fn main() {
         // A live search's answer lands from a worker thread; the waker runs `poll`, which
         // applies it and redraws. Replay answers land in the handler, so `poll` is idle.
         setup: Some(|app, waker| app.set_waker(waker)),
-        poll: Some(|app, clock, _tx| app.poll(clock)),
+        poll: Some(|app, clock, tx| app.poll_with(clock, tx)),
         // The window is exactly the widget: the price check is a fixed 28.75 rem wide, so the
         // window must not shrink past it. (As an overlay it won't be resizable at all.)
         min_size: Some(size),

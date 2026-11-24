@@ -68,9 +68,9 @@ pub fn view<S: 'static>(
                 .label("expand")
                 .on_press(move |s: &mut S| project(s).toggle_group_expanded(group))
                 .child(if open {
-                    icon::chevron(theme::rem(0.75), false, theme::gray(500))
+                    icon::chevron(theme::rem(0.875), false, theme::gray(500))
                 } else {
-                    icon::chevron_right(theme::rem(0.75), theme::gray(500))
+                    icon::chevron_right(theme::rem(0.875), theme::gray(500))
                 }),
         );
     }
@@ -154,10 +154,13 @@ pub fn view<S: 'static>(
     root
 }
 
-/// The row's checkbox: `far fa-square`/`fas fa-check-square`, `filter.disabled = !disabled`.
+/// The row's checkbox: `far fa-square text-gray-500`/`fas fa-check-square`,
+/// `filter.disabled = !disabled`. `#price-window` is `text-gray-200`, so a checked box is drawn
+/// in it (the check is a hole); a disabled row's outline is `gray-500`.
 fn checkbox<S: 'static>(filter: &StatFilter, path: StatPath, project: Project<S>) -> El {
     let checked = !filter.disabled;
-    let ink = if checked { theme::gray(800) } else { theme::gray(500) };
+    let ink = theme::gray(500);
+    let paper = theme::gray(200);
     row()
         .key(format!("stat-{}-toggle", path.key()))
         .w(theme::rem(1.25))
@@ -166,7 +169,7 @@ fn checkbox<S: 'static>(filter: &StatFilter, path: StatPath, project: Project<S>
         .role("button")
         .label(if checked { "checked" } else { "unchecked" })
         .on_press(move |s: &mut S| project(s).toggle_stat(path))
-        .child(icon::checkbox(14.0, checked, ink, Color::WHITE))
+        .child(icon::checkbox(14.0, checked, ink, paper))
 }
 
 /// The text button: `smartToggle` on a press.

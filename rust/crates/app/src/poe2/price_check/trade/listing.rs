@@ -255,7 +255,7 @@ fn price_cell(index: usize, result: &PricingResult, listed_times: u32, width: f3
                 ),
         );
     } else if !result.has_note {
-        cell = cell.child(ui::icon::question(theme::rem(0.75), theme::gray(400)).ml(theme::rem(0.25)));
+        cell = cell.child(ui::icon::question(theme::rem(0.875), theme::gray(400)).ml(theme::rem(0.25)));
     }
     cell
 }

@@ -59,7 +59,7 @@ pub fn view<S: 'static>(check: &PriceCheck, api: Api, project: Project<S>) -> El
         .role("button")
         .label(label.clone())
         .on_press(move |s: &mut S| project(s).toggle_online_filter())
-        .child(icon::history(theme::rem(0.75), color))
+        .child(icon::history(theme::rem(0.875), color))
         .child(text(label).key("online-filter-label").font(type_::SM).color(color).truncate())
 }
 

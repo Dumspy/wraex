@@ -5114,6 +5114,8 @@ dependencies = [
 name = "wraex-app"
 version = "0.1.0"
 dependencies = [
+ "arboard",
+ "image",
  "rune",
  "serde",
  "serde_json",

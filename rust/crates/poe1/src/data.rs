@@ -25,6 +25,12 @@ pub fn image_path(name: &str) -> std::path::PathBuf {
     std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/apt/renderer/public/images")).join(name)
 }
 
+/// `ref/apt/renderer/public/icon.png`: the product icon upstream ships, which the app puts
+/// in the system tray (`main/build/icon.png` becomes this on install).
+pub fn icon_path() -> std::path::PathBuf {
+    std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/apt/renderer/public/icon.png")).to_owned()
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StatMatcher {
     pub string: String,

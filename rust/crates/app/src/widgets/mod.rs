@@ -345,10 +345,31 @@ impl Overlay {
             widgets.push(Widget::from_config(&initialised(kind.wm_type(), id)).expect("a widget object"));
         }
         let shown = widgets.iter().find(|widget| widget.wm_type == kind.wm_type()).map(|widget| widget.wm_id);
-        let mut overlay = Self {
+        let mut overlay = Self::new(game, widgets);
+        if let Some(id) = shown {
+            // `wm.show` when the scene opens, without an [`Action`]: the scene is the widget
+            // being on screen, not a button press.
+            overlay.activate(id, crate::trade::Mode::Replay);
+        }
+        overlay
+    }
+
+    /// The overlay a live window draws: the config's widgets, none shown until a hotkey or a
+    /// widget's own button asks for one (`wm.show`).
+    pub fn live(game: GameId, config: &Value) -> Self {
+        let widgets: Vec<Widget> = config
+            .get("widgets")
+            .and_then(Value::as_array)
+            .map(|widgets| widgets.iter().filter_map(Widget::from_config).collect())
+            .unwrap_or_default();
+        Self::new(game, widgets)
+    }
+
+    fn new(game: GameId, widgets: Vec<Widget>) -> Self {
+        Self {
             game,
             widgets,
-            shown: shown.unwrap_or(0),
+            shown: 0,
             hover: None,
             panel_hover: None,
             editing: None,
@@ -359,25 +380,42 @@ impl Overlay {
             timers: BTreeMap::new(),
             item_search: None,
             actions: Vec::new(),
-        };
-        if let Some(id) = shown {
-            // `wm.show` when the scene opens, without an [`Action`]: the scene is the widget
-            // being on screen, not a button press.
-            if let Some(widget) = overlay.widget_mut(id) {
-                widget.set_wants(Wants::Show);
-            }
-            if overlay.widget(id).is_some_and(|widget| widget.wm_type == stopwatch::WM_TYPE) {
-                overlay.timers.insert(id, stopwatch::Timer::default());
-            }
-            if overlay.widget(id).is_some_and(|widget| widget.wm_type == item_search::WM_TYPE) {
-                // A scene reads the prices the screenshots recorded; a window would build the
-                // state with `Mode::for_run()`.
-                overlay.item_search = Some(item_search::State::new(game, crate::trade::Mode::Replay));
-            }
-            let title = overlay.widget(id).map(|widget| widget.wm_title.clone()).unwrap_or_default();
-            overlay.title = TextEdit::new(title);
         }
-        overlay
+    }
+
+    /// Draw `wm_id`'s widget, with the running state its type needs (`WidgetTimer.vue`'s
+    /// clock, `WidgetItemSearch.vue`'s prices). Marks it `show`, as `wm.show` does.
+    pub fn activate(&mut self, wm_id: u32, mode: crate::trade::Mode) {
+        if let Some(widget) = self.widget_mut(wm_id) {
+            widget.set_wants(Wants::Show);
+        }
+        self.focus(wm_id, mode);
+    }
+
+    /// Draw `wm_id`'s widget without changing its `wmWants`: the window follows the widget the
+    /// config says is shown, and a widget's own state is built the first time it is drawn.
+    pub fn focus(&mut self, wm_id: u32, mode: crate::trade::Mode) {
+        self.shown = wm_id;
+        if self.widget(wm_id).is_some_and(|widget| widget.wm_type == stopwatch::WM_TYPE) {
+            self.timers.entry(wm_id).or_default();
+        }
+        if self.widget(wm_id).is_some_and(|widget| widget.wm_type == item_search::WM_TYPE) && self.item_search.is_none()
+        {
+            // A scene reads the prices the screenshots recorded; a live window fetches them.
+            self.item_search = Some(item_search::State::new(self.game, mode));
+        }
+        let title = self.widget(wm_id).map(|widget| widget.wm_title.clone()).unwrap_or_default();
+        self.title = TextEdit::new(title);
+    }
+
+    /// The widget of this `wmType`, shown when it exists: what `MAIN->CLIENT::widget-action`
+    /// does for a target that names a widget type (the delve grid's toggle key).
+    pub fn show_type(&mut self, wm_type: &str, mode: crate::trade::Mode) -> bool {
+        let Some(id) = self.widgets.iter().find(|widget| widget.wm_type == wm_type).map(|w| w.wm_id) else {
+            return false;
+        };
+        self.activate(id, mode);
+        true
     }
 
     pub fn widget(&self, wm_id: u32) -> Option<&Widget> {

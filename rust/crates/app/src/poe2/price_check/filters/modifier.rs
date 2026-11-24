@@ -134,10 +134,12 @@ pub fn view<S: 'static>(check: &PriceCheck, filter: &StatFilter, item: &Item, in
     root
 }
 
-/// The row's checkbox: `far fa-square text-gray-500` / `fas fa-check-square`.
+/// The row's checkbox: `far fa-square text-gray-500` / `fas fa-check-square`. `#price-window`
+/// is `text-gray-200`, so a checked box is drawn in it (the check is a hole).
 fn checkbox<S: 'static>(filter: &StatFilter, index: usize, project: Project<S>) -> El {
     let checked = !filter.disabled;
-    let ink = if checked { theme::gray(800) } else { theme::gray(500) };
+    let ink = theme::gray(500);
+    let paper = theme::gray(200);
     row()
         .key(format!("stat-{index}-toggle"))
         .w(theme::rem(1.25))
@@ -146,7 +148,7 @@ fn checkbox<S: 'static>(filter: &StatFilter, index: usize, project: Project<S>) 
         .role("button")
         .label(if checked { "checked" } else { "unchecked" })
         .on_press(move |s: &mut S| project(s).toggle_stat(index))
-        .child(icon::checkbox(14.0, checked, ink, Color::WHITE).mt(theme::rem(0.125)))
+        .child(icon::checkbox(14.0, checked, ink, paper).mt(theme::rem(0.125)))
 }
 
 /// The text button: a press toggles the filter (`toggleFilter`; the keyboard path submits

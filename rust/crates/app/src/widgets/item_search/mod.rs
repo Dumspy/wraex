@@ -582,7 +582,7 @@ fn search_half<S: 'static>(state: &State, project: Project<S>) -> El {
             }
         })
         // `<i class="fas fa-times" />`
-        .child(icon::close(theme::rem(0.875), theme::gray(400)).key("item-search-reset-icon"))
+        .child(icon::times(theme::rem(0.875), theme::gray(400)).key("item-search-reset-icon"))
         .child(
             text(crate::settings::t(game, "item_search.reset"))
                 .key("item-search-reset-label")

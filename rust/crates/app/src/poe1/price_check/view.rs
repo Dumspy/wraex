@@ -70,7 +70,7 @@ fn title_leading<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
         .role("button")
         .label(format!("\u{21c4} {label}"))
         .on_press(move |s: &mut S| project(s).toggle_exchange())
-        .child(icon::exchange(theme::rem(0.75), theme::gray(600)))
+        .child(icon::exchange(theme::rem(0.875), theme::gray(600)))
         .child(text(label).key("titlebar-exchange-rate").font(type_::SM).color(theme::gray(600)))
 }
 

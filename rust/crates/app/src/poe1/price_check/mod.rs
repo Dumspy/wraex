@@ -58,9 +58,15 @@ pub fn data() -> &'static Data {
 /// `activateStockFilter: false`, `searchStatRange: 10`, `defaultCurrency: null`, plus
 /// `AppConfig().useIntlSite` (`false`) and the selected league.
 pub fn preset_options() -> CreatePresetsOptions {
+    preset_options_for(DEFAULT_LEAGUE)
+}
+
+/// [`preset_options`] for a league the app selected from the trade site's list
+/// (`useLeagues`), instead of a fresh install's [`DEFAULT_LEAGUE`].
+pub fn preset_options_for(league: &str) -> CreatePresetsOptions {
     CreatePresetsOptions {
         filters: CreateOptions {
-            league: DEFAULT_LEAGUE.to_owned(),
+            league: league.to_owned(),
             merchant_only: true,
             currency: None,
             collapse_listings: "api".to_owned(),
@@ -131,12 +137,17 @@ impl PriceCheck {
     /// [`PriceCheck::from_text`] with the transport chosen: recorded answers for a scene,
     /// test or headless render.
     pub fn with_mode(text: &str, mode: Mode) -> Self {
+        Self::with_mode_league(text, mode, DEFAULT_LEAGUE)
+    }
+
+    /// [`PriceCheck::with_mode`] in the league the app selected from the trade site's list.
+    pub fn with_mode_league(text: &str, mode: Mode, league: &str) -> Self {
         // Item art follows the window's switch: a live window fetches from the CDN, a
         // replay reads the screenshot harness's recordings.
         crate::ui::art::set_mode(mode);
         let data = data();
         let item = parse_clipboard(data, text).map_err(|fail| ParseError::Rejected { key: fail.0.into() });
-        Self::build(text.to_owned(), item, mode)
+        Self::build(text.to_owned(), item, mode, league)
     }
 
     /// `MAIN->CLIENT::item-text` with the item already parsed: what the item search sends when
@@ -146,13 +157,19 @@ impl PriceCheck {
     pub fn with_item(item: Item, mode: Mode) -> Self {
         crate::ui::art::set_mode(mode);
         let text = item.raw_text.clone();
-        Self::build(text, Ok(item), mode)
+        Self::build(text, Ok(item), mode, DEFAULT_LEAGUE)
+    }
+
+    /// A window with no item: the live app's idle state before a hotkey brings one. Nothing is
+    /// parsed, so the game data is not loaded either.
+    pub fn empty(mode: Mode, league: &str) -> Self {
+        crate::ui::art::set_mode(mode);
+        Self::build(String::new(), Err(ParseError::Rejected { key: "no item".into() }), mode, league)
     }
 
     /// The window over a parsed item, whatever produced it.
-    fn build(text: String, item: Result<Item, ParseError>, mode: Mode) -> Self {
-        let data = data();
-        let presets = item.as_ref().ok().map(|item| create_presets(data, item, &preset_options()));
+    fn build(text: String, item: Result<Item, ParseError>, mode: Mode, league: &str) -> Self {
+        let presets = item.as_ref().ok().map(|item| create_presets(data(), item, &preset_options_for(league)));
         let do_search = match (&item, &presets) {
             (Ok(item), Some(Ok(presets))) => initial_do_search(item, presets),
             _ => false,
@@ -162,7 +179,7 @@ impl PriceCheck {
             item,
             presets,
             do_search,
-            league: DEFAULT_LEAGUE.to_owned(),
+            league: league.to_owned(),
             prices: prices::PriceList::new(mode),
             open: true,
             stats_collapsed: false,

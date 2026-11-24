@@ -20,7 +20,7 @@ pub fn view(key: &str, stat: &UnknownModifier) -> El {
                 .w_full()
                 .pb(theme::rem(0.25))
                 .items_center()
-                .child(row().w(theme::rem(1.25)).child(icon::warning(theme::rem(0.75), theme::orange(400))))
+                .child(row().w(theme::rem(1.25)).child(icon::warning(theme::rem(0.875), theme::orange(400))))
                 .child(ui::item_modifier_text(&format!("{key}-text"), &stat.text, None, type_::SM).truncate()),
         )
         .child(

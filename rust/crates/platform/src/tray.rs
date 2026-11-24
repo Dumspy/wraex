@@ -137,6 +137,17 @@ impl Tray {
     }
 }
 
+/// Deliver every menu click to `f` instead of leaving it in the queue. The platform runs `f`
+/// on its own event thread; an app forwards it to its UI thread (Rune's `AppHandle::update`)
+/// rather than polling. Replaces an earlier handler.
+pub fn set_menu_handler(f: impl Fn(TrayAction) + Send + Sync + 'static) {
+    MenuEvent::set_event_handler(Some(move |event: MenuEvent| {
+        if let Some(action) = TrayAction::from_menu_id(event.id.as_ref()) {
+            f(action);
+        }
+    }));
+}
+
 /// The native menu, and the items backing it.
 fn native_menu() -> Result<(Menu, Vec<Box<dyn IsMenuItem>>), String> {
     let items: Vec<Box<dyn IsMenuItem>> = menu_items()

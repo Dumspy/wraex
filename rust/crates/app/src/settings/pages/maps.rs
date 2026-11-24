@@ -284,9 +284,9 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
             // `padding-right: calc(0.875rem + 2.350rem)`: the radios' 0.875 rem marker plus
             // the two gaps and boxes the rows put to their right.
             .pr(theme::rem(0.875 + 2.35))
-            .child(legend("maps-legend-warn", theme::orange(600)))
-            .child(legend("maps-legend-deadly", theme::red(700)))
-            .child(legend("maps-legend-good", theme::green(700))),
+            .child(legend("maps-legend-warn", theme::orange(600), ui::icon::warning))
+            .child(legend("maps-legend-deadly", theme::red(700), ui::icon::skull))
+            .child(legend("maps-legend-good", theme::green(700), ui::icon::check)),
     );
     root = root.child(header);
 
@@ -298,15 +298,16 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     root.child(list)
 }
 
-/// One coloured legend square, 32 pt wide (`w-8 py-1`).
-fn legend(key: &str, color: rune::Color) -> El {
+/// One coloured legend square, 32 pt wide (`w-8 py-1`): `fa-exclamation-triangle`,
+/// `fa-skull-crossbones` and `fa-check` at the page's 14 pt, in its `text-gray-100`.
+fn legend(key: &str, color: rune::Color, glyph: fn(f32, rune::Color) -> El) -> El {
     row()
         .key(key.to_owned())
         .w(theme::rem(2.0))
         .py(theme::rem(0.25))
         .fill(color)
         .justify_center()
-        .child(ui::icon::warning(12.0, rune::Color::WHITE))
+        .child(glyph(type_::SM.size, theme::gray(100)))
 }
 
 /// `SettingsMatcherEntry.vue`: the tag, the stat text, the three decision radios and Remove.
@@ -343,11 +344,11 @@ fn entry<S: 'static>(settings: &Settings, area: &AreaMod, index: usize, profile:
                 }));
         }
         let matcher = matcher.clone();
-        // `fa-trash-alt` for an outdated wording, `fa-times` otherwise.
+        // `fa-trash-alt` for an outdated wording, `fa-times` otherwise (`w-4`, 14 pt glyph).
         let glyph = if area.tag == Tag::Outdated {
-            ui::icon::trash(16.0, theme::red(400))
+            ui::icon::trash(type_::SM.size, theme::red(400))
         } else {
-            ui::icon::close(12.0, theme::gray(400))
+            ui::icon::times(type_::SM.size, theme::gray(400))
         };
         controls = controls.child(
             row()

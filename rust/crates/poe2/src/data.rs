@@ -28,6 +28,11 @@ pub fn image_path(name: &str) -> std::path::PathBuf {
     std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/ee2/renderer/public/images")).join(name)
 }
 
+/// `ref/ee2/renderer/public/icon.png`: EE2's product icon, which the app puts in the tray.
+pub fn icon_path() -> std::path::PathBuf {
+    std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/ee2/renderer/public/icon.png")).to_owned()
+}
+
 /// EE2's snapshot of `/api/trade2/data/{items,stats}` (`renderer/specs/data/`),
 /// which its tests and the golden harness serve instead of the trade site.
 pub fn reference_trade_data() -> TradeData {

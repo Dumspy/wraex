@@ -29,7 +29,7 @@ pub fn view<S: 'static>(key: &str, stat: &UnknownModifier, _item_text: &str, _pr
                             row()
                                 .w(theme::rem(1.25))
                                 .shrink()
-                                .child(icon::warning(theme::rem(0.75), theme::orange(400))),
+                                .child(icon::warning(theme::rem(0.875), theme::orange(400))),
                         )
                         .child(
                             ui::item_modifier_text(&format!("{key}-text"), &stat.text, None, type_::SM)

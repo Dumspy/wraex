@@ -2,9 +2,13 @@
 # every checkout, including Windows runners with core.autocrlf.
 fixtures/** text eol=lf
 tools/golden/corpus/** text eol=lf
-# Recorded images are bytes, not text.
+# Recorded images and bundled fonts are bytes, not text.
 *.png binary
 *.jpg binary
 *.jpeg binary
 *.gif binary
 *.webp binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary

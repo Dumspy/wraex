@@ -108,7 +108,8 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
                 }
                 settings.seed_edits();
             })
-            .child(text("+").key("chat-add-icon").font(theme::leading_none(type_::SM)).color(theme::gray(400)))
+            // `fas fa-plus mr-1`: the row's `gap` is upstream's `mr-1`.
+            .child(ui::icon::plus(type_::SM.size, theme::gray(400)).key("chat-add-icon"))
             .child(
                 text(tr(settings, "settings.chat_cmd_add"))
                     .key("chat-add-label")

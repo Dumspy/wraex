@@ -204,6 +204,9 @@ pub const FAMILY_POE_SC: Family = Family::Named("Fontin SmallCaps, FrizQuadrataI
 pub const FAMILY_POE: Family = Family::Named("Fontin, FrizQuadrataITC");
 /// `font-exo2`: Exo 2.
 pub const FAMILY_EXO2: Family = Family::Named("Exo 2");
+/// Font Awesome's family (`@fortawesome/fontawesome-free`): `fas`/`far` in upstream's
+/// templates, weight 900 for solid and 400 for regular, both under the same family name.
+pub const FAMILY_FA: Family = Family::Named("Font Awesome 6 Free");
 
 /// The sans and mono slots. Named after the face files themselves: `ref/apt`'s
 /// `@font-face` rules call the families `FontinSmallCaps` etc., but a TTF's own name
@@ -215,9 +218,12 @@ pub const FAMILY_EXO2: Family = Family::Named("Exo 2");
 /// numbers in `font-exo2 font-semibold`, and a span can reach that face through `mono`.
 pub const FAMILIES: (&str, &str) = ("Fontin SmallCaps, FrizQuadrataITC", "Exo 2");
 
-/// The fonts `ref/apt/renderer/src/assets/font` ships, compiled in.
+/// The fonts the widgets draw with, compiled in: the faces `ref/apt/renderer/src/assets/font`
+/// ships (they live in the `ref/apt` submodule, which CI checks out, not in `node_modules`),
+/// then Font Awesome's solid and regular faces.
 ///
-/// They live in the `ref/apt` submodule (CI checks it out), not in `node_modules`.
+/// Font Awesome is upstream's `node_modules` dependency, so the two faces the templates use are
+/// vendored in `assets/fontawesome/` (`fas` = weight 900, `far` = 400, one family name).
 pub const FONTS: &[&[u8]] = &[
     include_bytes!("../../../../ref/apt/renderer/src/assets/font/Fontin-SmallCaps-Hinted.ttf") as &[u8],
     include_bytes!("../../../../ref/apt/renderer/src/assets/font/Fontin-Regular-Hinted.ttf") as &[u8],
@@ -227,4 +233,6 @@ pub const FONTS: &[&[u8]] = &[
     include_bytes!("../../../../ref/apt/renderer/src/assets/font/Exo2-Regular.ttf") as &[u8],
     include_bytes!("../../../../ref/apt/renderer/src/assets/font/Exo2-Medium.ttf") as &[u8],
     include_bytes!("../../../../ref/apt/renderer/src/assets/font/Exo2-SemiBold.ttf") as &[u8],
+    include_bytes!("../assets/fontawesome/fa-solid-900.ttf") as &[u8],
+    include_bytes!("../assets/fontawesome/fa-regular-400.ttf") as &[u8],
 ];
