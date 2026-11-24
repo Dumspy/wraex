@@ -5,6 +5,7 @@
 //! trade request building ([`trade`]), the map check ([`map_check`]) and the
 //! item check's actions ([`item_check`]).
 
+pub mod config;
 pub mod data;
 pub mod filters;
 pub mod item_check;
@@ -201,5 +202,48 @@ mod tests {
         }
         assert!(compared > 0);
         assert!(failures.is_empty(), "{} of {compared} cases differ:\n\n{}", failures.len(), failures.join("\n\n"));
+    }
+
+    /// `defaultConfig()`, `initConfig()` and `getConfigForHost()` equal the
+    /// recorded settings (`fixtures/config/poe1/`).
+    #[test]
+    fn settings_match_the_fixtures() {
+        let cases = wraex_golden::config_cases(GameId::Poe1);
+        assert!(cases.len() > 1);
+        let mut failures = Vec::new();
+        let mut check = |what: String, expected: &serde_json::Value, actual: &serde_json::Value| {
+            if let Some(diff) = wraex_golden::diff(expected, &wraex_core::js::json_value(actual)) {
+                failures.push(format!("{what}: {diff}"));
+            }
+        };
+        for case in &cases {
+            if let Some(default) = &case.default {
+                check(format!("{} config", case.slug), default, &config::default_config());
+            }
+            let loaded = config::load(case.input.as_deref()).unwrap();
+            check(format!("{} loaded", case.slug), &case.loaded, &loaded.config);
+            check(format!("{} host", case.slug), &case.host, &config::host_config(&loaded.config).unwrap());
+            // Upstream saves `JSON.stringify(AppConfig())` with its key order;
+            // the contents are compared as JSON.
+            let saves: Vec<serde_json::Value> = case
+                .saves
+                .as_ref()
+                .and_then(|s| s.as_array().cloned())
+                .unwrap_or_default()
+                .iter()
+                .map(|s| {
+                    let contents: serde_json::Value =
+                        serde_json::from_str(s["payload"]["contents"].as_str().unwrap()).unwrap();
+                    serde_json::json!({ "contents": contents, "isTemporary": s["payload"]["isTemporary"] })
+                })
+                .collect();
+            let ours: Vec<serde_json::Value> = if loaded.save_temporary {
+                vec![serde_json::json!({ "contents": loaded.config, "isTemporary": true })]
+            } else {
+                Vec::new()
+            };
+            check(format!("{} saves", case.slug), &serde_json::json!(saves), &serde_json::json!(ours));
+        }
+        assert!(failures.is_empty(), "{}", failures.join("\n\n"));
     }
 }

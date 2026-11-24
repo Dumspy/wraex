@@ -77,7 +77,30 @@ The reference code runs these stages:
      `Host.sendEvent`. PoE2's config gets `WidgetItemCheck.vue`'s default
      item-check widget (`samePricedType: "both"`).
 
-Record the `active` preset and all presets, not just the active one. `presets.json`
+Record the `active` preset and all presets, not just the active one.
+
+## Settings
+
+The `poe1-config` and `poe2-config` projects load the real `web/Config.ts`
+(the item pipeline mocks it), with each reference's Vue plugin for the widget
+`.vue` files it imports and `happy-dom` as their browser. The widget registry
+is imported first, as the app's `App.vue` does (EE2's widgets read Config's
+exports while loading). The IPC host serves the input file and records what is
+sent back. Per game they write `fixtures/config/<game>/`:
+
+```
+default/config.json   defaultConfig()
+default/loaded.json   initConfig() without a file
+default/host.json     getConfigForHost() of that
+<slug>/input.txt      corpus/config/<game>/<slug>.json, as read
+<slug>/loaded.json    initConfig() of it (upgradeConfig, or the defaults)
+<slug>/host.json      getConfigForHost() of it
+<slug>/saves.json     save events, when initConfig saves (unreadable files)
+```
+
+The corpus files are derived from the recorded defaults by
+`scripts/make-config-corpus.py` (older versions and field names set by hand);
+real config files from players should replace them. `presets.json`
 is written before any request is built, and the requests get the live preset objects
 like the app does (EE2 wraps some trade ids in proxies, which cannot be cloned).
 

@@ -1,0 +1,292 @@
+{
+  "accountName": "",
+  "clientLog": null,
+  "commands": [
+    {
+      "hotkey": "F5",
+      "send": true,
+      "text": "/hideout"
+    },
+    {
+      "hotkey": "F9",
+      "send": true,
+      "text": "/exit"
+    },
+    {
+      "hotkey": null,
+      "send": true,
+      "text": "@last ty"
+    },
+    {
+      "hotkey": null,
+      "send": true,
+      "text": "/invite @last"
+    },
+    {
+      "hotkey": null,
+      "send": true,
+      "text": "/tradewith @last"
+    },
+    {
+      "hotkey": null,
+      "send": true,
+      "text": "/hideout @last"
+    }
+  ],
+  "configVersion": 18,
+  "delveGridKey": "Ctrl + G",
+  "fontSize": 16,
+  "gameConfig": null,
+  "itemCheckKey": "Ctrl + I",
+  "language": "cmn-Hant",
+  "logKeys": false,
+  "overlayBackground": "rgba(129, 139, 149, 0.15)",
+  "overlayBackgroundClose": true,
+  "overlayKey": "Shift + Space",
+  "realm": "pc-ggg",
+  "restoreClipboard": false,
+  "showAttachNotification": true,
+  "stashScroll": true,
+  "useIntlSite": true,
+  "widgets": [
+    {
+      "wmFlags": [
+        "invisible-on-blur",
+        "ignore-ui-visibility"
+      ],
+      "wmId": 2,
+      "wmTitle": "{icon=fa-cog}",
+      "wmType": "settings",
+      "wmWants": "hide",
+      "wmZorder": "exclusive"
+    },
+    {
+      "alwaysShow": false,
+      "anchor": {
+        "pos": "tl",
+        "x": 5,
+        "y": 5
+      },
+      "wmFlags": [
+        "invisible-on-blur",
+        "menu::skip"
+      ],
+      "wmId": 1,
+      "wmTitle": "",
+      "wmType": "menu",
+      "wmWants": "show",
+      "wmZorder": 1
+    },
+    {
+      "anchor": {
+        "pos": "tl",
+        "x": 10,
+        "y": 20
+      },
+      "ocrGemsKey": null,
+      "wmFlags": [
+        "invisible-on-blur"
+      ],
+      "wmId": 3,
+      "wmTitle": "{icon=fa-search}",
+      "wmType": "item-search",
+      "wmWants": "hide",
+      "wmZorder": null
+    },
+    {
+      "anchor": {
+        "pos": "tl",
+        "x": 35,
+        "y": 46
+      },
+      "enableHotkeys": true,
+      "entries": [
+        {
+          "hotkey": null,
+          "id": 1,
+          "name": "",
+          "text": "\"Pack Size: +3\""
+        },
+        {
+          "hotkey": null,
+          "id": 2,
+          "name": "",
+          "text": "Reflect"
+        },
+        {
+          "hotkey": null,
+          "id": 3,
+          "name": "",
+          "text": "\"Cannot Leech Life\""
+        },
+        {
+          "hotkey": null,
+          "id": 4,
+          "name": "",
+          "text": "\"Cannot Leech Mana\""
+        }
+      ],
+      "wmFlags": [
+        "invisible-on-blur"
+      ],
+      "wmId": 4,
+      "wmTitle": "Map rolling",
+      "wmType": "stash-search",
+      "wmWants": "hide",
+      "wmZorder": null
+    },
+    {
+      "anchor": {
+        "pos": "tl",
+        "x": 34,
+        "y": 56
+      },
+      "enableHotkeys": true,
+      "entries": [
+        {
+          "hotkey": null,
+          "id": 1,
+          "name": "",
+          "text": "Currency"
+        },
+        {
+          "hotkey": null,
+          "id": 2,
+          "name": "",
+          "text": "\"Divination Card\""
+        },
+        {
+          "hotkey": null,
+          "id": 3,
+          "name": "",
+          "text": "Fossil"
+        },
+        {
+          "hotkey": null,
+          "id": 4,
+          "name": "",
+          "text": "\"Map Tier\""
+        },
+        {
+          "hotkey": null,
+          "id": 5,
+          "name": "",
+          "text": "\"Map Device\" \"Rarity: Normal\""
+        },
+        {
+          "hotkey": null,
+          "id": 6,
+          "name": "",
+          "text": "Tane Laboratory"
+        }
+      ],
+      "wmFlags": [
+        "invisible-on-blur"
+      ],
+      "wmId": 5,
+      "wmTitle": "Dump sorting",
+      "wmType": "stash-search",
+      "wmWants": "hide",
+      "wmZorder": null
+    },
+    {
+      "activateStockFilter": false,
+      "apiLatencySeconds": 2,
+      "builtinBrowser": false,
+      "collapseListings": "api",
+      "defaultCurrency": null,
+      "hotkey": "D",
+      "hotkeyHold": "Ctrl",
+      "hotkeyLocked": "Ctrl + Alt + D",
+      "lockedInitialSearch": true,
+      "merchantOnly": true,
+      "requestPricePrediction": false,
+      "searchStatRange": 10,
+      "showCursor": true,
+      "showRateLimitState": false,
+      "showSeller": false,
+      "smartInitialSearch": true,
+      "wmFlags": [
+        "hide-on-blur",
+        "menu::skip"
+      ],
+      "wmId": 6,
+      "wmTitle": "",
+      "wmType": "price-check",
+      "wmWants": "hide",
+      "wmZorder": "exclusive"
+    },
+    {
+      "craftOfExileKey": null,
+      "hotkey": "Ctrl + I",
+      "maps": {
+        "profile": 1,
+        "selectedStats": [
+          {
+            "decision": "w--",
+            "matcher": "Players have #% to all maximum Resistances"
+          },
+          {
+            "decision": "d--",
+            "matcher": "Monsters reflect #% of Physical Damage"
+          },
+          {
+            "decision": "d--",
+            "matcher": "Monsters reflect #% of Elemental Damage"
+          },
+          {
+            "decision": "g--",
+            "matcher": "Area contains two Unique Bosses"
+          }
+        ],
+        "showNewStats": false
+      },
+      "poedbKey": null,
+      "stashSearchKey": null,
+      "wikiKey": null,
+      "wmFlags": [
+        "hide-on-blur",
+        "menu::skip"
+      ],
+      "wmId": 7,
+      "wmTitle": "",
+      "wmType": "item-check",
+      "wmWants": "hide",
+      "wmZorder": "exclusive"
+    },
+    {
+      "anchor": {
+        "pos": "tc",
+        "x": 50,
+        "y": 10
+      },
+      "images": [
+        {
+          "id": 1,
+          "url": "syndicate.jpg"
+        }
+      ],
+      "wmFlags": [
+        "invisible-on-blur"
+      ],
+      "wmId": 8,
+      "wmTitle": "Cheat sheets",
+      "wmType": "image-strip",
+      "wmWants": "hide",
+      "wmZorder": null
+    },
+    {
+      "toggleKey": "Ctrl + G",
+      "wmFlags": [
+        "hide-on-focus",
+        "menu::skip"
+      ],
+      "wmId": 9,
+      "wmTitle": "",
+      "wmType": "delve-grid",
+      "wmWants": "hide",
+      "wmZorder": null
+    }
+  ],
+  "windowTitle": "Path of Exile"
+}

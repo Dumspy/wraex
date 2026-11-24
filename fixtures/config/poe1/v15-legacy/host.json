@@ -1,0 +1,68 @@
+{
+  "clientLog": null,
+  "gameConfig": null,
+  "language": "cmn-Hant",
+  "logKeys": false,
+  "overlayKey": "Shift + Space",
+  "restoreClipboard": false,
+  "shortcuts": [
+    {
+      "action": {
+        "focusOverlay": false,
+        "target": "price-check",
+        "type": "copy-item"
+      },
+      "keepModKeys": true,
+      "shortcut": "Ctrl + D"
+    },
+    {
+      "action": {
+        "focusOverlay": true,
+        "target": "price-check",
+        "type": "copy-item"
+      },
+      "shortcut": "Ctrl + Alt + D"
+    },
+    {
+      "action": {
+        "type": "toggle-overlay"
+      },
+      "keepModKeys": true,
+      "shortcut": "Shift + Space"
+    },
+    {
+      "action": {
+        "focusOverlay": true,
+        "target": "item-check",
+        "type": "copy-item"
+      },
+      "shortcut": "Ctrl + I"
+    },
+    {
+      "action": {
+        "target": "delve-grid",
+        "type": "trigger-event"
+      },
+      "keepModKeys": true,
+      "shortcut": "Ctrl + G"
+    },
+    {
+      "action": {
+        "send": true,
+        "text": "/hideout",
+        "type": "paste-in-chat"
+      },
+      "shortcut": "F5"
+    },
+    {
+      "action": {
+        "send": true,
+        "text": "/exit",
+        "type": "paste-in-chat"
+      },
+      "shortcut": "F9"
+    }
+  ],
+  "stashScroll": true,
+  "windowTitle": "Path of Exile"
+}

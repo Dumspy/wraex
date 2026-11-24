@@ -5,6 +5,8 @@
 //! one module at a time, each ported module backed by golden fixtures (see
 //! `PLAN.md`, phase 3).
 
+pub mod config_store;
+pub mod config_upgrade;
 pub mod data;
 pub mod filters;
 pub mod game_files;

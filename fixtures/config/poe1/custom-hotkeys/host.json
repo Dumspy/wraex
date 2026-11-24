@@ -1,0 +1,119 @@
+{
+  "clientLog": null,
+  "gameConfig": null,
+  "language": "en",
+  "logKeys": false,
+  "overlayKey": "Shift + Space",
+  "restoreClipboard": false,
+  "shortcuts": [
+    {
+      "action": {
+        "focusOverlay": false,
+        "target": "price-check",
+        "type": "copy-item"
+      },
+      "keepModKeys": true,
+      "shortcut": "Ctrl + D"
+    },
+    {
+      "action": {
+        "focusOverlay": true,
+        "target": "price-check",
+        "type": "copy-item"
+      },
+      "shortcut": "Ctrl + Alt + D"
+    },
+    {
+      "action": {
+        "type": "toggle-overlay"
+      },
+      "keepModKeys": true,
+      "shortcut": "Shift + Space"
+    },
+    {
+      "action": {
+        "target": "open-wiki",
+        "type": "copy-item"
+      },
+      "shortcut": "F8"
+    },
+    {
+      "action": {
+        "target": "open-craft-of-exile",
+        "type": "copy-item"
+      },
+      "shortcut": "Ctrl + Shift + C"
+    },
+    {
+      "action": {
+        "target": "open-poedb",
+        "type": "copy-item"
+      },
+      "shortcut": "F7"
+    },
+    {
+      "action": {
+        "target": "search-similar",
+        "type": "copy-item"
+      },
+      "shortcut": "Ctrl + F"
+    },
+    {
+      "action": {
+        "focusOverlay": true,
+        "target": "item-check",
+        "type": "copy-item"
+      },
+      "shortcut": "Ctrl + I"
+    },
+    {
+      "action": {
+        "target": "delve-grid",
+        "type": "trigger-event"
+      },
+      "keepModKeys": true,
+      "shortcut": "Ctrl + G"
+    },
+    {
+      "action": {
+        "send": true,
+        "text": "/hideout",
+        "type": "paste-in-chat"
+      },
+      "shortcut": "F5"
+    },
+    {
+      "action": {
+        "send": true,
+        "text": "/exit",
+        "type": "paste-in-chat"
+      },
+      "shortcut": "F9"
+    },
+    {
+      "action": {
+        "send": true,
+        "text": "@last ty",
+        "type": "paste-in-chat"
+      },
+      "shortcut": "Ctrl + F2"
+    },
+    {
+      "action": {
+        "target": "heist-gems",
+        "type": "ocr-text"
+      },
+      "keepModKeys": true,
+      "shortcut": "Ctrl + O"
+    },
+    {
+      "action": {
+        "text": "\"Pack Size: +3\"",
+        "type": "stash-search"
+      },
+      "shortcut": "Ctrl + 1"
+    }
+  ],
+  "stashScroll": true,
+  "windowTitle": "Path of Exile"
+}

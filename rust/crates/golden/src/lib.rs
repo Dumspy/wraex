@@ -52,6 +52,50 @@ pub fn listing_fixture(game: GameId, name: &str) -> Value {
     serde_json::from_str(&text).unwrap_or_else(|e| panic!("{}: {e}", file.display()))
 }
 
+/// A settings case: `fixtures/config/<game>/<slug>/` (`tools/golden/src/config-cases.ts`).
+#[derive(Debug, Clone)]
+pub struct ConfigCase {
+    pub slug: String,
+    /// The config file's text; `None` for the `default` case (no file).
+    pub input: Option<String>,
+    /// `defaultConfig()`, for the `default` case only.
+    pub default: Option<Value>,
+    /// The config after `initConfig`.
+    pub loaded: Value,
+    /// `getConfigForHost()` of it.
+    pub host: Value,
+    /// The save events `initConfig` sent (an unreadable file's temporary save).
+    pub saves: Option<Value>,
+}
+
+/// Every settings case for `game`, `default` first.
+pub fn config_cases(game: GameId) -> Vec<ConfigCase> {
+    let root = fixtures_dir().join("config").join(game.as_str());
+    let mut slugs: Vec<String> = match fs::read_dir(&root) {
+        Ok(entries) => entries.map(|e| e.unwrap().file_name().into_string().unwrap()).collect(),
+        Err(_) => return Vec::new(),
+    };
+    slugs.sort_by_key(|s| (s != "default", s.clone()));
+    slugs
+        .into_iter()
+        .map(|slug| {
+            let dir = root.join(&slug);
+            let read = |name: &str| fs::read_to_string(dir.join(name)).ok();
+            let json = |name: &str| -> Option<Value> {
+                read(name).map(|t| serde_json::from_str(&t).unwrap_or_else(|e| panic!("{}/{name}: {e}", dir.display())))
+            };
+            ConfigCase {
+                input: read("input.txt"),
+                default: json("config.json"),
+                loaded: json("loaded.json").expect("loaded.json"),
+                host: json("host.json").expect("host.json"),
+                saves: json("saves.json"),
+                slug,
+            }
+        })
+        .collect()
+}
+
 /// Every case for `game`, sorted by slug.
 pub fn cases(game: GameId) -> Vec<Case> {
     let root = fixtures_dir().join(game.as_str());

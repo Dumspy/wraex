@@ -1,0 +1,56 @@
+{
+  "clientLog": null,
+  "gameConfig": null,
+  "hideOverlayOnBlur": false,
+  "initialDelay": 48,
+  "language": "en",
+  "libraryAlpha": false,
+  "libraryOutputPath": null,
+  "logKeys": false,
+  "overlayKey": "Shift + Space",
+  "readClientLog": false,
+  "restoreClipboard": false,
+  "shortcuts": [
+    {
+      "action": {
+        "focusOverlay": false,
+        "target": "price-check",
+        "type": "copy-item"
+      },
+      "keepModKeys": true,
+      "shortcut": "Ctrl + D"
+    },
+    {
+      "action": {
+        "focusOverlay": true,
+        "target": "price-check",
+        "type": "copy-item"
+      },
+      "shortcut": "Ctrl + Alt + D"
+    },
+    {
+      "action": {
+        "type": "toggle-overlay"
+      },
+      "shortcut": "Shift + Space"
+    },
+    {
+      "action": {
+        "send": true,
+        "text": "/hideout",
+        "type": "paste-in-chat"
+      },
+      "shortcut": "F5"
+    },
+    {
+      "action": {
+        "send": true,
+        "text": "/exit",
+        "type": "paste-in-chat"
+      },
+      "shortcut": "F9"
+    }
+  ],
+  "stashScroll": true,
+  "windowTitle": "Path of Exile 2"
+}

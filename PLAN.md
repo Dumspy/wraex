@@ -254,6 +254,10 @@ Agent loop per step: port module → `golden check` → fix diffs → repeat.
   hotkey from the INI, and `Client.txt` tailing (EE2's re-read included).
 - Settings storage (`ConfigStore.ts`): read upstream's config format so users
   can switch over without losing settings.
+  **PoE1 done** (`core::config_store`, `poe1::config`): the store (with
+  upstream's path to import from), `defaultConfig`, every `upgradeConfig` step,
+  `initConfig` and `getConfigForHost`, matched against `fixtures/config/poe1/`.
+  PoE2 next.
 - Tray icon, auto-updater, logging.
 - Later / optional: OCR (`main/src/vision`, Heist gem finder).
 
