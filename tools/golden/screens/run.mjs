@@ -2,27 +2,72 @@
 // reference renderer (ref/apt or ref/ee2) in a normal browser against a fake
 // main process. Phase 5 uses these to compare the Rune port against upstream.
 //
-//   node tools/golden/screens/run.mjs [--game poe1|poe2] [--case <slug>]... [--rebuild]
+//   node tools/golden/screens/run.mjs [--game poe1|poe2] [--case <slug>]... [--record] [--rebuild]
 //
 // Output goes to target/screens/<game>/<case>.png (+ .txt with innerText); it is
-// not committed and only meant for visual comparison.
+// not committed and only meant for visual comparison. `--record` forwards proxy
+// misses to the real trade site / poe.ninja and saves the answers under
+// corpus/screens/<game>/proxy/, so later runs replay them offline.
 import fs from 'node:fs'
 import path from 'node:path'
 import { chromium } from 'playwright'
 import { ensureBuild } from './build.mjs'
-import { DEFAULT_CASES, REPO_ROOT, corpusFile } from './cases.mjs'
-import { startHost } from './host.mjs'
+import { DEFAULT_CASES, REPO_ROOT, corpusFile, normalizeCase } from './cases.mjs'
+import { PROXY_HOSTS, startHost } from './host.mjs'
 
 // The fixture harness records `defaultConfig()` without a league; `Host.getConfig`
 // hands the renderer the same JSON. The only edit is leagueId, so the leagues
 // request fixture matches what the window shows in its title bar.
 const LEAGUE_ID = 'Standard'
 
+// Used when a game has no `recorded-at.txt`: a fixed date, so replayed files
+// always render the same relative listing times.
+const DEFAULT_CLOCK = new Date('2026-01-01T12:00:00Z')
+
 function loadConfig (game) {
   const file = path.join(REPO_ROOT, 'fixtures/config', game, 'default/config.json')
   const config = JSON.parse(fs.readFileSync(file, 'utf8'))
   config.leagueId = LEAGUE_ID
   return config
+}
+
+// `[workspace.package] version` from rust/Cargo.toml, so a recorded request
+// identifies the app the way `wraex_core::trade::api::USER_AGENT` does
+// (`wraex/<version> (+https://github.com/Dumspy/wraex)`).
+function workspaceVersion () {
+  const toml = fs.readFileSync(path.join(REPO_ROOT, 'rust/Cargo.toml'), 'utf8')
+  const section = toml.split(/^\[/m).find(chunk => chunk.startsWith('workspace.package]'))
+  const found = /^version\s*=\s*"([^"]+)"/m.exec(section ?? '')
+  if (!found) throw new Error('no [workspace.package] version in rust/Cargo.toml')
+  return found[1]
+}
+
+function userAgent () {
+  return `wraex/${workspaceVersion()} (+https://github.com/Dumspy/wraex)`
+}
+
+function recordedAtFile (game) {
+  return path.join(REPO_ROOT, 'tools/golden/corpus/screens', game, 'recorded-at.txt')
+}
+
+// The date the page's clock is frozen at. Recording writes it once (the
+// listings it saves must not look like they are in the future); later runs read
+// it, so replay is stable. Delete the file to re-freeze at the next recording.
+function pageClock (game, { record }) {
+  const file = recordedAtFile(game)
+  if (record && !fs.existsSync(file)) {
+    fs.mkdirSync(path.dirname(file), { recursive: true })
+    fs.writeFileSync(file, `${new Date().toISOString()}\n`)
+    console.log(`[screens] ${game}: freezing the clock at now (${path.relative(REPO_ROOT, file)})`)
+  }
+  if (!fs.existsSync(file)) return DEFAULT_CLOCK
+
+  const text = fs.readFileSync(file, 'utf8').trim()
+  const date = new Date(text)
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`${path.relative(REPO_ROOT, file)} is not an ISO date: ${JSON.stringify(text)}`)
+  }
+  return date
 }
 
 function withTimeout (promise, ms, label) {
@@ -38,6 +83,9 @@ function usage () {
 
   --game <poe1|poe2>  game to render (repeatable; default: both)
   --case <slug>       corpus case to render (repeatable; needs exactly one --game)
+  --record            fetch proxy misses from the real trade site / poe.ninja and
+                      save them under corpus/screens/<game>/proxy/ (one request
+                      per second; needs network)
   --rebuild           rebuild the renderer even if .screens-build/<game> exists
   --debug             print the page's console and errors while it runs
   -h, --help
@@ -47,7 +95,7 @@ and .txt.`)
 }
 
 function parseArgs (argv) {
-  const opts = { games: [], cases: [], rebuild: false, debug: false }
+  const opts = { games: [], cases: [], rebuild: false, debug: false, record: false }
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
     if (arg === '--game') {
@@ -58,6 +106,8 @@ function parseArgs (argv) {
       const slug = argv[++i]
       if (!slug) throw new Error('--case needs a corpus slug')
       opts.cases.push(slug)
+    } else if (arg === '--record') {
+      opts.record = true
     } else if (arg === '--rebuild') {
       opts.rebuild = true
     } else if (arg === '--debug') {
@@ -82,7 +132,24 @@ function parseArgs (argv) {
   return opts
 }
 
-async function shoot ({ browser, host, game, slug, debug }) {
+// Clicks the window's "Search" button until it sticks. CheckedItem resets
+// `doSearch` when the active preset's stats change (a poe.ninja answer landing
+// after the item did, say), which can undo a click made right after the window
+// appears; so keep clicking while the button is still rendered.
+async function startSearch (page, { game, slug }) {
+  const button = page.locator('#price-window').getByRole('button', { name: 'Search', exact: true })
+  for (let attempt = 0; attempt < 4; attempt++) {
+    if (!(await button.isVisible().catch(() => false))) return
+    await button.click()
+    await page.waitForTimeout(800)
+  }
+  if (await button.isVisible().catch(() => false)) {
+    console.error(`[screens] warning (${game}/${slug}): the Search button would not go away`)
+  }
+}
+
+async function shoot ({ browser, host, game, testCase, clock, record, debug }) {
+  const { slug, search } = testCase
   const text = fs.readFileSync(corpusFile(game, slug), 'utf8')
   const context = await browser.newContext({
     viewport: { width: 1600, height: 900 },
@@ -112,7 +179,7 @@ async function shoot ({ browser, host, game, slug, debug }) {
   const leaguesReady = host.nextProxyRequest('leagues')
 
   try {
-    await page.clock.setFixedTime(new Date('2026-01-01T12:00:00Z'))
+    await page.clock.setFixedTime(clock)
     await page.goto(host.url, { waitUntil: 'domcontentloaded' })
 
     await withTimeout(clientReady, 60_000, 'websocket connection to /events')
@@ -140,10 +207,28 @@ async function shoot ({ browser, host, game, slug, debug }) {
     })
 
     await page.waitForSelector('#price-window', { state: 'visible', timeout: 60_000 })
-    // Trade/poe.ninja answers are deliberately absent (404), so let any retry
-    // or spinner settle briefly; do not wait for it indefinitely.
-    await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => {})
+    // Let the item's own requests (poe.ninja, in-flight stats) land first.
+    await host.settled({ quietMs: 1200 })
     await page.waitForTimeout(500)
+
+    // Upstream only searches on its own for uniques and bulk currency; for
+    // everything else the "Search" button (the same text the window renders)
+    // starts the trade request. Clicking is the one place the harness acts.
+    if (search) await startSearch(page, { game, slug })
+
+    // The page asks the proxy for a chain of answers (search, then fetch); a
+    // recorded chain is throttled to one request per second, so wait for the
+    // traffic to stop rather than for a fixed time.
+    const quiet = await host.settled({ quietMs: record ? 3000 : 1500 })
+    if (!quiet) console.error(`[screens] warning (${game}/${slug}): proxy traffic never went quiet`)
+
+    const listed = await page.waitForFunction(() => {
+      const win = document.querySelector('#price-window')
+      if (!win || win.querySelector('ui-error-box')) return false
+      return Boolean(win.querySelector('tbody tr'))
+    }, { timeout: 15_000 }).then(() => true).catch(() => false)
+    if (!listed) console.error(`[screens] warning (${game}/${slug}): no listings in the window`)
+    await page.waitForTimeout(300)
 
     const outDir = path.join(REPO_ROOT, 'target/screens', game)
     fs.mkdirSync(outDir, { recursive: true })
@@ -167,31 +252,53 @@ async function shoot ({ browser, host, game, slug, debug }) {
   }
 }
 
+// `--case` keeps the options a default case has (its `search` flag), so
+// rendering one case behaves like the full run.
+function caseEntry (game, slug) {
+  const known = (DEFAULT_CASES[game] ?? [])
+    .map(normalizeCase)
+    .find(entry => entry.slug === slug)
+  return known ?? { slug, search: false }
+}
+
 async function main () {
   const opts = parseArgs(process.argv.slice(2))
   const casesByGame = opts.cases.length
-    ? { [opts.games[0]]: opts.cases }
-    : DEFAULT_CASES
+    ? { [opts.games[0]]: opts.cases.map(slug => caseEntry(opts.games[0], slug)) }
+    : Object.fromEntries(
+      Object.entries(DEFAULT_CASES).map(([game, cases]) => [game, cases.map(normalizeCase)])
+    )
 
+  const agent = opts.record ? userAgent() : ''
   const browser = await chromium.launch()
   try {
     for (const game of opts.games) {
       const buildDir = ensureBuild(game, { rebuild: opts.rebuild })
       const proxyDir = path.join(REPO_ROOT, 'tools/golden/corpus/screens', game, 'proxy')
+      const clock = pageClock(game, opts)
       const host = await startHost({
         buildDir,
         config: loadConfig(game),
         proxyDir,
-        verbose: opts.debug
+        verbose: opts.debug,
+        record: opts.record,
+        allowedHosts: PROXY_HOSTS[game],
+        userAgent: agent
       })
       console.log(`[screens] ${game}: hosting ${path.relative(REPO_ROOT, buildDir)} at ${host.url}`)
+      if (opts.record) console.log(`[screens] ${game}: recording as ${agent}, one request per second`)
       try {
-        for (const slug of casesByGame[game] ?? []) {
-          await shoot({ browser, host, game, slug, debug: opts.debug })
+        for (const testCase of casesByGame[game] ?? []) {
+          await shoot({ browser, host, game, testCase, clock, record: opts.record, debug: opts.debug })
+          if (host.errors.length) throw new Error(host.errors[0])
         }
       } finally {
         await host.close()
+        const { replayed, recorded, forwarded } = host.stats
+        console.log(`[screens] ${game}: ${replayed} replayed, ${forwarded} forwarded, ${recorded} recorded`)
+        for (const failure of host.failures) console.error(`[screens] warning (${game}): not recorded ${failure}`)
       }
+      if (host.errors.length) throw new Error(host.errors[0])
     }
   } finally {
     await browser.close()

@@ -171,6 +171,7 @@ cd tools/golden
 npm run screens -- --game poe1                     # one game, default cases
 npm run screens -- --game poe2 --case ee2-rare-map # one case
 npm run screens -- --rebuild                       # after bumping a reference
+npm run screens -- --game poe2 --record            # fetch + save new answers (network)
 ```
 
 It runs the reference's own `vite build` once per game, with cwd
@@ -181,7 +182,7 @@ files. PoE1's vite plugin regenerates those itself on `buildStart`.
 
 Per case it starts a fake main process (`screens/host.mjs`), opens the built page in
 Playwright (`playwright` 1.65.0, Chromium revision 1254) at 1600x900 / DPR 1, freezes
-the clock at 2026-01-01T12:00Z, waits for the `/events` websocket, sends
+the clock, waits for the `/events` websocket, sends
 
 ```json
 { "name": "MAIN->CLIENT::item-text",
@@ -192,6 +193,17 @@ the clock at 2026-01-01T12:00Z, waits for the `/events` websocket, sends
 and screenshots `#price-window` to `target/screens/<game>/<case>.png` (repo root,
 gitignored), with `target/screens/<game>/<case>.txt` next to it. The default cases
 are in `screens/cases.mjs`; item text comes from `corpus/<game>/<slug>.txt`.
+
+A case is a slug or `{ slug, search: true }`. Upstream searches by itself only for
+uniques and bulk currency (see `CheckedItem.vue`); for a rare or a map the window
+renders a "Search" button instead, so a case that should show listings needs
+`search: true` and the harness clicks that button. A case that needs it but lacks it
+prints `no listings in the window` and its screenshot shows the pre-search window.
+
+The page clock is frozen so listing ages and poe.ninja windows are stable. The date
+comes from `corpus/screens/<game>/recorded-at.txt` (ISO 8601, written by `--record`
+when the file is missing) and falls back to `2026-01-01T12:00:00Z`. Re-recording
+keeps the existing file: deleting it re-freezes the clock at the next recording.
 
 The host serves `/config` as `HostState`
 (`{ version, updater, contents: JSON.stringify(config) }`). `config` is
@@ -213,14 +225,53 @@ www.pathofexile.com/api/trade2/data/leagues
   -> www.pathofexile.com__api__trade2__data__leagues.json
 ```
 
+Two suffixes keep the name unambiguous:
+
+- a request with a body (the search and exchange endpoints answer by body) appends
+  `--body<8 hex of sha1(body)>`, so two searches of the same URL are two files. A
+  POST never falls back to a body-less name.
+- a name longer than 200 characters (a trade fetch lists the ids it wants) is cut to
+  160 and gets `--len<length>-<16 hex of sha1(name)>`: one path component cannot
+  exceed 255 bytes. Both are pure functions of the URL and body, so recording and
+  replay agree.
+
 Lookup order is `<name>.<METHOD>.json`, then `<name>.json`, so a POST and a GET to
 the same URL can be answered differently. Missing URLs are logged to stderr and
-answered `404 {}`, so the page never hangs. Only the leagues answers are committed
-today (PoE1 `[{ id, realm, event, rules }]`, PoE2 `{ result: [{ id, text }] }`).
-Because the trade endpoints are unanswered, the results area shows "Trade site
-request failed" (and PoE2 marks stats it would need `/api/trade2/data/stats` for as
-unrecognized). That is expected: the item header and the filters above it are what
-these screenshots are for. Add proxy fixture files, not code, to answer more.
+answered `404 {}` (or the answer fails and the page shows "Trade site request
+failed"), so the page never hangs. Add fixture files, not code, to answer more.
+
+The committed answers are recorded from the live sites (`--record`): leagues are
+hand-written, everything else is a real GGG / poe.ninja answer from 2026-11-24. The
+two big ones are `poe.ninja/poe1/.../dense/overviews` (3.4 MB, every item's price
+dense blob) and `/api/trade2/data/stats` (855 KB, every modifier); the rest is a few
+KB each. They are kept because the results and price areas need them; re-recording
+is manual, and stale answers are fine (the screenshots are a label, not a market
+feed).
+
+### Recording answers (`--record`)
+
+With `--record`, a proxy miss is forwarded to the real host over HTTPS and the answer
+is saved next to the fixtures, so later runs replay it offline:
+
+- only hosts upstream's `/proxy/` allows (`PROXY_HOSTS` in `ref/apt/main/src/proxy.ts`
+  and `ref/ee2/main/src/proxy.ts`, mirrored in `screens/host.mjs`); anything else is
+  refused, as upstream destroys such a request;
+- the request's method, body and headers, minus the browser-only `sec-*`, `host`,
+  `origin`, `content-length`, `connection`, `transfer-encoding` and `referer`, with
+  `User-Agent: wraex/<workspace.package.version> (+https://github.com/Dumspy/wraex)`
+  (the format of `wraex_core::trade::api::USER_AGENT`) and
+  `accept-encoding: identity`, because the saved body is the decoded text (as
+  upstream's Electron client sees it) and a replayed answer must be byte-identical;
+- at most one forwarded request per second, whatever the page asks for, and the run
+  stops with an error on a `429`;
+- the body is stored as the exact bytes received in `<name>.<METHOD>.json`. A
+  sibling `<name>.<METHOD>.meta.json` holds `{ "status": 200, "headers": { ... } }`
+  with `content-type`, `retry-after` and the `x-rate-limit-*` headers, which are
+  also handed back to the page on every replay. Without a meta file a fixture
+  replays as `200` with the default content type, which is how the hand-written
+  leagues files work. A `4xx`/`5xx` answer is not saved;
+- the leagues answers are never recorded (a miss for one stays a miss), and an
+  existing file is never overwritten, so deleting one is how you re-record just it.
 
 Screenshots are for visual comparison only: fonts and rendering differ by machine
 and browser, so do not pixel-diff them (the `.txt` dump helps with text). They are

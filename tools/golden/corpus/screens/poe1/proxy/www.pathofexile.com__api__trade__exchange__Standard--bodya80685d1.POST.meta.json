@@ -1,0 +1,10 @@
+{
+  "status": 200,
+  "headers": {
+    "content-type": "application/json",
+    "x-rate-limit-policy": "trade-exchange-request-limit",
+    "x-rate-limit-rules": "Ip",
+    "x-rate-limit-ip": "5:15:60,10:90:300,30:300:1800",
+    "x-rate-limit-ip-state": "1:15:0,1:90:0,1:300:0"
+  }
+}
