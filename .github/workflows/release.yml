@@ -120,6 +120,9 @@ jobs:
           cp -R "dist/$name/." "$appdir/usr/bin/"
           cp "$appdir/usr/bin/assets/poe1/icon.png" "$appdir/wraex.png"
           cp "$appdir/wraex.png" "$appdir/.DirIcon"
+          # The entry point. The executable's resolved path is in usr/bin, so
+          # `assets/` is found next to it.
+          ln -s usr/bin/wraex "$appdir/AppRun"
           cat > "$appdir/wraex.desktop" <<'EOF'
           [Desktop Entry]
           Type=Application

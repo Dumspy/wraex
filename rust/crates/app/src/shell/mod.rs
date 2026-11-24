@@ -28,14 +28,21 @@
 //!
 //! - **The window is the overlay.** It is transparent, borderless, on top and click-through
 //!   (`window_options()`), covers the game's client area, and the widget is drawn inside it
-//!   at the cursor ([`App::overlay_offset`]). [`OverlayController`] turns the click-through
-//!   off when a widget takes the mouse and the overlay handle gives the game its focus back.
+//!   at the cursor ([`App::overlay_offset`]). Hotkeys show it *inactive* (`showInactive()`:
+//!   the game keeps focus and the keyboard); the tracker activates it — click-through off,
+//!   overlay focused — when the mouse reaches the price check's card, and the overlay handle
+//!   gives the game its focus back.
+//! - **The widget follows the mouse.** A [`wraex_platform::window::MouseEvent`] stream from
+//!   the Win32 low-level mouse hook feeds the ported `WidgetAreaTracker`: moving away from
+//!   the press position closes the price check, clicking it activates the overlay, and
+//!   Ctrl+wheel outside the stash walks the stash tabs.
 //! - **Hotkeys exist only while the game is focused**: [`Shortcuts::on_game_active`], as
 //!   upstream's `active-change` listener, so a press can never land in another application.
 //!   That is what lets `keys::OSSender` synthesize keys by default here (see its
 //!   documentation for the platforms without tracking).
 //! - **The window follows the game**: moves and resizes re-place it, and it hides while the
-//!   game is unfocused, as the overlay library does.
+//!   game is unfocused, as the overlay library does. A `focus-change` with the overlay out of
+//!   front closes every `hide-on-blur` widget, as upstream's renderer does.
 //!
 //! macOS, X11 and Wayland have no window hook yet, so there the app keeps its earlier shape:
 //! an ordinary window placed next to the cursor, hotkeys registered all the time, and key
@@ -66,12 +73,12 @@ use wraex_core::game_files::{self, Os, UserDirs};
 use wraex_core::leagues::{LeagueSource, Leagues};
 use wraex_core::updates::{NoDownloadReason, UpdateInfo};
 use wraex_platform::clipboard::{Clipboard, is_poe_item};
-use wraex_platform::overlay::{OverlayController, OverlayEvent, OverlayHandle};
+use wraex_platform::overlay::{OverlayController, OverlayEvent, OverlayHandle, TrackArea};
 use wraex_platform::shortcuts::{
-    Action, HostConfig, ItemText, PressContext, Registration, ShortcutAction, ShortcutEvent, Shortcuts,
+    Action, HostConfig, ItemText, PressContext, Registration, ShortcutAction, ShortcutEvent, Shortcuts, WheelEvent,
 };
 use wraex_platform::tray::{Tray, TrayAction};
-use wraex_platform::window::{self, Bounds, GameWindow, Point};
+use wraex_platform::window::{self, Bounds, GameWindow, MouseEvent, Point};
 
 #[cfg(target_os = "windows")]
 use wraex_platform::window::WindowTarget;
@@ -91,6 +98,11 @@ const TRADE_HOST: &str = "www.pathofexile.com";
 
 /// How far below and right of the cursor a widget opens, in physical pixels.
 const CURSOR_OFFSET: i32 = 12;
+
+/// `WidgetAreaTracker.ts`'s `closeThreshold`: `2.5 * AppConfig().fontSize`, in points. Moving
+/// the mouse further than this from the press position closes the price check (unless the
+/// configured hold key is down); [`TrackArea`] scales it for Windows.
+const CLOSE_THRESHOLD: f32 = 2.5 * crate::theme::REM;
 
 /// How many frames a focus the overlay asked for counts as "in front", at 60 fps about a
 /// second and a half: `electron-overlay-window` waits for the `focus` event, and this is the
@@ -144,6 +156,78 @@ fn widget_offset(placement: Option<Placement>, size: (f32, f32), bounds: Bounds,
     (clamp(x, client_width - width), clamp(y, client_height - height))
 }
 
+/// The card's size inside the overlay window, in points. The price check fills the overlay's
+/// height (`#price-window` is `h-full` with the listings scrolling inside it); every other
+/// card keeps its own size, as upstream's `Widget.vue` cards do.
+fn overlay_widget_size(shown: &Shown, bounds: Bounds, scale: f64) -> Option<(f32, f32)> {
+    match shown {
+        Shown::PriceCheck | Shown::Poe2 => Some((crate::poe1::price_check::WIDTH, (bounds.height / scale) as f32)),
+        _ => window_size(shown),
+    }
+}
+
+/// `OVERLAY->MAIN::track-area`, in the coordinates upstream's renderer reports: the card's
+/// rectangle and the press position in screen DIPs, and `dpr` for `WidgetAreaTracker`'s Win32
+/// conversion. `offset` is where the card sits inside the overlay and `size` its size, both
+/// in points; `bounds` is the game's client area in physical pixels and `scale` the overlay's
+/// DPI scale.
+fn track_area(
+    offset: (f32, f32),
+    size: (f32, f32),
+    bounds: Bounds,
+    scale: f64,
+    cursor: Point,
+    hold_key: Option<String>,
+) -> TrackArea {
+    TrackArea {
+        hold_key,
+        close_threshold: f64::from(CLOSE_THRESHOLD),
+        // `from` is where the item's hotkey fired (`e.position`).
+        from: Point { x: cursor.x / scale, y: cursor.y / scale },
+        // `window.screenX + wm.poePanelWidth`, and the overlay's whole `innerHeight`.
+        area: Bounds {
+            x: bounds.x / scale + f64::from(offset.0),
+            y: bounds.y / scale + f64::from(offset.1),
+            width: f64::from(size.0),
+            height: f64::from(size.1),
+        },
+        dpr: scale,
+    }
+}
+
+/// The price check's `hotkeyHold` (`Ctrl` by default), the modifier that keeps the card open
+/// while the cursor is away from the press position. `None` is JavaScript's `undefined`: a
+/// hotkey with no hold key at all. An empty string is not the same thing.
+fn price_check_hold_key(config: &serde_json::Value) -> Option<String> {
+    config
+        .get("widgets")?
+        .as_array()?
+        .iter()
+        .find(|widget| widget.get("wmType").and_then(|value| value.as_str()) == Some("price-check"))?
+        .get("hotkeyHold")?
+        .as_str()
+        .map(str::to_owned)
+}
+
+/// What an [`OverlayEvent`] does to the app's windows, matching upstream's renderer:
+/// `PriceCheckWindow.vue` hides itself on `hide-exclusive-widget`, and `OverlayWindow.vue`
+/// hides every `hide-on-blur` widget whenever a `focus-change` says the overlay is not in
+/// front (Escape, Ctrl+W, the overlay key's off state, the game taking the focus back).
+fn apply_overlay_event(event: &OverlayEvent, app: &mut App) {
+    match event {
+        OverlayEvent::HideExclusiveWidget => app.close_exclusive_widget(),
+        OverlayEvent::FocusChange { overlay: false, .. } => app.hide_widgets_on_blur(),
+        _ => {}
+    }
+}
+
+/// Whether Escape/Ctrl+W and the overlay key act on what is shown. They are the overlay's
+/// `before-input-event` commands; the settings window is an ordinary window upstream with no
+/// such handler, and it must keep its keys (and its clicks) while it is open.
+fn overlay_commands_apply(shown: &Shown, interactable: bool) -> bool {
+    interactable && *shown != Shown::Settings
+}
+
 /// The live app's OS-facing half. Held by [`App`] as `App::live`; `None` in a scene or a
 /// test, which is what keeps every side effect out of them.
 pub struct Live {
@@ -168,10 +252,17 @@ pub struct Live {
     placement: Option<Placement>,
     /// The widget's offset inside the overlay window, in points ([`App::overlay_offset`]).
     overlay_offset: Option<(f32, f32)>,
+    /// The overlay window's height in points, which the price-check card fills
+    /// ([`App::overlay_size`]).
+    overlay_height: Option<f32>,
     /// The game rectangle the window was last placed over.
     placed: Option<Bounds>,
+    /// A price-check press asked for the card's area to be followed
+    /// (`OVERLAY->MAIN::track-area`); honoured once the window is placed over the game.
+    pending_track: Option<Point>,
     /// A widget opened under the cursor takes the mouse as soon as it is on screen
-    /// (`Live::sync_window`).
+    /// (`Live::sync_window`). Only for a window that is the widget itself (no game to be over)
+    /// and for the settings window; a hotkey-opened widget over the game stays inactive.
     activate_on_show: bool,
     /// Whether the overlay window itself has the focus (`AppSpec::on_focus`): the library's
     /// blur rule hides the overlay when neither it nor the game is in front.
@@ -260,7 +351,9 @@ impl Live {
             panel,
             placement: None,
             overlay_offset: None,
+            overlay_height: None,
             placed: None,
+            pending_track: None,
             activate_on_show: false,
             overlay_focused: false,
             tray_actions: Arc::new(Mutex::new(Vec::new())),
@@ -362,9 +455,12 @@ impl Live {
     }
 
     /// The overlay's own events (`MAIN->OVERLAY::*`). Upstream's renderer listens for them;
-    /// this port has no such channel yet, so the ones a person has to see are logged — the
-    /// administrator-rights error above all (`OverlayWindow.handleOverlayAttached`).
-    fn drain_overlay_events(&mut self) {
+    /// this port has no such channel, so the ones a person has to see are logged — the
+    /// administrator-rights error above all (`OverlayWindow.handleOverlayAttached`) — and the
+    /// two that close widgets are run against the app: the cursor left the card
+    /// (`hide-exclusive-widget`), and the overlay is no longer in front, which hides every
+    /// widget flagged `hide-on-blur` (`OverlayWindow.vue`'s `focus-change` handler).
+    fn drain_overlay_events(&mut self, app: &mut App) {
         for event in self.overlay.take_events() {
             match event {
                 OverlayEvent::NoAccess => self.warn(
@@ -374,11 +470,45 @@ impl Live {
                 OverlayEvent::Attached => eprintln!("wraex: overlay attached to the game window"),
                 OverlayEvent::FocusChange { game, overlay, using_hotkey } => {
                     eprintln!("wraex: focus game={game} overlay={overlay} hotkey={using_hotkey}");
+                    apply_overlay_event(&event, app);
                 }
-                // The renderer's own: the Alt peek and the exclusive widget closing.
-                OverlayEvent::Visibility { .. } | OverlayEvent::HideExclusiveWidget => {}
+                OverlayEvent::HideExclusiveWidget => apply_overlay_event(&event, app),
+                // The renderer's own: the Alt peek.
+                OverlayEvent::Visibility { .. } => {}
             }
         }
+    }
+
+    /// The global mouse hook's events (`uiohook`'s `mousemove`/`mousedown`/`wheel`). Moves feed
+    /// the tracked card and the Alt peek; a click on the card takes the overlay; Ctrl+wheel
+    /// outside the stash walks the stash tabs (`Shortcuts.ts`). The hook's move stream is
+    /// armed only while a card is tracked, so an idle desktop wakes nothing.
+    fn poll_mouse(&mut self) -> bool {
+        let Some(watcher) = self.watcher.as_mut() else { return false };
+        let events = watcher.drain_mouse();
+        if events.is_empty() {
+            watcher.set_mouse_moves(self.overlay.is_tracking_area());
+            return false;
+        }
+        let mut panel = OverlayPanel::new(self.panel.clone());
+        for event in events {
+            match event {
+                MouseEvent::Move { point, ctrl, alt } => {
+                    self.overlay.on_global_mouse_move(alt);
+                    self.overlay.on_mouse_move(point, ctrl, alt, &mut self.window, &mut panel);
+                }
+                MouseEvent::Down { point } => {
+                    self.overlay.on_mouse_down(point, &mut self.window, &mut panel);
+                }
+                MouseEvent::Wheel { point, rotation, ctrl } => {
+                    let wheel = WheelEvent { point, rotation, ctrl };
+                    self.shortcuts.on_wheel(&wheel, &self.window, &mut self.keys);
+                }
+            }
+        }
+        watcher.set_mouse_moves(self.overlay.is_tracking_area());
+        self.sync_registration();
+        true
     }
 
     /// `Shortcuts::on_game_active`: upstream's `active-change` listener. Registers the
@@ -565,7 +695,10 @@ impl Live {
                     position: cursor,
                     focus_overlay: *focus_overlay,
                 })];
-                return self.deliver(app, dispatch::shortcut_requests(events));
+                self.deliver(app, dispatch::shortcut_requests(events));
+                self.after_press(app, entry, cursor);
+                self.sync_registration();
+                return;
             }
             return self.warn(format!(
                 "the {target} hotkey needs synthetic keys on this build: copy the item in the game first"
@@ -591,13 +724,28 @@ impl Live {
             )
         };
         self.deliver(app, dispatch::shortcut_requests(events));
-        self.placement = Some(Placement::Cursor(cursor));
-        // The widget opens under the cursor, so it is hovered the moment it appears: upstream's
-        // `WidgetAreaTracker` activates the overlay on the mouse move onto it, and this stands
-        // in for that move (`sync_window`).
-        self.activate_on_show = true;
+        self.after_press(app, entry, cursor);
         // `focus-overlay` may have taken the focus from the game.
         self.sync_registration();
+    }
+
+    /// What a press leaves behind for the window: where an opened widget goes and how it is
+    /// shown. Upstream shows the overlay with `showInactive()`: the game keeps focus and the
+    /// keyboard, and `WidgetAreaTracker` activates the overlay only when the mouse reaches the
+    /// price check's card. Without a game to be over (macOS, X11, a closed game) the window
+    /// *is* the widget and takes the mouse and keyboard like the port always did.
+    fn after_press(&mut self, app: &App, entry: &ShortcutAction, cursor: Point) {
+        self.placement = Some(Placement::Cursor(cursor));
+        self.activate_on_show = self.game_bounds().is_none();
+        // `PriceCheckWindow.vue`: the renderer reports the card's area for the normal hotkey
+        // (`focusOverlay: false`); the locked one focuses the overlay instead.
+        if let Action::CopyItem { target, focus_overlay } = &entry.action
+            && target == "price-check"
+            && !focus_overlay
+            && app.shown() != Shown::None
+        {
+            self.pending_track = Some(cursor);
+        }
     }
 
     /// Run the shell's side of a press's or a widget's requests, oldest first.
@@ -665,8 +813,11 @@ impl Live {
     /// A key pressed while the overlay window has the keyboard (`OverlayWindow`'s
     /// `handleExtraCommands`): Escape and Ctrl+W give the game back its focus, the overlay key
     /// toggles, and a key nothing handles stays the widget's. `true` means it was handled.
+    ///
+    /// The settings window is an ordinary window upstream with no `before-input-event`
+    /// handler, so the overlay commands do not apply to it; it keeps its own keys.
     fn overlay_key(&mut self, event: &rune::KeyEvent) -> bool {
-        if !self.overlay.is_interactable() {
+        if !overlay_commands_apply(&self.shown, self.overlay.is_interactable()) {
             return false;
         }
         let Some(input) = keys::overlay_input(event) else { return false };
@@ -703,7 +854,9 @@ impl Live {
             // Nothing to draw: the next hotkey places its widget afresh.
             self.placement = None;
             self.overlay_offset = None;
+            self.overlay_height = None;
             self.activate_on_show = false;
+            self.stop_tracking();
             return self.hide_panel();
         }
         // `electron-overlay-window`'s `blur` handler: hide the overlay when neither the game
@@ -713,14 +866,23 @@ impl Live {
         let in_front = self.window.is_active() || self.overlay_focused || self.panel.expects_focus();
         if is_overlay(&shown) && self.watcher.is_some() && !in_front {
             self.overlay_offset = None;
+            self.overlay_height = None;
+            self.stop_tracking();
             return self.hide_panel();
+        }
+        // Only the price check's card is followed (`PriceCheckWindow.vue`'s `track-area`); a
+        // widget switched to or a card closed drops the listeners, as its `removeListeners` do.
+        if !matches!(shown, Shown::PriceCheck | Shown::Poe2) {
+            self.stop_tracking();
         }
 
         let Some(bounds) = over_game else {
             // No game window to be over: the widget's own window, at the cursor.
             self.overlay_offset = None;
+            self.overlay_height = None;
             self.activate_on_show = false;
             self.placed = None;
+            self.stop_tracking();
             if !self.handle.is_visible() {
                 if let Some(Placement::Cursor(point)) = self.placement {
                     self.handle
@@ -740,25 +902,53 @@ impl Live {
             return;
         };
 
+        // The overlay covers the game, so its height is what the price check fills.
+        self.overlay_height = Some((bounds.height / self.panel.scale()) as f32);
         self.overlay_offset = self.offset_over(&shown, bounds);
         if self.placed != Some(bounds) || !self.handle.is_visible() {
             if !self.handle.is_visible() {
-                self.handle.open();
+                // `showInactive()`: create/show the overlay without taking the focus or the
+                // keyboard from the game. `open()` would activate it — a hotkey's whole point
+                // is that the game keeps playing.
+                self.handle.show();
                 self.panel.visible.store(true, Ordering::Relaxed);
             }
-            // The window may not exist yet (Rune creates it on `open`); the next poll places
+            // The window may not exist yet (Rune creates it on `show`); the next poll places
             // it, because `placed` only records a window that was really moved.
             self.placed =
                 self.panel.overlay_hwnd().and_then(|hwnd| window::place_overlay(hwnd, bounds).then_some(bounds));
         }
 
         // The settings window always takes the mouse and the keyboard; a widget does when the
-        // cursor is already on it (upstream's `WidgetAreaTracker` reacts to a mouse move, and
-        // a widget that opens under the cursor has had one — see `Live::press`).
+        // cursor is already on it, which is the tray and the no-game paths. A hotkey-opened
+        // widget over the game stays click-through until `WidgetAreaTracker` sees the mouse.
         if (shown == Shown::Settings && opened) || std::mem::take(&mut self.activate_on_show) {
             let mut panel = OverlayPanel::new(self.panel.clone());
             self.overlay.assert_overlay_active(&mut self.window, &mut panel);
             self.sync_registration();
+        }
+
+        // `OVERLAY->MAIN::track-area`: the press asked for the card to be followed. The locked
+        // price check (`focusOverlay`) took the overlay straight away instead, as upstream's
+        // renderer only reports the area when it did not.
+        if let Some(cursor) = self.pending_track.take()
+            && matches!(shown, Shown::PriceCheck | Shown::Poe2)
+            && !self.overlay.is_interactable()
+            && let Some(offset) = self.overlay_offset
+            && let Some(size) = overlay_widget_size(&shown, bounds, self.panel.scale())
+        {
+            let area = track_area(
+                offset,
+                size,
+                bounds,
+                self.panel.scale(),
+                cursor,
+                price_check_hold_key(&self.startup.config),
+            );
+            self.overlay.on_track_area(area);
+            if let Some(watcher) = &self.watcher {
+                watcher.set_mouse_moves(true);
+            }
         }
 
         // The overlay library's `focus` handler makes the window click-through again; the
@@ -772,10 +962,22 @@ impl Live {
         }
     }
 
+    /// `WidgetAreaTracker.ts`'s `removeListeners`: stop following the price check's card and
+    /// disarm the hook's move stream.
+    fn stop_tracking(&mut self) {
+        if self.overlay.is_tracking_area() {
+            self.overlay.stop_tracking_area();
+        }
+        self.pending_track = None;
+        if let Some(watcher) = &self.watcher {
+            watcher.set_mouse_moves(false);
+        }
+    }
+
     /// Where the widget goes inside the overlay window, in logical points: at the cursor that
     /// asked for it (clamped into the window), or centred for a window the tray opened.
     fn offset_over(&self, shown: &Shown, bounds: Bounds) -> Option<(f32, f32)> {
-        let size = window_size(shown)?;
+        let size = overlay_widget_size(shown, bounds, self.panel.scale())?;
         Some(widget_offset(self.placement, size, bounds, self.panel.scale()))
     }
 
@@ -790,6 +992,11 @@ impl Live {
         if self.handle.is_visible() {
             self.handle.hide();
         }
+        // A hidden overlay is click-through again, so the frame after the next show cannot
+        // swallow a click before `sync_window` reconciles it.
+        if self.panel.click_through() != Some(true) {
+            OverlayPanel::new(self.panel.clone()).set_click_through(true);
+        }
         self.panel.visible.store(false, Ordering::Relaxed);
     }
 
@@ -797,6 +1004,7 @@ impl Live {
     /// recorded actions, and the window itself.
     fn poll(&mut self, app: &mut App, tx: &mut Tx) -> bool {
         let mut changed = self.poll_game_window();
+        changed |= self.poll_mouse();
 
         let actions: Vec<TrayAction> =
             self.tray_actions.lock().map(|mut queue| std::mem::take(&mut *queue)).unwrap_or_default();
@@ -841,7 +1049,7 @@ impl Live {
         }
         self.settings_was_open = settings_open;
 
-        self.drain_overlay_events();
+        self.drain_overlay_events(app);
         self.sync_window(app, tx);
         changed
     }
@@ -887,6 +1095,21 @@ impl App {
     /// window is the widget itself.
     pub fn overlay_offset(&self) -> Option<(f32, f32)> {
         self.live.as_ref().and_then(|live| live.overlay_offset)
+    }
+
+    /// The widget's size inside the overlay window, in points: what [`crate::view`] lays the
+    /// card out at. The price check takes the overlay's whole height because upstream's
+    /// `#price-window` is `h-full` and its listings scroll inside it; the other cards keep
+    /// their own size. `None` when the window is the widget itself.
+    pub fn overlay_size(&self) -> Option<(f32, f32)> {
+        let live = self.live.as_ref()?;
+        live.overlay_offset?;
+        let height = live.overlay_height?;
+        let (width, own_height) = window_size(&self.shown())?;
+        Some(match self.shown() {
+            Shown::PriceCheck | Shown::Poe2 => (width, height),
+            _ => (width, own_height),
+        })
     }
 
     /// What the window draws, in [`crate::view`]'s order.
@@ -949,6 +1172,36 @@ impl App {
             && let Some(widget) = overlay.widget_mut(overlay.shown)
         {
             widget.set_wants(widgets::Wants::Hide);
+        }
+    }
+
+    /// `MAIN->OVERLAY::hide-exclusive-widget`: the cursor moved away from the price check's
+    /// card, so the window hides itself (`PriceCheckWindow.vue` is the only listener).
+    pub fn close_exclusive_widget(&mut self) {
+        self.price_check.open = false;
+        if let Some(check) = &mut self.poe2 {
+            check.open = false;
+        }
+    }
+
+    /// `OverlayWindow.vue`'s `focus-change` handler with the overlay no longer in front: every
+    /// widget flagged `hide-on-blur` goes. Both price checks of the port carry it, as the item
+    /// check and most overlay widgets do upstream; a widget without it stays on screen.
+    pub fn hide_widgets_on_blur(&mut self) {
+        self.close_exclusive_widget();
+        if let Some(check) = &mut self.item_check {
+            check.open = false;
+        }
+        if let Some(check) = &mut self.item_check_poe2 {
+            check.open = false;
+        }
+        if let Some(overlay) = &mut self.widgets {
+            let id = overlay.shown;
+            if overlay.widget(id).is_some_and(|widget| widget.has_flag("hide-on-blur"))
+                && let Some(widget) = overlay.widget_mut(id)
+            {
+                widget.set_wants(widgets::Wants::Hide);
+            }
         }
     }
 

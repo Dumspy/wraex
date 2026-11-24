@@ -43,7 +43,15 @@ pub fn view<S: 'static>(check: &PriceCheck, cx: &mut Cx<S>, project: Project<S>)
     cx.foreground(theme::gray(200));
     let title_bar =
         ui::title_bar(check.title()).leading(divine_rate(check)).on_close(move |s: &mut S| project(s).close()).build();
-    col().key("price-check").w(WIDTH).h_full().fill(theme::gray(800)).child(title_bar).child(body(check, project))
+    col()
+        .key("price-check")
+        .w(WIDTH)
+        .h_full()
+        .fill(theme::gray(800))
+        // The card's background covers the whole card; nothing draws outside it.
+        .clip_rounded(0.0)
+        .child(title_bar)
+        .child(body(check, project))
 }
 
 /// `PriceCheckWindow.vue`'s `<slot />`: the exchange rate (`stableOrbCost` divines in the
@@ -106,6 +114,7 @@ fn body<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             let mut checked = col()
                 .key("checked-item")
                 .w_full()
+                .grow(1.0)
                 .padding(theme::rem(1.0))
                 .min_h(0.0)
                 .child(filter_name(check.active_preset().map(|preset| &preset.filters), project));

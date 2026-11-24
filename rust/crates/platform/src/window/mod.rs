@@ -27,7 +27,9 @@
 //!   lock swallows; the game's *client* rectangle (`GetClientRect` + `ClientToScreen`, so
 //!   borderless-windowed and fullscreen both land right); the UIPI probe that says the
 //!   game runs elevated (the "PoE window - No access" case); `SetForegroundWindow` with
-//!   the foreground-lock workaround for the focus hand-back.
+//!   the foreground-lock workaround for the focus hand-back; and a `WH_MOUSE_LL` hook for
+//!   global mouse moves, buttons and wheel notches ([`MouseEvent`], `uiohook-napi`'s
+//!   half that follows the price check and scrolls the stash tabs).
 //!   This is behaviour ported from that package's README and Win32 backend, not its code.
 //! - **macOS / X11 / Wayland** have no backend yet, so [`Watcher::start`] reports
 //!   [`WatchError::Unsupported`] and the shell keeps its ordinary windows. Follow-ups:
@@ -81,6 +83,23 @@ impl Point {
     pub fn is_inside(self, area: Bounds) -> bool {
         self.x > area.x && self.x < area.x + area.width && self.y > area.y && self.y < area.y + area.height
     }
+}
+
+/// A mouse event from the OS-level hook, in physical screen pixels: the half of
+/// `uiohook-napi` that `WidgetAreaTracker.ts` and `Shortcuts.ts` listen to.
+///
+/// Upstream's `mousemove` carries the modifier state the tracker compares with the price
+/// check's `hotkeyHold`; `mousedown` only needs the position, and `wheel` the notch and
+/// Ctrl for [`crate::shortcuts::Shortcuts::on_wheel`]. Only observed: the hook never blocks
+/// or injects an event.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum MouseEvent {
+    /// `uIOhook`'s `mousemove`.
+    Move { point: Point, ctrl: bool, alt: bool },
+    /// `uIOhook`'s `mousedown` (any button).
+    Down { point: Point },
+    /// `uIOhook`'s `wheel`: positive is away from the user, one notch per `120` Win32 units.
+    Wheel { point: Point, rotation: i32, ctrl: bool },
 }
 
 /// What the OS layer reports about the game window: the half of
@@ -271,6 +290,9 @@ impl std::error::Error for WatchError {}
 ///   moves/resizes, the window being destroyed. Each report is queued as a
 ///   [`GameWindowEvents`] for the app's poll loop to feed [`GameWindow`].
 /// - [`Watcher::drain`] takes what happened since the last call.
+/// - [`Watcher::drain_mouse`] takes the [`MouseEvent`]s the global low-level mouse hook queued
+///   (`uiohook`'s `mousemove`/`mousedown`/`wheel`). [`Watcher::set_mouse_moves`] turns off the
+///   flood of move events while nothing tracks the mouse (a wheel still arrives).
 /// - [`Watcher::hwnd`] is the tracked window's native handle, for [`focus_window`] and the
 ///   other calls that take one.
 ///

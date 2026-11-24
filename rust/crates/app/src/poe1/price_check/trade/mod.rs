@@ -403,7 +403,13 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
         Api::Trade => listing::view(check, project),
         Api::Bulk => bulk::view(check, project),
     };
-    rune::col().key("trade-scroll").w_full().min_h(0.0).scroll(rune::ScrollSpec { stick_bottom: false }).child(content)
+    rune::col()
+        .key("trade-scroll")
+        .w_full()
+        .shrink()
+        .min_h(0.0)
+        .scroll(rune::ScrollSpec { stick_bottom: false })
+        .child(content)
 }
 
 #[cfg(test)]

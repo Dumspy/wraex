@@ -381,9 +381,9 @@ pub fn view(app: &App, cx: &mut Cx<App>) -> El {
         // placed inside it where the cursor asked for it, or centred for the tray's windows.
         Some((x, y)) => {
             let mut placed = card.absolute(x, y);
-            // The card's own height is `h_full` in a window it used to fill; the overlay is
-            // the game's size, so it gets the size the shell reserved for it.
-            if let Some((width, height)) = shell::window_size(&app.shown()) {
+            // The price check fills the overlay (`#price-window` is `h-full`); the other
+            // cards keep their own size.
+            if let Some((width, height)) = app.overlay_size() {
                 placed = placed.w(width).h(height);
             }
             rune::col().w_full().h_full().child(placed)

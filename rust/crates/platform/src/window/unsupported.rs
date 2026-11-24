@@ -4,7 +4,7 @@
 //! ordinary windows there, and every call that would move, style or focus a window is a
 //! no-op. A stub rather than `cfg`s in the caller, so the shell's wiring stays one code path.
 
-use super::{Bounds, GameWindowEvents, WakeFn, WatchError, WindowTarget};
+use super::{Bounds, GameWindowEvents, MouseEvent, WakeFn, WatchError, WindowTarget};
 
 /// Nothing to follow: [`Watcher::start`] always fails with [`WatchError::Unsupported`].
 #[derive(Debug)]
@@ -18,6 +18,12 @@ impl Watcher {
     pub fn drain(&mut self) -> Vec<GameWindowEvents> {
         Vec::new()
     }
+
+    pub fn drain_mouse(&mut self) -> Vec<MouseEvent> {
+        Vec::new()
+    }
+
+    pub fn set_mouse_moves(&self, _enabled: bool) {}
 
     pub fn hwnd(&self) -> Option<isize> {
         None

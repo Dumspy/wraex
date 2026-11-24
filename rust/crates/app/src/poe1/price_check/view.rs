@@ -43,8 +43,16 @@ pub fn view<S: 'static>(check: &PriceCheck, cx: &mut Cx<S>, project: Project<S>)
         .leading(title_leading(check, project))
         .on_close(move |s: &mut S| project(s).close())
         .build();
-    let mut root =
-        col().key("price-check").w(WIDTH).h_full().fill(theme::gray(800)).child(title_bar).child(body(check, project));
+    let mut root = col()
+        .key("price-check")
+        .w(WIDTH)
+        .h_full()
+        .fill(theme::gray(800))
+        // `#price-window` has no scrolling itself (the listings do), and its background is the
+        // card's: nothing may draw outside it, or over the game it shows as black stripes.
+        .clip_rounded(0.0)
+        .child(title_bar)
+        .child(body(check, project));
     if check.exchange_open {
         root = root.child(exchange_popover(check));
     }
@@ -394,7 +402,11 @@ fn listings<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
         return el().key("trade-area");
     }
     let api = check.trade.api(check);
-    let mut area = col().key("trade-area").w_full().min_h(0.0).child(trade::view(check, project));
+    // The listing is the card's scrolling part: when the filters and the boxes below leave
+    // it less height than its table needs, it shrinks (`.shrink()` + `.min_h(0)`) and the
+    // table scrolls inside it, instead of growing past the card's background
+    // (`CheckedItem.vue`'s `layout-column min-h-0` with `overflow-y-auto` inside).
+    let mut area = col().key("trade-area").w_full().shrink().min_h(0.0).child(trade::view(check, project));
     if check.online_open {
         area = area.child(trade::online::panel(check, api, project));
     }

@@ -426,12 +426,21 @@ pub(super) fn error_box<S: 'static>(error: &str, project: Project<S>) -> El {
     )
 }
 
-/// `CheckedItem.vue`'s `trade-listing`/`trade-bulk`: the table for the active API.
+/// `CheckedItem.vue`'s `trade-listing`/`trade-bulk`: the table for the active API, in the
+/// listing's own scroll viewport (`TradeListing.vue`'s `layout-column overflow-y-auto`), so a
+/// long table scrolls inside the card instead of drawing past its background.
 pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
-    match check.trade.api(check) {
+    let content = match check.trade.api(check) {
         Api::Trade => listing::view(check, project),
         Api::Bulk => bulk::view(check, project),
-    }
+    };
+    rune::col()
+        .key("trade-scroll")
+        .w_full()
+        .shrink()
+        .min_h(0.0)
+        .scroll(rune::ScrollSpec { stick_bottom: false })
+        .child(content)
 }
 
 #[cfg(test)]

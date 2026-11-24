@@ -15,6 +15,10 @@
 //! - `EVENT_OBJECT_LOCATIONCHANGE` and `EVENT_OBJECT_DESTROY` on the found window's thread:
 //!   moves, resizes (including borderless-windowed and fullscreen changes) and the window
 //!   going away, after which the search starts over.
+//! - A `WH_MOUSE_LL` low-level mouse hook on the same thread: every mouse move, button press
+//!   and wheel notch, in physical screen pixels (the half of `uiohook-napi` the overlay and the
+//!   stash scroll use). It only observes: the callback queues the event and calls
+//!   `CallNextHookEx`, so the game never waits on it.
 //!
 //! The reported rectangle is the *client* area (`GetClientRect` + `ClientToScreen`), which is
 //! the whole window in borderless-windowed and fullscreen and the content below the title bar
@@ -25,6 +29,7 @@
 //! upstream shows "PoE window - No access" in exactly that case.
 
 use std::cell::RefCell;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
@@ -36,18 +41,21 @@ use windows::Win32::Graphics::Gdi::ClientToScreen;
 use windows::Win32::System::Threading::{AttachThreadInput, GetCurrentThreadId};
 use windows::Win32::UI::Accessibility::{HWINEVENTHOOK, SetWinEventHook, UnhookWinEvent};
 use windows::Win32::UI::HiDpi::GetDpiForWindow;
+use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VIRTUAL_KEY, VK_CONTROL, VK_MENU};
 use windows::Win32::UI::WindowsAndMessaging::{
-    CHILDID_SELF, DispatchMessageW, EVENT_OBJECT_DESTROY, EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_NAMECHANGE,
-    EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_MINIMIZEEND, GA_ROOT, GUITHREADINFO, GWL_EXSTYLE, GetAncestor, GetClassNameW,
-    GetClientRect, GetForegroundWindow, GetGUIThreadInfo, GetMessageW, GetWindowLongPtrW, GetWindowTextLengthW,
-    GetWindowTextW, GetWindowThreadProcessId, IsHungAppWindow, IsIconic, KillTimer, MSG, OBJID_WINDOW, PM_NOREMOVE,
-    PeekMessageW, PostMessageW, PostThreadMessageW, RegisterWindowMessageW, SWP_FRAMECHANGED, SWP_NOACTIVATE,
-    SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SetForegroundWindow, SetTimer, SetWindowLongPtrW, SetWindowPos,
-    TranslateMessage, WINEVENT_OUTOFCONTEXT, WM_QUIT, WS_EX_TOOLWINDOW,
+    CHILDID_SELF, CallNextHookEx, DispatchMessageW, EVENT_OBJECT_DESTROY, EVENT_OBJECT_LOCATIONCHANGE,
+    EVENT_OBJECT_NAMECHANGE, EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_MINIMIZEEND, GA_ROOT, GUITHREADINFO, GWL_EXSTYLE,
+    GetAncestor, GetClassNameW, GetClientRect, GetForegroundWindow, GetGUIThreadInfo, GetMessageW, GetWindowLongPtrW,
+    GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId, HHOOK, IsHungAppWindow, IsIconic, KillTimer, MSG,
+    MSLLHOOKSTRUCT, OBJID_WINDOW, PM_NOREMOVE, PeekMessageW, PostMessageW, PostThreadMessageW, RegisterWindowMessageW,
+    SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SetForegroundWindow, SetTimer,
+    SetWindowLongPtrW, SetWindowPos, SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, WH_MOUSE_LL,
+    WINEVENT_OUTOFCONTEXT, WM_LBUTTONDOWN, WM_MBUTTONDOWN, WM_MOUSEMOVE, WM_MOUSEWHEEL, WM_QUIT, WM_RBUTTONDOWN,
+    WM_XBUTTONDOWN, WS_EX_TOOLWINDOW,
 };
 use windows::core::w;
 
-use super::{Bounds, GameWindowEvents, WakeFn, WatchError, WindowTarget, matches_target};
+use super::{Bounds, GameWindowEvents, MouseEvent, Point, WakeFn, WatchError, WindowTarget, matches_target};
 
 /// The reference's foreground timer: 12 times a second, which is what catches foreground
 /// changes Windows swallowed (`ForegroundLockTimeout`, another app stealing the foreground).
@@ -57,6 +65,12 @@ const FOREGROUND_TIMER_MS: u32 = 83;
 struct Hook {
     target: WindowTarget,
     events: Sender<GameWindowEvents>,
+    /// The low-level mouse hook's queue: `uiohook`'s `mousemove`/`mousedown`/`wheel`.
+    mouse: Sender<MouseEvent>,
+    /// Move events are the bulk of the hook's traffic and are only wanted while a widget's
+    /// area is tracked (upstream adds its `mousemove` listener for exactly that time); the
+    /// flag keeps the hook from waking the app on every desktop mouse move.
+    mouse_moves: Arc<AtomicBool>,
     wake: WakeFn,
     /// The found window, mirrored for [`super::focus_window`] (0 when there is none).
     game: Arc<Mutex<Option<isize>>>,
@@ -71,6 +85,7 @@ struct Hook {
     location_hook: HWINEVENTHOOK,
     destroy_hook: HWINEVENTHOOK,
     name_hook: HWINEVENTHOOK,
+    mouse_hook: HHOOK,
     uipi_message: u32,
 }
 
@@ -100,6 +115,14 @@ impl Hook {
     /// the watcher; the thread is already on its way out then.
     fn emit(&self, event: GameWindowEvents) {
         if self.events.send(event).is_ok() {
+            (self.wake)();
+        }
+    }
+
+    /// Queues one mouse event. The hook callback does nothing else: no blocking, no input
+    /// injection, and no work that the message loop would have to wait for.
+    fn emit_mouse(&self, event: MouseEvent) {
+        if self.mouse.send(event).is_ok() {
             (self.wake)();
         }
     }
@@ -303,6 +326,48 @@ unsafe extern "system" fn foreground_timer(_hwnd: HWND, _message: u32, _id: usiz
     });
 }
 
+/// The low-level mouse hook (`WH_MOUSE_LL`), the input half of `uiohook-napi` that
+/// `WidgetAreaTracker.ts` and `Shortcuts.ts` use: every mouse move, button press and wheel
+/// notch on the desktop, in physical screen pixels.
+///
+/// It only observes. The callback queues one small event and hands the message on with
+/// [`CallNextHookEx`], so typing and aiming in the game are never delayed or blocked.
+unsafe extern "system" fn mouse_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -> windows::Win32::Foundation::LRESULT {
+    if code >= 0 {
+        let message = wparam.0 as u32;
+        // SAFETY: for `WH_MOUSE_LL` Windows passes a live `MSLLHOOKSTRUCT` in `lparam`.
+        let info = unsafe { &*(lparam.0 as *const MSLLHOOKSTRUCT) };
+        let point = Point { x: f64::from(info.pt.x), y: f64::from(info.pt.y) };
+        with_hook(|hook| match message {
+            WM_MOUSEMOVE if hook.mouse_moves.load(Ordering::Relaxed) => {
+                let (ctrl, alt) = mouse_modifiers();
+                hook.emit_mouse(MouseEvent::Move { point, ctrl, alt });
+            }
+            WM_LBUTTONDOWN | WM_RBUTTONDOWN | WM_MBUTTONDOWN | WM_XBUTTONDOWN => {
+                hook.emit_mouse(MouseEvent::Down { point });
+            }
+            WM_MOUSEWHEEL => {
+                // The high word of `mouseData` is the signed wheel delta; the sign is the
+                // notch's direction (a high-resolution wheel may send less than 120 at once).
+                let delta = i32::from((info.mouseData >> 16) as u16 as i16);
+                hook.emit_mouse(MouseEvent::Wheel { point, rotation: delta.signum(), ctrl: mouse_modifiers().0 });
+            }
+            _ => {}
+        });
+    }
+    // SAFETY: the hook contract: everything not consumed goes to the next hook in the chain.
+    unsafe { CallNextHookEx(None, code, wparam, lparam) }
+}
+
+/// Whether Ctrl and Alt are held, as `uiohook`'s `ctrlKey`/`altKey` report them.
+fn mouse_modifiers() -> (bool, bool) {
+    // SAFETY: a plain Win32 query usable from a low-level hook callback.
+    unsafe {
+        let down = |key: VIRTUAL_KEY| GetAsyncKeyState(key.0 as i32) < 0;
+        (down(VK_CONTROL), down(VK_MENU))
+    }
+}
+
 /// Whether `hwnd` is the foreground window, or the root of the window that really has the
 /// GUI focus. The reference asks MSAA (`AccessibleObjectFromEvent`, `STATE_SYSTEM_FOCUSED`)
 /// because `EVENT_SYSTEM_FOREGROUND` can name a window that did not end up focused; the GUI
@@ -405,6 +470,8 @@ enum Startup {
 fn hook_thread(
     target: WindowTarget,
     events: Sender<GameWindowEvents>,
+    mouse: Sender<MouseEvent>,
+    mouse_moves: Arc<AtomicBool>,
     wake: WakeFn,
     game: Arc<Mutex<Option<isize>>>,
     startup: Sender<Startup>,
@@ -417,6 +484,8 @@ fn hook_thread(
             *cell.borrow_mut() = Some(Hook {
                 target,
                 events,
+                mouse,
+                mouse_moves,
                 wake,
                 game,
                 hwnd: HWND::default(),
@@ -426,6 +495,7 @@ fn hook_thread(
                 location_hook: HWINEVENTHOOK::default(),
                 destroy_hook: HWINEVENTHOOK::default(),
                 name_hook: HWINEVENTHOOK::default(),
+                mouse_hook: HHOOK::default(),
                 uipi_message,
             });
         });
@@ -448,6 +518,12 @@ fn hook_thread(
             0,
             WINEVENT_OUTOFCONTEXT,
         );
+        // The global mouse hook, observed only (`mouse_proc` hands every event on).
+        let mouse_hook = SetWindowsHookExW(WH_MOUSE_LL, Some(mouse_proc), None, 0);
+        match mouse_hook {
+            Ok(hook) => with_hook(|state| state.mouse_hook = hook),
+            Err(error) => eprintln!("wraex: the global mouse hook could not be installed: {error}"),
+        }
         let timer = SetTimer(None, 0, FOREGROUND_TIMER_MS, Some(foreground_timer));
         // Create this thread's message queue before reporting ready, so a stop posted right
         // after `start` returns cannot be lost.
@@ -475,6 +551,10 @@ fn hook_thread(
             if !hook.name_hook.is_invalid() {
                 let _ = UnhookWinEvent(hook.name_hook);
             }
+            if !hook.mouse_hook.is_invalid() {
+                let _ = UnhookWindowsHookEx(hook.mouse_hook);
+                hook.mouse_hook = HHOOK::default();
+            }
         });
         HOOK.with(|cell| {
             let _ = cell.borrow_mut().take();
@@ -485,6 +565,8 @@ fn hook_thread(
 /// The Win32 window hook. See the module's documentation.
 pub struct Watcher {
     events: Receiver<GameWindowEvents>,
+    mouse: Receiver<MouseEvent>,
+    mouse_moves: Arc<AtomicBool>,
     game: Arc<Mutex<Option<isize>>>,
     target: WindowTarget,
     thread: Option<JoinHandle<()>>,
@@ -501,18 +583,27 @@ impl Watcher {
     /// Start following the window that has `target`'s title, now or whenever it appears.
     pub fn start(target: WindowTarget, wake: WakeFn) -> Result<Self, WatchError> {
         let (events, receiver) = mpsc::channel();
+        let (mouse, mouse_receiver) = mpsc::channel();
+        let mouse_moves: Arc<AtomicBool> = Arc::default();
         let game: Arc<Mutex<Option<isize>>> = Arc::default();
         let (startup, started) = mpsc::channel();
         let thread_game = game.clone();
         let thread_target = target.clone();
+        let thread_mouse_moves = mouse_moves.clone();
         let thread = std::thread::Builder::new()
             .name("wraex-window-hook".to_owned())
-            .spawn(move || hook_thread(thread_target, events, wake, thread_game, startup))
+            .spawn(move || hook_thread(thread_target, events, mouse, thread_mouse_moves, wake, thread_game, startup))
             .map_err(|error| WatchError::Thread(error.to_string()))?;
         match started.recv() {
-            Ok(Startup::Ready(thread_id)) => {
-                Ok(Self { events: receiver, game, target, thread: Some(thread), thread_id })
-            }
+            Ok(Startup::Ready(thread_id)) => Ok(Self {
+                events: receiver,
+                mouse: mouse_receiver,
+                mouse_moves,
+                game,
+                target,
+                thread: Some(thread),
+                thread_id,
+            }),
             Err(_) => {
                 let _ = thread.join();
                 Err(WatchError::Thread("the window hook thread stopped before it started".to_owned()))
@@ -523,6 +614,18 @@ impl Watcher {
     /// Everything the OS layer reported since the last call, oldest first.
     pub fn drain(&mut self) -> Vec<GameWindowEvents> {
         self.events.try_iter().collect()
+    }
+
+    /// The mouse events since the last call, oldest first (`uiohook`'s listeners).
+    pub fn drain_mouse(&mut self) -> Vec<MouseEvent> {
+        self.mouse.try_iter().collect()
+    }
+
+    /// Arms or disarms the mouse-move half of the hook. Buttons and wheel keep arriving
+    /// either way; moves are only queued while a widget's area is tracked, which is exactly
+    /// when upstream adds its `mousemove` listener.
+    pub fn set_mouse_moves(&self, enabled: bool) {
+        self.mouse_moves.store(enabled, Ordering::Relaxed);
     }
 
     /// The tracked window's handle, once one was found (and until it is destroyed).
