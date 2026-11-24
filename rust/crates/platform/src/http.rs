@@ -1,5 +1,6 @@
-//! The [`Transport`] the app sends trade requests with: `main/src/proxy.ts`
-//! without the proxy. Every request carries [`USER_AGENT`]; non-2xx answers
+//! The [`Transport`] the app sends requests with: `main/src/proxy.ts` without
+//! the proxy. Every request carries [`USER_AGENT`]; hosts are the trade proxy's
+//! [`ALLOWED_HOSTS`] plus the update check's [`UPDATE_HOST`]. Non-2xx answers
 //! come back as responses (the trade site's errors are JSON bodies), and the
 //! body is decoded (gzip) like `net.request` does.
 
@@ -7,6 +8,7 @@ use std::time::Duration;
 
 use ureq::Agent;
 use wraex_core::trade::api::{ALLOWED_HOSTS, HttpRequest, HttpResponse, Method, Transport, USER_AGENT};
+use wraex_core::updates::UPDATE_HOST;
 
 /// Blocking HTTPS. Call it from a worker thread, not the UI thread.
 #[derive(Debug, Clone)]
@@ -31,11 +33,16 @@ fn host(url: &str) -> Option<&str> {
     Some(rest.split(['/', '?']).next().unwrap_or(rest))
 }
 
+/// [`ALLOWED_HOSTS`] plus [`UPDATE_HOST`].
+fn allowed(host: &str) -> bool {
+    ALLOWED_HOSTS.contains(&host) || host == UPDATE_HOST
+}
+
 impl Transport for HttpTransport {
     fn send(&self, request: &HttpRequest) -> Result<HttpResponse, String> {
-        // `PROXY_HOSTS`: the proxy refuses any other host.
+        // `PROXY_HOSTS`, plus the update check.
         let host = host(&request.url).ok_or_else(|| format!("not an https URL: {}", request.url))?;
-        if !ALLOWED_HOSTS.contains(&host) {
+        if !allowed(host) {
             return Err(format!("host not allowed: {host}"));
         }
 
@@ -73,9 +80,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn only_the_proxy_hosts_are_reached() {
+    fn only_the_proxy_hosts_and_the_update_host_are_reached() {
         assert_eq!(host("https://www.pathofexile.com/api/trade/search/x"), Some("www.pathofexile.com"));
         assert_eq!(host("https://poe.ninja?x"), Some("poe.ninja"));
+        assert_eq!(host("https://api.github.com/repos/Dumspy/wraex/releases/latest"), Some("api.github.com"));
+        assert!(allowed("www.pathofexile.com"));
+        assert!(allowed(UPDATE_HOST));
+        assert!(!allowed("github.com"));
         let request =
             HttpRequest { method: Method::Get, url: "https://example.com/".into(), headers: Vec::new(), body: None };
         assert_eq!(HttpTransport::default().send(&request).unwrap_err(), "host not allowed: example.com");

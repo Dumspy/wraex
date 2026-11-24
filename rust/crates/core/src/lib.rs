@@ -18,6 +18,7 @@ pub mod parse;
 pub mod rarity;
 pub mod relative_time;
 pub mod trade;
+pub mod updates;
 
 use serde::{Deserialize, Serialize};
 
