@@ -7,12 +7,17 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[lib]
+name = "wraex_app"
+path = "src/lib.rs"
+
 [[bin]]
 name = "wraex"
 path = "src/main.rs"
 
 [dependencies]
 rune = { workspace = true }
+serde_json = { workspace = true }
 wraex-core = { workspace = true }
 wraex-game = { workspace = true }
 wraex-platform = { workspace = true }

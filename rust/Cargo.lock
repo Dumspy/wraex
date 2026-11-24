@@ -5048,6 +5048,7 @@ name = "wraex-app"
 version = "0.1.0"
 dependencies = [
  "rune",
+ "serde_json",
  "wraex-core",
  "wraex-game",
  "wraex-platform",
