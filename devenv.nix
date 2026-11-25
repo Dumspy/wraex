@@ -6,6 +6,16 @@ let
   # reference checkouts in ref/ and the golden harness stay first-class.
   # (`cargo fmt` has no --manifest-path, so run everything from rust/.)
   cargo = "cd ${root}/rust && cargo";
+  # `act` needs Docker, and some actions expect a GITHUB_TOKEN. The `gh` one is
+  # passed when it is logged in; checkout of the submodules is local, so the
+  # token is optional. `set --` builds act's extra arguments, for any shell.
+  actToken = ''
+    set --
+    token=$(gh auth token 2>/dev/null || true)
+    if [ -n "$token" ]; then
+      set -- -s "GITHUB_TOKEN=$token"
+    fi
+  '';
 in
 {
   # The Rust channel is pinned by rust-toolchain.toml (same as Rune's `dev`),
@@ -30,6 +40,9 @@ in
     llvm
     # Inspecting fixture diffs.
     jq
+    # Run the GitHub Actions workflows locally (ci:local, ci:release:local): it
+    # reads .actrc, which maps ubuntu-latest to an amd64 image.
+    act
   ] ++ lib.optionals pkgs.stdenv.isLinux [
     # Rune links libxkbcommon and libwayland-client; window runs also need the
     # X11/XKB libraries and, without a GPU, a software Vulkan driver.
@@ -104,6 +117,21 @@ in
       after = [ "check:fmt" "check:clippy" "check:test" "check:rune-pin" ];
       exec = "echo 'All checks passed'";
     };
+    # The GitHub Actions workflows locally (nektos/act + Docker, against .actrc).
+    # amd64 containers are emulated on Apple Silicon: slow, but end to end. A manual
+    # release run only uploads artifacts (the draft release waits for a v* tag), and
+    # one matrix leg can be run directly, e.g. the Windows cross-build:
+    #   act workflow_dispatch -W .github/workflows/release.yml -j package --matrix name:windows
+    "ci:local".exec = ''
+      cd ${root}
+      ${actToken}
+      act "$@" pull_request -W .github/workflows/ci.yml
+    '';
+    "ci:release:local".exec = ''
+      cd ${root}
+      ${actToken}
+      act "$@" workflow_dispatch -W .github/workflows/release.yml -j package
+    '';
     # Reference tracking. Apt ships from master; EE2 ships releases, so pick the
     # tag explicitly:  EE2_TAG=v0.16.3 devenv tasks run ref:ee2:release
     "ref:apt:latest".exec = ''

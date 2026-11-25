@@ -76,8 +76,16 @@ Add fields only with the module that produces them; do not guess at the shape.
 ## Checks the agent can run itself
 
 - `cargo fmt` / `cargo clippy -D warnings` / `cargo test`.
+- PR CI skips the slow game-data and render tests and the headless smoke (they run
+  on push to development and main), so run the full suite locally before a PR:
+  `cargo test --workspace`, which `devenv tasks run check:all` already runs.
 - Rune pin: `devenv tasks run check:rune-pin`.
 - Fixture diff: `devenv tasks run golden:prepare` once, then
   `devenv tasks run check:fixtures` (regenerates, fails on any change in `fixtures/`).
   Never edit a fixture by hand; add corpus cases instead.
 - UI: render headless with `--snap` and inspect the PNG and element tree (phase 5).
+- Workflows: `devenv tasks run ci:local` / `ci:release:local` run ci.yml / release.yml
+  with `act` (needs Docker; `.actrc` runs ubuntu-latest as emulated amd64 on Apple
+  Silicon, so it is slow but validates the workflow end to end). Cache saves fail
+  there (`tar` cannot stat under Rosetta), so local runs are always cold; time the
+  workflows on GitHub, not locally.

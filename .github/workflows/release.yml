@@ -34,6 +34,9 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  # Read by the prebuilt cargo-xwin install and by the xwin cache key, so both move
+  # together on a bump.
+  CARGO_XWIN_VERSION: "0.24.1"
 
 jobs:
   package:
@@ -71,15 +74,31 @@ jobs:
 
       - run: rustup toolchain install
 
-      # cargo-xwin and the LLVM tools it drives (clang-cl, lld-link, llvm-lib), plus
-      # makensis (NSIS 3) and ImageMagick, which package.py uses to turn the package's
-      # PNG icon into the multi-size .ico the setup needs.
+      # The LLVM tools cargo-xwin drives (clang-cl, lld-link, llvm-lib), plus makensis
+      # (NSIS 3) and ImageMagick, which package.py uses to turn the package's PNG icon
+      # into the multi-size .ico the setup needs.
       - name: Windows cross-compiler and installer tooling
         if: matrix.name == 'windows'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends clang lld llvm nsis imagemagick
-          cargo install --locked cargo-xwin
+
+      # The prebuilt release binary: `cargo install` spent ~2 minutes compiling
+      # cargo-xwin before the build proper had even started.
+      - name: cargo-xwin
+        if: matrix.name == 'windows'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-xwin@${{ env.CARGO_XWIN_VERSION }}
+
+      # xwin downloads and unpacks the MSVC CRT and Windows SDK into cargo-xwin's
+      # cache directory on first use; restoring it saves ~2 minutes on every later run.
+      - name: Cache xwin CRT and SDK
+        if: matrix.name == 'windows'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/cargo-xwin
+          key: xwin-${{ runner.os }}-${{ env.CARGO_XWIN_VERSION }}
 
       - uses: Swatinem/rust-cache@v2
         with:

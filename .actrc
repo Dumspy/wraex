@@ -1,0 +1,16 @@
+# nektos/act: run .github/workflows/ locally (devenv tasks ci:local, ci:release:local).
+# act reads this file from the repo root, so run it from there.
+
+# Every job is `runs-on: ubuntu-latest`, a GitHub x86_64 image. Map it to the
+# catthehacker image with rustup (the workflows run `rustup toolchain install`,
+# which act-latest lacks), and run it as amd64: the linux
+# release leg downloads an x86_64 AppImage tool, and emulation keeps the two
+# legs on the same architecture as CI.
+-P ubuntu-latest=ghcr.io/catthehacker/ubuntu:rust-latest
+--container-architecture linux/amd64
+
+# actions/upload-artifact and actions/download-artifact need this server, the
+# cache server is on by default and keeps actions/cache and Swatinem/rust-cache
+# warm between runs. Both live under target/, which git ignores.
+--artifact-server-path target/act/artifacts
+--cache-server-path target/act/cache

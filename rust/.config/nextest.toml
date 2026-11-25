@@ -1,0 +1,18 @@
+# CI runs nextest rather than `cargo test`: one process per test, run in parallel.
+[profile.ci]
+# Report every failure in one run instead of stopping at the first.
+fail-fast = false
+# List tests over 10s in the summary (none are today; the slowest take ~3s).
+slow-timeout = { period = "10s" }
+final-status-level = "slow"
+
+# Pull requests run the fast set only. The poe1/poe2 data and parser modules load
+# the references' full game data, and the app's scene, widget and settings tests
+# render Rune frames; both dominate the run and are covered by the push to
+# development and main instead.
+[profile.pr]
+inherits = "ci"
+default-filter = """
+not ((package(wraex-poe1) | package(wraex-poe2)) & test(/^(data|parser)::/)
+     | package(wraex-app) & test(/^(tests|widget_tests|settings::tests)::/))
+"""
