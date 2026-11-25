@@ -319,6 +319,7 @@ impl OverlayController {
             return;
         }
         self.is_interactable = true;
+        crate::log!("wraex: overlay takes the mouse and keyboard");
         // `onOverlayActive` (EE2) then `OverlayController.activateOverlay`.
         handle.show();
         handle.set_click_through(false);
@@ -334,6 +335,7 @@ impl OverlayController {
             return;
         }
         self.is_interactable = false;
+        crate::log!("wraex: the game takes the mouse and keyboard back");
         handle.set_click_through(true);
         handle.focus_game();
         if window.set_active(true).is_some() {

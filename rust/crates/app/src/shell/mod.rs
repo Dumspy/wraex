@@ -505,7 +505,10 @@ impl Live {
                     wraex_platform::log!("wraex: focus game={game} overlay={overlay} hotkey={using_hotkey}");
                     apply_overlay_event(&event, app);
                 }
-                OverlayEvent::HideExclusiveWidget => apply_overlay_event(&event, app),
+                OverlayEvent::HideExclusiveWidget => {
+                    wraex_platform::log!("wraex: the cursor moved away from the card: closing it");
+                    apply_overlay_event(&event, app);
+                }
                 // The Alt peek: `sync_window` reads `OverlayController::is_visible`, which is
                 // the state this event reports; there is no renderer channel to forward it to.
                 OverlayEvent::Visibility { .. } => {}
@@ -892,6 +895,7 @@ impl Live {
         let opened = shown != self.shown;
         let over_game = self.game_bounds();
         if opened {
+            wraex_platform::log!("wraex: showing {shown:?} (was {:?})", self.shown);
             self.shown = shown.clone();
             // The overlay's size comes from the game, not from the widget.
             if over_game.is_none()
@@ -916,6 +920,9 @@ impl Live {
         // window of its own — so it stays while the game is in the background.
         let in_front = self.window.is_active() || self.overlay_focused || self.panel.expects_focus();
         if is_overlay(&shown) && self.watcher.is_some() && !in_front {
+            if self.handle.is_visible() {
+                wraex_platform::log!("wraex: hiding the overlay: neither the game nor the overlay is in front");
+            }
             self.overlay_offset = None;
             self.overlay_height = None;
             self.stop_tracking();
@@ -961,6 +968,7 @@ impl Live {
                 // `showInactive()`: create/show the overlay without taking the focus or the
                 // keyboard from the game. `open()` would activate it — a hotkey's whole point
                 // is that the game keeps playing.
+                wraex_platform::log!("wraex: overlay window show (inactive)");
                 self.handle.show();
                 self.panel.visible.store(true, Ordering::Relaxed);
             }
@@ -1041,6 +1049,7 @@ impl Live {
     fn hide_panel(&mut self) {
         self.placed = None;
         if self.handle.is_visible() {
+            wraex_platform::log!("wraex: overlay window hide");
             self.handle.hide();
         }
         // A hidden overlay is click-through again, so the frame after the next show cannot
@@ -1247,6 +1256,10 @@ impl App {
     /// widget flagged `hide-on-blur` goes. Both price checks of the port carry it, as the item
     /// check and most overlay widgets do upstream; a widget without it stays on screen.
     pub fn hide_widgets_on_blur(&mut self) {
+        wraex_platform::log!(
+            "wraex: the overlay lost the focus: closing hide-on-blur widgets (showing {:?})",
+            self.shown()
+        );
         self.close_exclusive_widget();
         if let Some(check) = &mut self.item_check {
             check.open = false;
