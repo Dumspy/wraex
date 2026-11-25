@@ -49,13 +49,13 @@ use windows::Win32::UI::WindowsAndMessaging::{
     CHILDID_SELF, CallNextHookEx, DispatchMessageW, EVENT_OBJECT_DESTROY, EVENT_OBJECT_LOCATIONCHANGE,
     EVENT_OBJECT_NAMECHANGE, EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_MINIMIZEEND, GA_ROOT, GUITHREADINFO, GWL_EXSTYLE,
     GetAncestor, GetClassNameW, GetClientRect, GetForegroundWindow, GetGUIThreadInfo, GetMessageW, GetWindowLongPtrW,
-    GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId, HHOOK, IsHungAppWindow, IsIconic, KBDLLHOOKSTRUCT,
-    KillTimer, LLKHF_INJECTED, MSG, MSLLHOOKSTRUCT, OBJID_WINDOW, PM_NOREMOVE, PeekMessageW, PostMessageW,
-    PostThreadMessageW, RegisterWindowMessageW, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER,
-    SetForegroundWindow, SetTimer, SetWindowLongPtrW, SetWindowPos, SetWindowsHookExW, TranslateMessage,
-    UnhookWindowsHookEx, WH_KEYBOARD_LL, WH_MOUSE_LL, WINEVENT_OUTOFCONTEXT, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN,
-    WM_MBUTTONDOWN, WM_MOUSEMOVE, WM_MOUSEWHEEL, WM_QUIT, WM_RBUTTONDOWN, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_XBUTTONDOWN,
-    WS_EX_TOOLWINDOW,
+    GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId, HHOOK, IsHungAppWindow, IsIconic, IsWindowVisible,
+    KBDLLHOOKSTRUCT, KillTimer, LLKHF_INJECTED, MSG, MSLLHOOKSTRUCT, OBJID_WINDOW, PM_NOREMOVE, PeekMessageW,
+    PostMessageW, PostThreadMessageW, RegisterWindowMessageW, SW_HIDE, SW_SHOWNOACTIVATE, SWP_FRAMECHANGED,
+    SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SetForegroundWindow, SetTimer, SetWindowLongPtrW,
+    SetWindowPos, SetWindowsHookExW, ShowWindow, TranslateMessage, UnhookWindowsHookEx, WH_KEYBOARD_LL, WH_MOUSE_LL,
+    WINEVENT_OUTOFCONTEXT, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_MBUTTONDOWN, WM_MOUSEMOVE, WM_MOUSEWHEEL, WM_QUIT,
+    WM_RBUTTONDOWN, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_XBUTTONDOWN, WS_EX_TOOLWINDOW,
 };
 use windows::core::w;
 
@@ -774,6 +774,13 @@ pub fn configure_overlay(hwnd: isize) {
         let style = GetWindowLongPtrW(window, GWL_EXSTYLE);
         let wanted = style | WS_EX_TOOLWINDOW.0 as isize;
         if wanted != style {
+            // The taskbar keeps the button of a window that was already shown when its style
+            // changed ("Managing Taskbar Buttons"): hide it for the change and show it again,
+            // without activating it, so the button goes.
+            let visible = IsWindowVisible(window).as_bool();
+            if visible {
+                let _ = ShowWindow(window, SW_HIDE);
+            }
             let _ = SetWindowLongPtrW(window, GWL_EXSTYLE, wanted);
             let _ = SetWindowPos(
                 window,
@@ -784,6 +791,9 @@ pub fn configure_overlay(hwnd: isize) {
                 0,
                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED,
             );
+            if visible {
+                let _ = ShowWindow(window, SW_SHOWNOACTIVATE);
+            }
         }
     }
 }
