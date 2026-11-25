@@ -33,8 +33,8 @@ pub enum Request {
     /// `MAIN->CLIENT::widget-action`: a widget's hotkey (the delve grid's toggle, a timer's
     /// start/stop).
     WidgetAction(String),
-    /// Draw a widget of this `wmType` in the overlay window (`wm.show(wmId)`).
-    ShowWidget(String),
+    /// Draw the widget the config's `wmWants` now shows (`wm.show(wmId)` from the menu).
+    ShowWidget(u32),
     /// Nothing the port does yet, and why.
     Unsupported(String),
 }
@@ -84,7 +84,7 @@ pub fn poe2_item_request(action: &crate::poe2::item_check::Action) -> Request {
 pub fn widget_request(action: &crate::widgets::Action) -> Request {
     use crate::widgets::Action;
     match action {
-        Action::Show(id) => Request::ShowWidget(format!("widget {id}")),
+        Action::Show(id) => Request::ShowWidget(*id),
         // The window follows the state (`App::poll` hides it when nothing is open), so a hide
         // needs no effect of its own.
         Action::Hide(_) => Request::Unsupported("hide".to_owned()),
@@ -209,6 +209,9 @@ mod tests {
             widget_request(&Action::StashSearch("\"Currency\"".to_owned())),
             Request::StashSearch("\"Currency\"".to_owned())
         );
+        // `wm.show(wmId)` names the widget by its id; the settings widget opens the settings
+        // window in the shell.
+        assert_eq!(widget_request(&Action::Show(2)), Request::ShowWidget(2));
         assert_eq!(widget_request(&Action::EditInSettings(2)), Request::Settings);
         assert!(matches!(widget_request(&Action::Hide(2)), Request::Unsupported(_)));
         assert!(matches!(widget_request(&Action::ImportImage(2)), Request::Unsupported(_)));

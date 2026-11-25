@@ -360,6 +360,7 @@ impl PriceCheck {
             filter.value = 0.0;
             filter.disabled = true;
         }
+        self.filters_changed();
         true
     }
 
@@ -370,6 +371,14 @@ impl PriceCheck {
 
     /// `CheckedItem.vue`'s `@reset`: hide the results, back to the Search row.
     pub fn reset_search(&mut self) {
+        self.do_search = false;
+    }
+
+    /// `CheckedItem.vue`'s deep watch on `[item, doSearch, itemStats, itemFilters]`: once the
+    /// results are up, any change to the stats or the filters hides them again ("force user to
+    /// press Search button on change"). A trade-option change is the exception: the next watch
+    /// (see [`PriceCheck::after_trade_change`]) starts the search itself.
+    fn filters_changed(&mut self) {
         self.do_search = false;
     }
 
@@ -407,8 +416,10 @@ impl PriceCheck {
         self.trade.select_currency(which);
     }
 
-    /// A trade filter changed: `CheckedItem.vue` re-runs the search
-    /// (`watch([item, JSON.stringify(itemFilters.trade)])`).
+    /// A trade filter changed: `CheckedItem.vue`'s second watch
+    /// (`watch([item, JSON.stringify(itemFilters.trade)])`) sets `doSearch = true` again, which
+    /// the search watch turns into a new search. The deep watch has just hidden the old results
+    /// ([`PriceCheck::filters_changed`]); this puts them back with the new options.
     fn after_trade_change(&mut self) {
         self.do_search = true;
         self.search();
@@ -475,6 +486,7 @@ impl PriceCheck {
         {
             relaxed.disabled = Some(!relaxed.disabled.unwrap_or(false));
         }
+        self.filters_changed();
     }
 
     /// `FilterName.vue`'s corrupted switch.
@@ -482,6 +494,7 @@ impl PriceCheck {
         if let Some(corrupted) = self.filters_mut().and_then(|filters| filters.corrupted.as_mut()) {
             corrupted.value = !corrupted.value;
         }
+        self.filters_changed();
     }
 
     /// The Search button (and Enter in a field): `doSearch = true`, which fetches the
@@ -532,6 +545,7 @@ impl PriceCheck {
         if let Some(filter) = self.stat_mut(index) {
             filter.disabled = !filter.disabled;
         }
+        self.filters_changed();
     }
 
     /// `FilterModifierItemIsElemental.vue`'s `select`: choosing an element enables the filter
@@ -547,6 +561,7 @@ impl PriceCheck {
                 filter.roll = Some(roll);
             }
         }
+        self.filters_changed();
     }
 
     /// `FilterModifier.vue`'s `inputFocus`: an emptied field takes the roll's default.
@@ -582,6 +597,7 @@ impl PriceCheck {
                 }
             }
         }
+        self.filters_changed();
     }
 
     /// The numeric field's chip (a `FilterBtnNumeric.vue`).
@@ -594,6 +610,7 @@ impl PriceCheck {
         if let Some(filter) = self.numeric_mut(which) {
             filter.disabled = !filter.disabled;
         }
+        self.filters_changed();
     }
 
     /// `FilterBtnLogical.vue`'s `toggle` for the chips that are not `FilterNumeric`s.
@@ -618,6 +635,7 @@ impl PriceCheck {
             // Read-only chips (`readonly` in `FiltersBlock.vue`'s `filter-btn-logical`).
             LogicalToggle::Blighted | LogicalToggle::RarityMagic | LogicalToggle::RarityNormal => {}
         }
+        self.filters_changed();
     }
 
     /// `FilterBtnLogical.vue`'s toggle for the chips backed by a `{ disabled }` filter.
@@ -629,6 +647,7 @@ impl PriceCheck {
             ItemFlag::Mirrored => flip(filters.mirrored.as_mut().map(|filter| &mut filter.disabled)),
             ItemFlag::Sanctified => flip(filters.sanctified.as_mut().map(|filter| &mut filter.disabled)),
         }
+        self.filters_changed();
     }
 
     /// The active preset's stat at `index`.
@@ -963,5 +982,21 @@ mod tests {
         assert!(!stat.disabled);
         // The roll is the affix pseudo stat's, so it differs from the "Any" row's.
         assert!(stat.roll.is_some());
+    }
+
+    /// `CheckedItem.vue`'s two watches: a stat change after a search hides the results (the
+    /// Search button comes back), while a trade option restarts the search itself.
+    #[test]
+    fn a_stat_change_waits_for_search_and_a_trade_change_searches() {
+        let mut check = PriceCheck::with_mode(&crate::corpus_poe2("ee2-unique-item"), Mode::Replay);
+        assert!(check.do_search, "a unique searches by itself");
+        assert!(!check.trade.rows.is_empty(), "the recorded listing rows");
+
+        check.toggle_stat(0);
+        assert!(!check.do_search, "the stat changed: the results are stale");
+
+        check.set_listing_type("any");
+        assert!(check.do_search, "the trade option change re-searched");
+        assert!(!check.trade.rows.is_empty() || check.trade.error.is_some(), "a new request went out");
     }
 }

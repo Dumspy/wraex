@@ -221,13 +221,19 @@ impl App {
     /// The app with only an overlay widget open on `kind`'s scene: the menu, the stopwatch, the
     /// image strip, the delve grid, the item search or the stash search, at the card's own size.
     /// A scene never reads the user's
-    /// config or the network: [`widgets::Overlay::scene`] reads `default_config()` only.
+    /// config or the network: [`widgets::Overlay::scene`] reads `default_config()` only. The
+    /// corpus case the window was built on is closed: the scene is the overlay widget, as an
+    /// active overlay draws it, with no price check behind it.
     pub fn widgets_scene(game: GameId, kind: widgets::Kind) -> Self {
         let mut app = match game {
             GameId::Poe2 => Self::with_mode_poe2(&corpus_poe2("currency-djinn-barya"), Mode::Replay),
             _ => Self::with_mode(&corpus(SCENES[0].0), Mode::Replay),
         };
         app.game = game;
+        app.price_check.open = false;
+        if let Some(check) = &mut app.poe2 {
+            check.open = false;
+        }
         app.widgets = Some(widgets::Overlay::scene(game, kind));
         app
     }
@@ -367,8 +373,9 @@ fn project_item_check_poe2(app: &mut App) -> &mut poe2::item_check::ItemCheck {
     app.item_check_poe2.as_mut().expect("an item-check scene built the window")
 }
 
-/// The app's window: the settings window while it is open, else the item check, else whichever
-/// game's price check is open.
+/// The app's window: the exclusive widget while one is open — the settings window, the item
+/// check, or whichever game's price check — else the overlay widget [`shell::App::shown`] names,
+/// which is the widget menu while the overlay is active.
 pub fn view(app: &App, cx: &mut Cx<App>) -> El {
     // A live window with nothing to draw is hidden by the shell (`shell::Live::sync_window`);
     // this only keeps the frame it was hidden in from drawing a widget. `is_peeked` is
@@ -388,27 +395,54 @@ pub fn view(app: &App, cx: &mut Cx<App>) -> El {
         // The window is the overlay over the game (Windows, PLAN.md phase 2): the widget is
         // placed inside it where the cursor asked for it, or centred for the tray's windows.
         Some((x, y)) => {
+            let size = app.overlay_size();
             let mut placed = card.absolute(x, y);
             // The price check fills the overlay (`#price-window` is `h-full`); the other
             // cards keep their own size.
-            if let Some((width, height)) = app.overlay_size() {
+            if let Some((width, height)) = size {
                 placed = placed.w(width).h(height);
             }
-            rune::col().w_full().h_full().instant_changes().child(placed)
+            let mut window = rune::col().w_full().h_full().instant_changes();
+            if app.overlay_active() {
+                let (width, height) = size.unwrap_or((0.0, 0.0));
+                window = window.child(overlay_background((x, y), (width, height)));
+            }
+            window.child(placed)
         }
         None => card,
     }
 }
 
+/// `OverlayWindow.vue`'s background `div`, in the four strips around the card: while the overlay
+/// is active, a click outside the widgets gives the game its focus back
+/// (`handleBackgroundClick` with `overlayBackgroundClose`, [`App::on_overlay_background`]). A
+/// press inside the card is the widget's and never reaches these, as upstream's background sits
+/// under the widgets. The dim the reference paints there (`overlayBackground`) is not drawn: the
+/// game stays as it is behind the widgets.
+fn overlay_background(card: (f32, f32), size: (f32, f32)) -> El {
+    let (x, y) = card;
+    let (width, height) = size;
+    let strip = |key: &str| {
+        rune::el().key(format!("overlay-background-{key}")).on_press(|app: &mut App| app.on_overlay_background())
+    };
+    let mut window = rune::col().w_full().h_full();
+    if y > 0.0 {
+        window = window.child(strip("top").pin(Some(0.0), Some(0.0), Some(0.0), None).h(y));
+    }
+    if x > 0.0 {
+        window = window.child(strip("left").pin(Some(0.0), Some(y), None, None).w(x).h(height));
+    }
+    window = window
+        .child(strip("right").pin(Some(x + width), Some(y), Some(0.0), None).h(height))
+        .child(strip("bottom").pin(Some(0.0), Some(y + height), Some(0.0), Some(0.0)));
+    window
+}
+
 /// The widget the window shows, at its own size.
 fn card(app: &App, cx: &mut Cx<App>) -> El {
-    // An overlay widget is a card of its own, at its own size; a hidden one shows the window
-    // under it (the item search hands the window to the price check its pick opened).
-    if let Some(overlay) = &app.widgets
-        && overlay.shown_widget().is_some_and(|widget| widget.wm_wants == widgets::Wants::Show)
-    {
-        return widgets::view(overlay, cx, project_widgets);
-    }
+    // `OverlayWindow.vue`'s `visibilityState` order: an exclusive widget wins — the settings
+    // window and the item check first, then the price check — and the overlay's own widgets
+    // follow it.
     if let Some(settings) = &app.settings
         && settings.open
     {
@@ -425,11 +459,23 @@ fn card(app: &App, cx: &mut Cx<App>) -> El {
     {
         return poe2::item_check::view(check, cx, project_item_check_poe2);
     }
-    match app.game {
-        GameId::Poe2 => {
-            poe2::price_check::view::view(app.poe2.as_ref().expect("a PoE2 scene built the window"), cx, project_poe2)
-        }
-        _ => poe1::price_check::view::view(&app.price_check, cx, project),
+    if app.price_check.open || app.poe2.as_ref().is_some_and(|check| check.open) {
+        return match app.game {
+            GameId::Poe2 => poe2::price_check::view::view(
+                app.poe2.as_ref().expect("a PoE2 scene built the window"),
+                cx,
+                project_poe2,
+            ),
+            _ => poe1::price_check::view::view(&app.price_check, cx, project),
+        };
+    }
+    // An overlay widget is a card of its own, at its own size; a hidden one shows the window
+    // under it (the item search hands the window to the price check its pick opened). The
+    // shell builds the overlay's state before it asks for the menu, so this is never `None` in
+    // a live window; a scene without one draws nothing rather than panicking.
+    match app.widgets.as_ref() {
+        Some(overlay) => widgets::view(overlay, cx, project_widgets),
+        None => rune::el(),
     }
 }
 
@@ -834,6 +880,28 @@ mod tests {
         assert!(runtime.find("listing-20-price").is_none(), "twenty rows, no more");
     }
 
+    /// The background click areas: four strips around the card, so a press inside the card is
+    /// the widget's — text selection included — and only the empty overlay gives the game its
+    /// focus back (`OverlayWindow.vue`'s background sits under the widgets).
+    #[test]
+    fn the_overlay_background_wraps_the_card_without_covering_it() {
+        let text = TextSystem::new(theme::FONTS, theme::FAMILIES);
+        let mut runtime = Runtime::with_text(
+            App::default(),
+            |_app: &App, _cx: &mut Cx<App>| overlay_background((100.0, 50.0), (200.0, 100.0)),
+            (400.0, 300.0),
+            Env::new(true, 1.0),
+            text,
+        );
+        runtime.frame(0.0);
+        let elements = runtime.elements();
+        let rect = |key: &str| element(&elements, key).unwrap_or_else(|| panic!("no {key}")).rect;
+        assert_eq!(rect("overlay-background-top"), [0.0, 0.0, 400.0, 50.0]);
+        assert_eq!(rect("overlay-background-left"), [0.0, 50.0, 100.0, 100.0]);
+        assert_eq!(rect("overlay-background-right"), [300.0, 50.0, 100.0, 100.0]);
+        assert_eq!(rect("overlay-background-bottom"), [0.0, 150.0, 400.0, 150.0]);
+    }
+
     /// A unique is searched by name, and has the price row and the disenchant value.
     #[test]
     fn the_timeless_jewel_shows_its_unique_name() {
@@ -850,6 +918,48 @@ mod tests {
         assert_eq!(dust.label.as_deref(), Some("/images/dust.png"));
         assert_eq!([dust.rect[2], dust.rect[3]], [20.0, 20.0], "`w-5`");
         assert!(runtime.find("search-label").is_none());
+    }
+
+    /// `CheckedItem.vue`'s deep watch on `[item, doSearch, itemStats, itemFilters]`: after the
+    /// search a unique makes by itself, changing a stat filter hides the results, so the Search
+    /// button comes back ("force user to press Search button on change"). The first Windows
+    /// test's first bug: the stale listings stayed while the filters no longer matched them.
+    #[test]
+    fn changing_a_stat_after_a_search_shows_the_search_button_again() {
+        let mut runtime = runtime("adv-unique-timeless-jewel");
+        assert!(runtime.state.price_check.do_search, "a unique searches by itself");
+        assert!(runtime.find("search-label").is_none(), "the results replace the button");
+
+        click(&mut runtime, "stat-1-0-toggle");
+        assert!(!runtime.state.price_check.do_search, "the stat changed: the results are stale");
+        assert_eq!(text_of(&runtime, "search-label").as_deref(), Some("Search"));
+        assert!(runtime.find("trade-table").is_none());
+
+        // The button searches again with the new filter; the replay has no answer for that
+        // request, but the search is what was asked for.
+        click(&mut runtime, "search");
+        assert!(runtime.state.price_check.do_search);
+    }
+
+    /// `CheckedItem.vue`'s other watch, `[item, JSON.stringify(itemFilters.trade)]`: a trade
+    /// option change restarts the search instead of waiting for the button.
+    #[test]
+    fn changing_a_trade_option_searches_again() {
+        let mut check = PriceCheck::with_mode(&corpus("adv-rare-ring-mirrored-catalyst"), Mode::Replay);
+        check.start_search();
+        assert!(check.do_search);
+        assert!(!check.trade.rows.is_empty(), "the recorded listing rows");
+
+        check.set_listed(Some("1day"));
+        assert!(check.do_search, "the trade option change re-searched");
+        // The replay has no answer for the new request: the listings were cleared for the new
+        // search, which is the proof it went out.
+        assert!(check.trade.rows.is_empty());
+        assert!(
+            check.trade.error.as_deref().is_some_and(|error| error.contains("no recorded answer")),
+            "{:?}",
+            check.trade.error
+        );
     }
 
     /// `PriceTrend.vue`'s "Base item" slot: a rare ring prices by its base type.

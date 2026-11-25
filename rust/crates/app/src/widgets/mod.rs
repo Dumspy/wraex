@@ -23,9 +23,14 @@
 //! screenshots in `tools/golden/screens/widgets.mjs` crop exactly one widget's card, so a
 //! scene's window *is* that card (see [`scene_size`]), filled with what the reference's overlay
 //! paints behind its widgets ([`crate::theme::overlay_background`]) so a translucent widget
-//! composites the same way. What a scene does not draw is the rest of the overlay: the anchors
-//! only decide which side a widget's actions panel hangs on, and `wmZorder` is not modelled,
-//! because no scene shows two widgets at once.
+//! composites the same way. What a scene does not draw is the rest of the overlay: `wmZorder`
+//! is not modelled, because no scene shows two widgets at once, and a live window draws one
+//! card too — the menu while the overlay is active and nothing else is open, or the widget a
+//! hotkey or the menu asked for.
+//!
+//! `Widget.vue` draws any widget at its config's `anchor` (`top: y%`, `left: x%`, shifted by
+//! the `translate` its `pos` picks); the shell reads that for a card the overlay itself
+//! reveals ([`Widget::anchor`], [`Widget::anchor_pos`]).
 //!
 //! One consequence of a card-sized window: the hover actions panel hangs *outside* the card (as
 //! `Widget.vue`'s `position: absolute` panel does), so in a scene it is clipped. It is still in
@@ -228,6 +233,18 @@ impl Widget {
         let axis = |name: &str| anchor.and_then(|a| a.get(name)).and_then(Value::as_f64).unwrap_or(0.0) as f32;
         (axis("x"), axis("y"))
     }
+
+    /// `anchor.pos` (`tl`, `tc`, `cc`, ...): which corner of the card `anchor.x`/`anchor.y`
+    /// name. `Widget.vue` picks the `translate` with it; a widget without an anchor (the
+    /// settings window, which is not drawn as a card) is top-left.
+    pub fn anchor_pos(&self) -> String {
+        self.config
+            .get("anchor")
+            .and_then(|anchor| anchor.get("pos"))
+            .and_then(Value::as_str)
+            .unwrap_or("tl")
+            .to_owned()
+    }
 }
 
 /// `wmFlags` as strings (`widgets.ts` lists the well-known ones, the edge cases are free-form).
@@ -354,7 +371,8 @@ impl Overlay {
         overlay
     }
 
-    /// The overlay a live window draws: the config's widgets, none shown until a hotkey or a
+    /// The overlay a live window draws: the config's widgets, none drawn until the overlay is
+    /// active (then the menu, `OverlayWindow.vue`'s `visibilityState`) or a hotkey or a
     /// widget's own button asks for one (`wm.show`).
     pub fn live(game: GameId, config: &Value) -> Self {
         let widgets: Vec<Widget> = config
@@ -406,16 +424,6 @@ impl Overlay {
         }
         let title = self.widget(wm_id).map(|widget| widget.wm_title.clone()).unwrap_or_default();
         self.title = TextEdit::new(title);
-    }
-
-    /// The widget of this `wmType`, shown when it exists: what `MAIN->CLIENT::widget-action`
-    /// does for a target that names a widget type (the delve grid's toggle key).
-    pub fn show_type(&mut self, wm_type: &str, mode: crate::trade::Mode) -> bool {
-        let Some(id) = self.widgets.iter().find(|widget| widget.wm_type == wm_type).map(|w| w.wm_id) else {
-            return false;
-        };
-        self.activate(id, mode);
-        true
     }
 
     pub fn widget(&self, wm_id: u32) -> Option<&Widget> {
@@ -621,12 +629,15 @@ impl Overlay {
     }
 }
 
-/// `invisible-on-blur`, the flag the stopwatch clears while it runs.
-const INVISIBLE_ON_BLUR: &str = "invisible-on-blur";
+/// `invisible-on-blur` (`widgets.ts`): `OverlayWindow.vue` hides it while the overlay is not
+/// active (the widget menu has it, so the menu goes when the game takes the focus). The
+/// stopwatch clears it while it runs, which is what keeps a running timer on screen.
+pub const INVISIBLE_ON_BLUR: &str = "invisible-on-blur";
 
 /// `WidgetSpec.type` of the settings window, which the menu's cog shows and a widget's `edit`
-/// opens when it does not edit inline.
-const SETTINGS: &str = "settings";
+/// opens when it does not edit inline. `wmZorder: 'exclusive'` upstream: it wins over the other
+/// widgets, and `invisible-on-blur` closes it when the game takes the focus.
+pub const SETTINGS: &str = "settings";
 
 /// A new widget's config: `wm.create`'s `uninitialized` object with the widget's own
 /// `initInstance`/mount branch applied, which upstream runs on the component's first mount.

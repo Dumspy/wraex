@@ -86,7 +86,8 @@ impl Harness {
         // `assert_overlay_active`: the game keeps the focus.
         self.handle.show();
         self.handle.set_click_through(true);
-        let size = overlay_widget_size(&Shown::PriceCheck, BOUNDS, scale).expect("the price check has a size");
+        let size =
+            overlay_widget_size(GameId::Poe1, &Shown::PriceCheck, BOUNDS, scale).expect("the price check has a size");
         let offset = widget_offset(Some(Placement::Cursor(cursor)), size, BOUNDS, scale);
         let area = track_area(offset, size, BOUNDS, scale, cursor, price_check_hold_key(&config()));
         self.overlay.on_track_area(area);
@@ -114,6 +115,122 @@ fn config() -> serde_json::Value {
     crate::settings::default_config(GameId::Poe1)
 }
 
+/// The app the shell leaves for an overlay widget: `Overlay::live`'s state (no scene), with
+/// nothing open yet. A unit test has no Rune window, so the overlay's `active` state is passed
+/// to [`App::shown_in`] by hand.
+fn overlay_app() -> crate::App {
+    let mut app = crate::App::replay("currency-divine-orb");
+    app.close_windows();
+    app.widgets = Some(widgets::Overlay::live(GameId::Poe1, &config()));
+    app
+}
+
+/// `OverlayWindow.vue`'s `visibilityState`: while the overlay is active every widget whose
+/// `wmWants` is `show` is drawn, and the widget menu always is. The first Windows run's
+/// overlay-key bug: `shown` said `None`, so `sync_window` hid the window the moment the overlay
+/// key was pressed and nothing appeared.
+#[test]
+fn the_overlay_key_shows_the_widget_menu() {
+    let app = overlay_app();
+    assert_eq!(app.shown_in(false), Shown::None, "the menu carries `invisible-on-blur`");
+
+    let shown = app.shown_in(true);
+    assert_eq!(shown, Shown::Widget(widgets::Kind::Menu.wm_type().to_owned()));
+    assert!(is_overlay(&shown), "the menu is drawn in the overlay window");
+    assert!(!hides_window(&shown, true, true), "the window stays on screen over the game");
+    assert_eq!(window_size(GameId::Poe1, &shown), Some(widgets::scene_size(GameId::Poe1, widgets::Kind::Menu)));
+}
+
+/// The game taking the focus back closes what `invisible-on-blur` hid: the menu is not drawn
+/// any more, so the shell hides the window, and the next activation brings it back.
+#[test]
+fn the_game_taking_the_focus_hides_the_widget_menu() {
+    let mut app = overlay_app();
+    assert_eq!(app.shown_in(true), Shown::Widget(widgets::Kind::Menu.wm_type().to_owned()));
+
+    apply_overlay_event(&OverlayEvent::FocusChange { game: true, overlay: false, using_hotkey: false }, &mut app);
+
+    let shown = app.shown_in(false);
+    assert_eq!(shown, Shown::None);
+    assert!(hides_window(&shown, true, true), "nothing to draw, so the window hides even with the game in front");
+    assert_eq!(app.shown_in(true), Shown::Widget(widgets::Kind::Menu.wm_type().to_owned()));
+}
+
+/// The overlay key with a price check open: the card is `wmZorder: 'exclusive'` upstream and
+/// wins over the menu both ways — it stays when the overlay comes on, and its `hide-on-blur`
+/// flag closes it when the key gives the game the focus back.
+#[test]
+fn the_overlay_key_with_a_price_check_open_keeps_the_card() {
+    let mut app = overlay_app();
+    app.price_check.open = true;
+    assert_eq!(app.shown_in(true), Shown::PriceCheck, "an exclusive widget wins over the menu");
+
+    apply_overlay_event(&OverlayEvent::FocusChange { game: true, overlay: false, using_hotkey: false }, &mut app);
+    assert!(!app.price_check.open, "`hide-on-blur`");
+    assert_eq!(app.shown_in(false), Shown::None);
+}
+
+/// Settings is `invisible-on-blur` upstream: the game taking the focus closes it, the tray or
+/// the menu only having asked for it.
+#[test]
+fn the_game_taking_the_focus_closes_settings() {
+    let mut app = crate::App::settings_scene(GameId::Poe1, Page::Hotkeys);
+    // The scene opens over a price check; nothing is under the settings window in a live run,
+    // because `wm.show` on an exclusive widget hides the other one.
+    app.price_check.open = false;
+    assert_eq!(app.shown(), Shown::Settings);
+
+    app.hide_widgets_on_blur();
+    assert!(!app.settings.as_ref().is_some_and(|settings| settings.open));
+    assert_eq!(app.shown(), Shown::None);
+}
+
+/// `WidgetSettings.vue`'s close hides its widget, so the menu lists the cog again.
+#[test]
+fn closing_settings_lists_it_in_the_menu_again() {
+    let mut app = overlay_app();
+    let id = app
+        .widgets
+        .as_ref()
+        .and_then(|overlay| overlay.widgets.iter().find(|widget| widget.wm_type == widgets::SETTINGS))
+        .expect("the config's settings widget")
+        .wm_id;
+    app.widgets.as_mut().expect("the overlay").show(id);
+    app.widgets.as_mut().expect("the overlay").take_actions();
+    assert_eq!(app.widgets.as_ref().unwrap().widget(id).unwrap().wm_wants, widgets::Wants::Show);
+
+    app.hide_settings_widget();
+    assert_eq!(app.widgets.as_ref().unwrap().widget(id).unwrap().wm_wants, widgets::Wants::Hide);
+}
+
+/// `Widget.vue`'s `anchor`: the percentages of the overlay, shifted by the `translate` the
+/// `pos` picks. The menu's `anchor: { pos: 'tl', x: 5, y: 5 }` puts it at 5 %/5 % of the game.
+#[test]
+fn a_widgets_anchor_places_it_in_the_overlay() {
+    let bounds = Bounds { x: 0.0, y: 0.0, width: 1600.0, height: 1200.0 };
+    let size = widgets::scene_size(GameId::Poe1, widgets::Kind::Menu);
+    assert_eq!(anchored_offset("tl", (5.0, 5.0), size, bounds, 1.0), (80.0, 60.0));
+    // `tc` centres the card on its x, `br` puts its bottom-right corner on the anchor.
+    assert_eq!(anchored_offset("tc", (50.0, 10.0), (200.0, 100.0), bounds, 1.0), (700.0, 120.0));
+    assert_eq!(anchored_offset("br", (100.0, 100.0), (200.0, 100.0), bounds, 1.0), (1400.0, 1100.0));
+    // A 150 % window: the anchor is a percentage of the game in points, not physical pixels.
+    assert_eq!(
+        anchored_offset("tl", (5.0, 5.0), size, bounds, 1.5),
+        ((1600.0 / 1.5 * 0.05) as f32, (1200.0 / 1.5 * 0.05) as f32)
+    );
+}
+
+/// `AppConfig().overlayBackgroundClose` decides whether the overlay's background click gives
+/// the game its focus back; a config without it is upstream's default, `true`.
+#[test]
+fn the_overlay_background_closes_on_a_click_by_default() {
+    assert!(overlay_background_close(&config()));
+    let mut config = config();
+    config["overlayBackgroundClose"] = serde_json::json!(false);
+    assert!(!overlay_background_close(&config));
+    assert!(overlay_background_close(&serde_json::json!({})), "upstream's `true`");
+}
+
 #[test]
 fn the_game_comes_from_the_flag() {
     let args = |list: &[&str]| list.iter().map(|arg| (*arg).to_owned()).collect::<Vec<_>>();
@@ -128,16 +245,25 @@ fn the_game_comes_from_the_flag() {
 
 #[test]
 fn a_window_is_sized_for_what_it_draws() {
-    assert_eq!(window_size(&Shown::None), None);
-    assert_eq!(window_size(&Shown::Settings), Some((crate::settings::WIDTH, crate::settings::HEIGHT)));
-    assert_eq!(window_size(&Shown::PriceCheck), Some((crate::poe1::price_check::WIDTH, HEIGHT)));
-    assert_eq!(window_size(&Shown::Poe2), Some((crate::poe2::price_check::WIDTH, HEIGHT)));
+    assert_eq!(window_size(GameId::Poe1, &Shown::None), None);
+    assert_eq!(window_size(GameId::Poe1, &Shown::Settings), Some((crate::settings::WIDTH, crate::settings::HEIGHT)));
+    assert_eq!(window_size(GameId::Poe1, &Shown::PriceCheck), Some((crate::poe1::price_check::WIDTH, HEIGHT)));
+    assert_eq!(window_size(GameId::Poe1, &Shown::Poe2), Some((crate::poe2::price_check::WIDTH, HEIGHT)));
     assert_eq!(
-        window_size(&Shown::Widget(widgets::Kind::Menu.name().to_owned())),
+        window_size(GameId::Poe1, &Shown::Widget(widgets::Kind::Menu.name().to_owned())),
         Some(widgets::scene_size(GameId::Poe1, widgets::Kind::Menu))
     );
-    // A widget the port does not draw keeps the price check's size rather than failing.
-    assert_eq!(window_size(&Shown::Widget("unknown".to_owned())), None);
+    // A widget's card is its own size in each game: EE2's menu is wider than APT's.
+    assert_eq!(
+        window_size(GameId::Poe2, &Shown::Widget(widgets::Kind::Menu.name().to_owned())),
+        Some(widgets::scene_size(GameId::Poe2, widgets::Kind::Menu))
+    );
+    assert_ne!(
+        widgets::scene_size(GameId::Poe2, widgets::Kind::Menu).0,
+        widgets::scene_size(GameId::Poe1, widgets::Kind::Menu).0
+    );
+    // A widget the port does not draw has no size rather than a wrong one.
+    assert_eq!(window_size(GameId::Poe1, &Shown::Widget("unknown".to_owned())), None);
 }
 
 /// The settings window is upstream's ordinary window, not the overlay: it must never hide
@@ -453,10 +579,10 @@ fn the_game_taking_the_focus_back_closes_the_card() {
 #[test]
 fn the_track_area_is_the_card_in_screen_points() {
     let bounds = Bounds { x: 100.0, y: 50.0, width: 1600.0, height: 1200.0 };
-    let size = overlay_widget_size(&Shown::PriceCheck, bounds, 2.0).expect("a size");
+    let size = overlay_widget_size(GameId::Poe1, &Shown::PriceCheck, bounds, 2.0).expect("a size");
     assert_eq!(size, (crate::poe1::price_check::WIDTH, 600.0), "the price check is h-full");
     assert_eq!(
-        overlay_widget_size(&Shown::Widget(widgets::Kind::Menu.name().to_owned()), bounds, 2.0),
+        overlay_widget_size(GameId::Poe1, &Shown::Widget(widgets::Kind::Menu.name().to_owned()), bounds, 2.0),
         Some(widgets::scene_size(GameId::Poe1, widgets::Kind::Menu)),
         "other cards keep their own size"
     );

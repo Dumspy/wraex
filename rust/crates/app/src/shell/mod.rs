@@ -168,13 +168,52 @@ fn widget_offset(placement: Option<Placement>, size: (f32, f32), bounds: Bounds,
     (clamp(x, client_width - width), clamp(y, client_height - height))
 }
 
+/// Whether the overlay's background click gives the game its focus back
+/// (`AppConfig().overlayBackgroundClose`, `true` on a fresh install).
+fn overlay_background_close(config: &serde_json::Value) -> bool {
+    config.get("overlayBackgroundClose").and_then(serde_json::Value::as_bool).unwrap_or(true)
+}
+
+/// Whether the shell hides the native window for what the app draws: nothing at all (the app
+/// idles in the tray), or an overlay when neither the game nor the overlay window itself is in
+/// front (`electron-overlay-window`'s `blur` handler; `focusNext`: a focus we asked for is not a
+/// blur yet). The settings window is not the overlay — upstream gives it an ordinary window of
+/// its own — so it stays while the game is in the background.
+fn hides_window(shown: &Shown, following_game: bool, in_front: bool) -> bool {
+    *shown == Shown::None || (following_game && is_overlay(shown) && !in_front)
+}
+
+/// Where a widget at its config's `anchor` sits inside the overlay, in points from the card's
+/// top-left: `Widget.vue`'s `top: <y>%`, `left: <x>%` with the `translate` its `pos` picks
+/// (`tl` none, `tc` half the card's width to the left, `br` all of it, ...). `bounds` is the
+/// game's client area in physical pixels and `scale` the overlay's DPI scale; the result is
+/// clamped so the whole card stays inside the game.
+fn anchored_offset(pos: &str, anchor: (f32, f32), size: (f32, f32), bounds: Bounds, scale: f64) -> (f32, f32) {
+    let (width, height) = (f64::from(size.0), f64::from(size.1));
+    let (client_width, client_height) = (bounds.width / scale, bounds.height / scale);
+    let x = client_width * f64::from(anchor.0) / 100.0;
+    let y = client_height * f64::from(anchor.1) / 100.0;
+    let left = match pos.chars().nth(1) {
+        Some('c') => x - width / 2.0,
+        Some('r') => x - width,
+        _ => x,
+    };
+    let top = match pos.chars().next() {
+        Some('c') => y - height / 2.0,
+        Some('b') => y - height,
+        _ => y,
+    };
+    let clamp = |value: f64, limit: f64| value.clamp(0.0, limit.max(0.0)) as f32;
+    (clamp(left, client_width - width), clamp(top, client_height - height))
+}
+
 /// The card's size inside the overlay window, in points. The price check fills the overlay's
 /// height (`#price-window` is `h-full` with the listings scrolling inside it); every other
 /// card keeps its own size, as upstream's `Widget.vue` cards do.
-fn overlay_widget_size(shown: &Shown, bounds: Bounds, scale: f64) -> Option<(f32, f32)> {
+fn overlay_widget_size(game: GameId, shown: &Shown, bounds: Bounds, scale: f64) -> Option<(f32, f32)> {
     match shown {
         Shown::PriceCheck | Shown::Poe2 => Some((crate::poe1::price_check::WIDTH, (bounds.height / scale) as f32)),
-        _ => window_size(shown),
+        _ => window_size(game, shown),
     }
 }
 
@@ -317,6 +356,11 @@ pub struct Live {
     /// The settings window was open at the last poll: a close means Save or Cancel, and
     /// either way the app re-reads its file.
     settings_was_open: bool,
+    /// The overlay window has held the focus since the settings window opened. The settings
+    /// widget is `invisible-on-blur` upstream, but the tray click that opens it can bounce the
+    /// game's foreground back before the overlay's `focus()` lands; that is the tray menu
+    /// closing, not the user going back to the game.
+    settings_armed: bool,
     shown: Shown,
 }
 
@@ -398,6 +442,7 @@ impl Live {
             prices: Some(prices),
             poe2_prices: None,
             settings_was_open: false,
+            settings_armed: false,
             shown: Shown::None,
         }
     }
@@ -789,7 +834,13 @@ impl Live {
     /// price check's card. Without a game to be over (macOS, X11, a closed game) the window
     /// *is* the widget and takes the mouse and keyboard like the port always did.
     fn after_press(&mut self, app: &App, entry: &ShortcutAction, cursor: Point) {
-        self.placement = Some(Placement::Cursor(cursor));
+        // The overlay key only flips the overlay on or off; what it reveals sits at its own
+        // anchor (`Widget.vue` draws the menu at 5 %/5 %), so it does not claim a placement. A
+        // widget a hotkey opens goes at the cursor.
+        self.placement = match entry.action {
+            Action::ToggleOverlay => None,
+            _ => Some(Placement::Cursor(cursor)),
+        };
         self.activate_on_show = self.game_bounds().is_none();
         // `PriceCheckWindow.vue`: the renderer reports the card's area for the normal hotkey
         // (`focusOverlay: false`); the locked one focuses the overlay instead.
@@ -836,7 +887,7 @@ impl Live {
             dispatch::Request::PriceCheck(text) => app.open_price_check(self, &text),
             dispatch::Request::ItemCheck { text, action } => app.open_item_check(self, &text, action),
             dispatch::Request::WidgetAction(target) => app.widget_action(self, &target),
-            dispatch::Request::ShowWidget(wm_type) => app.open_widget(self, &wm_type),
+            dispatch::Request::ShowWidget(wm_id) => app.open_widget(self, wm_id),
             dispatch::Request::Unsupported(what) => self.warn(format!("not wired yet: {what}")),
         }
     }
@@ -890,7 +941,11 @@ impl Live {
     /// ([`App::overlay_offset`]); the overlay library hides it while the game is unfocused.
     /// Without a hook it is the ordinary window the port has had: sized to the widget, next
     /// to the cursor when a hotkey asked for it.
-    fn sync_window(&mut self, app: &App, tx: &mut Tx) {
+    fn sync_window(&mut self, app: &mut App, tx: &mut Tx) {
+        // `OverlayWindow.vue` draws the widget menu while the overlay is active (it is
+        // `wmWants: 'show'`), and this shell draws one card at a time: focus the menu before
+        // `shown` is read, so the window that opens already has it.
+        app.sync_overlay_menu();
         let shown = app.shown();
         let opened = shown != self.shown;
         let over_game = self.game_bounds();
@@ -899,28 +954,22 @@ impl Live {
             self.shown = shown.clone();
             // The overlay's size comes from the game, not from the widget.
             if over_game.is_none()
-                && let Some((width, height)) = window_size(&shown)
+                && let Some((width, height)) = window_size(self.game, &shown)
             {
                 tx.resize_window_instant((width, height));
             }
         }
 
-        if shown == Shown::None {
-            // Nothing to draw: the next hotkey places its widget afresh.
-            self.placement = None;
-            self.overlay_offset = None;
-            self.overlay_height = None;
-            self.activate_on_show = false;
-            self.stop_tracking();
-            return self.hide_panel();
-        }
         // `electron-overlay-window`'s `blur` handler: hide the overlay when neither the game
         // nor the overlay window itself is in front. (`focusNext`: a focus we asked for is not
-        // a blur yet.) The settings window is not the overlay — upstream gives it an ordinary
-        // window of its own — so it stays while the game is in the background.
+        // a blur yet.)
         let in_front = self.window.is_active() || self.overlay_focused || self.panel.expects_focus();
-        if is_overlay(&shown) && self.watcher.is_some() && !in_front {
-            if self.handle.is_visible() {
+        if hides_window(&shown, self.watcher.is_some(), in_front) {
+            if shown == Shown::None {
+                // Nothing to draw: the next hotkey places its widget afresh.
+                self.placement = None;
+                self.activate_on_show = false;
+            } else if self.handle.is_visible() {
                 wraex_platform::log!("wraex: hiding the overlay: neither the game nor the overlay is in front");
             }
             self.overlay_offset = None;
@@ -962,7 +1011,7 @@ impl Live {
 
         // The overlay covers the game, so its height is what the price check fills.
         self.overlay_height = Some((bounds.height / self.panel.scale()) as f32);
-        self.overlay_offset = self.offset_over(&shown, bounds);
+        self.overlay_offset = self.offset_over(app, &shown, bounds);
         if self.placed != Some(bounds) || !self.handle.is_visible() {
             if !self.handle.is_visible() {
                 // `showInactive()`: create/show the overlay without taking the focus or the
@@ -994,7 +1043,7 @@ impl Live {
             && matches!(shown, Shown::PriceCheck | Shown::Poe2)
             && !self.overlay.is_interactable()
             && let Some(offset) = self.overlay_offset
-            && let Some(size) = overlay_widget_size(&shown, bounds, self.panel.scale())
+            && let Some(size) = overlay_widget_size(self.game, &shown, bounds, self.panel.scale())
         {
             let area = track_area(
                 offset,
@@ -1034,9 +1083,20 @@ impl Live {
     }
 
     /// Where the widget goes inside the overlay window, in logical points: at the cursor that
-    /// asked for it (clamped into the window), or centred for a window the tray opened.
-    fn offset_over(&self, shown: &Shown, bounds: Bounds) -> Option<(f32, f32)> {
-        let size = overlay_widget_size(shown, bounds, self.panel.scale())?;
+    /// asked for it (clamped into the window), in the middle for a window the tray opened, or
+    /// at the card's own anchor when the overlay itself revealed it.
+    fn offset_over(&self, app: &App, shown: &Shown, bounds: Bounds) -> Option<(f32, f32)> {
+        let size = overlay_widget_size(self.game, shown, bounds, self.panel.scale())?;
+        // `Widget.vue` draws a widget at its config's `anchor`; a hotkey's card goes at the
+        // cursor and the tray's in the middle (this shell's placement), while what the overlay
+        // key reveals keeps the anchor, as it does upstream.
+        if self.placement.is_none()
+            && matches!(shown, Shown::Widget(_))
+            && let Some(widget) = app.widgets.as_ref().and_then(|overlay| overlay.shown_widget())
+        {
+            let pos = widget.anchor_pos();
+            return Some(anchored_offset(&pos, widget.anchor(), size, bounds, self.panel.scale()));
+        }
         Some(widget_offset(self.placement, size, bounds, self.panel.scale()))
     }
 
@@ -1102,9 +1162,11 @@ impl Live {
         }
 
         // Save or Cancel closes the settings window; either way the app re-reads its config so
-        // the next hotkey press uses what the file now says.
+        // the next hotkey press uses what the file now says, and the settings widget goes back
+        // to `hide` so the menu lists it again (`WidgetSettings.vue`'s close).
         let settings_open = app.settings.as_ref().is_some_and(|settings| settings.open);
         if self.settings_was_open && !settings_open {
+            app.hide_settings_widget();
             self.reload_config();
             changed = true;
         }
@@ -1166,7 +1228,7 @@ impl App {
         let live = self.live.as_ref()?;
         live.overlay_offset?;
         let height = live.overlay_height?;
-        let (width, own_height) = window_size(&self.shown())?;
+        let (width, own_height) = window_size(self.game, &self.shown())?;
         Some(match self.shown() {
             Shown::PriceCheck | Shown::Poe2 => (width, height),
             _ => (width, own_height),
@@ -1180,14 +1242,31 @@ impl App {
         self.live.as_ref().is_some_and(|live| peek_hides(&self.shown(), live.overlay.is_visible()))
     }
 
+    /// `OverlayWindow.vue`'s `active`: the overlay is taking the mouse and keyboard.
+    pub(crate) fn overlay_active(&self) -> bool {
+        self.live.as_ref().is_some_and(|live| live.overlay.is_interactable())
+    }
+
     /// What the window draws, in [`crate::view`]'s order.
     pub fn shown(&self) -> Shown {
-        if let Some(overlay) = &self.widgets
-            && let Some(widget) = overlay.shown_widget()
-            && widget.wm_wants == widgets::Wants::Show
-        {
-            return Shown::Widget(widget.wm_type.clone());
-        }
+        self.shown_state(self.overlay_active(), self.live.is_none())
+    }
+
+    /// [`App::shown`] for a live app, with the overlay's own state given: a test has no Rune
+    /// window to flip `OverlayWindow.vue`'s `active`. [`App::shown`] also passes the scene case,
+    /// where the app's one widget stands in for an active overlay.
+    pub(crate) fn shown_in(&self, overlay_active: bool) -> Shown {
+        self.shown_state(overlay_active, false)
+    }
+
+    /// The window this app draws. `overlay_active` is `OverlayWindow.vue`'s `active` (the
+    /// overlay takes the mouse and keyboard); `scene` is the port's headless app, whose one
+    /// widget stands in for what an active overlay draws.
+    fn shown_state(&self, overlay_active: bool, scene: bool) -> Shown {
+        let active = overlay_active || scene;
+        // `visibilityState`'s exclusive widget wins, in the config's order
+        // (`widget-registry.ts`): settings, then the item check, then the price check. The
+        // price check and the item check hide every other widget upstream while they show.
         if let Some(settings) = &self.settings
             && settings.open
         {
@@ -1202,27 +1281,77 @@ impl App {
         match self.game {
             GameId::Poe2 => {
                 if self.poe2.as_ref().is_some_and(|check| check.open) {
-                    Shown::Poe2
-                } else if self.price_check.open {
-                    Shown::PriceCheck
-                } else {
-                    Shown::None
+                    return Shown::Poe2;
+                }
+                if self.price_check.open {
+                    return Shown::PriceCheck;
                 }
             }
             _ => {
                 if self.price_check.open {
-                    Shown::PriceCheck
-                } else if self.poe2.as_ref().is_some_and(|check| check.open) {
-                    Shown::Poe2
-                } else {
-                    Shown::None
+                    return Shown::PriceCheck;
+                }
+                if self.poe2.as_ref().is_some_and(|check| check.open) {
+                    return Shown::Poe2;
                 }
             }
         }
+        if let Some(overlay) = &self.widgets
+            && let Some(widget) = overlay.shown_widget()
+            && widget.wm_wants == widgets::Wants::Show
+            // The settings widget is drawn by the settings window, not as a card; with that
+            // window closed there is nothing to draw for it.
+            && widget.wm_type != widgets::SETTINGS
+            && (active || !widget.has_flag(widgets::INVISIBLE_ON_BLUR))
+        {
+            return Shown::Widget(widget.wm_type.clone());
+        }
+        // `WidgetMenu.vue`'s instance is `wmWants: 'show'` and always exists, and
+        // `visibilityState` draws every `show` widget while the overlay is active: activating
+        // the overlay with the overlay key therefore shows at least the menu. Only a live
+        // overlay has that state — a scene draws its one widget and nothing else.
+        if overlay_active {
+            return Shown::Widget(widgets::menu::WM_TYPE.to_owned());
+        }
+        Shown::None
+    }
+
+    /// Keep the one card this shell draws in step with [`App::shown`]: when the overlay is
+    /// active and the menu is what it names, focus the menu widget, so [`crate::widgets::view`]
+    /// draws the same card (`OverlayWindow.vue` draws the menu as a widget of its own). True
+    /// when it changed the focused widget.
+    fn sync_overlay_menu(&mut self) -> bool {
+        if !self.overlay_active() {
+            return false;
+        }
+        if !matches!(self.shown_in(true), Shown::Widget(wm_type) if wm_type == widgets::menu::WM_TYPE) {
+            return false;
+        }
+        let Some(live) = &self.live else { return false };
+        let (game, config) = (live.game, live.startup.config.clone());
+        let overlay = self.widgets.get_or_insert_with(|| widgets::Overlay::live(game, &config));
+        let Some(menu) =
+            overlay.widgets.iter().find(|widget| widget.wm_type == widgets::menu::WM_TYPE).map(|widget| widget.wm_id)
+        else {
+            return false;
+        };
+        if overlay.shown == menu {
+            return false;
+        }
+        overlay.focus(menu, Mode::Live);
+        true
     }
 
     /// The window's close button: every widget is closed, and the shell hides the window.
     pub fn close_windows(&mut self) {
+        // Closing the window gives the game its focus back first, as Escape and the overlay
+        // key's off state do. Without it the overlay would still be active and the shell would
+        // draw the widget menu again in the next frame instead of hiding.
+        if let Some(live) = &mut self.live {
+            let mut panel = OverlayPanel::new(live.panel.clone());
+            live.overlay.assert_game_active(&mut live.window, &mut panel);
+            live.sync_registration();
+        }
         self.price_check.open = false;
         if let Some(check) = &mut self.poe2 {
             check.open = false;
@@ -1236,8 +1365,23 @@ impl App {
         if let Some(check) = &mut self.item_check_poe2 {
             check.open = false;
         }
+        // The menu is not hideable upstream (`WidgetMenu.vue`'s `hideable="false"`), and it is
+        // what the overlay draws while it is active: closing the window leaves it show.
         if let Some(overlay) = &mut self.widgets
             && let Some(widget) = overlay.widget_mut(overlay.shown)
+            && widget.wm_type != widgets::menu::WM_TYPE
+        {
+            widget.set_wants(widgets::Wants::Hide);
+        }
+    }
+
+    /// `WidgetSettings.vue`'s close (`wm.hide`): the settings widget goes back to `hide`, so
+    /// the widget menu lists its cog again.
+    fn hide_settings_widget(&mut self) {
+        if let Some(overlay) = &mut self.widgets
+            && let Some(id) =
+                overlay.widgets.iter().find(|widget| widget.wm_type == widgets::SETTINGS).map(|widget| widget.wm_id)
+            && let Some(widget) = overlay.widget_mut(id)
         {
             widget.set_wants(widgets::Wants::Hide);
         }
@@ -1253,8 +1397,14 @@ impl App {
     }
 
     /// `OverlayWindow.vue`'s `focus-change` handler with the overlay no longer in front: every
-    /// widget flagged `hide-on-blur` goes. Both price checks of the port carry it, as the item
-    /// check and most overlay widgets do upstream; a widget without it stays on screen.
+    /// widget flagged `hide-on-blur` goes, and so does the settings widget, which is
+    /// `invisible-on-blur` upstream (drawn in the overlay there). Both price checks of the port
+    /// carry `hide-on-blur`, as the item check and most overlay widgets do upstream; a widget
+    /// without either flag stays on screen.
+    ///
+    /// A widget flagged `invisible-on-blur` keeps `wmWants: 'show'` — upstream only stops
+    /// drawing it — which [`App::shown_in`] re-checks, so the menu goes with the overlay and
+    /// comes back the next time it is activated.
     pub fn hide_widgets_on_blur(&mut self) {
         wraex_platform::log!(
             "wraex: the overlay lost the focus: closing hide-on-blur widgets (showing {:?})",
@@ -1266,6 +1416,12 @@ impl App {
         }
         if let Some(check) = &mut self.item_check_poe2 {
             check.open = false;
+        }
+        if let Some(settings) = &mut self.settings
+            && settings.open
+            && self.live.as_ref().is_none_or(|live| live.settings_armed)
+        {
+            settings.cancel();
         }
         if let Some(overlay) = &mut self.widgets {
             let id = overlay.shown;
@@ -1291,6 +1447,8 @@ impl App {
         if let Some(live) = &mut self.live {
             live.overlay_focused = focused;
             live.panel.focus_settled();
+            // The settings window's blur rule waits for this: see `Live::settings_armed`.
+            live.settings_armed |= focused;
         }
     }
 
@@ -1306,16 +1464,44 @@ impl App {
 
     /// The tray's "Settings/League", a widget's edit button, or `wm.show` on the settings
     /// widget: upstream's settings window, over the game's widget.
+    ///
+    /// Settings is `wmZorder: 'exclusive'` with `invisible-on-blur` upstream, so opening it
+    /// hides whatever exclusive widget was showing (the price check, the item check), and the
+    /// window takes the overlay's focus (`activate_on_show`). A focus change to the game is
+    /// therefore what closes it: the tray click itself only asked for it.
     fn open_settings(&mut self, live: &mut Live) {
+        self.close_exclusive_widget();
+        if let Some(check) = &mut self.item_check {
+            check.open = false;
+        }
+        if let Some(check) = &mut self.item_check_poe2 {
+            check.open = false;
+        }
         let mut settings = Settings::open_live(live.game, Mode::Live);
         settings.update = live.update.clone();
         if let Some(waker) = &self.waker {
             settings.set_waker(waker.clone());
         }
         live.settings_was_open = true;
+        // The overlay window being on screen and focused means the settings opens in an active
+        // overlay (the menu's cog); otherwise the focus it asks for arms this when it lands.
+        live.settings_armed = live.panel.visible() && live.overlay_focused;
         self.settings = Some(settings);
         live.placement = Some(Placement::Centred);
         live.activate_on_show = true;
+    }
+
+    /// `OverlayWindow.vue`'s `handleBackgroundClick` with `overlayBackgroundClose`: a click
+    /// outside the widgets gives the game its focus back. The `focus-change` that follows
+    /// closes the `invisible-on-blur` menu and every `hide-on-blur` widget.
+    pub(crate) fn on_overlay_background(&mut self) {
+        let Some(live) = &mut self.live else { return };
+        if !live.overlay.is_interactable() || !overlay_background_close(&live.startup.config) {
+            return;
+        }
+        let mut panel = OverlayPanel::new(live.panel.clone());
+        live.overlay.assert_game_active(&mut live.window, &mut panel);
+        live.sync_registration();
     }
 
     /// `MAIN->CLIENT::item-text` for `price-check`: the window for the copied item, in the
@@ -1474,15 +1660,23 @@ impl App {
         live.activate_on_show = true;
     }
 
-    /// Draw a widget of `wm_type` in the overlay window (`wm.show(wmId)` from the menu).
-    fn open_widget(&mut self, live: &mut Live, wm_type: &str) {
+    /// `wm.show(wmId)` from the widget menu: the config already says `show`, so the shell
+    /// draws (focuses) that widget. The settings widget is `wmZorder: 'exclusive'` upstream
+    /// and drawn in a window of its own here, so it opens the settings window instead.
+    fn open_widget(&mut self, live: &mut Live, wm_id: u32) {
         let config = live.startup.config.clone();
-        let overlay = self.widgets.get_or_insert_with(|| widgets::Overlay::live(live.game, &config));
-        if !overlay.show_type(wm_type, Mode::Live) {
-            // No instance in the config: `wm.create`, which the scene's `initialised` has.
-            let id = overlay.create(wm_type);
-            overlay.focus(id, Mode::Live);
+        let wm_type = {
+            let overlay = self.widgets.get_or_insert_with(|| widgets::Overlay::live(live.game, &config));
+            match overlay.widget(wm_id).map(|widget| widget.wm_type.clone()) {
+                Some(wm_type) => wm_type,
+                None => return,
+            }
+        };
+        if wm_type == widgets::SETTINGS {
+            return self.open_settings(live);
         }
+        let Some(overlay) = &mut self.widgets else { return };
+        overlay.focus(wm_id, Mode::Live);
         live.placement = Some(Placement::Centred);
         live.activate_on_show = true;
     }
@@ -1571,13 +1765,14 @@ pub fn default_league(game: GameId) -> &'static str {
 }
 
 /// The native window's size for what it draws. The price check is a fixed 28.75 rem column;
-/// the settings window is upstream's 50 × 38 rem.
-pub(crate) fn window_size(shown: &Shown) -> Option<(f32, f32)> {
+/// the settings window is upstream's 50 × 38 rem; a widget's card is its own size, which
+/// differs per game (EE2's menu has an `XP` bar, its stash searches other entries).
+pub(crate) fn window_size(game: GameId, shown: &Shown) -> Option<(f32, f32)> {
     match shown {
         Shown::None => None,
         Shown::Settings => Some((crate::settings::WIDTH, crate::settings::HEIGHT)),
         Shown::ItemCheck | Shown::PriceCheck | Shown::Poe2 => Some((crate::poe1::price_check::WIDTH, HEIGHT)),
-        Shown::Widget(name) => widgets::Kind::from_name(name).map(|kind| widgets::scene_size(GameId::Poe1, kind)),
+        Shown::Widget(name) => widgets::Kind::from_name(name).map(|kind| widgets::scene_size(game, kind)),
     }
 }
 
@@ -1690,6 +1885,12 @@ impl Panel {
         if self.take_focus.load(Ordering::Relaxed) {
             window.focus();
         }
+    }
+
+    /// Whether the window was last shown (the shell's own bookkeeping, since Rune has no query
+    /// for it).
+    fn visible(&self) -> bool {
+        self.visible.load(Ordering::Relaxed)
     }
 
     fn window(&self) -> Option<rune::WindowHandle> {
