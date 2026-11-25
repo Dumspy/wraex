@@ -12,7 +12,7 @@ What is implemented where:
 | Finding the game's window by title (`windowTitle`), following focus/move/resize/destroy | `rust/crates/platform/src/window/win32.rs` (`SetWinEventHook` on its own thread) |
 | The host's reaction to it (focus changes, bounds, destruction) | `rust/crates/platform/src/window/mod.rs`, `overlay.rs` |
 | The overlay window (transparent, on top, click-through, covering the game's client area), shown inactive | `rust/crates/app/src/shell/mod.rs` (`Panel`, `OverlayPanel`, `sync_window`) |
-| What the overlay draws while it is active: the widget menu at its anchor, the exclusive widgets first, and the background click back to the game | `rust/crates/app/src/shell/mod.rs` (`App::shown`, `App::sync_overlay_menu`, `App::on_overlay_background`) |
+| What the overlay draws while it is active: every widget whose `wmWants` is `show`, each at its own `anchor` (`OverlayWindow.vue`'s `visibilityState`), the exclusive widgets alone, and the background click back to the game | `rust/crates/app/src/shell/mod.rs` (`App::cards_for`, `App::overlay_cards`, `overlay_root`, `App::on_overlay_background`), `rust/crates/app/src/lib.rs` (`view`, `card_at`) |
 | Global mouse moves, buttons and wheel (`uiohook`'s half) | `rust/crates/platform/src/window/win32.rs` (`WH_MOUSE_LL` on the hook thread) |
 | Global key down/up (`uiohook`'s other half): the Alt peek and the key log. Keys Wraex synthesizes are flagged injected and ignored | `rust/crates/platform/src/window/win32.rs` (`WH_KEYBOARD_LL` on the hook thread), `rust/crates/app/src/shell/mod.rs` (`poll_keyboard`) |
 | Following the mouse onto the price check, closing it when the mouse leaves, Ctrl+wheel stash tabs | `rust/crates/platform/src/overlay.rs` (`WidgetAreaTracker` port), `rust/crates/app/src/shell/mod.rs` (`poll_mouse`, `track_area`), `shortcuts.rs` (`on_wheel`) |
@@ -132,14 +132,31 @@ the overlay interactive even without the mouse.
 
 1. In the game, press the overlay key with nothing else open. **Look for**: the widget menu at
    the top left (its `anchor: { pos: 'tl', x: 5, y: 5 }`, as upstream draws it), the game still
-   visible behind it, and `wraex: focus game=false overlay=true hotkey=true`. This is the first
-   Windows run's overlay-key bug: `shown` said `None` and the window hid at once. From the menu,
-   the cog opens the settings and the other buttons their widgets.
-2. Click the background (anywhere outside the cards). **Look for**: the game gets the focus, the
+   visible behind it, and `wraex: focus game=false overlay=true hotkey=true`. The log line
+   `wraex: overlay draws menu` names what the overlay paints. This was the first Windows run's
+   overlay-key bug: `shown` said `None` and the window hid at once. From the menu, the cog opens
+   the settings and the other buttons their widgets.
+2. Click **Map rolling** in the menu. **Look for**: the menu *stays* where it is (cog included)
+   and the stash search's card appears at its own anchor (35 %/46 % of the game) beside it, in the
+   same overlay window — `wraex: overlay draws menu, stash-search`. Clicking the menu's other
+   entries adds their cards the same way; each hides again with its own button (a shown widget is
+   no longer listed), and a card that overlaps another one comes to the front when clicked.
+3. Click the cog. **Look for**: the menu and the stash search go, and the settings window fills
+   the overlay (centred, 50 × 38 rem, at the top — `SettingsWindow.vue` is `inset: 0` with the
+   window inside it); `wraex: overlay draws settings`. Click a page, type in a field, click an
+   empty part of the window (below the pages, the title bar's background): **nothing closes** —
+   only Save, Cancel, the title bar's close, or the game taking the focus does.
+4. Press Save. **Look for**: the settings window goes and the menu is back at 5 %/5 %, *not* in
+   the middle of the screen where the settings window was, with the stash search still up if it
+   was. Cancel does the same.
+5. Click the background (anywhere outside every card). **Look for**: the game gets the focus, the
    menu goes (`invisible-on-blur`) and the hotkeys re-register — log
    `wraex: focus game=true overlay=false …`. Press Escape or the overlay key instead for the same.
-3. Press the overlay key again while the menu is up. **Look for**: the same: the overlay key's off
+6. Press the overlay key again while the menu is up. **Look for**: the same: the overlay key's off
    state gives the game the focus, and the menu closes with it.
+7. Run a stopwatch and let the overlay lose the focus (click into the game). **Look for**: the
+   running stopwatch stays on screen (its `invisible-on-blur` flag is cleared while it runs) while
+   the menu goes; activating the overlay brings the menu back over it.
 
 ### 4. Borderless windowed, resizing and moving
 
@@ -178,19 +195,22 @@ the overlay interactive even without the mouse.
 
 ### 7. Everything else still works
 
-1. Tray → Settings. **Look for**: the settings window opens (over the game, centred, with no
-   title bar — it is the same overlay window) and is usable: pages switch, a hotkey can be
-   recorded, Save closes it. Opening it activates the overlay (`wraex: overlay takes the mouse
-   and keyboard`), as upstream's settings widget is `invisible-on-blur`; the tray menu closing
-   must not be what closes it. Save leaves the overlay active, so the widget menu is there
-   afterwards — the background click or the overlay key goes back to the game.
+1. Tray → Settings. **Look for**: the settings window opens (over the game, centred
+   horizontally and at the top — `SettingsWindow.vue` is `position: absolute; inset: 0` with the
+   50 × 38 rem window inside it — with no title bar, in the same overlay window) and is usable:
+   pages switch, a hotkey can be recorded, Save closes it. Opening it activates the overlay
+   (`wraex: overlay takes the mouse and keyboard`), as upstream's settings widget is
+   `invisible-on-blur`; the tray menu closing must not be what closes it. Save leaves the overlay
+   active, so the widget menu is there afterwards — the background click or the overlay key goes
+   back to the game.
 2. Record a different price-check hotkey, save, and repeat step 1 with it. **Look for**: the
    new chord works and the old one does not.
 3. `Alt + F4` on the settings window closes the window and leaves Wraex in the tray; Tray →
    Quit exits the app and leaves the game running.
 4. Quit the game, then Tray → Settings again. **Look for**: the settings window still opens and
    is usable — it is the only way in while no hotkey is registered (hotkeys need the game's
-   focus). It is still the overlay-style window (no title bar, on top), sized to the settings.
+   focus). With no game to sit over it is the window itself: still the overlay style (no title
+   bar, on top), sized to the settings.
 5. With the settings window open, click into the game. **Look for**: the game takes the focus
    and the settings window closes with the overlay (upstream's `invisible-on-blur` on the
    settings widget), rather than staying on top of the game.
@@ -242,6 +262,10 @@ Collect, in the issue or report:
 | "Can click through into the game a lot" | nothing activated the overlay once the game had the focus back: no global mouse input | a `WH_MOUSE_LL` hook feeds the ported `WidgetAreaTracker`; with the card's area armed, the mouse entering it turns click-through off and focuses the overlay |
 | "Stuck on screen, could not close it" | Escape went to the game and the tracker had no input, so nothing ever closed the card | moving away from the press position closes the price check (`hide-exclusive-widget`); Escape/Ctrl+W and the overlay key close it on the `focus-change`; the game taking the focus back closes every `hide-on-blur` widget |
 | black stripes under the card | the price-check card was a fixed 900 pt inside an overlay of the game's height, and the listing table grew past the card's background | `#price-window` fills the overlay's height like upstream's `h-full`, the listings are the scrolling part, and the card clips to its own rectangle |
+| the menu came back in the middle of the screen after Save | one card at a time: the shell stored a single placement, and opening the settings set it to centred, so the menu inherited it | a `Widget.vue` card is placed at its config's `anchor` (`App::cards_for`), and only the hotkey checks and the settings window use a placement |
+| "Map rolling" hid the menu | the one-card model drew the newly shown widget *instead of* the menu | `OverlayWindow.vue`'s `visibilityState`: every widget whose `wmWants` is `show` is drawn at once, each at its own anchor, and an exclusive widget is drawn alone |
+| clicking inside the settings window closed it | the overlay's background click layer was four strips worked out around one card, and a click on a card's own blank area (no handler) fell through to it | the background is one layer under all the cards (`overlay_root`), and each card's box takes its own presses, so only the empty overlay gives the game the focus back |
+| the next widget's offset was stale after one closed | the offset was cached per shown card | every card's offset is worked out from its anchor each frame |
 
 The second bug of that run was not Windows-specific: after a filter change the price check kept
 showing the listings of the old filters, because `CheckedItem.vue`'s deep watch on
@@ -262,16 +286,19 @@ These are deliberate, and each is a follow-up rather than a bug:
   hook (`wraex_platform::window::Watcher::start` reports `Unsupported` there). Rune's
   interactive overlays are unsupported on Wayland, which PLAN.md notes as a known loss.
 - **No screenshot/OCR** (`OverlayController.screenshot()`, the heist gem finder).
-- **A widget opened from the tray is centred**, not at the cursor: only a hotkey knows where
-  the cursor was. The tray and menu paths also still take the focus for the widget they open,
-  where a hotkey-opened widget stays inactive.
-- **One widget at a time.** `OverlayWindow.vue` draws every widget whose `wmWants` is `show`
-  together — the menu next to a running stopwatch and a pinned stash search, each at its own
-  anchor. The port draws one: the menu while the overlay is active and nothing exclusive is
-  open, else the widget a hotkey or the menu opened. That is why opening a widget hides the
-  menu for now; several positioned cards in one window is the follow-up.
+- **A card goes where its config says, not where the cursor is.** `Widget.vue` places every card
+  at its `anchor`, so a widget opened from the tray or the menu lands there too; only the price
+  check and the item check open at the cursor (`Placement::Cursor`). Several widgets are drawn at
+  once (`OverlayWindow.vue`'s `visibilityState`), each at its own anchor; the settings window and
+  the two checks are exclusive and hide the rest, as upstream's `wmZorder: 'exclusive'` widgets
+  do.
 - **The overlay background is not painted.** Upstream dims the game with
   `AppConfig().overlayBackground` while the overlay is active; the port only honours the click
   on that background (`overlayBackgroundClose`), so the game looks unchanged behind the cards.
-- **`hide-on-focus` widgets stay drawn.** `OverlayWindow.vue` hides the delve grid and others
-  when the overlay becomes active; the port does not model that flag yet.
+- **A card's anchor size is an estimate.** `Widget.vue` positions a card with CSS percentages, so
+  its own size cancels out of the maths; the port lays the cards out in points and needs a size
+  before the card is measured, so it uses the reference's own size (`widgets::scene_size`). A
+  ported card a few points narrower only shifts a `tc`/`br`/`cc` anchor by half the difference.
+- **Dragging a card is not ported.** `Widget.vue`'s move handles and its `anchor` write stay with
+  the shell, so the config's `anchor` is read but never rewritten by the overlay (the settings
+  pages can still change it).

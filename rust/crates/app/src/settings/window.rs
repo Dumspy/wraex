@@ -37,11 +37,13 @@ pub fn view<S: 'static>(settings: &Settings, cx: &mut Cx<S>, project: Project<S>
                 .child(content(settings, project)),
         );
 
+    // `SettingsWindow.vue` is the widget: its root only holds the window (upstream has the
+    // patrons' blocks above it, which the port does not draw), so it has no background of its
+    // own and must not paint over the game — the overlay draws it as a card covering the game.
     col()
         .key("settings")
         .w_full()
         .h_full()
-        .fill(theme::gray(900))
         .items_center()
         .child(window)
         // The recorder: a release anywhere while a field is armed writes the hotkey

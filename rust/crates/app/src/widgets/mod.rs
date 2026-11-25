@@ -23,14 +23,15 @@
 //! screenshots in `tools/golden/screens/widgets.mjs` crop exactly one widget's card, so a
 //! scene's window *is* that card (see [`scene_size`]), filled with what the reference's overlay
 //! paints behind its widgets ([`crate::theme::overlay_background`]) so a translucent widget
-//! composites the same way. What a scene does not draw is the rest of the overlay: `wmZorder`
-//! is not modelled, because no scene shows two widgets at once, and a live window draws one
-//! card too — the menu while the overlay is active and nothing else is open, or the widget a
-//! hotkey or the menu asked for.
+//! composites the same way. A live overlay window draws every widget whose `wmWants` is `show`
+//! at once, each at its own `anchor`: [`card`] is one widget's box, which the shell places
+//! ([`crate::shell::App::cards_for`]); [`view`] is the scene's single card.
 //!
 //! `Widget.vue` draws any widget at its config's `anchor` (`top: y%`, `left: x%`, shifted by
-//! the `translate` its `pos` picks); the shell reads that for a card the overlay itself
-//! reveals ([`Widget::anchor`], [`Widget::anchor_pos`]).
+//! the `translate` its `pos` picks); the shell reads that for every card ([`Widget::anchor`],
+//! [`Widget::anchor_pos`]). `wmZorder` is the paint order: a card with a number paints above
+//! [`Widget::zorder`]'s `auto` ones (the reference's CSS `z-index`), and pressing a card brings
+//! it to the top (`bring_to_top`).
 //!
 //! One consequence of a card-sized window: the hover actions panel hangs *outside* the card (as
 //! `Widget.vue`'s `position: absolute` panel does), so in a scene it is clipped. It is still in
@@ -116,6 +117,12 @@ impl Kind {
     pub fn from_name(name: &str) -> Option<Self> {
         Kind::ALL.into_iter().find(|kind| kind.name() == name)
     }
+
+    /// The kind a config's `wmType` names. It differs from [`Kind::name`] for the stopwatch
+    /// (the config says `timer`, the scene `stopwatch`).
+    pub fn from_wm_type(wm_type: &str) -> Option<Self> {
+        Kind::ALL.into_iter().find(|kind| kind.wm_type() == wm_type)
+    }
 }
 
 /// `wmWants`: whether the overlay draws the widget.
@@ -176,6 +183,18 @@ impl Widget {
 
     pub fn has_flag(&self, flag: &str) -> bool {
         self.wm_flags.iter().any(|it| it == flag)
+    }
+
+    /// `wmZorder: 'exclusive'`: `OverlayWindow.vue` draws this widget alone while it is shown
+    /// (settings, the price check and the item check in the reference's registry).
+    pub fn is_exclusive(&self) -> bool {
+        self.config.get("wmZorder") == Some(&Value::String("exclusive".to_owned()))
+    }
+
+    /// `wmZorder` as the number `Widget.vue` sets as the card's `z-index`, if it has one. The
+    /// overlay paints the cards in this order; `None` is CSS' `auto` (the config's order).
+    pub fn zorder(&self) -> Option<f64> {
+        self.config.get("wmZorder").and_then(Value::as_f64)
     }
 
     /// `wm.setFlag`: adds or removes one flag; returns whether the widget changed.
@@ -317,8 +336,9 @@ pub struct Overlay {
     pub game: GameId,
     /// `AppConfig().widgets`, in the config's order.
     pub widgets: Vec<Widget>,
-    /// The `wmId` of the widget this window draws. A scene picks one; the app would draw every
-    /// widget whose `wmWants` is `show` at its anchor.
+    /// The `wmId` of the widget the window was built around: a scene picks one, and a live app
+    /// focuses the one a hotkey or the menu asks for. A live overlay over the game draws every
+    /// widget whose `wmWants` is `show`, each at its anchor, not only this one.
     pub shown: u32,
     /// `Widget.vue`'s hover state: the widget whose actions panel shows.
     pub hover: Option<u32>,
@@ -414,16 +434,64 @@ impl Overlay {
     /// config says is shown, and a widget's own state is built the first time it is drawn.
     pub fn focus(&mut self, wm_id: u32, mode: crate::trade::Mode) {
         self.shown = wm_id;
-        if self.widget(wm_id).is_some_and(|widget| widget.wm_type == stopwatch::WM_TYPE) {
-            self.timers.entry(wm_id).or_default();
-        }
-        if self.widget(wm_id).is_some_and(|widget| widget.wm_type == item_search::WM_TYPE) && self.item_search.is_none()
-        {
-            // A scene reads the prices the screenshots recorded; a live window fetches them.
-            self.item_search = Some(item_search::State::new(self.game, mode));
-        }
+        self.ensure_state(wm_id, mode);
         let title = self.widget(wm_id).map(|widget| widget.wm_title.clone()).unwrap_or_default();
         self.title = TextEdit::new(title);
+    }
+
+    /// Give a widget the running state its card reads before it is drawn: the stopwatch's clock
+    /// (`WidgetTimer.vue`'s `instances: 'multi'` state) and the item search's prices. The overlay
+    /// draws every shown widget, so this runs for each of them, not only the focused one. True
+    /// when it built one.
+    pub fn ensure_state(&mut self, wm_id: u32, mode: crate::trade::Mode) -> bool {
+        let wm_type = self.widget(wm_id).map(|widget| widget.wm_type.clone());
+        let mut added = false;
+        if wm_type.as_deref() == Some(stopwatch::WM_TYPE)
+            && let std::collections::btree_map::Entry::Vacant(entry) = self.timers.entry(wm_id)
+        {
+            entry.insert(stopwatch::Timer::default());
+            added = true;
+        }
+        if wm_type.as_deref() == Some(item_search::WM_TYPE) && self.item_search.is_none() {
+            // A scene reads the prices the screenshots recorded; a live window fetches them.
+            self.item_search = Some(item_search::State::new(self.game, mode));
+            added = true;
+        }
+        added
+    }
+
+    /// [`Overlay::ensure_state`] for every widget whose `wmWants` is `show`: the cards the
+    /// overlay draws, whose view reads their state. True when one was built.
+    pub fn ensure_states(&mut self, mode: crate::trade::Mode) -> bool {
+        let ids: Vec<u32> =
+            self.widgets.iter().filter(|widget| widget.wm_wants == Wants::Show).map(|widget| widget.wm_id).collect();
+        let mut added = false;
+        for id in ids {
+            added |= self.ensure_state(id, mode);
+        }
+        added
+    }
+
+    /// `OverlayWindow.vue`'s `bringToTop`: the pressed widget paints above the others
+    /// (`Widget.vue`'s `mousedown`). An exclusive widget already wins the whole overlay, so it
+    /// keeps its `wmZorder`.
+    pub fn bring_to_top(&mut self, wm_id: u32) {
+        if self.widget(wm_id).is_some_and(Widget::is_exclusive) {
+            return;
+        }
+        let Some(top) = self
+            .widgets
+            .iter()
+            .filter_map(Widget::zorder)
+            .fold(None, |top: Option<f64>, z| Some(top.map_or(z, |top| top.max(z))))
+        else {
+            return;
+        };
+        if let Some(widget) = self.widget_mut(wm_id)
+            && let Some(object) = widget.config.as_object_mut()
+        {
+            object.insert("wmZorder".to_owned(), json!(top + 1.0));
+        }
     }
 
     pub fn widget(&self, wm_id: u32) -> Option<&Widget> {
@@ -634,10 +702,32 @@ impl Overlay {
 /// stopwatch clears it while it runs, which is what keeps a running timer on screen.
 pub const INVISIBLE_ON_BLUR: &str = "invisible-on-blur";
 
+/// `hide-on-blur` (`widgets.ts`): `OverlayWindow.vue` hides it when the overlay loses the focus —
+/// a widget that stays `show` until the user closes it, like a pinned stash search.
+pub const HIDE_ON_BLUR: &str = "hide-on-blur";
+
+/// `hide-on-focus` (`widgets.ts`): `OverlayWindow.vue` hides it when the overlay gains the focus,
+/// so the delve grid never covers the interactive overlay.
+pub const HIDE_ON_FOCUS: &str = "hide-on-focus";
+
 /// `WidgetSpec.type` of the settings window, which the menu's cog shows and a widget's `edit`
 /// opens when it does not edit inline. `wmZorder: 'exclusive'` upstream: it wins over the other
 /// widgets, and `invisible-on-blur` closes it when the game takes the focus.
 pub const SETTINGS: &str = "settings";
+
+/// `WidgetSpec.type` of the price check. `wmZorder: 'exclusive'` upstream, `hide-on-blur`: the
+/// window is drawn instead of every other widget and closes when the overlay loses the focus.
+pub const PRICE_CHECK: &str = "price-check";
+
+/// `WidgetSpec.type` of the item check, exclusive and `hide-on-blur` like the price check.
+pub const ITEM_CHECK: &str = "item-check";
+
+/// Whether the app draws this widget's card itself (`settings`, the price check and the item
+/// check are exclusive widgets in the config, but their state lives in the app, not in
+/// [`Overlay`]). The rest of the config is the overlay's own widgets.
+pub fn app_drawn(wm_type: &str) -> bool {
+    matches!(wm_type, SETTINGS | PRICE_CHECK | ITEM_CHECK)
+}
 
 /// A new widget's config: `wm.create`'s `uninitialized` object with the widget's own
 /// `initInstance`/mount branch applied, which upstream runs on the component's first mount.
@@ -737,6 +827,9 @@ pub fn chrome<S: 'static>(overlay: &Overlay, widget: &Widget, card: El, project:
         let overlay = project(s);
         overlay.hover = inside.then_some(id);
     });
+    // `Widget.vue`'s `@mousedown="handleMouseDown"`: `wm.bringToTop`. A press anywhere on the
+    // card is the widget's, so it never reaches the overlay's background click layer.
+    frame = frame.on_press(move |s: &mut S| project(s).bring_to_top(id));
     frame = frame.child(card);
 
     if hovered {
@@ -863,26 +956,36 @@ fn move_handles<S: 'static>(id: u32, handles: Option<&'static str>, _project: Pr
 }
 
 /// The widget's card: the slot `Widget.vue` wraps.
-pub fn view<S: 'static>(overlay: &Overlay, cx: &mut Cx<S>, project: Project<S>) -> El {
+pub fn card<S: 'static>(overlay: &Overlay, widget: &Widget, cx: &mut Cx<S>, project: Project<S>) -> El {
     cx.foreground(theme::gray(100));
-    let Some(widget) = overlay.shown_widget().cloned() else { return el().key("widgets") };
-    let card = match widget.wm_type.as_str() {
-        stopwatch::WM_TYPE => stopwatch::view(overlay, &widget, project),
-        image_strip::WM_TYPE => image_strip::view(overlay, &widget, project),
-        delve_grid::WM_TYPE => delve_grid::view(overlay, &widget, project),
-        item_search::WM_TYPE => item_search::view(overlay, &widget, project),
-        stash_search::WM_TYPE => stash_search::view(overlay, &widget, project),
-        _ => menu::view(overlay, &widget, project),
+    let body = match widget.wm_type.as_str() {
+        stopwatch::WM_TYPE => stopwatch::view(overlay, widget, project),
+        image_strip::WM_TYPE => image_strip::view(overlay, widget, project),
+        delve_grid::WM_TYPE => delve_grid::view(overlay, widget, project),
+        item_search::WM_TYPE => item_search::view(overlay, widget, project),
+        stash_search::WM_TYPE => stash_search::view(overlay, widget, project),
+        _ => menu::view(overlay, widget, project),
     };
-    // The window is the card: upstream's `.widget` is content-sized and the screenshot harness
-    // crops it, so the scene's root places it at the top left and does not stretch it.
-    col()
-        .key("widgets")
-        .w_full()
-        .h_full()
-        .items_start()
-        .fill(theme::overlay_background())
-        .child(chrome(overlay, &widget, card, project))
+    chrome(overlay, widget, body, project)
+}
+
+/// [`card`] for the widget the window was built around (`Overlay::shown`).
+pub fn view<S: 'static>(overlay: &Overlay, cx: &mut Cx<S>, project: Project<S>) -> El {
+    let Some(widget) = overlay.shown_widget().cloned() else { return el().key("widgets") };
+    scene_root(card(overlay, &widget, cx, project))
+}
+
+/// [`card`] for `wm_id`, the widget a live overlay draws among the others.
+pub fn view_card<S: 'static>(overlay: &Overlay, wm_id: u32, cx: &mut Cx<S>, project: Project<S>) -> El {
+    let Some(widget) = overlay.widget(wm_id).cloned() else { return el() };
+    card(overlay, &widget, cx, project)
+}
+
+/// A scene's root: the window is the card. Upstream's `.widget` is content-sized and the
+/// screenshot harness crops it, so the scene's root places it at the top left, over the tint the
+/// reference's overlay paints behind its widgets.
+fn scene_root(card: El) -> El {
+    col().key("widgets").w_full().h_full().items_start().fill(theme::overlay_background()).child(card)
 }
 
 /// A `widget-<name>` / `poe2-widget-<name>` scene: the game and the widget.

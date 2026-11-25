@@ -58,9 +58,9 @@ pub struct App {
     /// The item check window on PoE2.
     pub item_check_poe2: Option<poe2::item_check::ItemCheck>,
     /// An overlay widget (`widgets`): the menu, the stopwatch, the image strip, the delve grid,
-    /// the item search or the stash search, one per scene. A live window draws one widget at a
-    /// time — the one a hotkey or the widget menu asks for — because it is an ordinary window,
-    /// where upstream's overlay paints every `show` widget over the game (phase 2).
+    /// the item search or the stash search, one per scene. A live window draws every widget the
+    /// config shows at once, each at its own anchor (`OverlayWindow.vue`'s `visibilityState`);
+    /// without a game window to sit over, the window is the one widget that was opened.
     pub widgets: Option<widgets::Overlay>,
     /// Where trade requests go: HTTPS in a window, recorded answers headless.
     mode: Mode,
@@ -280,6 +280,9 @@ impl App {
         let poe2 = self.poe2.as_mut().is_some_and(|check| check.poll());
         let settings = self.settings.as_mut().is_some_and(|settings| settings.poll());
         let widgets = self.widgets.as_mut().is_some_and(|overlay| overlay.poll(clock));
+        // The overlay draws every widget whose `wmWants` is `show` at once: a timer it starts
+        // and the item search's prices have to exist for each of them, not just the focused one.
+        let prepared = self.widgets.as_mut().is_some_and(|overlay| overlay.ensure_states(self.mode));
         // The item search's field shows the query its results came from: Rune's write-back of a
         // blurred field's model can land empty, and the view rebuilds the field from it.
         let repaired = self
@@ -296,7 +299,7 @@ impl App {
             }
             None => false,
         };
-        poe1 || poe2 || settings || widgets || opened || repaired
+        poe1 || poe2 || settings || widgets || opened || repaired || prepared
     }
 
     /// `MAIN->CLIENT::item-text` with an item the parser never saw: the item search's
@@ -374,8 +377,9 @@ fn project_item_check_poe2(app: &mut App) -> &mut poe2::item_check::ItemCheck {
 }
 
 /// The app's window: the exclusive widget while one is open — the settings window, the item
-/// check, or whichever game's price check — else the overlay widget [`shell::App::shown`] names,
-/// which is the widget menu while the overlay is active.
+/// check, or whichever game's price check — else the overlay's cards: over the game, every
+/// widget [`shell::App::cards_for`] shows, each at its own anchor (`OverlayWindow.vue`'s
+/// `visibilityState`); in a scene, the scene's one widget.
 pub fn view(app: &App, cx: &mut Cx<App>) -> El {
     // A live window with nothing to draw is hidden by the shell (`shell::Live::sync_window`);
     // this only keeps the frame it was hidden in from drawing a widget. `is_peeked` is
@@ -389,53 +393,42 @@ pub fn view(app: &App, cx: &mut Cx<App>) -> El {
     // screen beside the next one (and, with no frame to finish the fade, after closing). In a
     // live window every change lands at once; hover colours keep their springs.
     let live = app.live.is_some();
-    let card = card(app, cx);
-    let card = if live { card.instant_changes() } else { card };
-    match app.overlay_offset() {
-        // The window is the overlay over the game (Windows, PLAN.md phase 2): the widget is
-        // placed inside it where the cursor asked for it, or centred for the tray's windows.
-        Some((x, y)) => {
-            let size = app.overlay_size();
-            let mut placed = card.absolute(x, y);
-            // The price check fills the overlay (`#price-window` is `h-full`); the other
-            // cards keep their own size.
-            if let Some((width, height)) = size {
-                placed = placed.w(width).h(height);
-            }
-            let mut window = rune::col().w_full().h_full().instant_changes();
-            if app.overlay_active() {
-                let (width, height) = size.unwrap_or((0.0, 0.0));
-                window = window.child(overlay_background((x, y), (width, height)));
-            }
-            window.child(placed)
-        }
-        None => card,
+    // The overlay over the game: one window, every visible widget drawn at once, each placed by
+    // its config's `anchor` (`OverlayWindow.vue` draws all of them over one background).
+    if let Some(cards) = app.overlay_cards() {
+        return shell::overlay_root(cards, app.overlay_active(), |card| card_at(app, cx, card));
     }
+    let card = card(app, cx);
+    if live { card.instant_changes() } else { card }
 }
 
-/// `OverlayWindow.vue`'s background `div`, in the four strips around the card: while the overlay
-/// is active, a click outside the widgets gives the game its focus back
-/// (`handleBackgroundClick` with `overlayBackgroundClose`, [`App::on_overlay_background`]). A
-/// press inside the card is the widget's and never reaches these, as upstream's background sits
-/// under the widgets. The dim the reference paints there (`overlayBackground`) is not drawn: the
-/// game stays as it is behind the widgets.
-fn overlay_background(card: (f32, f32), size: (f32, f32)) -> El {
-    let (x, y) = card;
-    let (width, height) = size;
-    let strip = |key: &str| {
-        rune::el().key(format!("overlay-background-{key}")).on_press(|app: &mut App| app.on_overlay_background())
-    };
-    let mut window = rune::col().w_full().h_full();
-    if y > 0.0 {
-        window = window.child(strip("top").pin(Some(0.0), Some(0.0), Some(0.0), None).h(y));
+/// One card the live overlay draws, by what it is: an exclusive widget, or the overlay's own
+/// widget `wm_id`.
+fn card_at(app: &App, cx: &mut Cx<App>, card: &shell::Card) -> El {
+    // `OverlayWindow.vue`'s `visibilityState` order: an exclusive widget wins — the settings
+    // window and the item check first, then the price check — else the overlay's own widgets.
+    match &card.shown {
+        shell::Shown::Settings => match &app.settings {
+            Some(settings) => settings::window::view(settings, cx, project_settings),
+            None => rune::el(),
+        },
+        shell::Shown::ItemCheck => match (&app.item_check, &app.item_check_poe2) {
+            (Some(check), _) => poe1::item_check::view(check, cx, project_item_check),
+            (None, Some(check)) => poe2::item_check::view(check, cx, project_item_check_poe2),
+            (None, None) => rune::el(),
+        },
+        shell::Shown::PriceCheck => poe1::price_check::view::view(&app.price_check, cx, project),
+        shell::Shown::Poe2 => match &app.poe2 {
+            Some(check) => poe2::price_check::view::view(check, cx, project_poe2),
+            None => rune::el(),
+        },
+        // The card `wm_id` names: several widgets share a type (two stash searches).
+        shell::Shown::Widget(_) => match (&app.widgets, card.wm_id) {
+            (Some(overlay), Some(wm_id)) => widgets::view_card(overlay, wm_id, cx, project_widgets),
+            _ => rune::el(),
+        },
+        shell::Shown::None => rune::el(),
     }
-    if x > 0.0 {
-        window = window.child(strip("left").pin(Some(0.0), Some(y), None, None).w(x).h(height));
-    }
-    window = window
-        .child(strip("right").pin(Some(x + width), Some(y), Some(0.0), None).h(height))
-        .child(strip("bottom").pin(Some(0.0), Some(y + height), Some(0.0), Some(0.0)));
-    window
 }
 
 /// The widget the window shows, at its own size.
@@ -676,8 +669,57 @@ mod tests {
     use rune::runtime::ElementInfo;
     use rune::text::TextSystem;
     use rune::{Env, Runtime};
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     use super::*;
+
+    /// The presses a test card's handler took (the `on_press` handlers are `'static` fns, so the
+    /// counter cannot live in the closure). One per test, because the tests run in parallel.
+    static TWO_CARD_PRESSES: AtomicUsize = AtomicUsize::new(0);
+    static ONE_CARD_PRESSES: AtomicUsize = AtomicUsize::new(0);
+
+    /// Two big cards, one at each own offset: what a live overlay's root looks like.
+    fn two_card_overlay(_app: &App, _cx: &mut Cx<App>) -> El {
+        let cards = vec![
+            shell::Card {
+                shown: shell::Shown::Widget("menu".to_owned()),
+                wm_id: Some(1),
+                offset: (100.0, 50.0),
+                width: Some(200.0),
+                height: Some(100.0),
+            },
+            shell::Card {
+                shown: shell::Shown::Widget("stash-search".to_owned()),
+                wm_id: Some(4),
+                offset: (10.0, 220.0),
+                width: Some(100.0),
+                height: Some(60.0),
+            },
+        ];
+        shell::overlay_root(cards, true, |card| {
+            rune::el().key(format!("{}-body", card.key())).w_full().h_full().fill(theme::gray(800)).on_press(
+                |_app: &mut App| {
+                    TWO_CARD_PRESSES.fetch_add(1, Ordering::Relaxed);
+                },
+            )
+        })
+    }
+
+    /// One card that is only as large as its content: `Widget.vue`'s cards are content-sized.
+    fn one_content_sized_card(_app: &App, _cx: &mut Cx<App>) -> El {
+        let card = shell::Card {
+            shown: shell::Shown::Widget("menu".to_owned()),
+            wm_id: Some(1),
+            offset: (20.0, 30.0),
+            width: None,
+            height: None,
+        };
+        shell::overlay_root(vec![card], true, |_card| {
+            rune::col().key("content-sized").w(80.0).h(40.0).fill(theme::gray(900)).on_press(|_app: &mut App| {
+                ONE_CARD_PRESSES.fetch_add(1, Ordering::Relaxed);
+            })
+        })
+    }
 
     fn runtime(slug: &str) -> Runtime<App> {
         // A `settings-<game>-<page>` scene opens the settings window; a `poe2-` scene opens
@@ -890,26 +932,61 @@ mod tests {
         assert!(runtime.find("listing-20-price").is_none(), "twenty rows, no more");
     }
 
-    /// The background click areas: four strips around the card, so a press inside the card is
-    /// the widget's — text selection included — and only the empty overlay gives the game its
-    /// focus back (`OverlayWindow.vue`'s background sits under the widgets).
+    /// `OverlayWindow.vue`'s background sits *under* the widgets: a press inside a card is that
+    /// widget's — its blank parts included — and only the empty overlay gives the game its focus
+    /// back (`handleBackgroundClick` with `overlayBackgroundClose`). This is the third bug of the
+    /// Windows run: the settings window closed as soon as it was clicked, because the background
+    /// strips were worked out around a single card's size and offset and the click on the card's
+    /// own blank background fell through to them.
     #[test]
-    fn the_overlay_background_wraps_the_card_without_covering_it() {
-        let text = TextSystem::new(theme::FONTS, theme::FAMILIES);
+    fn the_overlay_background_sits_under_every_card() {
         let mut runtime = Runtime::with_text(
             App::default(),
-            |_app: &App, _cx: &mut Cx<App>| overlay_background((100.0, 50.0), (200.0, 100.0)),
+            two_card_overlay,
             (400.0, 300.0),
             Env::new(true, 1.0),
-            text,
+            TextSystem::new(theme::FONTS, theme::FAMILIES),
         );
         runtime.frame(0.0);
+
         let elements = runtime.elements();
         let rect = |key: &str| element(&elements, key).unwrap_or_else(|| panic!("no {key}")).rect;
-        assert_eq!(rect("overlay-background-top"), [0.0, 0.0, 400.0, 50.0]);
-        assert_eq!(rect("overlay-background-left"), [0.0, 50.0, 100.0, 100.0]);
-        assert_eq!(rect("overlay-background-right"), [300.0, 50.0, 100.0, 100.0]);
-        assert_eq!(rect("overlay-background-bottom"), [0.0, 150.0, 400.0, 150.0]);
+        assert_eq!(rect("overlay-background"), [0.0, 0.0, 400.0, 300.0], "the background is the whole overlay");
+        assert_eq!(rect("card-1"), [100.0, 50.0, 200.0, 100.0], "the first card, at its offset and size");
+        assert_eq!(rect("card-4"), [10.0, 220.0, 100.0, 60.0], "the second card has its own");
+        // The background is painted before the cards, so it is under every one of them.
+        let background = runtime.element_at(10.0, 10.0).and_then(|picked| picked.key().map(str::to_owned));
+        assert_eq!(background.as_deref(), Some("overlay-background"), "the empty overlay");
+        let inner = runtime.element_at(150.0, 100.0).and_then(|picked| picked.key().map(str::to_owned));
+        assert_ne!(inner.as_deref(), Some("overlay-background"), "a press inside the card never reaches it");
+
+        // And the press itself: the card's handler answers, the overlay's does not.
+        TWO_CARD_PRESSES.store(0, Ordering::Relaxed);
+        runtime.pointer_down(150.0, 100.0);
+        runtime.pointer_up(150.0, 100.0);
+        runtime.frame(1.0 / 60.0);
+        assert_eq!(TWO_CARD_PRESSES.load(Ordering::Relaxed), 1, "the press belongs to the widget");
+    }
+
+    /// A card's wrapper takes the press on its whole rectangle, sized or content-sized: a card
+    /// that only took the clicks its controls sit on would let the rest fall to the background.
+    #[test]
+    fn a_card_takes_the_press_on_its_whole_box() {
+        let mut runtime = Runtime::with_text(
+            App::default(),
+            one_content_sized_card,
+            (200.0, 200.0),
+            Env::new(true, 1.0),
+            TextSystem::new(theme::FONTS, theme::FAMILIES),
+        );
+        runtime.frame(0.0);
+        assert_eq!(element(&runtime.elements(), "card-1").expect("the wrapper").rect, [20.0, 30.0, 80.0, 40.0]);
+
+        ONE_CARD_PRESSES.store(0, Ordering::Relaxed);
+        runtime.pointer_down(90.0, 60.0);
+        runtime.pointer_up(90.0, 60.0);
+        runtime.frame(1.0 / 60.0);
+        assert_eq!(ONE_CARD_PRESSES.load(Ordering::Relaxed), 1, "a press on the card's blank edge is still the card's");
     }
 
     /// A unique is searched by name, and has the price row and the disenchant value.

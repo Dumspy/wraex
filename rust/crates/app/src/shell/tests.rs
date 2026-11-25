@@ -141,6 +141,270 @@ fn the_overlay_key_shows_the_widget_menu() {
     assert_eq!(window_size(GameId::Poe1, &shown), Some(widgets::scene_size(GameId::Poe1, widgets::Kind::Menu)));
 }
 
+/// The config's `wmId` for a `wmType` (the first instance, for the two stash searches).
+fn widget_id(app: &crate::App, wm_type: &str) -> u32 {
+    app.widgets
+        .as_ref()
+        .expect("the overlay")
+        .widgets
+        .iter()
+        .find(|widget| widget.wm_type == wm_type)
+        .unwrap_or_else(|| panic!("the config has no {wm_type} widget"))
+        .wm_id
+}
+
+/// The menu's card offset, from the config's `anchor: { pos: 'tl', x: 5, y: 5 }`.
+fn menu_offset() -> (f32, f32) {
+    anchored_offset("tl", (5.0, 5.0), widgets::scene_size(GameId::Poe1, widgets::Kind::Menu), BOUNDS, 1.0)
+}
+
+/// `OverlayWindow.vue` draws every widget whose `wmWants` is `show`, each at its own anchor
+/// (`Widget.vue`). The second Windows-run bug: clicking "Map rolling" in the menu replaced the
+/// menu with the stash search, so the settings cog went with it; both must be on screen at once.
+#[test]
+fn the_overlay_draws_every_shown_widget_at_its_own_anchor() {
+    let mut app = overlay_app();
+    let menu = widget_id(&app, widgets::menu::WM_TYPE);
+    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    assert_eq!(cards.len(), 1, "the config's other widgets are hidden");
+    assert_eq!(cards[0].shown, Shown::Widget(widgets::menu::WM_TYPE.to_owned()));
+    assert_eq!(cards[0].wm_id, Some(menu));
+    assert_eq!(cards[0].offset, menu_offset());
+    assert_eq!(cards[0].size(), None, "a `Widget.vue` card is content-sized");
+
+    // "Map rolling": the menu's button (or `wm.show`) makes the stash search visible; the menu
+    // stays. `wmZorder` puts the numbered menu card last, as CSS paints a positive `z-index`
+    // above the `auto` ones.
+    let stash = widget_id(&app, widgets::Kind::StashSearch.wm_type());
+    app.widgets.as_mut().expect("the overlay").show(stash);
+    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    assert_eq!(cards.len(), 2, "the menu and the stash search");
+    assert_eq!(cards[0].wm_id, Some(stash), "the `auto` card paints first");
+    assert_eq!(cards[1].wm_id, Some(menu), "the menu paints above it");
+    let size = widgets::scene_size(GameId::Poe1, widgets::Kind::StashSearch);
+    assert_eq!(cards[0].offset, anchored_offset("tl", (35.0, 46.0), size, BOUNDS, 1.0));
+    assert_eq!(cards[1].offset, menu_offset(), "the menu keeps its own anchor");
+
+    // The window's `shown` is still the menu (the focused widget), so the native window and the
+    // debug log keep naming the overlay's card.
+    assert_eq!(app.shown_in(true), Shown::Widget(widgets::menu::WM_TYPE.to_owned()));
+}
+
+/// Settings is `wmZorder: 'exclusive'` (`SettingsWindow.vue`): it is drawn alone, and its root
+/// covers the overlay (`position: absolute; inset: 0`). Save or Cancel closes it and the menu is
+/// back at *its own* anchor — the first Windows-run bug was the menu returning in the middle of
+/// the screen, inheriting the placement the settings window had claimed.
+#[test]
+fn save_returns_to_the_menu_at_its_own_anchor() {
+    let mut app = overlay_app();
+    app.settings = Some(crate::settings::Settings::scene(GameId::Poe1, Page::Hotkeys));
+    // `App::open_settings` asks for a centred window; over the game the settings card covers the
+    // overlay whatever the placement says.
+    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred));
+    assert_eq!(cards.len(), 1, "the exclusive settings window hides the menu");
+    assert_eq!(cards[0].shown, Shown::Settings);
+    assert_eq!(cards[0].offset, (0.0, 0.0));
+    assert_eq!(cards[0].width, Some(BOUNDS.width as f32));
+    assert_eq!(cards[0].height, Some(BOUNDS.height as f32));
+
+    // Save: the working copy is written and the window closes, as `Live::poll` runs after it.
+    app.settings.as_mut().expect("the settings window").save().expect("the scene's temp store");
+    app.hide_settings_widget();
+    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred));
+    assert_eq!(cards.len(), 1);
+    assert_eq!(cards[0].shown, Shown::Widget(widgets::menu::WM_TYPE.to_owned()));
+    assert_eq!(cards[0].offset, menu_offset(), "the menu is at 5 %/5 %, not where the settings was");
+
+    // Cancel is the same close (`Settings::cancel`), and the same menu.
+    app.settings = Some(crate::settings::Settings::scene(GameId::Poe1, Page::General));
+    app.settings.as_mut().expect("the settings window").cancel();
+    app.hide_settings_widget();
+    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred));
+    assert_eq!(cards[0].shown, Shown::Widget(widgets::menu::WM_TYPE.to_owned()));
+    assert_eq!(cards[0].offset, menu_offset());
+}
+
+/// After the overlay key's on state with a settings window that never came: the config's
+/// settings widget is `show` (a `wm.show` that did not open the window) and must not draw a
+/// second card, or an overlay of the settings widget alone.
+#[test]
+fn the_settings_widget_card_needs_the_settings_window() {
+    let mut app = overlay_app();
+    let settings = widget_id(&app, widgets::SETTINGS);
+    app.widgets.as_mut().expect("the overlay").show(settings);
+    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    assert!(
+        cards.iter().all(|card| card.shown != Shown::Settings && card.wm_id != Some(settings)),
+        "the settings widget is drawn by the settings window"
+    );
+    assert_eq!(cards.len(), 1, "the menu is still the only card");
+}
+
+/// The price check is `wmZorder: 'exclusive'` with `hide-on-blur`: while it is open the menu and
+/// every other widget are gone, and it fills the overlay's height at the cursor.
+#[test]
+fn the_price_check_draws_alone() {
+    let mut app = overlay_app();
+    let stash = widget_id(&app, widgets::Kind::StashSearch.wm_type());
+    app.widgets.as_mut().expect("the overlay").show(stash);
+    app.price_check.open = true;
+    let cursor = Point { x: 400.0, y: 300.0 };
+    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Cursor(cursor)));
+    assert_eq!(cards.len(), 1, "an exclusive widget hides the rest");
+    assert_eq!(cards[0].shown, Shown::PriceCheck);
+    let size = (crate::poe1::price_check::WIDTH, BOUNDS.height as f32);
+    assert_eq!(cards[0].size(), Some(size), "`#price-window` is `h-full`");
+    assert_eq!(cards[0].offset, widget_offset(Some(Placement::Cursor(cursor)), size, BOUNDS, 1.0));
+    assert_eq!(app.shown_in(true), Shown::PriceCheck);
+}
+
+/// `visibilityState`'s `invisible-on-blur`: the menu goes with the overlay, while a widget whose
+/// flag was cleared (a running stopwatch) stays drawn over the game.
+#[test]
+fn hidden_widgets_are_not_drawn() {
+    let mut app = overlay_app();
+    assert!(app.cards_for(false, BOUNDS, 1.0, None).is_empty(), "the menu is `invisible-on-blur`");
+
+    let timer = app.widgets.as_mut().expect("the overlay").create(widgets::Kind::Stopwatch.wm_type());
+    app.widgets.as_mut().expect("the overlay").timer_start(timer, 0.0);
+    let cards = app.cards_for(false, BOUNDS, 1.0, None);
+    assert_eq!(cards.len(), 1, "the running stopwatch is the only card off-overlay");
+    assert_eq!(cards[0].wm_id, Some(timer));
+    // The timer's own anchor is the centre (`cc`), which its card is shifted by.
+    let size = widgets::scene_size(GameId::Poe1, widgets::Kind::Stopwatch);
+    assert_eq!(cards[0].offset, anchored_offset("cc", (50.0, 50.0), size, BOUNDS, 1.0));
+    assert_eq!(app.shown_in(false), Shown::Widget(widgets::Kind::Stopwatch.wm_type().to_owned()));
+}
+
+/// The settings window as the overlay draws it: `SettingsWindow.vue` is a widget whose root is
+/// `position: absolute; inset: 0`, with its 50 × 38 rem `.window` centred horizontally at the
+/// top. Its box takes the clicks — below the window too — so a click anywhere inside it never
+/// reaches the overlay's background layer (the bug where the settings closed on its first click).
+#[test]
+fn the_settings_window_covers_the_overlay_and_takes_its_clicks() {
+    let mut app = overlay_app();
+    app.settings = Some(crate::settings::Settings::scene(GameId::Poe1, Page::Hotkeys));
+    let size = (BOUNDS.width as f32, BOUNDS.height as f32);
+    let text = rune::text::TextSystem::new(crate::theme::FONTS, crate::theme::FAMILIES);
+    let mut runtime = rune::Runtime::with_text(app, game_overlay, size, rune::Env::new(true, 1.0), text);
+    runtime.frame(0.0);
+
+    assert_eq!(
+        rect_of(&runtime, "settings-window"),
+        [400.0, 0.0, crate::settings::WIDTH, crate::settings::HEIGHT],
+        "centred horizontally, at the top of the game"
+    );
+    assert!(runtime.find("settings-menu-hotkeys").is_some(), "the pages are drawn");
+    assert!(runtime.find("titlebar-close").is_some(), "the title bar's close is there");
+    // Below the window, still inside the settings widget's root: the widget's own box.
+    let picked = runtime.element_at(100.0, 1000.0).and_then(|picked| picked.key().map(str::to_owned));
+    assert_ne!(picked.as_deref(), Some("overlay-background"), "a click inside the settings window is the widget's");
+    assert!(
+        matches!(picked.as_deref(), Some("settings") | Some("card-settings")),
+        "the settings card's own box takes it: {picked:?}"
+    );
+}
+
+/// The Windows run's whole sequence, as the shell's decisions see it: the overlay key draws the
+/// menu at its anchor; "Map rolling" adds the stash search and keeps the menu; the cog's settings
+/// window is alone; Save brings the menu back at *its* anchor, beside the stash search; the
+/// background click gives the game its focus back and the overlay draws nothing.
+#[test]
+fn the_windows_runs_sequence_keeps_every_card_in_place() {
+    let mut app = overlay_app();
+    let menu = widget_id(&app, widgets::menu::WM_TYPE);
+    let stash = widget_id(&app, widgets::Kind::StashSearch.wm_type());
+    let settings = widget_id(&app, widgets::SETTINGS);
+
+    // The overlay key: the menu, at 5 %/5 %.
+    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    assert_eq!(cards.len(), 1);
+    assert_eq!(cards[0].wm_id, Some(menu));
+    assert_eq!(cards[0].offset, menu_offset());
+
+    // "Map rolling": the menu's button is `wm.toggle`, which shows the stash search.
+    app.widgets.as_mut().expect("the overlay").toggle(stash);
+    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    assert_eq!(cards.len(), 2, "both cards: the image strip must not hide the menu");
+    assert!(cards.iter().any(|card| card.wm_id == Some(menu) && card.offset == menu_offset()));
+    assert!(cards.iter().any(|card| card.wm_id == Some(stash)));
+
+    // The cog: `wm.show(settings)` and the settings window opens. It is exclusive, so it is the
+    // only card, covering the overlay.
+    app.widgets.as_mut().expect("the overlay").toggle(settings);
+    app.settings = Some(crate::settings::Settings::scene(GameId::Poe1, Page::Hotkeys));
+    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred));
+    assert_eq!(cards.len(), 1);
+    assert_eq!(cards[0].shown, Shown::Settings);
+
+    // Save: the settings widget goes back to `hide`, and the menu is where it belongs.
+    app.settings.as_mut().expect("the settings window").save().expect("the scene's temp store");
+    app.hide_settings_widget();
+    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred));
+    let menu_card = cards.iter().find(|card| card.wm_id == Some(menu)).expect("the menu is back");
+    assert_eq!(menu_card.offset, menu_offset(), "the menu, not the settings window's placement");
+    assert!(cards.iter().any(|card| card.wm_id == Some(stash)), "the stash search stayed up");
+
+    // The background click: the game gets the focus back, and the overlay draws nothing.
+    apply_overlay_event(&OverlayEvent::FocusChange { game: true, overlay: false, using_hotkey: false }, &mut app);
+    assert!(
+        app.cards_for(false, BOUNDS, 1.0, None).is_empty(),
+        "the menu and the stash search are `invisible-on-blur`"
+    );
+    assert_eq!(app.shown_in(false), Shown::None);
+}
+
+/// The overlay as [`crate::view`] draws it over a game: every visible widget at its own anchor,
+/// in one window (`OverlayWindow.vue`'s `visibilityState`). The live shell places the same cards
+/// (`App::cards_for`); this renders them from the app's own state, as a `--snap` of a scene does.
+fn game_overlay(app: &App, cx: &mut rune::Cx<App>) -> El {
+    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    crate::shell::overlay_root(cards, true, |card| crate::card_at(app, cx, card))
+}
+
+/// The drawn rect of the element keyed `key`, in points.
+fn rect_of(runtime: &rune::Runtime<App>, key: &str) -> [f32; 4] {
+    runtime
+        .elements()
+        .iter()
+        .find(|element| element.key.as_deref() == Some(key))
+        .unwrap_or_else(|| panic!("no element keyed `{key}`"))
+        .rect
+}
+
+/// The second Windows-run bug, end to end: "Map rolling" from the menu must leave the menu on
+/// screen (its cog included) *and* draw the stash search, each at its own anchor, in one overlay
+/// window.
+#[test]
+fn the_menu_and_a_stash_search_draw_together() {
+    let mut app = overlay_app();
+    let menu = widget_id(&app, widgets::menu::WM_TYPE);
+    let settings = widget_id(&app, widgets::SETTINGS);
+    let stash = widget_id(&app, widgets::Kind::StashSearch.wm_type());
+    app.widgets.as_mut().expect("the overlay").toggle(stash);
+
+    let size = (BOUNDS.width as f32, BOUNDS.height as f32);
+    let text = rune::text::TextSystem::new(crate::theme::FONTS, crate::theme::FAMILIES);
+    let mut runtime = rune::Runtime::with_text(app, game_overlay, size, rune::Env::new(true, 1.0), text);
+    runtime.frame(0.0);
+
+    assert_eq!(rect_of(&runtime, "overlay-background"), [0.0, 0.0, size.0, size.1]);
+    // The menu at 5 %/5 % of 1600 × 1200, and the stash search at 35 %/46 %.
+    let menu_card = rect_of(&runtime, &format!("card-{menu}"));
+    assert_eq!([menu_card[0], menu_card[1]], [80.0, 60.0]);
+    let stash_card = rect_of(&runtime, &format!("card-{stash}"));
+    assert_eq!([stash_card[0], stash_card[1]], [560.0, 552.0]);
+    // Both cards are drawn, and the menu still offers its cog: the widget menu did not go.
+    assert!(rect_of(&runtime, "widget-menu")[2] > 0.0, "the menu card is drawn");
+    assert!(rect_of(&runtime, &format!("widget-{stash}"))[2] > 0.0, "the stash search card is drawn");
+    assert!(runtime.find(&format!("widget-menu-entry-{settings}")).is_some(), "the cog is still there");
+    // The window is one overlay: the two cards do not overlap, and neither is cut off.
+    let menu_rect = rect_of(&runtime, "widget-menu");
+    let stash_rect = rect_of(&runtime, &format!("widget-{stash}"));
+    assert!(menu_rect[0] + menu_rect[2] < stash_rect[0], "the menu and the stash search are side by side");
+    assert!(stash_rect[1] + stash_rect[3] <= size.1);
+}
+
 /// The game taking the focus back closes what `invisible-on-blur` hid: the menu is not drawn
 /// any more, so the shell hides the window, and the next activation brings it back.
 #[test]
