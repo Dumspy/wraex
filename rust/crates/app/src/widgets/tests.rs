@@ -458,6 +458,15 @@ fn the_widgets_hover_panel_offers_its_actions() {
     click(&mut runtime, &format!("widget-{id}-move"));
     assert_eq!(overlay(&runtime).moving, Some(id));
     assert!(runtime.find(&format!("widget-{id}-handle-cc")).is_some());
+    let elements_before = runtime.elements();
+    assert!(
+        element(&elements_before, &format!("widget-{id}")).is_some_and(|frame| frame.opacity < 1.0),
+        "`Widget.vue`'s `opacity-75` starts as the move mode comes on"
+    );
+    settle(&mut runtime);
+    let elements = runtime.elements();
+    let frame = element(&elements, &format!("widget-{id}")).expect("the card's frame");
+    assert!((frame.opacity - 0.75).abs() < 0.01, "`opacity-75` while moving: {}", frame.opacity);
 
     click(&mut runtime, &format!("widget-{id}-delete"));
     assert!(overlay(&runtime).widget(id).is_none(), "removed");
@@ -485,6 +494,97 @@ fn the_panel_follows_each_widgets_props() {
     assert!(grid.find(&format!("widget-{id}-edit")).is_none(), "readonly");
     assert!(grid.find(&format!("widget-{id}-move")).is_none(), "`move-handles: none`");
     assert!(grid.find(&format!("widget-{id}-delete")).is_none(), "`removable: false`");
+}
+
+/// `Widget.vue`'s `updatePosition`: `Math.min(Math.max(e.clientX / window.innerWidth, 0), 1) *
+/// 100`, the percentages an `anchor` stores.
+#[test]
+fn a_pointer_becomes_the_anchors_percentages() {
+    assert_eq!(widgets::pointer_percent([400.0, 300.0], (1600.0, 1200.0)), (25.0, 25.0));
+    assert_eq!(widgets::pointer_percent([0.0, 0.0], (1600.0, 1200.0)), (0.0, 0.0));
+    assert_eq!(widgets::pointer_percent([1600.0, 1200.0], (1600.0, 1200.0)), (100.0, 100.0));
+    // Outside the overlay the percentage stops at the edge, as upstream's clamp does.
+    assert_eq!(widgets::pointer_percent([-50.0, 2000.0], (1600.0, 1200.0)), (0.0, 100.0));
+    // A scene (or a window) whose size is not known yet has no percentages to write.
+    assert_eq!(widgets::pointer_percent([20.0, 20.0], (0.0, 0.0)), (0.0, 0.0));
+}
+
+/// `Widget.vue`'s `startMove`/`updatePosition`: a handle press makes its `pos` the anchor, puts
+/// that corner under the pointer and follows it; the release is what the shell saves, and a
+/// cancelled gesture (Rune takes the pointer away) puts the anchor back.
+#[test]
+fn a_move_handle_writes_the_anchor_and_asks_to_save() {
+    let mut app = App::widgets_scene(GameId::Poe1, Kind::Stopwatch);
+    let overlay = app.widgets.as_mut().expect("a widget scene");
+    let id = overlay.shown;
+    let before = (overlay.widget(id).expect("the timer").anchor_pos(), overlay.widget(id).unwrap().anchor());
+    overlay.size = (1600.0, 1200.0);
+
+    overlay.begin_move(id, "tl", [400.0, 300.0]);
+    assert_eq!(overlay.moving, Some(id), "`Widget.vue`'s `isMoving`");
+    assert_eq!(overlay.widget(id).unwrap().anchor_pos(), "tl");
+    assert_eq!(overlay.widget(id).unwrap().anchor(), (25.0, 25.0));
+    assert!(overlay.take_config_dirty(), "the press raised the widget (`bringToTop`)");
+
+    // A cancelled drag is not a move: the anchor is the one the press found.
+    overlay.end_move(id, "tl", [400.0, 300.0], true);
+    assert_eq!(
+        (overlay.widget(id).unwrap().anchor_pos(), overlay.widget(id).unwrap().anchor()),
+        before,
+        "a cancelled gesture restores the anchor"
+    );
+    assert!(!overlay.config_dirty());
+
+    // A released one keeps the pointer's place, every frame of the drag.
+    overlay.begin_move(id, "tl", [400.0, 300.0]);
+    overlay.drag_to(id, "tl", [800.0, 600.0]);
+    assert_eq!(overlay.widget(id).unwrap().anchor(), (50.0, 50.0));
+    overlay.end_move(id, "tl", [800.0, 600.0], false);
+    assert!(overlay.take_config_dirty(), "the shell has a new anchor to save");
+    assert!(!overlay.config_dirty(), "one save per gesture");
+}
+
+/// `OverlayWindow.vue`'s `bringToTop`: the pressed widget gets one `wmZorder` above the topmost
+/// numbered one, an already-topmost one is left alone (upstream returns early), and an exclusive
+/// widget keeps its own place. Every change is what the shell saves.
+#[test]
+fn pressing_a_widget_raises_it_and_marks_the_config() {
+    let mut app = App::widgets_scene(GameId::Poe1, Kind::Menu);
+    let overlay = app.widgets.as_mut().expect("a widget scene");
+    let menu = overlay.shown;
+    let strip = overlay
+        .widgets
+        .iter()
+        .find(|widget| widget.wm_type == Kind::ImageStrip.wm_type())
+        .expect("the config's image strip")
+        .wm_id;
+    let settings = overlay
+        .widgets
+        .iter()
+        .find(|widget| widget.wm_type == widgets::SETTINGS)
+        .expect("the config's settings widget")
+        .wm_id;
+    assert_eq!(overlay.widget(menu).unwrap().zorder(), Some(1.0), "the menu's own zorder");
+    assert_eq!(overlay.widget(strip).unwrap().zorder(), None, "CSS `auto`");
+
+    // `wm.show` does not raise; `Widget.vue`'s mousedown does.
+    overlay.show(strip);
+    overlay.take_actions();
+    assert!(!overlay.config_dirty());
+    overlay.bring_to_top(strip);
+    assert_eq!(overlay.widget(strip).unwrap().zorder(), Some(2.0));
+    assert!(overlay.take_config_dirty(), "the shell saves the new paint order");
+
+    overlay.bring_to_top(strip);
+    assert!(!overlay.config_dirty(), "already the topmost: nothing to save");
+    overlay.bring_to_top(menu);
+    assert_eq!(overlay.widget(menu).unwrap().zorder(), Some(3.0), "the lower card came to the front");
+    assert!(overlay.take_config_dirty(), "the menu's new order is saved");
+
+    // `wmZorder: 'exclusive'` already wins the whole overlay.
+    overlay.bring_to_top(settings);
+    assert_eq!(overlay.widget(settings).unwrap().zorder(), None, "not a number");
+    assert!(!overlay.config_dirty());
 }
 
 /// Let animated values (a layout change's spring) land: the first frame only starts them.

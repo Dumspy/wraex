@@ -17,7 +17,10 @@
 //! 5. **Update check** ([`updates`]): at launch and every 16 hours, shown on the settings
 //!    window's About page.
 //! 6. **Actions** ([`dispatch`]): the widgets record what their buttons ask for; the shell
-//!    opens the browser, types a stash search or quits.
+//!    opens the browser, types a stash search or quits. A widget's own config — the `anchor` a
+//!    drag wrote, the `wmZorder` a press set — is written back in the next poll
+//!    ([`Live::save_widget_config`]), as upstream's `saveConfig()` does on the overlay's blur,
+//!    so positions and the paint order survive a restart.
 //!
 //! # The game's window (PLAN.md phase 2)
 //!
@@ -947,6 +950,38 @@ impl Live {
         self.sync_client_log();
     }
 
+    /// `saveConfig()` for what the overlay itself changed: a dragged widget's `anchor`, a press's
+    /// `wmZorder`. Upstream's renderer saves on the overlay window's blur and when an exclusive
+    /// widget closes; the port writes the file in the poll after the change, so a position or
+    /// paint order survives a restart even if the app is quit from the tray.
+    ///
+    /// Only the widget list is taken from the overlay: the rest of the config is the shell's,
+    /// and the settings window's saves go through [`Live::reload_config`].
+    fn save_widget_config(&mut self, app: &mut App) {
+        let Some(overlay) = &mut app.widgets else { return };
+        if !overlay.config_dirty() {
+            return;
+        }
+        let widgets: Vec<serde_json::Value> = overlay.widgets.iter().map(|widget| widget.config.clone()).collect();
+        let Some(object) = self.startup.config.as_object_mut() else {
+            // Still dirty, so the next poll asks again rather than losing the move.
+            return overlay.mark_config_dirty();
+        };
+        object.insert("widgets".to_owned(), serde_json::Value::Array(widgets));
+        let contents = match serde_json::to_string(&self.startup.config) {
+            Ok(contents) => contents,
+            Err(error) => {
+                self.warn(format!("saving the widget positions failed: {error}"));
+                return overlay.mark_config_dirty();
+            }
+        };
+        if let Err(error) = self.startup.store.save(&contents, self.startup.save_temporary) {
+            self.warn(format!("saving the widget positions failed: {error}"));
+            return overlay.mark_config_dirty();
+        }
+        overlay.take_config_dirty();
+    }
+
     /// Whether the hotkeys may be registered now: without a window hook they are system-wide
     /// (the earlier behaviour), with one they exist only while the game has the focus.
     fn hotkeys_follow_game(&self) -> bool {
@@ -1130,6 +1165,17 @@ impl Live {
         let opened = shown != self.shown;
         let over_game = self.game_bounds();
         let cards = over_game.map(|bounds| self.cards(app, bounds));
+        // `Widget.vue` positions and drags a card in percentages of the overlay: over the game
+        // that is its client area in points (the window is placed over it), without one the
+        // widget's own window.
+        let overlay_size = over_game
+            .map(|bounds| ((bounds.width / self.panel.scale()) as f32, (bounds.height / self.panel.scale()) as f32))
+            .or_else(|| window_size(self.game, &shown));
+        if let Some(size) = overlay_size
+            && let Some(overlay) = &mut app.widgets
+        {
+            overlay.size = size;
+        }
         let drawn: Vec<Shown> = match &cards {
             Some(cards) => cards.iter().map(|card| card.shown.clone()).collect(),
             // Without a game the window is the widget itself, and `shown` names it.
@@ -1339,6 +1385,7 @@ impl Live {
             changed = true;
             self.deliver(app, requests);
         }
+        self.save_widget_config(app);
 
         // Save or Cancel closes the settings window; either way the app re-reads its config so
         // the next hotkey press uses what the file now says, and the settings widget goes back

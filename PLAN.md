@@ -155,8 +155,13 @@ the game. What the test found and how it was fixed is in `docs/windows-spike.md`
 first Windows run found"); Rune problems and their workarounds are in `docs/rune-issues.md`.
 Not tested yet: exclusive fullscreen (lower priority: the user plays windowed or
 borderless), the setup exe, Ctrl+wheel stash scrolling against the game's own, X11 and
-Wayland. Still open from the spike: dragging widgets to a new anchor, and keeping
-`wmZorder` in the config.
+Wayland. **Moving widgets is done (2026-11-25):** the hover panel's `move` button draws
+`Widget.vue`'s handles, dragging one puts that corner under the pointer and writes the `anchor`
+percentages every frame, a press anywhere on a card raises it (`wmZorder`), and both are saved
+to the config in the poll after the change (upstream's `saveConfig()`, which it runs on the
+overlay's blur), so a restart keeps every position and the paint order. The floating handle at
+the anchor (`mover.active`) and hiding the handle under the anchor's own position are still
+missing; see `docs/windows-spike.md`.
 
 ## Phase 3: port core logic (≈ 2–4 weeks per game)
 

@@ -488,6 +488,67 @@ fn a_widgets_anchor_places_it_in_the_overlay() {
     );
 }
 
+/// Every `anchor.pos` of `Widget.vue`'s `widgetPosition`: the corner or edge the `translate`
+/// names sits on the anchor, which is the point a move handle writes.
+#[test]
+fn every_anchor_pos_puts_its_named_corner_on_the_anchor() {
+    let bounds = Bounds { x: 0.0, y: 0.0, width: 1600.0, height: 1200.0 };
+    let size = (200.0, 100.0);
+    let anchor = (30.0, 40.0);
+    let (x, y) = (480.0, 480.0);
+    let card = |pos: &str| anchored_offset(pos, anchor, size, bounds, 1.0);
+    // `tl` = no translate, `tc` = half the card to the left, `br` = all of it, ...
+    assert_eq!(card("tl"), (x, y));
+    assert_eq!(card("tc"), (x - 100.0, y));
+    assert_eq!(card("tr"), (x - 200.0, y));
+    assert_eq!(card("cr"), (x - 200.0, y - 50.0));
+    assert_eq!(card("br"), (x - 200.0, y - 100.0));
+    assert_eq!(card("bc"), (x - 100.0, y - 100.0));
+    assert_eq!(card("bl"), (x, y - 100.0));
+    assert_eq!(card("cl"), (x, y - 50.0));
+    assert_eq!(card("cc"), (x - 100.0, y - 50.0));
+
+    // And the pointer that wrote the anchor puts the same named corner under the cursor: the
+    // percentages a drag saves are the ones this placement reads back.
+    let pointer = (480.0, 480.0);
+    let written = widgets::pointer_percent([pointer.0, pointer.1], (1600.0, 1200.0));
+    assert!((written.0 - anchor.0).abs() < 1e-4 && (written.1 - anchor.1).abs() < 1e-4, "{written:?}");
+    for pos in ["tl", "tc", "tr", "cr", "br", "bc", "bl", "cl", "cc"] {
+        let (left, top) = anchored_offset(pos, written, size, bounds, 1.0);
+        let mut axis = pos.chars();
+        let corner_y = match axis.next() {
+            Some('t') => top,
+            Some('c') => top + size.1 / 2.0,
+            _ => top + size.1,
+        };
+        let corner_x = match axis.next() {
+            Some('l') => left,
+            Some('c') => left + size.0 / 2.0,
+            _ => left + size.0,
+        };
+        assert!(
+            (corner_x - pointer.0).abs() < 0.01 && (corner_y - pointer.1).abs() < 0.01,
+            "{pos}: {corner_x}, {corner_y}"
+        );
+    }
+}
+
+/// Any card is clamped inside the game, as `Widget.vue`'s `max-width`/`max-height` keep it:
+/// the card never starts left of the game or ends right of it.
+#[test]
+fn a_card_stays_inside_the_overlay_at_every_edge() {
+    let bounds = Bounds { x: 0.0, y: 0.0, width: 800.0, height: 600.0 };
+    let size = (200.0, 100.0);
+    for pos in ["tl", "tc", "tr", "cr", "br", "bc", "bl", "cl", "cc"] {
+        for anchor in [(0.0, 0.0), (100.0, 100.0), (0.0, 100.0), (100.0, 0.0), (50.0, 50.0)] {
+            let (left, top) = anchored_offset(pos, anchor, size, bounds, 1.0);
+            assert!(left >= 0.0 && top >= 0.0, "{pos} at {anchor:?}: {left},{top}");
+            assert!(left + size.0 <= bounds.width as f32 + 0.01, "{pos} at {anchor:?}: {left}");
+            assert!(top + size.1 <= bounds.height as f32 + 0.01, "{pos} at {anchor:?}: {top}");
+        }
+    }
+}
+
 /// `AppConfig().overlayBackgroundClose` decides whether the overlay's background click gives
 /// the game its focus back; a config without it is upstream's default, `true`.
 #[test]
@@ -975,9 +1036,20 @@ fn a_key_pressed_while_alt_is_held_ends_the_peek() {
 /// `AppHandle` and a `Panel` with no native window behind it, the config lives in a temp folder,
 /// and the app's trade requests go to the recordings (`Mode::Replay`).
 fn live_app(name: &str, clipboard: TestClipboard) -> App {
+    let dir = live_dir(name);
+    live_app_in(&dir, clipboard)
+}
+
+/// A fresh temp folder for a test's `appData`, so the config a test saves can be read back.
+fn live_dir(name: &str) -> std::path::PathBuf {
     let dir = std::env::temp_dir().join(format!("wraex-shell-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
-    let startup = config::load(GameId::Poe1, &dir);
+    dir
+}
+
+/// [`live_app`] with the folder given, for a test that restarts from the config it saved.
+fn live_app_in(dir: &std::path::Path, clipboard: TestClipboard) -> App {
+    let startup = config::load(GameId::Poe1, dir);
     let mut app = App::live(Live::for_tests(startup, Box::new(clipboard)));
     app.mode = Mode::Replay;
     app
@@ -987,6 +1059,39 @@ fn live_app(name: &str, clipboard: TestClipboard) -> App {
 fn poll(app: &mut App) -> bool {
     let mut tx = Tx::default();
     app.poll_with(0.0, &mut tx)
+}
+
+/// The live overlay in a Rune window of the game's size, drawn the way [`crate::view`] draws it
+/// over the game (`App::cards_for`). The shell's poll is left to the test (`poll`), so the
+/// overlay keeps the size [`Live::sync_window`] would read from the game.
+fn overlay_runtime(app: App) -> rune::Runtime<App> {
+    let text = rune::text::TextSystem::new(crate::theme::FONTS, crate::theme::FAMILIES);
+    let size = (BOUNDS.width as f32, BOUNDS.height as f32);
+    let mut runtime = rune::Runtime::with_text(app, game_overlay, size, rune::Env::new(true, 1.0), text);
+    runtime.frame(0.0);
+    runtime
+}
+
+/// The `wmId`s of the cards the overlay draws over the game, in paint order.
+fn card_ids(app: &App) -> Vec<Option<u32>> {
+    app.cards_for(true, BOUNDS, 1.0, None).iter().map(|card| card.wm_id).collect()
+}
+
+/// The saved config, read the way the next start reads it.
+fn saved_config(dir: &std::path::Path) -> serde_json::Value {
+    let path = crate::settings::config_path_in(GameId::Poe1, dir);
+    serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap()
+}
+
+/// The saved widget object for `wm_id`.
+fn saved_widget(config: &serde_json::Value, wm_id: u32) -> serde_json::Value {
+    config["widgets"]
+        .as_array()
+        .expect("widgets")
+        .iter()
+        .find(|widget| widget["wmId"] == wm_id)
+        .unwrap_or_else(|| panic!("no saved widget {wm_id}"))
+        .clone()
 }
 
 /// The config's `toggle-overlay` hotkey (upstream's `overlayKey`, `Shift + Space`).
@@ -1194,6 +1299,109 @@ fn the_price_check_hotkey_draws_its_card_until_the_game_takes_the_focus() {
     assert!(!app.price_check.open, "`hide-on-blur`");
     assert!(drawn(&app).is_empty(), "nothing is drawn any more: {:?}", drawn(&app));
     assert!(!window_visible(&app), "the window is hidden");
+}
+
+/// `Widget.vue`'s move handles through the real path: a drag of the stopwatch's centre handle
+/// takes the card with the pointer every frame, the release writes the new `anchor` into the
+/// widget's config, and the next poll saves it (`saveConfig()`, which upstream runs on the
+/// overlay's blur). A restart reads the same position and paint order back.
+#[test]
+fn dragging_a_widgets_handle_moves_it_and_saves_the_anchor() {
+    let dir = live_dir("move");
+    let mut app = live_app_in(&dir, TestClipboard::default());
+    poll(&mut app);
+    // The menu's "add widget…" (`wm.create`): a stopwatch, as `WidgetTimer.vue` mounts it.
+    let timer = app.widgets.as_mut().expect("the overlay").create(widgets::Kind::Stopwatch.wm_type());
+    poll(&mut app);
+    let menu = widget_id(&app, widgets::menu::WM_TYPE);
+    // The overlay over the game is the game's client area in points, which is what a drag's
+    // percentages are of (`Live::sync_window` sets it from the game every frame).
+    let overlay = app.widgets.as_mut().expect("the overlay");
+    overlay.moving = Some(timer);
+    overlay.size = (BOUNDS.width as f32, BOUNDS.height as f32);
+
+    let mut runtime = overlay_runtime(app);
+    let size = widgets::scene_size(GameId::Poe1, widgets::Kind::Stopwatch);
+    assert_eq!(runtime.state.widgets.as_ref().unwrap().widget(timer).unwrap().anchor(), (50.0, 50.0));
+    let key = format!("widget-{timer}-handle-cc");
+    let (hx, hy) = runtime.find(&key).unwrap_or_else(|| panic!("no `{key}`"));
+    runtime.pointer_move(hx, hy);
+    runtime.pointer_down(hx, hy);
+    runtime.frame(1.0 / 60.0);
+
+    // A quarter into the overlay: the card follows the pointer every frame, no spring.
+    runtime.pointer_move(400.0, 300.0);
+    runtime.frame(1.0 / 60.0);
+    assert_eq!(runtime.state.widgets.as_ref().unwrap().widget(timer).unwrap().anchor(), (25.0, 25.0));
+    let cards = runtime.state.cards_for(true, BOUNDS, 1.0, None);
+    let card = cards.iter().find(|card| card.wm_id == Some(timer)).expect("the timer's card");
+    assert_eq!(card.offset, anchored_offset("cc", (25.0, 25.0), size, BOUNDS, 1.0));
+
+    runtime.pointer_up(400.0, 300.0);
+    runtime.frame(1.0 / 60.0);
+    let mut app = runtime.state;
+    poll(&mut app);
+
+    let saved = saved_config(&dir);
+    let widget = saved_widget(&saved, timer);
+    assert_eq!(widget["anchor"], serde_json::json!({ "pos": "cc", "x": 25.0, "y": 25.0 }));
+    assert_eq!(widget["wmZorder"], 2.0, "the press also raised it above the menu");
+
+    // A restart from that file: the same anchor, and the same paint order.
+    let mut restarted = live_app_in(&dir, TestClipboard::default());
+    poll(&mut restarted);
+    let overlay = restarted.widgets.as_ref().expect("the overlay");
+    let widget = overlay.widget(timer).expect("the stopwatch survived the restart");
+    assert_eq!(widget.anchor_pos(), "cc");
+    assert_eq!(widget.anchor(), (25.0, 25.0));
+    assert_eq!(widget.zorder(), Some(2.0));
+    assert_eq!(card_ids(&restarted), vec![Some(menu), Some(timer)], "the menu, then the stopwatch");
+    let cards = restarted.cards_for(true, BOUNDS, 1.0, None);
+    assert_eq!(cards[1].offset, anchored_offset("cc", (25.0, 25.0), size, BOUNDS, 1.0));
+}
+
+/// `Widget.vue`'s `@mousedown`: a press on a lower card raises it (`wm.bringToTop`) and the new
+/// `wmZorder` is saved, so the paint order survives a restart (`OverlayWindow.vue`'s
+/// `visibilityState`: the config order for `auto` cards, then the numbered ones).
+#[test]
+fn clicking_a_lower_widget_raises_it_and_saves_the_order() {
+    let dir = live_dir("raise");
+    let path = crate::settings::config_path_in(GameId::Poe1, &dir);
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+    // A config that opens with the image strip shown: `wm.show` raises a widget, so a card that
+    // has to be *clicked* to come to the front starts shown in the file, as `ConfigStore` has it.
+    let mut config = crate::settings::default_config(GameId::Poe1);
+    config["widgets"]
+        .as_array_mut()
+        .expect("widgets")
+        .iter_mut()
+        .find(|widget| widget["wmType"] == "image-strip")
+        .expect("the image strip")["wmWants"] = serde_json::json!("show");
+    std::fs::write(&path, config.to_string()).unwrap();
+
+    let mut app = live_app_in(&dir, TestClipboard::default());
+    poll(&mut app);
+    let menu = widget_id(&app, widgets::menu::WM_TYPE);
+    let strip = widget_id(&app, widgets::Kind::ImageStrip.wm_type());
+    assert_eq!(card_ids(&app), vec![Some(strip), Some(menu)], "the `auto` card paints first");
+
+    let mut runtime = overlay_runtime(app);
+    let (x, y) = runtime.find("image-strip").expect("the strip's card");
+    runtime.pointer_move(x, y);
+    runtime.pointer_down(x, y);
+    runtime.pointer_up(x, y);
+    runtime.frame(1.0 / 60.0);
+    let mut app = runtime.state;
+    assert_eq!(app.widgets.as_ref().unwrap().widget(strip).unwrap().zorder(), Some(2.0));
+    assert_eq!(card_ids(&app), vec![Some(menu), Some(strip)], "the pressed card paints on top");
+    poll(&mut app);
+
+    let saved = saved_config(&dir);
+    assert_eq!(saved_widget(&saved, strip)["wmZorder"], 2.0);
+
+    let mut restarted = live_app_in(&dir, TestClipboard::default());
+    poll(&mut restarted);
+    assert_eq!(card_ids(&restarted), vec![Some(menu), Some(strip)], "the order survived the restart");
 }
 
 /// The guard: while `App::with_live` runs, `App::live` is empty, so an `App` method answering

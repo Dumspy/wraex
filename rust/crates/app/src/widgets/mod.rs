@@ -41,9 +41,17 @@
 //!
 //! Widgets act through the app shell, as upstream's do: showing, hiding or creating a widget
 //! edits the config the shell owns (`wm.show` in `OverlayWindow.vue`) and records an [`Action`]
-//! for the shell, so a scene or a test reads what happened without a window. Dragging a widget
-//! to a new anchor, the image strip's file picker and the drag-and-drop reordering of its images
-//! stay with the shell and are not ported (they record an [`Action`] each).
+//! for the shell, so a scene or a test reads what happened without a window. The image strip's
+//! file picker and the drag-and-drop reordering of its images stay with the shell and are not
+//! ported (they record an [`Action`] each).
+//!
+//! Moving a widget is `Widget.vue`'s move mode: the `move` button draws the handles its
+//! `move-handles` prop picks ([`move_handles`]), a press on a handle puts that corner under the
+//! pointer and every move writes the pointer's place into the widget's `anchor` percentages
+//! ([`Overlay::begin_move`], [`Overlay::drag_to`]), and a press anywhere on a card raises it
+//! ([`Overlay::bring_to_top`]). Both write the widget's config; the overlay marks it
+//! ([`Overlay::take_config_dirty`]) and the shell saves the file, as upstream's `saveConfig()`
+//! does on the overlay's blur.
 //!
 //! The widgets' own hotkeys (`toggleKey`, `resetKey`) are the platform's to bind; what the main
 //! process sends while they are bound, `MAIN->CLIENT::widget-action`, is
@@ -51,7 +59,10 @@
 //!
 //! Still missing from the reference's widget frame: the fade-in of its panel (`Widget.vue`'s
 //! `:hover` with no transition upstream either), the `delete` countdown's 1 s progress gradient
-//! (the port deletes on release), and the DnD library's reorder animation.
+//! (the port deletes on release), the DnD library's reorder animation, and the floating
+//! `mover.active` handle: upstream hides the in-card handle for the current `anchor.pos` and
+//! draws that one fixed on the overlay instead, while the port draws every declared handle
+//! inside the card.
 
 pub mod delve_grid;
 pub mod icon;
@@ -64,7 +75,7 @@ pub mod xp_tracker;
 
 use std::collections::BTreeMap;
 
-use rune::{Color, Cx, El, TextEdit, col, el, row, text};
+use rune::{Color, Cx, Drag, El, Phase, TextEdit, col, el, row, text};
 use serde_json::{Value, json};
 use wraex_core::GameId;
 
@@ -276,6 +287,55 @@ impl Widget {
             .unwrap_or("tl")
             .to_owned()
     }
+
+    /// `props.config.anchor.pos = pos` and `updatePosition`'s x/y write, as one edit. Returns
+    /// whether the widget changed.
+    pub fn set_anchor(&mut self, pos: &str, x: f32, y: f32) -> bool {
+        if self.anchor_pos() == pos && self.anchor() == (x, y) {
+            return false;
+        }
+        let anchor = json!({ "pos": pos, "x": x, "y": y });
+        match self.config.as_object_mut() {
+            Some(object) => {
+                object.insert("anchor".to_owned(), anchor);
+            }
+            None => return false,
+        }
+        true
+    }
+
+    /// `wmZorder` as `OverlayWindow.vue`'s `bringToTop` writes it. Returns whether the widget
+    /// changed.
+    pub fn set_zorder(&mut self, zorder: f64) -> bool {
+        if self.zorder() == Some(zorder) {
+            return false;
+        }
+        let Some(object) = self.config.as_object_mut() else { return false };
+        object.insert("wmZorder".to_owned(), json!(zorder));
+        true
+    }
+}
+
+/// `Widget.vue`'s `startMove`: the anchor a move-handle press began from. A cancelled gesture
+/// puts the widget back there; a released one keeps the new anchor and asks the shell to save
+/// it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MoveStart {
+    pub wm_id: u32,
+    pub pos: String,
+    pub x: f32,
+    pub y: f32,
+}
+
+/// `Widget.vue`'s `updatePosition`: a pointer's place in the overlay as `anchor.x`/`anchor.y`
+/// percentages, clamped to the overlay's edges
+/// (`Math.min(Math.max(p / size, 0), 1) * 100`). A zero-sized overlay (a scene before its size
+/// is known) puts the anchor at the top-left, as upstream's `0 / 0` would be `NaN` there.
+pub fn pointer_percent(point: [f32; 2], size: (f32, f32)) -> (f32, f32) {
+    let axis = |value: f32, limit: f32| {
+        if limit.is_finite() && limit > 0.0 { (value / limit).clamp(0.0, 1.0) * 100.0 } else { 0.0 }
+    };
+    (axis(point[0], size.0), axis(point[1], size.1))
 }
 
 /// `wmFlags` as strings (`widgets.ts` lists the well-known ones, the edge cases are free-form).
@@ -361,6 +421,18 @@ pub struct Overlay {
     pub editing: Option<u32>,
     /// `Widget.vue`'s `isMoving`: the move handles are drawn.
     pub moving: Option<u32>,
+    /// The overlay window's size in points: the whole the `anchor` percentages are of. The
+    /// shell sets it from the game's client area every frame ([`crate::shell::Live`]); a scene's
+    /// window is the card itself.
+    pub size: (f32, f32),
+    /// `Widget.vue`'s `startMove`: the anchor a handle press began from, kept so a cancelled
+    /// gesture (Rune takes the pointer away when the window loses the focus) can put the widget
+    /// back where it was.
+    pub move_start: Option<MoveStart>,
+    /// A widget's `anchor` or `wmZorder` changed: upstream saves the config for those
+    /// (`saveConfig()` on the overlay's blur). [`Overlay::take_config_dirty`] hands it to the
+    /// shell, which writes the file.
+    config_dirty: bool,
     /// `WidgetMenu.vue`'s "add widget…" popover.
     pub add_open: bool,
     /// `WidgetMenu.vue`'s `<textarea>` (`v-model` is the element's value, cleared on paste).
@@ -404,6 +476,9 @@ impl Overlay {
             // The scene's fixed client-log state: a level 72 character in a level 80 area.
             overlay.set_xp(xp_tracker::scene_state());
         }
+        // A scene's window is the card: its own size is the overlay the anchor percentages are
+        // of, so a move handle pressed in a scene lands where the reference's would.
+        overlay.size = scene_size(game, kind);
         if let Some(id) = shown {
             // `wm.show` when the scene opens, without an [`Action`]: the scene is the widget
             // being on screen, not a button press.
@@ -433,6 +508,9 @@ impl Overlay {
             panel_hover: None,
             editing: None,
             moving: None,
+            size: (0.0, 0.0),
+            move_start: None,
+            config_dirty: false,
             add_open: false,
             paste: TextEdit::default(),
             title: TextEdit::default(),
@@ -497,7 +575,8 @@ impl Overlay {
 
     /// `OverlayWindow.vue`'s `bringToTop`: the pressed widget paints above the others
     /// (`Widget.vue`'s `mousedown`). An exclusive widget already wins the whole overlay, so it
-    /// keeps its `wmZorder`.
+    /// keeps its `wmZorder`; the topmost numbered widget is left alone, as upstream returns when
+    /// the press is on it. A change asks the shell to save the config.
     pub fn bring_to_top(&mut self, wm_id: u32) {
         if self.widget(wm_id).is_some_and(Widget::is_exclusive) {
             return;
@@ -510,11 +589,74 @@ impl Overlay {
         else {
             return;
         };
-        if let Some(widget) = self.widget_mut(wm_id)
-            && let Some(object) = widget.config.as_object_mut()
-        {
-            object.insert("wmZorder".to_owned(), json!(top + 1.0));
+        if self.widget(wm_id).and_then(Widget::zorder) == Some(top) {
+            return;
         }
+        if self.widget_mut(wm_id).is_some_and(|widget| widget.set_zorder(top + 1.0)) {
+            self.config_dirty = true;
+        }
+    }
+
+    /// `Widget.vue`'s `startMove(pos, e)`: the handle under the pointer becomes the widget's
+    /// `anchor.pos`, the widget comes to the top and follows the pointer at once. The anchor it
+    /// started from is kept for a gesture Rune cancels.
+    pub fn begin_move(&mut self, wm_id: u32, pos: &str, point: [f32; 2]) {
+        let Some(widget) = self.widget(wm_id) else { return };
+        self.move_start =
+            Some(MoveStart { wm_id, pos: widget.anchor_pos(), x: widget.anchor().0, y: widget.anchor().1 });
+        self.moving = Some(wm_id);
+        self.bring_to_top(wm_id);
+        self.drag_to(wm_id, pos, point);
+    }
+
+    /// `Widget.vue`'s `updatePosition`: the widget's anchor follows the pointer every frame, as
+    /// percentages of the overlay. Returns whether the widget changed. An overlay whose size is
+    /// not known yet (a live app between two polls) keeps the anchor where it is.
+    pub fn drag_to(&mut self, wm_id: u32, pos: &str, point: [f32; 2]) -> bool {
+        if self.size.0 <= 0.0 || self.size.1 <= 0.0 {
+            return false;
+        }
+        let (x, y) = pointer_percent(point, self.size);
+        self.widget_mut(wm_id).is_some_and(|widget| widget.set_anchor(pos, x, y))
+    }
+
+    /// The end of a move-handle gesture. A released one keeps the pointer's place and asks the
+    /// shell to save the config (`saveConfig()`); a cancelled one — Rune takes the pointer away
+    /// when the window loses the focus — puts the widget back where the press found it.
+    pub fn end_move(&mut self, wm_id: u32, pos: &str, point: [f32; 2], cancelled: bool) {
+        let start = self.move_start.take().filter(|start| start.wm_id == wm_id);
+        if cancelled {
+            if let Some(start) = start
+                && let Some(widget) = self.widget_mut(wm_id)
+            {
+                widget.set_anchor(&start.pos, start.x, start.y);
+            }
+            return;
+        }
+        self.drag_to(wm_id, pos, point);
+        // The moves already wrote the anchor; the gesture as a whole is what has to be saved.
+        let changed = start.is_some_and(|start| {
+            self.widget(wm_id)
+                .is_some_and(|widget| widget.anchor_pos() != start.pos || widget.anchor() != (start.x, start.y))
+        });
+        if changed {
+            self.config_dirty = true;
+        }
+    }
+
+    /// Whether a widget's `anchor` or `wmZorder` changed since the shell last saved: upstream's
+    /// `saveConfig()` has work to do. Emptied by [`Overlay::take_config_dirty`].
+    pub fn config_dirty(&self) -> bool {
+        self.config_dirty
+    }
+
+    pub fn take_config_dirty(&mut self) -> bool {
+        std::mem::take(&mut self.config_dirty)
+    }
+
+    /// [`Overlay::config_dirty`] after a save that failed, so the next poll tries again.
+    pub fn mark_config_dirty(&mut self) {
+        self.config_dirty = true;
     }
 
     pub fn widget(&self, wm_id: u32) -> Option<&Widget> {
@@ -870,9 +1012,15 @@ pub fn chrome<S: 'static>(overlay: &Overlay, widget: &Widget, card: El, project:
         let overlay = project(s);
         overlay.hover = inside.then_some(id);
     });
+    // `Widget.vue`'s `:class="{ 'opacity-75': isMoving }"`: the widget dims while its handles
+    // are out, so the game underneath shows through it.
+    if overlay.moving == Some(id) {
+        frame = frame.opacity(0.75);
+    }
     // `Widget.vue`'s `@mousedown="handleMouseDown"`: `wm.bringToTop`. A press anywhere on the
-    // card is the widget's, so it never reaches the overlay's background click layer.
-    frame = frame.on_press(move |s: &mut S| project(s).bring_to_top(id));
+    // card is the widget's, so it never reaches the overlay's background click layer; the
+    // handler runs as the button goes down, as Vue's `mousedown` does.
+    frame = frame.on_press(move |s: &mut S| project(s).bring_to_top(id)).press_on_down();
     frame = frame.child(card);
 
     if hovered {
@@ -891,13 +1039,21 @@ pub fn chrome<S: 'static>(overlay: &Overlay, widget: &Widget, card: El, project:
         for (name, key) in overlay.panel_actions(harness) {
             let label = crate::settings::t(overlay.game, key);
             let action = name;
+            // `Widget.vue`'s `:class="{ [$style.active]: isEditing }"` / `isMoving`: the entry
+            // whose mode is on has a darker background.
+            let active =
+                (name == "move" && overlay.moving == Some(id)) || (name == "edit" && overlay.editing == Some(id));
+            let mut entry = row()
+                .key(format!("widget-{id}-{name}"))
+                .px(theme::rem(0.25))
+                .focusable(true)
+                .role("button")
+                .label(label.clone());
+            if active {
+                entry = entry.fill(Color::BLACK.alpha(0.6));
+            }
             panel = panel.child(
-                row()
-                    .key(format!("widget-{id}-{name}"))
-                    .px(theme::rem(0.25))
-                    .focusable(true)
-                    .role("button")
-                    .label(label.clone())
+                entry
                     .hover(Color::WHITE.alpha(0.15))
                     .on_press(move |s: &mut S| panel_press(project(s), id, action))
                     .child(
@@ -962,38 +1118,56 @@ fn panel_press(overlay: &mut Overlay, id: u32, action: &'static str) {
     }
 }
 
-/// The move handles `Widget.vue` draws while `isMoving` (`shownHandles`), around the card.
-fn move_handles<S: 'static>(id: u32, handles: Option<&'static str>, _project: Project<S>) -> El {
+/// The move handles `Widget.vue` draws while `isMoving` (`shownHandles`), around the card, and
+/// the drag each one runs: `startMove(pos, e)` + `updatePosition` while the pointer moves, then
+/// `endMove`.
+fn move_handles<S: 'static>(id: u32, handles: Option<&'static str>, project: Project<S>) -> El {
     let size = theme::rem(1.0);
-    let handle = |key: String| {
-        el().key(key).size(size, size).border(theme::rem(0.25), Color::BLACK.alpha(0.6)).fill(Color::BLACK.alpha(0.2))
+    let handle = |pos: &'static str| {
+        el().key(format!("widget-{id}-handle-{pos}"))
+            .size(size, size)
+            .border(theme::rem(0.25), Color::BLACK.alpha(0.6))
+            .fill(Color::BLACK.alpha(0.2))
+            .on_drag(move |s: &mut S, drag: &mut Drag, _tx| {
+                let overlay = project(s);
+                match drag.phase {
+                    Phase::Down => overlay.begin_move(id, pos, drag.window_point()),
+                    Phase::Move => {
+                        overlay.drag_to(id, pos, drag.window_point());
+                    }
+                    Phase::Up => overlay.end_move(id, pos, drag.window_point(), drag.cancelled()),
+                }
+            })
     };
     let mut layer = el().key(format!("widget-{id}-handles")).pin(Some(0.0), Some(0.0), Some(0.0), Some(0.0)).center();
     let around = handles.unwrap_or_default();
     if matches!(around, "all" | "corners" | "top-bottom") {
         layer = layer
-            .child(handle(format!("widget-{id}-handle-tl")).pin(Some(-size / 2.0), Some(-size / 2.0), None, None))
-            .child(handle(format!("widget-{id}-handle-tr")).pin(None, Some(-size / 2.0), Some(-size / 2.0), None));
+            .child(handle("tl").pin(Some(-size / 2.0), Some(-size / 2.0), None, None))
+            .child(handle("tr").pin(None, Some(-size / 2.0), Some(-size / 2.0), None));
     }
     if matches!(around, "all" | "corners" | "top-bottom") {
         layer = layer
-            .child(handle(format!("widget-{id}-handle-bl")).pin(Some(-size / 2.0), None, None, Some(-size / 2.0)))
-            .child(handle(format!("widget-{id}-handle-br")).pin(None, None, Some(-size / 2.0), Some(-size / 2.0)));
+            .child(handle("bl").pin(Some(-size / 2.0), None, None, Some(-size / 2.0)))
+            .child(handle("br").pin(None, None, Some(-size / 2.0), Some(-size / 2.0)));
     }
     if around == "all" {
-        layer = layer
-            .child(handle(format!("widget-{id}-handle-tc")).pin(None, Some(-size / 2.0), None, None).center())
-            .child(handle(format!("widget-{id}-handle-bc")).pin(None, None, None, Some(-size / 2.0)));
+        layer = layer.child(handle("tc").pin(None, Some(-size / 2.0), None, None).center()).child(handle("bc").pin(
+            None,
+            None,
+            None,
+            Some(-size / 2.0),
+        ));
     }
     // `move-handles: ['tl', 'bl']` (the item search) is the two handles on the left edge.
     if around == "tl-bl" {
         layer = layer
-            .child(handle(format!("widget-{id}-handle-tl")).pin(Some(-size / 2.0), Some(-size / 2.0), None, None))
-            .child(handle(format!("widget-{id}-handle-bl")).pin(Some(-size / 2.0), None, None, Some(-size / 2.0)));
+            .child(handle("tl").pin(Some(-size / 2.0), Some(-size / 2.0), None, None))
+            .child(handle("bl").pin(Some(-size / 2.0), None, None, Some(-size / 2.0)));
     }
     // `move-handles: 'center'` is the one handle in the middle (`stopwatch/WidgetTimer.vue`).
     if around == "center" {
-        layer = layer.child(handle(format!("widget-{id}-handle-cc")));
+        layer = layer.child(handle("cc"));
     }
     layer
 }

@@ -16,6 +16,7 @@ What is implemented where:
 | Global mouse moves, buttons and wheel (`uiohook`'s half) | `rust/crates/platform/src/window/win32.rs` (`WH_MOUSE_LL` on the hook thread) |
 | Global key down/up (`uiohook`'s other half): the Alt peek and the key log. Keys Wraex synthesizes are flagged injected and ignored | `rust/crates/platform/src/window/win32.rs` (`WH_KEYBOARD_LL` on the hook thread), `rust/crates/app/src/shell/mod.rs` (`poll_keyboard`) |
 | Following the mouse onto the price check, closing it when the mouse leaves, Ctrl+wheel stash tabs | `rust/crates/platform/src/overlay.rs` (`WidgetAreaTracker` port), `rust/crates/app/src/shell/mod.rs` (`poll_mouse`, `track_area`), `shortcuts.rs` (`on_wheel`) |
+| Moving a widget (`Widget.vue`'s move handles), raising the pressed card (`wmZorder`) and saving both to the config | `rust/crates/app/src/widgets/mod.rs` (`move_handles`, `Overlay::begin_move`/`drag_to`/`end_move`, `bring_to_top`), `rust/crates/app/src/shell/mod.rs` (`Live::save_widget_config`, `sync_window`'s overlay size) |
 | Hotkeys registered only while the game is focused | `rust/crates/app/src/shell/mod.rs` (`sync_registration`) |
 | Key synthesis allowed by default there, opt-in elsewhere | `rust/crates/app/src/shell/keys.rs` |
 | Focus hand-back (`SetForegroundWindow` + the foreground-lock workaround) | `rust/crates/platform/src/window/win32.rs` (`focus_window`) |
@@ -243,6 +244,41 @@ lost, repeated or blocked while this runs.
    appears exactly once and in order; the log (with `logKeys` on) shows one `Keydown`/`Keyup`
    per press and no synthesized keys.
 
+### 9. Moving widgets and the paint order
+
+Upstream's `Widget.vue`: the hover panel's **move** button draws the widget's handles, dragging
+one puts that corner under the pointer and writes the new `anchor` (x/y percentages of the
+overlay) into the config, and a press anywhere on a card brings it to the front
+(`wm.bringToTop` → `wmZorder`). Both are saved, so a restart keeps them.
+
+1. Open the overlay (overlay key) so the menu and, say, "Map rolling" are up. **Look for**: the
+   cards' positions are where the config says (the menu at 5 %/5 %).
+2. Click the card that is *behind* the other one. **Look for**: it comes to the front at once
+   (the log line `wraex: overlay draws …` keeps naming both), and a click on its blank area or
+   a label is enough for that — no title bar is needed.
+3. Hover a card and click **move** in its actions panel. **Look for**: the card dims to 75 %,
+   its handles appear (a stopwatch has the one in its middle; a corner-handled widget has the
+   four; the image strip and the XP tracker the top/bottom ones), and the panel's `move` entry
+   stays highlighted.
+4. Drag a handle, slowly and to all four edges. **Look for**: the card follows the pointer
+   every frame — the corner you grabbed stays under the cursor — and it is never dragged
+   outside the game: at the edges it stops at the game's edge, and the saved percentage is
+   0 % or 100 %.
+5. Release, then hover the card again and click **move** to put the handles away. **Look for**:
+   the card is not dimmed any more and stays where you dropped it.
+6. Drag the *corner* versus the *middle* handle: the card jumps so that the handle you grabbed
+   is at the pointer. That is `Widget.vue`'s `startMove`: `anchor.pos` becomes the handle's
+   position.
+7. Quit Wraex from the tray (or let the game take the focus and reopen the overlay), then start
+   it again. **Look for**: every card is where you left it, in the same front-to-back order.
+   The log's config path names the file the positions were written to
+   (`%APPDATA%\Wraex\Path of Exile\config.json`); its `widgets` array holds the new `anchor`
+   and `wmZorder`.
+8. While a card is being moved, Alt-tab away or press the overlay key's off state. **Look for**:
+   nothing breaks: a drag whose pointer Rune takes away is cancelled and the card returns to
+   where the gesture started, and a gesture still in progress when the app quits leaves the
+   config as it was (the file is written on release only).
+
 ## When something fails
 
 Collect, in the issue or report:
@@ -301,6 +337,13 @@ These are deliberate, and each is a follow-up rather than a bug:
   its own size cancels out of the maths; the port lays the cards out in points and needs a size
   before the card is measured, so it uses the reference's own size (`widgets::scene_size`). A
   ported card a few points narrower only shifts a `tc`/`br`/`cc` anchor by half the difference.
-- **Dragging a card is not ported.** `Widget.vue`'s move handles and its `anchor` write stay with
-  the shell, so the config's `anchor` is read but never rewritten by the overlay (the settings
-  pages can still change it).
+- **The move mode's floating handle is not drawn.** `Widget.vue` hides the in-card handle that
+  sits at the current `anchor.pos` and draws a fixed white-bordered `mover.active` at the anchor
+  instead; the port draws every declared handle inside the card and has no overlay-level handle.
+  Dragging works from every handle either way, and the card's own `anchor` is read and written
+  by the overlay now (`Overlay::begin_move`/`drag_to`).
+- **Widget positions are saved after the change, not on blur.** Upstream's `saveConfig()` runs
+  when the overlay window loses the focus (and when an exclusive widget closes), so a config
+  changed and then killed in the same second could be lost; the port writes the file in the
+  poll after the drag or press (`Live::save_widget_config`) and skips the write when nothing
+  changed.

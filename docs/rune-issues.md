@@ -41,3 +41,16 @@ re-check each entry: drop the workaround if the bug is gone.
 - **Seen:** porting the stopwatch (`.timer`'s `text-shadow: 0 1px 3px`).
 - **Cause:** Rune has a box shadow (`El::shadow`) but no text shadow.
 - **Workaround:** none; the stopwatch is drawn without it (accepted).
+
+## Pointer handlers don't bubble
+
+- **Seen:** porting `Widget.vue`'s `@mousedown` (the pressed card comes to the front) and its move
+  handles. Vue's `mousedown` on a card's wrapper runs for a press on any child, a button included.
+- **Cause:** Rune sends each press, drag and move to exactly one node — the topmost one that takes
+  primary input (`primary_target`) — with no propagation. An ancestor's `on_press` runs only when
+  the press lands on an element without a handler of its own (a label, a picture, blank space);
+  an `El::on_drag` on a handle likewise keeps the card's `on_press` from running.
+- **Workaround:** the card frame uses `on_press(...).press_on_down()` so a press on its blank parts
+  or labels raises it as `mousedown` would, and a handle's drag calls `Overlay::bring_to_top`
+  itself. Pressing one of a widget's own buttons does not raise the widget; that only shows when
+  two cards overlap at that pixel (`rust/crates/app/src/widgets/mod.rs`).
