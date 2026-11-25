@@ -8,7 +8,7 @@
 use rune::{Align, El, col, el, row, text};
 use wraex_poe1::map_check as decisions;
 use wraex_poe1::prices::{Prices, display_rounding};
-use wraex_poe1::ultimatum::{Ultimatum, UltimatumModifier, value};
+use wraex_poe1::ultimatum::{Ultimatum, UltimatumModifier, UltimatumValue, value};
 use wraex_poe1::ultimatum_check::{self as rules, UltimatumCheckConfig, Verdict};
 
 use crate::poe1::i18n;
@@ -138,10 +138,8 @@ fn info(ultimatum: &Ultimatum, prices: &Prices) -> El {
     block = block
         .child(info_line("sacrifice", &i18n::fmt("ultimatum.sacrifice", &[&sacrifice_text(ultimatum)])))
         .child(info_line("reward", &i18n::fmt("ultimatum.reward", &[ultimatum.reward.description()])));
-    if let Some(line) = value_line(ultimatum, prices) {
-        block = block.child(line);
-    }
-    block
+    let value = value(ultimatum, crate::poe1::price_check::data(), prices);
+    value_lines("ultimatum-check", value, prices).into_iter().fold(block, El::child)
 }
 
 fn info_line(key: &str, content: &str) -> El {
@@ -156,29 +154,49 @@ fn sacrifice_text(ultimatum: &Ultimatum) -> String {
     }
 }
 
-/// "Sacrifice worth 87c · Reward worth 174c", once the price list has the units.
-fn value_line(ultimatum: &Ultimatum, prices: &Prices) -> Option<El> {
+/// The worth line, "Sacrifice worth 87c · Reward worth 174c", and under it the profit if the
+/// encounter is won, green or red. The item check and the price check both draw it; `prefix`
+/// keys the elements. Empty until the price list has loaded.
+pub fn value_lines(prefix: &str, value: UltimatumValue, prices: &Prices) -> Vec<El> {
     if prices.is_empty() {
-        return None;
+        return Vec::new();
     }
-    let value = value(ultimatum, crate::poe1::price_check::data(), prices);
     let part = |key: &str, chaos: Option<f64>| chaos.map(|chaos| i18n::fmt(key, &[&compact_price(prices, chaos)]));
     let parts: Vec<String> =
         [part("ultimatum.value_sacrifice", value.sacrifice), part("ultimatum.value_reward", value.reward)]
             .into_iter()
             .flatten()
             .collect();
-    (!parts.is_empty()).then(|| {
-        text(parts.join(" \u{b7} "))
-            .key("ultimatum-check-value")
-            .font(type_::SM)
-            .color(theme::gray(400))
-            .py(theme::rem(0.125))
-    })
+    let mut lines = Vec::new();
+    if !parts.is_empty() {
+        lines.push(
+            text(parts.join(" \u{b7} "))
+                .key(format!("{prefix}-value"))
+                .font(type_::SM)
+                .color(theme::gray(400))
+                .py(theme::rem(0.125)),
+        );
+    }
+    if let Some(profit) = value.profit() {
+        let amount = compact_price(prices, profit.abs());
+        let (signed, color) = if profit < 0.0 {
+            (format!("-{amount}"), theme::red(400))
+        } else {
+            (format!("+{amount}"), theme::green(500))
+        };
+        lines.push(
+            text(i18n::fmt("ultimatum.profit", &[&signed]))
+                .key(format!("{prefix}-profit"))
+                .font(type_::SM)
+                .color(color)
+                .py(theme::rem(0.125)),
+        );
+    }
+    lines
 }
 
-/// `compact_price`: the value in the orb poe.ninja prices it in, as the price check writes it.
-fn compact_price(prices: &Prices, chaos: f64) -> String {
+/// `compact_price`: the value in the orb poe.ninja prices it in (`87c`, `2.4div`).
+pub fn compact_price(prices: &Prices, chaos: f64) -> String {
     let price = prices.auto_currency(chaos);
     let amount = display_rounding(price.min, false);
     match price.currency {
@@ -245,7 +263,7 @@ fn modifier_row<S: 'static>(
         Some(draw) => cycle.child(draw(14.0, theme::gray(200)).key(format!("ultimatum-mod-{index}-icon"))),
         None => cycle.child(el().w(theme::rem(1.0))),
     };
-    cycle = cycle.child(modifier_text(modifier, index));
+    cycle = cycle.child(modifier_text(modifier, index, fill.is_some()));
 
     // The eye only acts while the new-mod icon is on; it marks this tier seen, not the rest.
     let seen = config.show_new_mods && current.is_none_or(|value| value == '-');
@@ -276,8 +294,11 @@ fn modifier_row<S: 'static>(
     row().key(format!("ultimatum-mod-{index}")).w_full().child(cycle).child(eye)
 }
 
-/// The modifier's name with its numeral (from tier II up) and its muted description.
-fn modifier_text(modifier: &UltimatumModifier, index: usize) -> El {
+/// The modifier's name with its numeral (from tier II up) and its muted description; on a
+/// marked row's colour the muted greys are too dark to read, so both stay light there.
+fn modifier_text(modifier: &UltimatumModifier, index: usize, marked: bool) -> El {
+    let (tier_color, description_color) =
+        if marked { (theme::gray(200), theme::gray(200)) } else { (theme::gray(400), theme::gray(500)) };
     let mut lines = col().key(format!("ultimatum-mod-{index}-text")).grow(1.0).min_w(0.0);
     let mut name =
         row().key(format!("ultimatum-mod-{index}-name")).gap(theme::rem(0.25)).items_center().child(
@@ -288,7 +309,7 @@ fn modifier_text(modifier: &UltimatumModifier, index: usize) -> El {
             text(TIERS[usize::from(modifier.tier.saturating_sub(1)).min(3)])
                 .key(format!("ultimatum-mod-{index}-tier"))
                 .font(type_::XS)
-                .color(theme::gray(400)),
+                .color(tier_color),
         );
     }
     lines = lines.child(name);
@@ -297,7 +318,7 @@ fn modifier_text(modifier: &UltimatumModifier, index: usize) -> El {
             text(content.to_owned())
                 .key(format!("ultimatum-mod-{index}-description-{line}"))
                 .font(type_::XS)
-                .color(theme::gray(500))
+                .color(description_color)
                 .wrap(),
         );
     }

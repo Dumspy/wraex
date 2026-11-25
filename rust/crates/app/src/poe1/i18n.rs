@@ -33,6 +33,7 @@ const EXTRA: &[(&str, &str)] = &[
     ("ultimatum.sacrifice_note", "Listings mix sacrifice counts"),
     ("ultimatum.value_sacrifice", "Sacrifice worth {0}"),
     ("ultimatum.value_reward", "Reward worth {0}"),
+    ("ultimatum.profit", "Profit if you win: {0}"),
     ("ultimatum.monsters", "Monsters: {0}"),
     ("ultimatum.monster_damage", "{0}% increased damage"),
     ("ultimatum.monster_life", "{0}% more life"),

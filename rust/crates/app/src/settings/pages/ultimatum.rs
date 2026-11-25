@@ -150,6 +150,7 @@ fn chip<S: 'static>(name: &str, tier: usize, set: &str, profile: u32, index: usi
         .w(theme::rem(1.5))
         .h(type_::SM.line_px())
         .justify_center()
+        .items_center()
         .radius(theme::ROUNDED)
         .fill(fill)
         .focusable(true)

@@ -31,7 +31,6 @@ use wraex_poe1::filters::{FilterOrGroup, FilterTag, ItemFilters, SearchFilter, S
 use wraex_poe1::parser::item::Item;
 use wraex_poe1::parser::meta::ItemCategory;
 use wraex_poe1::parser::modifiers::ModifierMechanic;
-use wraex_poe1::prices::{Prices, display_rounding};
 
 use crate::poe1::i18n;
 use crate::poe1::price_check::view::Project;
@@ -221,22 +220,8 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             );
         }
         if let Some(value) = check.ultimatum_value() {
-            let prices = check.prices.prices();
-            let part =
-                |key: &str, chaos: Option<f64>| chaos.map(|chaos| i18n::fmt(key, &[&compact_price(prices, chaos)]));
-            let parts: Vec<String> =
-                [part("ultimatum.value_sacrifice", value.sacrifice), part("ultimatum.value_reward", value.reward)]
-                    .into_iter()
-                    .flatten()
-                    .collect();
-            if !parts.is_empty() {
-                root = root.child(
-                    text(parts.join(" \u{b7} "))
-                        .key("ultimatum-value")
-                        .font(type_::SM)
-                        .color(theme::gray(400))
-                        .py(theme::rem(0.25)),
-                );
+            for line in crate::poe1::ultimatum_check::value_lines("ultimatum", value, check.prices.prices()) {
+                root = root.child(line);
             }
         }
     }
@@ -357,17 +342,6 @@ fn unknown_count(check: &PriceCheck) -> usize {
         return 0;
     }
     item.unknown_modifiers.len()
-}
-
-/// `autoCurrency` and `displayRounding`, in the short form the Ultimatum value line uses
-/// (`87c`, `2.4div`).
-fn compact_price(prices: &Prices, chaos: f64) -> String {
-    let price = prices.auto_currency(chaos);
-    let amount = display_rounding(price.min, false);
-    match price.currency {
-        "div" => format!("{amount}div"),
-        _ => format!("{amount}c"),
-    }
 }
 
 /// A `FilterOrGroup`'s `hidden`.

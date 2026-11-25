@@ -131,6 +131,14 @@ pub struct UltimatumValue {
     pub reward: Option<f64>,
 }
 
+impl UltimatumValue {
+    /// What winning the encounter gains: the reward less the sacrifice. It does not weigh the
+    /// chance of losing the sacrifice, nor what the Ultimatum itself would sell for.
+    pub fn profit(&self) -> Option<f64> {
+        Some(self.reward? - self.sacrifice?)
+    }
+}
+
 /// `value`: the sacrifice and the reward in chaos, from poe.ninja. Doubling rewards are worth
 /// twice the sacrifice; a unique swap is the two uniques' prices, each looked up on its own.
 pub fn value(u: &Ultimatum, d: &Data, prices: &Prices) -> UltimatumValue {
@@ -592,6 +600,9 @@ mod tests {
             value_of("survive-unique-swap", include_str!("../testdata/ultimatum/survive-unique-swap.txt")),
             UltimatumValue { sacrifice: Some(5.0), reward: Some(40.0) }
         );
+        assert_eq!(UltimatumValue { sacrifice: Some(5.0), reward: Some(40.0) }.profit(), Some(35.0));
+        assert_eq!(UltimatumValue { sacrifice: Some(40.0), reward: Some(5.0) }.profit(), Some(-35.0));
+        assert_eq!(UltimatumValue { sacrifice: Some(9.0), reward: None }.profit(), None);
     }
 
     #[test]

@@ -1260,6 +1260,7 @@ mod tests {
             text_of(&runtime, "ultimatum-value").as_deref(),
             Some("Sacrifice worth 87c \u{b7} Reward worth 174c")
         );
+        assert_eq!(text_of(&runtime, "ultimatum-profit").as_deref(), Some("Profit if you win: +87c"));
         // The modifier lines are the encounter's: not stats, and not unknown modifiers either.
         assert!(runtime.find("btn-stats").is_none());
         assert!(runtime.find("filters-stats").is_none());
@@ -1824,6 +1825,7 @@ mod tests {
             text_of(&runtime, "ultimatum-check-value").as_deref(),
             Some("Sacrifice worth 87c \u{b7} Reward worth 174c")
         );
+        assert_eq!(text_of(&runtime, "ultimatum-check-profit").as_deref(), Some("Profit if you win: +87c"));
         assert_eq!(text_of(&runtime, "ultimatum-check-verdict-text").as_deref(), Some("Don't run"));
         assert_eq!(element(&runtime.elements(), "ultimatum-check-verdict").unwrap().fill, theme::red(700));
 
