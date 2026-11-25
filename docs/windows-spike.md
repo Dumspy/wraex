@@ -13,6 +13,7 @@ What is implemented where:
 | The host's reaction to it (focus changes, bounds, destruction) | `rust/crates/platform/src/window/mod.rs`, `overlay.rs` |
 | The overlay window (transparent, on top, click-through, covering the game's client area), shown inactive | `rust/crates/app/src/shell/mod.rs` (`Panel`, `OverlayPanel`, `sync_window`) |
 | Global mouse moves, buttons and wheel (`uiohook`'s half) | `rust/crates/platform/src/window/win32.rs` (`WH_MOUSE_LL` on the hook thread) |
+| Global key down/up (`uiohook`'s other half): the Alt peek and the key log. Keys Wraex synthesizes are flagged injected and ignored | `rust/crates/platform/src/window/win32.rs` (`WH_KEYBOARD_LL` on the hook thread), `rust/crates/app/src/shell/mod.rs` (`poll_keyboard`) |
 | Following the mouse onto the price check, closing it when the mouse leaves, Ctrl+wheel stash tabs | `rust/crates/platform/src/overlay.rs` (`WidgetAreaTracker` port), `rust/crates/app/src/shell/mod.rs` (`poll_mouse`, `track_area`), `shortcuts.rs` (`on_wheel`) |
 | Hotkeys registered only while the game is focused | `rust/crates/app/src/shell/mod.rs` (`sync_registration`) |
 | Key synthesis allowed by default there, opt-in elsewhere | `rust/crates/app/src/shell/keys.rs` |
@@ -160,6 +161,32 @@ the overlay interactive even without the mouse.
    is usable — it is the only way in while no hotkey is registered (hotkeys need the game's
    focus). It is still the overlay-style window (no title bar, on top), sized to the settings.
 
+### 8. The Alt peek
+
+`OverlayVisibility`: a lone Alt held down hides the widgets so the game underneath can be
+looked at; letting go brings them back. The keyboard hook only observes, so no key may be
+lost, repeated or blocked while this runs.
+
+1. Open a price check and leave the cursor away from its card. Hold **Alt alone** and keep it
+   down. **Look for**: the card disappears about a quarter-second later (275 ms) and the game
+   is visible underneath; the character still turns and walks with Alt held.
+2. Release Alt. **Look for**: the card is back in the same place, still click-through if the
+   cursor is away from it (step 2's behaviour is unchanged).
+3. Tap Alt and release it within ~275 ms. **Look for**: no flicker — the card never disappears.
+4. Hold Alt and press another key (e.g. Alt+A, or Alt+Tab). **Look for**: the card does **not**
+   stay hidden — a lone Alt is the peek, any other key cancels it (upstream's keydown rule).
+5. Move the mouse onto the card so it becomes interactable, then hold Alt. **Look for**: it
+   hides after 85 ms instead (the interactable delay), and the release brings it back with the
+   card still clickable.
+6. Tap Alt and move the mouse within the 275 ms window. **Look for**: the card never
+   disappears — a mouse move cancels a pending peek, as upstream's `mousemove` handler does.
+7. Press the price-check hotkey while the game's "show advanced item descriptions" key is Alt
+   (PoE2 default) so Wraex synthesizes Ctrl+Alt+C. **Look for**: the card does not hide — the
+   injected Alt is ignored by the hook.
+8. Open the game's chat and type a sentence while the hook runs. **Look for**: every character
+   appears exactly once and in order; the log (with `logKeys` on) shows one `Keydown`/`Keyup`
+   per press and no synthesized keys.
+
 ## When something fails
 
 Collect, in the issue or report:
@@ -167,7 +194,9 @@ Collect, in the issue or report:
 - the whole `wraex.log` from start to the failing step;
 - the game's mode (borderless / fullscreen), resolution and Windows display scale;
 - the `windowTitle` from the config, and whether Wraex runs as administrator;
-- the class name the log printed when it attached.
+- the class name the log printed when it attached;
+- whether the log has `the global mouse hook could not be installed` or `the global keyboard
+  hook could not be installed` (another application may hold the hook, or the app is sandboxed).
 
 ## What the first Windows run found, and what changed
 
@@ -180,7 +209,8 @@ Collect, in the issue or report:
 
 What still needs a real Windows run: the hook's coordinate/DPI conversion at non-100 % scale,
 whether the click that activates a click-through overlay reaches the game once (as upstream's
-does), and the wheel hook's interplay with the game's own stash scrolling.
+does), the wheel hook's interplay with the game's own stash scrolling, and the Alt peek's
+timing/modifier tracking from the keyboard hook (step 8 above).
 
 ## Known gaps in this spike
 
@@ -189,12 +219,9 @@ These are deliberate, and each is a follow-up rather than a bug:
 - **Settings and the widget share one window.** Upstream has a separate overlay window and a
   separate settings window; the port draws both in the overlay (settings centred). Splitting
   them is phase 5 work.
-- **The Alt peek** (`OverlayVisibility`) runs in the overlay state machine and the mouse hook
-  feeds its `mousemove`; the global keyboard hook that reports Alt down/up is not written, so
-  holding Alt does not hide the widgets yet.
-- **The mouse hook is Win32 only.** macOS, X11 and Wayland have no window or input hook
-  (`wraex_platform::window::Watcher::start` reports `Unsupported` there). Rune's interactive
-  overlays are unsupported on Wayland, which PLAN.md notes as a known loss.
+- **The input hooks are Win32 only.** macOS, X11 and Wayland have no window, mouse or keyboard
+  hook (`wraex_platform::window::Watcher::start` reports `Unsupported` there). Rune's
+  interactive overlays are unsupported on Wayland, which PLAN.md notes as a known loss.
 - **No screenshot/OCR** (`OverlayController.screenshot()`, the heist gem finder).
 - **A widget opened from the tray is centred**, not at the cursor: only a hotkey knows where
   the cursor was. The tray and menu paths also still take the focus for the widget they open,

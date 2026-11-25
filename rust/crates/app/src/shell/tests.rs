@@ -4,6 +4,7 @@
 use super::*;
 use crate::settings::Page;
 use wraex_platform::overlay::{OverlayEvent, OverlayHandle, OverlayInput};
+use wraex_platform::shortcuts::InputEvent;
 
 /// One [`OverlayHandle`] call, recorded; the same shape the platform crate's tests use, which
 /// is private to that crate.
@@ -149,6 +150,19 @@ fn only_widgets_are_the_overlay() {
     assert!(is_overlay(&Shown::Widget(widgets::Kind::Menu.name().to_owned())));
     assert!(!is_overlay(&Shown::Settings));
     assert!(!is_overlay(&Shown::None));
+}
+
+/// `OverlayVisibility`'s Alt peek hides the widget the overlay draws, and only that: the
+/// settings window is an ordinary window upstream and stays.
+#[test]
+fn the_alt_peek_hides_the_widget_but_not_the_settings_window() {
+    assert!(peek_hides(&Shown::PriceCheck, false));
+    assert!(peek_hides(&Shown::Poe2, false));
+    assert!(peek_hides(&Shown::ItemCheck, false));
+    assert!(peek_hides(&Shown::Widget(widgets::Kind::Menu.name().to_owned()), false));
+    assert!(!peek_hides(&Shown::Settings, false), "the settings window is not the overlay");
+    assert!(!peek_hides(&Shown::None, false), "there is nothing to hide");
+    assert!(!peek_hides(&Shown::PriceCheck, true), "a visible overlay hides nothing");
 }
 
 /// A widget placed inside the overlay: at the cursor, or centred, always inside the card's
@@ -489,4 +503,76 @@ fn overlay_commands_do_not_touch_the_settings_window() {
     assert!(overlay_commands_apply(&Shown::Widget("menu".to_owned()), true));
     assert!(!overlay_commands_apply(&Shown::PriceCheck, false), "the overlay does not hold the keys");
     assert!(!overlay_commands_apply(&Shown::Settings, true), "the settings window keeps its escape");
+}
+
+/// One `OverlayVisibility` peek's timer: time only moves when a test advances it.
+#[derive(Debug, Default)]
+struct TestClock(std::cell::Cell<wraex_core::trade::rate_limit::Millis>);
+
+impl TestClock {
+    fn advance(&self, millis: wraex_core::trade::rate_limit::Millis) {
+        self.0.set(self.0.get() + millis);
+    }
+}
+
+impl Clock for TestClock {
+    fn now(&self) -> wraex_core::trade::rate_limit::Millis {
+        self.0.get()
+    }
+
+    fn sleep(&self, millis: wraex_core::trade::rate_limit::Millis) {
+        self.advance(millis);
+    }
+}
+
+/// The global keyboard hook's Alt peek, as `Live::poll_keyboard` feeds it to `OverlayVisibility`:
+/// holding Alt alone hides the widget after the 275 ms delay, and the release brings it back.
+#[test]
+fn the_alt_peek_hides_the_widget_until_alt_is_released() {
+    let mut harness = Harness::playing();
+    harness.open_price_check(Point { x: 800.0, y: 600.0 }, 1.0);
+    let clock = TestClock::default();
+    let shortcuts = Shortcuts::new(GameId::Poe1, wraex_core::game_files::Os::Windows);
+    let alt = |alt| InputEvent { key: Some("Alt"), ctrl: false, shift: false, alt };
+
+    apply_key_event(&mut harness.overlay, &shortcuts, KeyEvent::Down(alt(true)), &clock);
+    assert_eq!(
+        harness.overlay.visibility_deadline(),
+        Some(wraex_platform::overlay::VISIBILITY_HIDE_DELAY),
+        "a tap does not flicker the widget: the hide waits"
+    );
+    assert!(harness.overlay.is_visible());
+
+    clock.advance(wraex_platform::overlay::VISIBILITY_HIDE_DELAY);
+    harness.overlay.poll(&clock);
+    assert!(!harness.overlay.is_visible(), "holding Alt hides the widgets");
+    assert_eq!(harness.overlay.take_events(), vec![OverlayEvent::Visibility { is_visible: false }]);
+
+    apply_key_event(&mut harness.overlay, &shortcuts, KeyEvent::Up(alt(false)), &clock);
+    assert!(harness.overlay.is_visible(), "releasing Alt brings them back");
+    assert_eq!(harness.overlay.take_events(), vec![OverlayEvent::Visibility { is_visible: true }]);
+}
+
+/// `OverlayVisibility`'s other keydown branch: a key pressed while Alt is held ends the peek, so
+/// Alt+Tab or Alt+F4 are not a peek.
+#[test]
+fn a_key_pressed_while_alt_is_held_ends_the_peek() {
+    let mut harness = Harness::playing();
+    let clock = TestClock::default();
+    let shortcuts = Shortcuts::new(GameId::Poe1, wraex_core::game_files::Os::Windows);
+    let controller = &mut harness.overlay;
+
+    let alt = InputEvent { key: Some("Alt"), ctrl: false, shift: false, alt: true };
+    apply_key_event(controller, &shortcuts, KeyEvent::Down(alt), &clock);
+    assert!(controller.visibility_deadline().is_some());
+
+    let alt_tab = InputEvent { key: Some("Tab"), ctrl: false, shift: false, alt: true };
+    apply_key_event(controller, &shortcuts, KeyEvent::Down(alt_tab), &clock);
+    assert_eq!(controller.visibility_deadline(), None, "the peek is cancelled");
+    assert!(controller.is_visible());
+
+    // The Alt release is a no-op then: the widget never went away.
+    apply_key_event(controller, &shortcuts, KeyEvent::Up(InputEvent { alt: false, ..alt }), &clock);
+    assert!(controller.is_visible());
+    assert!(controller.take_events().is_empty());
 }

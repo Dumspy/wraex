@@ -19,6 +19,9 @@
 //!   and wheel notch, in physical screen pixels (the half of `uiohook-napi` the overlay and the
 //!   stash scroll use). It only observes: the callback queues the event and calls
 //!   `CallNextHookEx`, so the game never waits on it.
+//! - A `WH_KEYBOARD_LL` low-level keyboard hook on the same thread: every key's down and up with
+//!   the modifiers held, which is `OverlayVisibility`'s Alt peek and `Shortcuts`' key log. Keys
+//!   Wraex synthesizes are flagged injected and skipped. Observe-only, like the mouse hook.
 //!
 //! The reported rectangle is the *client* area (`GetClientRect` + `ClientToScreen`), which is
 //! the whole window in borderless-windowed and fullscreen and the content below the title bar
@@ -41,21 +44,25 @@ use windows::Win32::Graphics::Gdi::ClientToScreen;
 use windows::Win32::System::Threading::{AttachThreadInput, GetCurrentThreadId};
 use windows::Win32::UI::Accessibility::{HWINEVENTHOOK, SetWinEventHook, UnhookWinEvent};
 use windows::Win32::UI::HiDpi::GetDpiForWindow;
-use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VIRTUAL_KEY, VK_CONTROL, VK_MENU};
+use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VIRTUAL_KEY, VK_CONTROL, VK_MENU, VK_SHIFT};
 use windows::Win32::UI::WindowsAndMessaging::{
     CHILDID_SELF, CallNextHookEx, DispatchMessageW, EVENT_OBJECT_DESTROY, EVENT_OBJECT_LOCATIONCHANGE,
     EVENT_OBJECT_NAMECHANGE, EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_MINIMIZEEND, GA_ROOT, GUITHREADINFO, GWL_EXSTYLE,
     GetAncestor, GetClassNameW, GetClientRect, GetForegroundWindow, GetGUIThreadInfo, GetMessageW, GetWindowLongPtrW,
-    GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId, HHOOK, IsHungAppWindow, IsIconic, KillTimer, MSG,
-    MSLLHOOKSTRUCT, OBJID_WINDOW, PM_NOREMOVE, PeekMessageW, PostMessageW, PostThreadMessageW, RegisterWindowMessageW,
-    SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SetForegroundWindow, SetTimer,
-    SetWindowLongPtrW, SetWindowPos, SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, WH_MOUSE_LL,
-    WINEVENT_OUTOFCONTEXT, WM_LBUTTONDOWN, WM_MBUTTONDOWN, WM_MOUSEMOVE, WM_MOUSEWHEEL, WM_QUIT, WM_RBUTTONDOWN,
-    WM_XBUTTONDOWN, WS_EX_TOOLWINDOW,
+    GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId, HHOOK, IsHungAppWindow, IsIconic, KBDLLHOOKSTRUCT,
+    KillTimer, LLKHF_INJECTED, MSG, MSLLHOOKSTRUCT, OBJID_WINDOW, PM_NOREMOVE, PeekMessageW, PostMessageW,
+    PostThreadMessageW, RegisterWindowMessageW, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER,
+    SetForegroundWindow, SetTimer, SetWindowLongPtrW, SetWindowPos, SetWindowsHookExW, TranslateMessage,
+    UnhookWindowsHookEx, WH_KEYBOARD_LL, WH_MOUSE_LL, WINEVENT_OUTOFCONTEXT, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN,
+    WM_MBUTTONDOWN, WM_MOUSEMOVE, WM_MOUSEWHEEL, WM_QUIT, WM_RBUTTONDOWN, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_XBUTTONDOWN,
+    WS_EX_TOOLWINDOW,
 };
 use windows::core::w;
 
-use super::{Bounds, GameWindowEvents, MouseEvent, Point, WakeFn, WatchError, WindowTarget, matches_target};
+use super::{
+    Bounds, GameWindowEvents, KeyEvent, ModifierState, MouseEvent, Point, WakeFn, WatchError, WindowTarget,
+    matches_target,
+};
 
 /// The reference's foreground timer: 12 times a second, which is what catches foreground
 /// changes Windows swallowed (`ForegroundLockTimeout`, another app stealing the foreground).
@@ -67,6 +74,10 @@ struct Hook {
     events: Sender<GameWindowEvents>,
     /// The low-level mouse hook's queue: `uiohook`'s `mousemove`/`mousedown`/`wheel`.
     mouse: Sender<MouseEvent>,
+    /// The low-level keyboard hook's queue: `uiohook`'s `keydown`/`keyup`.
+    keys: Sender<KeyEvent>,
+    /// The modifiers the keyboard hook has seen held, which the mouse hook's events carry too.
+    modifiers: ModifierState,
     /// Move events are the bulk of the hook's traffic and are only wanted while a widget's
     /// area is tracked (upstream adds its `mousemove` listener for exactly that time); the
     /// flag keeps the hook from waking the app on every desktop mouse move.
@@ -86,6 +97,7 @@ struct Hook {
     destroy_hook: HWINEVENTHOOK,
     name_hook: HWINEVENTHOOK,
     mouse_hook: HHOOK,
+    keyboard_hook: HHOOK,
     uipi_message: u32,
 }
 
@@ -123,6 +135,13 @@ impl Hook {
     /// injection, and no work that the message loop would have to wait for.
     fn emit_mouse(&self, event: MouseEvent) {
         if self.mouse.send(event).is_ok() {
+            (self.wake)();
+        }
+    }
+
+    /// Queues one key event, with the same observe-only contract as [`Self::emit_mouse`].
+    fn emit_key(&self, event: KeyEvent) {
+        if self.keys.send(event).is_ok() {
             (self.wake)();
         }
     }
@@ -340,8 +359,7 @@ unsafe extern "system" fn mouse_proc(code: i32, wparam: WPARAM, lparam: LPARAM) 
         let point = Point { x: f64::from(info.pt.x), y: f64::from(info.pt.y) };
         with_hook(|hook| match message {
             WM_MOUSEMOVE if hook.mouse_moves.load(Ordering::Relaxed) => {
-                let (ctrl, alt) = mouse_modifiers();
-                hook.emit_mouse(MouseEvent::Move { point, ctrl, alt });
+                hook.emit_mouse(MouseEvent::Move { point, ctrl: hook.modifiers.ctrl(), alt: hook.modifiers.alt() });
             }
             WM_LBUTTONDOWN | WM_RBUTTONDOWN | WM_MBUTTONDOWN | WM_XBUTTONDOWN => {
                 hook.emit_mouse(MouseEvent::Down { point });
@@ -350,7 +368,7 @@ unsafe extern "system" fn mouse_proc(code: i32, wparam: WPARAM, lparam: LPARAM) 
                 // The high word of `mouseData` is the signed wheel delta; the sign is the
                 // notch's direction (a high-resolution wheel may send less than 120 at once).
                 let delta = i32::from((info.mouseData >> 16) as u16 as i16);
-                hook.emit_mouse(MouseEvent::Wheel { point, rotation: delta.signum(), ctrl: mouse_modifiers().0 });
+                hook.emit_mouse(MouseEvent::Wheel { point, rotation: delta.signum(), ctrl: hook.modifiers.ctrl() });
             }
             _ => {}
         });
@@ -359,13 +377,53 @@ unsafe extern "system" fn mouse_proc(code: i32, wparam: WPARAM, lparam: LPARAM) 
     unsafe { CallNextHookEx(None, code, wparam, lparam) }
 }
 
-/// Whether Ctrl and Alt are held, as `uiohook`'s `ctrlKey`/`altKey` report them.
-fn mouse_modifiers() -> (bool, bool) {
+/// The low-level keyboard hook (`WH_KEYBOARD_LL`), the half of `uiohook-napi` that
+/// `OverlayVisibility.ts` (the Alt peek) and `Shortcuts.ts` (the key log) listen to: every key's
+/// down and up on the desktop, with the modifiers the hook has seen.
+///
+/// It only observes. The callback queues one small event and hands the message on with
+/// [`CallNextHookEx`], so typing in the game is never delayed or blocked. Keys Wraex synthesizes
+/// itself (`SendInput` for the game's copy key) arrive flagged `LLKHF_INJECTED` and are
+/// ignored: they must not toggle the peek or report a modifier the user is not holding.
+unsafe extern "system" fn keyboard_proc(
+    code: i32,
+    wparam: WPARAM,
+    lparam: LPARAM,
+) -> windows::Win32::Foundation::LRESULT {
+    if code >= 0 {
+        let message = wparam.0 as u32;
+        let down = message == WM_KEYDOWN || message == WM_SYSKEYDOWN;
+        let up = message == WM_KEYUP || message == WM_SYSKEYUP;
+        if down || up {
+            // SAFETY: for `WH_KEYBOARD_LL` Windows passes a live `KBDLLHOOKSTRUCT` in `lparam`.
+            let info = unsafe { &*(lparam.0 as *const KBDLLHOOKSTRUCT) };
+            if !info.flags.contains(LLKHF_INJECTED) {
+                with_hook(|hook| {
+                    // The released key's modifier is cleared before the event is built, which
+                    // is the state `OverlayVisibility`'s keyup handler reads (`!e.altKey`).
+                    hook.modifiers.set(info.vkCode, down);
+                    let event = hook.modifiers.input(wraex_core::keys::vk_to_key(info.vkCode));
+                    hook.emit_key(if down { KeyEvent::Down(event) } else { KeyEvent::Up(event) });
+                });
+            }
+        }
+    }
+    // SAFETY: the hook contract: everything not consumed goes to the next hook in the chain.
+    unsafe { CallNextHookEx(None, code, wparam, lparam) }
+}
+
+/// The modifiers held right now, for the state before the hook's first key event: a key the
+/// user was already holding sends no keydown, and the mouse hook's events need its modifiers.
+fn system_modifiers() -> ModifierState {
+    let mut modifiers = ModifierState::default();
     // SAFETY: a plain Win32 query usable from a low-level hook callback.
     unsafe {
         let down = |key: VIRTUAL_KEY| GetAsyncKeyState(key.0 as i32) < 0;
-        (down(VK_CONTROL), down(VK_MENU))
+        modifiers.set(VK_SHIFT.0 as u32, down(VK_SHIFT));
+        modifiers.set(VK_CONTROL.0 as u32, down(VK_CONTROL));
+        modifiers.set(VK_MENU.0 as u32, down(VK_MENU));
     }
+    modifiers
 }
 
 /// Whether `hwnd` is the foreground window, or the root of the window that really has the
@@ -465,17 +523,26 @@ enum Startup {
     Ready(u32),
 }
 
+/// The three queues the hook thread fills: the game window's reports, the mouse hook's events
+/// and the keyboard hook's.
+#[derive(Debug)]
+struct HookChannels {
+    events: Sender<GameWindowEvents>,
+    mouse: Sender<MouseEvent>,
+    keys: Sender<KeyEvent>,
+}
+
 /// The hook thread: hooks, the timer, the first look at the foreground, then the message
 /// loop until `WM_QUIT` (posted by [`Watcher::drop`]).
 fn hook_thread(
     target: WindowTarget,
-    events: Sender<GameWindowEvents>,
-    mouse: Sender<MouseEvent>,
+    channels: HookChannels,
     mouse_moves: Arc<AtomicBool>,
     wake: WakeFn,
     game: Arc<Mutex<Option<isize>>>,
     startup: Sender<Startup>,
 ) {
+    let HookChannels { events, mouse, keys } = channels;
     // SAFETY: every call here is a plain Win32 call owned by this thread, which also
     // unhooks everything before it ends.
     unsafe {
@@ -485,6 +552,8 @@ fn hook_thread(
                 target,
                 events,
                 mouse,
+                keys,
+                modifiers: system_modifiers(),
                 mouse_moves,
                 wake,
                 game,
@@ -496,6 +565,7 @@ fn hook_thread(
                 destroy_hook: HWINEVENTHOOK::default(),
                 name_hook: HWINEVENTHOOK::default(),
                 mouse_hook: HHOOK::default(),
+                keyboard_hook: HHOOK::default(),
                 uipi_message,
             });
         });
@@ -523,6 +593,12 @@ fn hook_thread(
         match mouse_hook {
             Ok(hook) => with_hook(|state| state.mouse_hook = hook),
             Err(error) => eprintln!("wraex: the global mouse hook could not be installed: {error}"),
+        }
+        // The global keyboard hook, observed only too: the Alt peek and the key log.
+        let keyboard_hook = SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_proc), None, 0);
+        match keyboard_hook {
+            Ok(hook) => with_hook(|state| state.keyboard_hook = hook),
+            Err(error) => eprintln!("wraex: the global keyboard hook could not be installed: {error}"),
         }
         let timer = SetTimer(None, 0, FOREGROUND_TIMER_MS, Some(foreground_timer));
         // Create this thread's message queue before reporting ready, so a stop posted right
@@ -555,6 +631,10 @@ fn hook_thread(
                 let _ = UnhookWindowsHookEx(hook.mouse_hook);
                 hook.mouse_hook = HHOOK::default();
             }
+            if !hook.keyboard_hook.is_invalid() {
+                let _ = UnhookWindowsHookEx(hook.keyboard_hook);
+                hook.keyboard_hook = HHOOK::default();
+            }
         });
         HOOK.with(|cell| {
             let _ = cell.borrow_mut().take();
@@ -566,6 +646,7 @@ fn hook_thread(
 pub struct Watcher {
     events: Receiver<GameWindowEvents>,
     mouse: Receiver<MouseEvent>,
+    keys: Receiver<KeyEvent>,
     mouse_moves: Arc<AtomicBool>,
     game: Arc<Mutex<Option<isize>>>,
     target: WindowTarget,
@@ -584,6 +665,7 @@ impl Watcher {
     pub fn start(target: WindowTarget, wake: WakeFn) -> Result<Self, WatchError> {
         let (events, receiver) = mpsc::channel();
         let (mouse, mouse_receiver) = mpsc::channel();
+        let (keys, key_receiver) = mpsc::channel();
         let mouse_moves: Arc<AtomicBool> = Arc::default();
         let game: Arc<Mutex<Option<isize>>> = Arc::default();
         let (startup, started) = mpsc::channel();
@@ -592,12 +674,22 @@ impl Watcher {
         let thread_mouse_moves = mouse_moves.clone();
         let thread = std::thread::Builder::new()
             .name("wraex-window-hook".to_owned())
-            .spawn(move || hook_thread(thread_target, events, mouse, thread_mouse_moves, wake, thread_game, startup))
+            .spawn(move || {
+                hook_thread(
+                    thread_target,
+                    HookChannels { events, mouse, keys },
+                    thread_mouse_moves,
+                    wake,
+                    thread_game,
+                    startup,
+                )
+            })
             .map_err(|error| WatchError::Thread(error.to_string()))?;
         match started.recv() {
             Ok(Startup::Ready(thread_id)) => Ok(Self {
                 events: receiver,
                 mouse: mouse_receiver,
+                keys: key_receiver,
                 mouse_moves,
                 game,
                 target,
@@ -619,6 +711,12 @@ impl Watcher {
     /// The mouse events since the last call, oldest first (`uiohook`'s listeners).
     pub fn drain_mouse(&mut self) -> Vec<MouseEvent> {
         self.mouse.try_iter().collect()
+    }
+
+    /// The keyboard events since the last call, oldest first (`uiohook`'s `keydown`/`keyup`
+    /// listeners). Keys Wraex synthesized are not among them.
+    pub fn drain_keys(&mut self) -> Vec<KeyEvent> {
+        self.keys.try_iter().collect()
     }
 
     /// Arms or disarms the mouse-move half of the hook. Buttons and wheel keep arriving

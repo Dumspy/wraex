@@ -371,8 +371,10 @@ fn project_item_check_poe2(app: &mut App) -> &mut poe2::item_check::ItemCheck {
 /// game's price check is open.
 pub fn view(app: &App, cx: &mut Cx<App>) -> El {
     // A live window with nothing to draw is hidden by the shell (`shell::Live::sync_window`);
-    // this only keeps the frame it was hidden in from drawing a widget.
-    if app.live.is_some() && app.shown() == shell::Shown::None {
+    // this only keeps the frame it was hidden in from drawing a widget. `is_peeked` is
+    // `OverlayVisibility`'s Alt peek: the widget is not drawn while Alt is held, and comes back
+    // exactly where it was when Alt is released.
+    if app.live.is_some() && (app.shown() == shell::Shown::None || app.is_peeked()) {
         return rune::el();
     }
     let card = card(app, cx);

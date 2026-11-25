@@ -122,6 +122,20 @@ pub fn code_to_key(code: &str) -> Option<&'static str> {
     KEY_TO_CODE.iter().find(|(_, c)| c.to_string() == code).map(|(k, _)| *k)
 }
 
+/// [`KEY_TO_CODE`]'s reverse for a Windows virtual-key code, as the low-level keyboard hook
+/// reports it (`KBDLLHOOKSTRUCT.vkCode`). The left/right modifier variants (`VK_LCONTROL` 0xA2,
+/// `VK_RCONTROL` 0xA3, ...) map to the plain name: they are the same key as far as a hotkey or
+/// `uiohook`'s events are concerned, and `KeyToCode` only has the plain one.
+pub fn vk_to_key(code: u32) -> Option<&'static str> {
+    match code {
+        0xA0 | 0xA1 => return Some("Shift"), // VK_LSHIFT, VK_RSHIFT
+        0xA2 | 0xA3 => return Some("Ctrl"),  // VK_LCONTROL, VK_RCONTROL
+        0xA4 | 0xA5 => return Some("Alt"),   // VK_LMENU, VK_RMENU
+        _ => {}
+    }
+    KEY_TO_CODE.iter().find(|(_, vk)| *vk == code).map(|(name, _)| *name)
+}
+
 /// `isModKey`
 pub fn is_mod_key(key: &str) -> bool {
     matches!(key, "Ctrl" | "Shift" | "Alt")
@@ -179,5 +193,24 @@ mod tests {
         assert_eq!(hotkey_to_string(&["Alt"], false, false, false), "Alt");
         assert_eq!(hotkey_to_string(&["D", "Shift", "Ctrl"], false, false, true), "Ctrl + Shift + Alt + D");
         assert_eq!(merge_two_hotkeys("Ctrl + D", "Shift + D"), "Ctrl + Shift + D");
+    }
+
+    #[test]
+    fn virtual_key_codes_name_their_keys() {
+        // `KeyToCode`'s pairs, looked up the other way (what the keyboard hook has).
+        assert_eq!(vk_to_key(18), Some("Alt"));
+        assert_eq!(vk_to_key(68), Some("D"));
+        assert_eq!(vk_to_key(116), Some("F5"));
+        assert_eq!(vk_to_key(222), Some("Quote"));
+        // The left/right modifiers are the plain names, which is all `KeyToCode` has.
+        assert_eq!(vk_to_key(0xA0), Some("Shift"));
+        assert_eq!(vk_to_key(0xA1), Some("Shift"));
+        assert_eq!(vk_to_key(0xA2), Some("Ctrl"));
+        assert_eq!(vk_to_key(0xA3), Some("Ctrl"));
+        assert_eq!(vk_to_key(0xA4), Some("Alt"));
+        assert_eq!(vk_to_key(0xA5), Some("Alt"));
+        // Media keys and the like have no name in the hotkey config.
+        assert_eq!(vk_to_key(0xAD), None);
+        assert_eq!(vk_to_key(0), None);
     }
 }

@@ -27,9 +27,11 @@
 //!   lock swallows; the game's *client* rectangle (`GetClientRect` + `ClientToScreen`, so
 //!   borderless-windowed and fullscreen both land right); the UIPI probe that says the
 //!   game runs elevated (the "PoE window - No access" case); `SetForegroundWindow` with
-//!   the foreground-lock workaround for the focus hand-back; and a `WH_MOUSE_LL` hook for
+//!   the foreground-lock workaround for the focus hand-back; a `WH_MOUSE_LL` hook for
 //!   global mouse moves, buttons and wheel notches ([`MouseEvent`], `uiohook-napi`'s
-//!   half that follows the price check and scrolls the stash tabs).
+//!   half that follows the price check and scrolls the stash tabs); and a
+//!   `WH_KEYBOARD_LL` hook for every key's down and up ([`KeyEvent`]), which is the
+//!   Alt peek and the key log `uiohook-napi` provides. Both hooks only observe.
 //!   This is behaviour ported from that package's README and Win32 backend, not its code.
 //! - **macOS / X11 / Wayland** have no backend yet, so [`Watcher::start`] reports
 //!   [`WatchError::Unsupported`] and the shell keeps its ordinary windows. Follow-ups:
@@ -55,6 +57,8 @@ mod win32;
 pub use unsupported::{Watcher, configure_overlay, dpi_scale, focus_window, place_overlay};
 #[cfg(windows)]
 pub use win32::{Watcher, configure_overlay, dpi_scale, focus_window, place_overlay};
+
+use crate::shortcuts::InputEvent;
 
 /// A rectangle in screen coordinates (Electron's `Rectangle`,
 /// `OverlayController.targetBounds`).
@@ -100,6 +104,62 @@ pub enum MouseEvent {
     Down { point: Point },
     /// `uIOhook`'s `wheel`: positive is away from the user, one notch per `120` Win32 units.
     Wheel { point: Point, rotation: i32, ctrl: bool },
+}
+
+/// A key event from the OS-level keyboard hook (`uiohook-napi`'s `keydown`/`keyup`).
+///
+/// Every key is reported, not only the modifiers: `OverlayVisibility`'s Alt peek hides the
+/// widgets on an Alt-only keydown and brings them back on any other key, and `Shortcuts`'
+/// `logKeys` logs them all. Only observed: the hook never blocks, swallows or injects a key.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum KeyEvent {
+    /// `uIOhook`'s `keydown`, with the modifiers held at the time.
+    Down(InputEvent),
+    /// `uIOhook`'s `keyup`. The modifier the released key names is already cleared, which is
+    /// what `OverlayVisibility`'s `if (!e.altKey)` relies on.
+    Up(InputEvent),
+}
+
+/// Which modifiers the keyboard hook has seen held, in `uiohook`'s `ctrlKey`/`shiftKey`/
+/// `altKey` shape.
+///
+/// The hook reports every key's down and up, so this is its own bookkeeping rather than
+/// `GetAsyncKeyState`'s snapshot (which can lag the key event it belongs to). The mouse hook
+/// passes the same state along with its moves, as `uiohook`'s mouse events carry the keyboard
+/// modifiers.
+#[cfg(any(windows, test))]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub(crate) struct ModifierState {
+    ctrl: bool,
+    shift: bool,
+    alt: bool,
+}
+
+#[cfg(any(windows, test))]
+impl ModifierState {
+    /// One key event: the modifier that key names goes down or up; any other key changes
+    /// nothing. `vk` is `KBDLLHOOKSTRUCT.vkCode`; left and right variants name the same key.
+    pub(crate) fn set(&mut self, vk: u32, down: bool) {
+        match wraex_core::keys::vk_to_key(vk) {
+            Some("Ctrl") => self.ctrl = down,
+            Some("Shift") => self.shift = down,
+            Some("Alt") => self.alt = down,
+            _ => {}
+        }
+    }
+
+    pub(crate) fn ctrl(&self) -> bool {
+        self.ctrl
+    }
+
+    pub(crate) fn alt(&self) -> bool {
+        self.alt
+    }
+
+    /// The modifiers as the [`InputEvent`] for `key`.
+    pub(crate) fn input(&self, key: Option<&'static str>) -> InputEvent {
+        InputEvent { key, ctrl: self.ctrl, shift: self.shift, alt: self.alt }
+    }
 }
 
 /// What the OS layer reports about the game window: the half of
@@ -293,6 +353,9 @@ impl std::error::Error for WatchError {}
 /// - [`Watcher::drain_mouse`] takes the [`MouseEvent`]s the global low-level mouse hook queued
 ///   (`uiohook`'s `mousemove`/`mousedown`/`wheel`). [`Watcher::set_mouse_moves`] turns off the
 ///   flood of move events while nothing tracks the mouse (a wheel still arrives).
+/// - [`Watcher::drain_keys`] takes the [`KeyEvent`]s the global low-level keyboard hook queued
+///   (`uiohook`'s `keydown`/`keyup`): the Alt peek and the key log. Keys the app synthesizes
+///   itself are flagged injected and are not reported, so they cannot toggle the peek.
 /// - [`Watcher::hwnd`] is the tracked window's native handle, for [`focus_window`] and the
 ///   other calls that take one.
 ///
@@ -412,5 +475,30 @@ mod tests {
         assert!(!Point { x: 0.0, y: 5.0 }.is_inside(area));
         assert!(!Point { x: 5.0, y: 10.0 }.is_inside(area));
         assert_eq!(Point { x: 3.0, y: 4.0 }.distance_to(Point { x: 0.0, y: 0.0 }), 5.0);
+    }
+
+    #[test]
+    fn the_keyboard_hook_tracks_the_modifiers_it_reports() {
+        let mut keys = ModifierState::default();
+        assert_eq!(keys.input(None), InputEvent { key: None, ctrl: false, shift: false, alt: false });
+
+        // `VK_MENU` (18) is the Alt a low-level hook reports; `VK_LMENU` (0xA4) is the same key.
+        keys.set(0x12, true);
+        assert!(keys.alt(), "Alt down is the state the mouse hook reads");
+        assert!(keys.input(Some("Alt")).alt, "Alt down shows in the event");
+        keys.set(0x12, false);
+        assert!(!keys.input(Some("Alt")).alt, "and Alt up clears it, so `!e.altKey` is true");
+
+        // A letter changes no modifier: only the modifier it names goes down or up.
+        keys.set(0x44, true);
+        assert_eq!(keys.input(Some("D")), InputEvent { key: Some("D"), ctrl: false, shift: false, alt: false });
+
+        keys.set(0x10, true); // VK_SHIFT
+        keys.set(0xA2, true); // VK_LCONTROL
+        assert_eq!(keys.input(Some("D")), InputEvent { key: Some("D"), ctrl: true, shift: true, alt: false });
+        keys.set(0xA3, false); // VK_RCONTROL up: the plain Ctrl flag goes with it
+        assert!(!keys.ctrl());
+        keys.set(0xA1, false); // VK_RSHIFT up
+        assert_eq!(keys.input(None), InputEvent { key: None, ctrl: false, shift: false, alt: false });
     }
 }

@@ -36,6 +36,10 @@
 //!   the Win32 low-level mouse hook feeds the ported `WidgetAreaTracker`: moving away from
 //!   the press position closes the price check, clicking it activates the overlay, and
 //!   Ctrl+wheel outside the stash walks the stash tabs.
+//! - **The Alt peek and the key log.** A [`wraex_platform::window::KeyEvent`] stream from the
+//!   Win32 low-level keyboard hook feeds `OverlayVisibility`: holding Alt alone hides the
+//!   widgets, releasing it (or pressing another key) brings them back. The hook reports every
+//!   key, which is also what `Shortcuts`' `logKeys` writes.
 //! - **Hotkeys exist only while the game is focused**: [`Shortcuts::on_game_active`], as
 //!   upstream's `active-change` listener, so a press can never land in another application.
 //!   That is what lets `keys::OSSender` synthesize keys by default here (see its
@@ -71,6 +75,7 @@ use serde_json::json;
 use wraex_core::GameId;
 use wraex_core::game_files::{self, Os, UserDirs};
 use wraex_core::leagues::{LeagueSource, Leagues};
+use wraex_core::trade::api::Clock;
 use wraex_core::updates::{NoDownloadReason, UpdateInfo};
 use wraex_platform::clipboard::{Clipboard, is_poe_item};
 use wraex_platform::overlay::{OverlayController, OverlayEvent, OverlayHandle, TrackArea};
@@ -78,7 +83,7 @@ use wraex_platform::shortcuts::{
     Action, HostConfig, ItemText, PressContext, Registration, ShortcutAction, ShortcutEvent, Shortcuts, WheelEvent,
 };
 use wraex_platform::tray::{Tray, TrayAction};
-use wraex_platform::window::{self, Bounds, GameWindow, MouseEvent, Point};
+use wraex_platform::window::{self, Bounds, GameWindow, KeyEvent, MouseEvent, Point};
 
 #[cfg(target_os = "windows")]
 use wraex_platform::window::WindowTarget;
@@ -133,6 +138,13 @@ enum Placement {
 /// window, which upstream draws in an ordinary window of its own.
 fn is_overlay(shown: &Shown) -> bool {
     matches!(shown, Shown::PriceCheck | Shown::Poe2 | Shown::ItemCheck | Shown::Widget(_))
+}
+
+/// `OverlayVisibility`: a lone Alt hides the widget the overlay draws, not the window itself
+/// (the game keeps the mouse and keyboard it already had) and not the settings window, which
+/// upstream draws in an ordinary window of its own.
+fn peek_hides(shown: &Shown, overlay_visible: bool) -> bool {
+    is_overlay(shown) && !overlay_visible
 }
 
 /// Where a widget goes inside the overlay window: at the cursor that asked for it (12 px below
@@ -218,6 +230,27 @@ fn apply_overlay_event(event: &OverlayEvent, app: &mut App) {
         OverlayEvent::HideExclusiveWidget => app.close_exclusive_widget(),
         OverlayEvent::FocusChange { overlay: false, .. } => app.hide_widgets_on_blur(),
         _ => {}
+    }
+}
+
+/// One keyboard event from the global hook, as upstream's `uiohook` listeners read it:
+/// `OverlayVisibility` (an Alt-only keydown hides the widgets after a delay, any other key or
+/// the Alt release brings them back) and `Shortcuts`' `logKeys`. The hook only observes, so
+/// nothing here swallows, repeats or synthesizes a key.
+fn apply_key_event(overlay: &mut OverlayController, shortcuts: &Shortcuts, event: KeyEvent, clock: &dyn Clock) {
+    match event {
+        KeyEvent::Down(event) => {
+            overlay.on_global_key_down(&event, clock);
+            if let Some(line) = shortcuts.log_key_down(&event) {
+                eprintln!("{line}");
+            }
+        }
+        KeyEvent::Up(event) => {
+            overlay.on_global_key_up(event.alt);
+            if let Some(line) = shortcuts.log_key_up(event.key) {
+                eprintln!("{line}");
+            }
+        }
     }
 }
 
@@ -473,7 +506,8 @@ impl Live {
                     apply_overlay_event(&event, app);
                 }
                 OverlayEvent::HideExclusiveWidget => apply_overlay_event(&event, app),
-                // The renderer's own: the Alt peek.
+                // The Alt peek: `sync_window` reads `OverlayController::is_visible`, which is
+                // the state this event reports; there is no renderer channel to forward it to.
                 OverlayEvent::Visibility { .. } => {}
             }
         }
@@ -509,6 +543,23 @@ impl Live {
         watcher.set_mouse_moves(self.overlay.is_tracking_area());
         self.sync_registration();
         true
+    }
+
+    /// The global keyboard hook's events (`uiohook`'s `keydown`/`keyup`): the Alt peek and the
+    /// key log. The peek's hide is a timer (`OverlayVisibility`'s `setTimeout`), so the deadline
+    /// is polled here too, on frames without a key. Only a change of the peek redraws: a key that
+    /// starts or cancels a pending hide leaves the widget on screen, and the log is stderr.
+    fn poll_keyboard(&mut self) -> bool {
+        let events = match self.watcher.as_mut() {
+            Some(watcher) => watcher.drain_keys(),
+            None => return false,
+        };
+        let visible = self.overlay.is_visible();
+        for event in events {
+            apply_key_event(&mut self.overlay, &self.shortcuts, event, &LiveClock);
+        }
+        self.overlay.poll(&LiveClock);
+        visible != self.overlay.is_visible()
     }
 
     /// `Shortcuts::on_game_active`: upstream's `active-change` listener. Registers the
@@ -1005,6 +1056,7 @@ impl Live {
     fn poll(&mut self, app: &mut App, tx: &mut Tx) -> bool {
         let mut changed = self.poll_game_window();
         changed |= self.poll_mouse();
+        changed |= self.poll_keyboard();
 
         let actions: Vec<TrayAction> =
             self.tray_actions.lock().map(|mut queue| std::mem::take(&mut *queue)).unwrap_or_default();
@@ -1110,6 +1162,13 @@ impl App {
             Shown::PriceCheck | Shown::Poe2 => (width, height),
             _ => (width, own_height),
         })
+    }
+
+    /// `OverlayVisibility`: a lone Alt has the widgets peeked away. What the app draws is then
+    /// empty ([`crate::view`]), while the window and the widget's state stay: the game keeps the
+    /// mouse and keyboard it had, and nothing closes on a focus change.
+    pub fn is_peeked(&self) -> bool {
+        self.live.as_ref().is_some_and(|live| peek_hides(&self.shown(), live.overlay.is_visible()))
     }
 
     /// What the window draws, in [`crate::view`]'s order.
