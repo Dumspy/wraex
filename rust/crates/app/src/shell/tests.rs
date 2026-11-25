@@ -1055,6 +1055,14 @@ fn live_app_in(dir: &std::path::Path, clipboard: TestClipboard) -> App {
     app
 }
 
+/// [`live_app_in`] for EE2's game: its own config folder and the PoE2 defaults.
+fn live_app_poe2_in(dir: &std::path::Path) -> App {
+    let startup = config::load(GameId::Poe2, dir);
+    let mut app = App::live(Live::for_tests(startup, Box::new(TestClipboard::default())));
+    app.mode = Mode::Replay;
+    app
+}
+
 /// One frame of the real path: exactly what `AppSpec::poll` is wired to in [`run`].
 fn poll(app: &mut App) -> bool {
     let mut tx = Tx::default();
@@ -1079,7 +1087,12 @@ fn card_ids(app: &App) -> Vec<Option<u32>> {
 
 /// The saved config, read the way the next start reads it.
 fn saved_config(dir: &std::path::Path) -> serde_json::Value {
-    let path = crate::settings::config_path_in(GameId::Poe1, dir);
+    saved_config_for(GameId::Poe1, dir)
+}
+
+/// [`saved_config`] for a game's own config folder.
+fn saved_config_for(game: GameId, dir: &std::path::Path) -> serde_json::Value {
+    let path = crate::settings::config_path_in(game, dir);
     serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap()
 }
 
@@ -1091,6 +1104,17 @@ fn saved_widget(config: &serde_json::Value, wm_id: u32) -> serde_json::Value {
         .iter()
         .find(|widget| widget["wmId"] == wm_id)
         .unwrap_or_else(|| panic!("no saved widget {wm_id}"))
+        .clone()
+}
+
+/// The saved `item-check` widget object, where the map and Ultimatum decisions live.
+fn saved_item_check(config: &serde_json::Value) -> serde_json::Value {
+    config["widgets"]
+        .as_array()
+        .expect("widgets")
+        .iter()
+        .find(|widget| widget["wmType"] == "item-check")
+        .expect("the saved item-check widget")
         .clone()
 }
 
@@ -1402,6 +1426,112 @@ fn clicking_a_lower_widget_raises_it_and_saves_the_order() {
     let mut restarted = live_app_in(&dir, TestClipboard::default());
     poll(&mut restarted);
     assert_eq!(card_ids(&restarted), vec![Some(menu), Some(strip)], "the order survived the restart");
+}
+
+/// `WidgetItemCheck.vue`'s modifier buttons mutate the reactive config and `saveConfig()`
+/// persists it: an Ultimatum mark made in the overlay is in the saved widget after the next
+/// poll, and the next press (`from_config`) sees it.
+#[test]
+fn an_ultimatum_mark_made_in_the_item_check_is_saved() {
+    use wraex_poe1::ultimatum_check::decision;
+
+    let dir = live_dir("item-check-ultimatum");
+    let text = include_str!("../../../poe1/testdata/ultimatum/survive-currency.txt");
+    let mut app = live_app_in(&dir, TestClipboard::default());
+    poll(&mut app);
+    let config = app.live.as_ref().expect("the live shell").startup.config.clone();
+    app.open_item_check_for(GameId::Poe1, &config, Mode::Replay, text, None);
+    assert!(app.item_check.as_ref().is_some_and(|check| check.open), "the Ultimatum parsed");
+
+    // `UltimatumModButton.vue`'s click for the tier II the item rolled on profile I.
+    let check = app.item_check.as_mut().expect("the item check");
+    wraex_poe1::ultimatum_check::set_decision(&mut check.ultimatum, check.maps.profile, "Stormcaller Runes", 2, "d");
+    poll(&mut app);
+
+    let saved = saved_config(&dir);
+    let widget = saved_item_check(&saved);
+    let ultimatum: wraex_poe1::ultimatum_check::UltimatumCheckConfig =
+        serde_json::from_value(widget["ultimatum"].clone()).expect("the saved Ultimatum decisions");
+    assert_eq!(decision(&ultimatum, 1, "Stormcaller Runes", 2), Some('d'), "the mark reached the file");
+
+    // A restart, as the next hotkey press: the widget reads the saved decisions.
+    let mut restarted = live_app_in(&dir, TestClipboard::default());
+    let config = restarted.live.as_ref().expect("the live shell").startup.config.clone();
+    restarted.open_item_check_for(GameId::Poe1, &config, Mode::Replay, text, None);
+    let check = restarted.item_check.as_ref().expect("the item check");
+    assert_eq!(decision(&check.ultimatum, check.maps.profile, "Stormcaller Runes", 2), Some('d'));
+}
+
+/// The map check's stat decision and profile switch are the other half of the same widget; both
+/// must survive into the saved config and the next press.
+#[test]
+fn a_map_check_decision_and_profile_made_in_the_item_check_are_saved() {
+    let dir = live_dir("item-check-maps");
+    let text = crate::corpus("real-map-rare-t16-max-res");
+    let mut app = live_app_in(&dir, TestClipboard::default());
+    poll(&mut app);
+    let config = app.live.as_ref().expect("the live shell").startup.config.clone();
+    app.open_item_check_for(GameId::Poe1, &config, Mode::Replay, &text, None);
+    assert!(app.item_check.as_ref().is_some_and(|check| check.open), "the map parsed");
+
+    // `MapStatButton.vue`'s cycle and the header's profile numeral, which both cards share.
+    let check = app.item_check.as_mut().expect("the item check");
+    let matcher = "Players have #% to all maximum Resistances";
+    crate::poe1::map_check::set_decision(&mut check.maps, matcher, "d");
+    check.maps.profile = 2;
+    poll(&mut app);
+
+    let saved = saved_config(&dir);
+    let widget = saved_item_check(&saved);
+    let maps: wraex_poe1::map_check::MapCheckConfig =
+        serde_json::from_value(widget["maps"].clone()).expect("the saved map decisions");
+    assert_eq!(maps.profile, 2, "the profile switch reached the file");
+    let entry = maps.selected_stats.iter().find(|entry| entry.matcher == matcher).expect("the stat's decisions");
+    assert_eq!(entry.decision, "d--", "the stat decision reached the file");
+
+    let mut restarted = live_app_in(&dir, TestClipboard::default());
+    let config = restarted.live.as_ref().expect("the live shell").startup.config.clone();
+    restarted.open_item_check_for(GameId::Poe1, &config, Mode::Replay, &text, None);
+    let check = restarted.item_check.as_ref().expect("the item check");
+    assert_eq!(check.maps.profile, 2);
+    let entry = check.maps.selected_stats.iter().find(|entry| entry.matcher == matcher).expect("the stat's decisions");
+    assert_eq!(entry.decision, "d--");
+}
+
+/// EE2's item check keeps its map decisions in the same `maps` key, so the shell syncs it the
+/// same way: a decision and profile switch survive the restart.
+#[test]
+fn a_poe2_map_decision_made_in_the_item_check_is_saved() {
+    let dir = live_dir("item-check-poe2-maps");
+    let text = crate::corpus_poe2("ee2-rare-map");
+    let mut app = live_app_poe2_in(&dir);
+    poll(&mut app);
+    let config = app.live.as_ref().expect("the live shell").startup.config.clone();
+    app.open_item_check_for(GameId::Poe2, &config, Mode::Replay, &text, None);
+    assert!(app.item_check_poe2.as_ref().is_some_and(|check| check.open), "the waystone parsed");
+
+    let check = app.item_check_poe2.as_mut().expect("the item check");
+    let matcher = "#% maximum Player Resistances";
+    crate::poe2::map_check::set_decision(&mut check.maps, matcher, "d");
+    check.maps.profile = 3;
+    poll(&mut app);
+
+    let saved = saved_config_for(GameId::Poe2, &dir);
+    let widget = saved_item_check(&saved);
+    let maps: wraex_poe2::map_check::MapCheckConfig =
+        serde_json::from_value(widget["maps"].clone()).expect("the saved map decisions");
+    assert_eq!(maps.profile, 3, "the profile switch reached the file");
+    let entry = maps.selected_stats.iter().find(|entry| entry.matcher == matcher).expect("the stat's decisions");
+    assert_eq!(entry.decision, "d--", "the stat decision reached the file");
+    assert!(widget.get("ultimatum").is_none(), "EE2's item check has no Ultimatum key");
+
+    let mut restarted = live_app_poe2_in(&dir);
+    let config = restarted.live.as_ref().expect("the live shell").startup.config.clone();
+    restarted.open_item_check_for(GameId::Poe2, &config, Mode::Replay, &text, None);
+    let check = restarted.item_check_poe2.as_ref().expect("the item check");
+    assert_eq!(check.maps.profile, 3);
+    let entry = check.maps.selected_stats.iter().find(|entry| entry.matcher == matcher).expect("the stat's decisions");
+    assert_eq!(entry.decision, "d--");
 }
 
 /// The guard: while `App::with_live` runs, `App::live` is empty, so an `App` method answering
