@@ -24,23 +24,28 @@ What is implemented where:
 
 1. Start Path of Exile (or Path of Exile 2) **in windowed or borderless-windowed mode** once,
    so the game has written its config; fullscreen is the last step, not the first.
-2. Build and run the app from a terminal, and keep the log visible:
+2. Get the build from GitHub; there is no need to build Wraex yourself. Open the latest
+   **Release** run on `development` under the repository's **Actions** tab (or the one linked
+   to you), download the `wraex-windows` artifact at the bottom of the run's page, and unzip it.
+   Inside is `wraex-<version>-x86_64-pc-windows-msvc.zip`: unzip that anywhere too. Keep
+   `wraex.exe` next to its `assets` folder.
+3. Run it from PowerShell in that folder, with the log going to a file:
 
    ```powershell
-   cd rust
-   cargo run -p wraex-app -- --game poe1        # or: --game poe2
+   .\wraex.exe --game poe1 2> wraex.log        # or: --game poe2
    ```
 
-   The app writes everything to stderr. In a second terminal:
+   The app writes everything to stderr. To watch the log live, in a second PowerShell window
+   in the same folder:
 
    ```powershell
-   cargo run -p wraex-app -- --game poe1 2> wraex.log
    Get-Content wraex.log -Wait
    ```
 
-   A packaged build is the same: `wraex.exe --game poe1 2> wraex.log`.
+   Keep `wraex.log` after the session: it is what a report needs (see "When something
+   fails"). Each start overwrites it, so rename it before running again.
 
-3. What the log says on a healthy start (a few lines each):
+4. What the log says on a healthy start (a few lines each):
 
    - `wraex: following the "Path of Exile" window` — the hook started.
    - `wraex: following window "Path of Exile" of class "…" (access: yes)` — the window was
