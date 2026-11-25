@@ -85,6 +85,16 @@ impl BulkCurrency {
         }
     }
 
+    /// The `/images` file beside the table's total: EE2's `exa.png`, `chaos.png`, `divine.png`
+    /// (`TradeBulk.vue`'s three `<img>`s; the exalted orb's art is not called `exalted`).
+    pub const fn icon(self) -> &'static str {
+        match self {
+            BulkCurrency::Exalted => "exa.png",
+            BulkCurrency::Chaos => "chaos.png",
+            BulkCurrency::Divine => "divine.png",
+        }
+    }
+
     /// The `have` tag of an exchange group.
     fn of_tag(tag: &str) -> Self {
         match tag {

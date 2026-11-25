@@ -16,6 +16,10 @@
 //! - **Map screenshots** (`MapCheck.vue`) are `https://i.imgur.com/...` URLs from the game
 //!   data's `area.screenshot`/`map.screenshot`, loaded the same way, and drawn filling a
 //!   21:9 box (`object-fit: cover`).
+//! - **Greyscale art** is local art drawn through CSS `filter: grayscale(1)` (`TradeListing.vue`'s
+//!   stash icon, `TradeBulk.vue`'s currency icons). Rune has no colour filter, so [`local_grey`]
+//!   decodes the picture, applies the filter's colour matrix to its pixels and caches the result
+//!   beside the colour copy.
 //! - Anything not loaded yet, and anything that failed, is the dark square
 //!   [`icon::image_placeholder`] draws, so the layout never jumps.
 //!
@@ -159,6 +163,19 @@ pub fn local_sized(game: GameId, name: &str, size: (f32, f32)) -> El {
     draw(Source::Local { game, name: name.to_owned() }, size)
 }
 
+/// `/images/<name>` through CSS `filter: grayscale(1)`: `TradeListing.vue`'s stash icon and
+/// `TradeBulk.vue`'s currency icons. The picture's own opacity, if the reference adds one
+/// (`grayscale(1) opacity(0.5)`), is [`El::opacity`] on the returned element.
+pub fn local_grey(game: GameId, name: &str, size: f32) -> El {
+    let source = Source::Local { game, name: name.to_owned() };
+    match ready_grey(&source) {
+        Some(image) => {
+            el().size(size, size).pixels_fit(image.pixels(), SurfaceFit::Fit).role("img").label(source.label())
+        }
+        None => icon::image_placeholder(size).size(size, size),
+    }
+}
+
 /// `/images/<name>` cropped to fill `size`, as CSS `object-fit: cover` does:
 /// `WidgetImageStrip.vue`'s `FullscreenImage` in a card.
 ///
@@ -280,6 +297,69 @@ fn settle(image: Image) -> Option<Image> {
         return None;
     }
     Some(image)
+}
+
+/// [`ready`] of `source`'s greyscale copy.
+///
+/// The conversion is CPU work on the reference's own art (a 1.25-rem icon), so it happens in the
+/// frame that first asks for it and the result is filed in the registry like any other picture:
+/// every later frame — and every later listing row sharing the icon — draws the same handle.
+fn ready_grey(source: &Source) -> Option<Image> {
+    let key = format!("{}#greyscale", source.key());
+    let stored = {
+        let mut registry = REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        if let Some(image) = registry.images.get(&key).cloned() {
+            Some(image)
+        } else if registry.failed.contains(&key) || !registry.pending.insert(key.clone()) {
+            return None;
+        } else {
+            None
+        }
+    };
+    if let Some(image) = stored {
+        return settle(image);
+    }
+    match greyscale(source) {
+        Ok(image) => {
+            store(key, image.clone());
+            settle(image)
+        }
+        Err(why) => {
+            fail(key, why);
+            None
+        }
+    }
+}
+
+/// `source` decoded and put through CSS `filter: grayscale(1)`'s colour matrix.
+///
+/// The filter shorthand's operations run in sRGB, and `grayscale(amount)` replaces every channel
+/// with `0.2126 R + 0.7152 G + 0.0722 B` at `amount = 1` (`Filter Effects`' luminance weights),
+/// leaving alpha alone — so the conversion is per pixel on the 8-bit sRGB values.
+fn greyscale(source: &Source) -> Result<Image, String> {
+    let Source::Local { game, name } = source else {
+        return Err(format!("{} is not the reference's own art", source.label()));
+    };
+    let path = image_path(*game, name);
+    let bytes = std::fs::read(&path).map_err(|error| format!("{}: {error}", path.display()))?;
+    // The reference's greyscale art is PNG (`stash.png`, the currency icons), so the PNG decoder
+    // alone is enough — the same one `ImageCache` would use, without linking every codec.
+    let decoded = rune::image::png_rgba8(&bytes).map_err(|error| format!("{}: {error}", path.display()))?;
+    let (width, height) = decoded.dimensions();
+    let mut rgba = decoded.into_raw();
+    to_greyscale(&mut rgba);
+    Ok(cache().rgba(width, height, rgba))
+}
+
+/// `filter: grayscale(1)` over straight-alpha sRGB pixels, in place.
+fn to_greyscale(rgba: &mut [u8]) {
+    for pixel in rgba.as_chunks_mut::<4>().0 {
+        let luma = 0.2126 * f32::from(pixel[0]) + 0.7152 * f32::from(pixel[1]) + 0.0722 * f32::from(pixel[2]);
+        let luma = luma.round().clamp(0.0, 255.0) as u8;
+        pixel[0] = luma;
+        pixel[1] = luma;
+        pixel[2] = luma;
+    }
 }
 
 /// Load `source` and file the result under `key`, clearing its pending mark.
@@ -433,6 +513,32 @@ mod tests {
         let key = Source::Local { game: GameId::Poe1, name: "nope.png".to_owned() }.key();
         assert!(ready(&Source::Local { game: GameId::Poe1, name: "nope.png".to_owned() }).is_none());
         assert!(REGISTRY.lock().unwrap().failed.contains(&key), "a miss is remembered");
+    }
+
+    /// `filter: grayscale(1)`: the Filter Effects matrix's luminance weights over sRGB, alpha
+    /// untouched (`0.2126 · 255` is 54.2 for pure red, `0.7152 · 255` is 182.4 for pure green).
+    #[test]
+    fn greyscale_keeps_luminance_and_alpha() {
+        let mut rgba = [255, 0, 0, 255, 0, 255, 0, 128, 0, 0, 255, 0, 255, 255, 255, 255];
+        to_greyscale(&mut rgba);
+        assert_eq!(rgba, [54, 54, 54, 255, 182, 182, 182, 128, 18, 18, 18, 0, 255, 255, 255, 255]);
+    }
+
+    /// The greyscale copy is a picture of its own: it decodes from the same file, is filed under
+    /// its own key (so the colour copy still draws in colour) and is remembered like one.
+    #[test]
+    fn a_greyscale_copy_is_cached_beside_the_colour_one() {
+        set_mode(Mode::Replay);
+        let source = Source::Local { game: GameId::Poe1, name: "stash.png".to_owned() };
+        let grey = ready_grey(&source).expect("the stash icon has a greyscale copy");
+        assert_eq!(grey.size(), Some([48, 48]));
+        assert!(ready(&source).is_some(), "the colour copy still loads");
+        let keys = REGISTRY.lock().unwrap().images.keys().cloned().collect::<Vec<_>>();
+        assert!(keys.contains(&format!("{}#greyscale", source.key())), "{keys:?}");
+        assert_eq!(grey.pixels().size(), (48, 48), "the pixels follow the decoded size");
+        // Asking again hands back the same picture, not a second conversion.
+        let again = ready_grey(&source).expect("a cached greyscale copy");
+        assert_eq!(again.id(), grey.id());
     }
 
     #[test]

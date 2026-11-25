@@ -97,9 +97,9 @@ fn currency_button<S: 'static>(check: &PriceCheck, which: BulkCurrency, selected
         .label(format!("{key} {label}"))
         .on_press(move |s: &mut S| project(s).select_currency(which))
         // `$style.currencyIcon`: 1.75 rem with -0.4375 rem above and below, so it does not
-        // grow the button (upstream also greys it out; Rune has no colour filter).
+        // grow the button, and `grayscale(1)`.
         .child(
-            art::local(wraex_core::GameId::Poe1, &format!("{key}.png"), theme::rem(1.75))
+            art::local_grey(wraex_core::GameId::Poe1, &format!("{key}.png"), theme::rem(1.75))
                 .mr(theme::rem(0.125))
                 .my(-(theme::rem(0.4375)))
                 .key(format!("bulk-currency-{key}-icon")),

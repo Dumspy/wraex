@@ -1705,6 +1705,19 @@ mod tests {
         assert_eq!(text_of(&runtime, "bulk-0-stock").as_deref(), Some("12"));
         assert_eq!(text_of(&runtime, "bulk-1-fulfill").as_deref(), Some("1"));
         assert!(runtime.find("bulk-2-price").is_none(), "two offers, the rest of the table is empty");
+
+        // `$style.currencyIcon`: the reference's three art files (`exa.png` for the exalted orb),
+        // drawn — so decoded, and greyscale — rather than left as placeholders.
+        let elements = runtime.elements();
+        for (key, label) in [
+            ("bulk-currency-exalted-icon", "/images/exa.png"),
+            ("bulk-currency-chaos-icon", "/images/chaos.png"),
+            ("bulk-currency-divine-icon", "/images/divine.png"),
+        ] {
+            let icon = element(&elements, key).unwrap_or_else(|| panic!("no `{key}`"));
+            assert_eq!(icon.role, "img", "{key}");
+            assert_eq!(icon.label.as_deref(), Some(label), "{key}");
+        }
     }
 
     /// Closing one game's window leaves the other's state alone.

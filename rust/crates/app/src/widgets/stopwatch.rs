@@ -87,14 +87,13 @@ pub fn view<S: 'static>(overlay: &Overlay, widget: &Widget, project: Project<S>)
 
     // `.timer`: `font-size: 2rem; line-height: 1; @apply font-mono; text-shadow`.
     //
-    // The reference's `font-mono` is a system monospace stack, so every glyph — the two colons
-    // included — advances a full 19.27 pt at 32 pt and the clock is 154.13 pt wide. Rune's mono
-    // slot is Exo 2: its digits advance 19.3 pt (the same), its colons 7.5, so the clock is laid
-    // out in the monospace's cells — digits in 38.53 pt pairs, colons centred in 19.27 pt — and
-    // each character lands where the reference's does.
+    // `font-mono` is the platform's monospaced face, so every glyph — the two colons included —
+    // advances one cell. Each character is centred in a cell as wide as the reference's advance
+    // (19.27 pt at 32 pt, Menlo's), so the clock keeps the reference's width whatever face the
+    // platform resolves.
     const DIGITS: f32 = 38.53;
     const COLON: f32 = 19.27;
-    let time = TextStyle::new(32.0, 500.0).lh(32.0).mono();
+    let time = TextStyle::new(32.0, 400.0).lh(32.0).family(theme::FAMILY_SYSTEM_MONO);
     let digits = |key: &str, value: String| {
         text(value).key(key.to_owned()).w(DIGITS).align(rune::Align::Center).font(time).color(Color::WHITE)
     };

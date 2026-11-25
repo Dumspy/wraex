@@ -207,6 +207,15 @@ pub const FAMILY_EXO2: Family = Family::Named("Exo 2");
 /// Font Awesome's family (`@fortawesome/fontawesome-free`): `fas`/`far` in upstream's
 /// templates, weight 900 for solid and 400 for regular, both under the same family name.
 pub const FAMILY_FA: Family = Family::Named("Font Awesome 6 Free");
+/// `font-mono`'s face (`WidgetTimer.vue`): Tailwind's default stack is
+/// `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+/// monospace`, the platform's own monospaced face. Upstream bundles no monospaced font, so the
+/// port names the same families in the same order and Rune loads the first one installed: Menlo
+/// (what the reference's Chromium screenshots draw) on macOS, Consolas on Windows, Liberation
+/// Mono or DejaVu Sans Mono on Linux, the generic `monospace`'s usual faces. A machine with none
+/// of them falls back to the sans slot.
+pub const FAMILY_SYSTEM_MONO: Family =
+    Family::Named("Menlo, Monaco, Consolas, Liberation Mono, Courier New, DejaVu Sans Mono");
 
 /// The sans and mono slots. Named after the face files themselves: `ref/apt`'s
 /// `@font-face` rules call the families `FontinSmallCaps` etc., but a TTF's own name
