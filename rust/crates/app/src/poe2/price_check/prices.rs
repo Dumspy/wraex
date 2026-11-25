@@ -39,7 +39,7 @@ pub fn load(mode: Mode) -> Prices {
 pub fn fetch(league: &str) -> Result<Vec<(&'static str, String)>, String> {
     use wraex_core::trade::api::Transport;
 
-    let transport = wraex_platform::http::HttpTransport::default();
+    let transport = crate::trade::live_transport();
     let mut bodies = Vec::with_capacity(NINJA_TYPES.len());
     for (kind, _, _) in NINJA_TYPES {
         let response = transport.send(&overview_request(league, kind))?;

@@ -1879,7 +1879,7 @@ fn spawn_startup_work(handle: AppHandle<App>, game: GameId, configured: Option<S
     std::thread::Builder::new()
         .name("wraex-startup".to_owned())
         .spawn(move || {
-            let transport = wraex_platform::http::HttpTransport::default();
+            let transport = crate::trade::live_transport();
             let source = match game {
                 GameId::Poe2 => LeagueSource::Poe2,
                 _ => LeagueSource::Poe1,

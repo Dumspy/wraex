@@ -84,7 +84,7 @@ fn recorded_trade_data() -> TradeData {
 fn live_trade_data() -> Result<TradeData, String> {
     use wraex_core::trade::api::{HttpRequest, Method, Transport};
 
-    let transport = wraex_platform::http::HttpTransport::default();
+    let transport = crate::trade::live_transport();
     let get = |what: &str| -> Result<String, String> {
         let request = HttpRequest {
             method: Method::Get,

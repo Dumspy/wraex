@@ -11,6 +11,8 @@ repository.workspace = true
 serde = { workspace = true }
 tray-icon = { workspace = true }
 ureq = { workspace = true }
+cookie_store = { workspace = true }
+url = { workspace = true }
 wraex-core = { workspace = true }
 
 # The Win32 window hook (`window::win32`): `SetWinEventHook`, the foreground queries, the

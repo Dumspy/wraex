@@ -39,6 +39,14 @@ fancy-regex = "0.20"
 # Blocking HTTP with rustls for the trade API (`wraex_platform::http`): a few
 # requests per second on a worker thread need no async runtime.
 ureq = "3"
+# The transport's cookie jar, like Electron's persistent default session: RFC 6265
+# domain/path/expiry matching and the JSON persistence of the expiring cookies.
+# ureq's own `cookies` feature hands `Set-Cookie` to the jar before any middleware
+# sees it, so the `Partitioned` attribute could not be stripped first.
+cookie_store = "0.22"
+# `cookie_store::Cookie::parse` takes the request's `Url`; also already in the lock
+# file through the HTTP stack.
+url = "2"
 # `String.prototype.normalize('NFKD')` (poe.ninja detail page slugs).
 unicode-normalization = "0.1"
 # The system tray (`wraex_platform::tray`), the crate Tauri uses. Default

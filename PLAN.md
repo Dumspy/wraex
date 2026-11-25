@@ -255,8 +255,13 @@ Agent loop per step: port module → `golden check` → fix diffs → repeat.
   result rows. EE2 downloads its price data from its own server
   (`api.exiledexchange2.dev`); Wraex asks poe.ninja's PoE2 exchange overviews
   directly instead (decided 2026-11-24), one request per category, and looks
-  items up by name. Other sources (EE2's server, by agreement) can come later. Not yet: the session cookies upstream's proxy
-  forwards (Cloudflare, a logged-in POESESSID).
+  items up by name. Other sources (EE2's server, by agreement) can come later. Session
+  cookies behave as through upstream's proxy: `wraex_platform::http` keeps one jar for
+  every live request (RFC 6265 domain/path/expiry/`Secure`), strips `Partitioned` from
+  `Set-Cookie` before storing it (Cloudflare's), and saves the expiring cookies to
+  `cookies.json` beside the settings, loading them at startup; session cookies last only
+  for the run. Like upstream, nothing else: no cookie field in the settings, no
+  user-entered `POESESSID`.
 - `GameConfig.ts` (reads PoE's keybinds from `production_Config.ini`),
   `GameLogWatcher.ts` (Client.txt for zone/chat events).
   **Done** (`core::game_files`, `core::keys`): default locations per game and

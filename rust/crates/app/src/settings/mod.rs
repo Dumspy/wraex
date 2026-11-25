@@ -515,6 +515,18 @@ pub fn config_path_in(game: GameId, app_data: &std::path::Path) -> PathBuf {
     app_data.join("Wraex").join(folder).join("config.json")
 }
 
+/// Where the HTTP transport saves the session's expiring cookies: `cookies.json` in
+/// `Wraex`, beside the per-game settings folders. Electron's default session is one
+/// session for both games, so the jar is one file too.
+pub fn cookies_path() -> Option<PathBuf> {
+    Some(cookies_path_in(&app_data_dir()?))
+}
+
+/// [`cookies_path`] under an explicit `appData`, so a test can point it at a temp dir.
+pub fn cookies_path_in(app_data: &std::path::Path) -> PathBuf {
+    app_data.join("Wraex").join("cookies.json")
+}
+
 /// `app.getPath('appData')`.
 pub fn app_data_dir() -> Option<PathBuf> {
     if cfg!(target_os = "windows") {

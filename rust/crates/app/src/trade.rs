@@ -7,7 +7,7 @@
 //! same [`wraex_core::trade::api::TradeClient`], so rate limits, caching and error
 //! handling are the app's real ones.
 
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use wraex_core::trade::api::{ALLOWED_HOSTS, Clock, HttpRequest, HttpResponse, TradeClient, TradeSite, Transport};
@@ -112,6 +112,15 @@ pub enum Site {
     Poe2,
 }
 
+/// The one live transport. Its cookie jar is the app's session, as Electron's default
+/// session is for upstream: a Cloudflare cookie set on one answer goes out with the next
+/// request, and the expiring cookies are saved beside the settings. A headless run never
+/// reaches it (it replays), so no scene or test touches the file.
+pub(crate) fn live_transport() -> HttpTransport {
+    static LIVE: OnceLock<HttpTransport> = OnceLock::new();
+    LIVE.get_or_init(|| HttpTransport::new(crate::settings::cookies_path())).clone()
+}
+
 /// The transport and clock a run sends with: HTTPS and the wall clock in a window, the
 /// recorded answers and the frozen recording time headless. The price data comes over
 /// the same [transport](Transport), so a scene replays poe.ninja too.
@@ -122,7 +131,7 @@ pub fn target(mode: Mode) -> (TargetTransport, TargetClock) {
 /// [`target`] for one game's trade site and recordings.
 pub fn target_for(mode: Mode, site: Site) -> (TargetTransport, TargetClock) {
     match (mode, site) {
-        (Mode::Live, _) => (TargetTransport::Live(HttpTransport::default()), TargetClock::Live(LiveClock)),
+        (Mode::Live, _) => (TargetTransport::Live(live_transport()), TargetClock::Live(LiveClock)),
         (Mode::Replay, Site::Poe1) => {
             (TargetTransport::Replay(ReplayTransport::poe1()), TargetClock::Replay(ReplayClock::poe1()))
         }
