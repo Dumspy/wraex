@@ -3,7 +3,7 @@
 //! The overlay is one page full of *widgets*: `AppConfig().widgets` lists them, each with a
 //! `wmType`, a `wmTitle`, a `wmWants` (`show`/`hide`) and an `anchor`. `OverlayWindow.vue` draws
 //! every visible one at its anchor; `Widget.vue` is the frame around each (the hover actions
-//! panel, the edit/move modes, the move handles). Four of them are ported here; the item and
+//! panel, the edit/move modes, the move handles). Seven of them are ported here; the item and
 //! stash searches live in their own modules:
 //!
 //! - [`menu`]: `WidgetMenu.vue`, the launcher bar — a button per hidden widget, the cog that
@@ -18,8 +18,8 @@
 //!   `CLIENT->MAIN::user-action` per press.
 //!
 //! Each is a scene of its own (`widget-menu`, `widget-stopwatch`, `widget-image-strip`,
-//! `widget-delve-grid`, `widget-item-search`, `widget-stash-search`, and `poe2-widget-…` for
-//! EE2's copies), one widget per window: the
+//! `widget-delve-grid`, `widget-item-search`, `widget-stash-search`, `poe2-widget-xp-tracker`,
+//! and `poe2-widget-…` for EE2's copies), one widget per window: the
 //! screenshots in `tools/golden/screens/widgets.mjs` crop exactly one widget's card, so a
 //! scene's window *is* that card (see [`scene_size`]), filled with what the reference's overlay
 //! paints behind its widgets ([`crate::theme::overlay_background`]) so a translucent widget
@@ -60,6 +60,7 @@ pub mod item_search;
 pub mod menu;
 pub mod stash_search;
 pub mod stopwatch;
+pub mod xp_tracker;
 
 use std::collections::BTreeMap;
 
@@ -83,12 +84,21 @@ pub enum Kind {
     DelveGrid,
     ItemSearch,
     StashSearch,
+    /// EE2's experience tracker, the first client-log-driven widget.
+    XpTracker,
 }
 
 impl Kind {
     /// Every ported widget.
-    pub const ALL: [Kind; 6] =
-        [Kind::Menu, Kind::Stopwatch, Kind::ImageStrip, Kind::DelveGrid, Kind::ItemSearch, Kind::StashSearch];
+    pub const ALL: [Kind; 7] = [
+        Kind::Menu,
+        Kind::Stopwatch,
+        Kind::ImageStrip,
+        Kind::DelveGrid,
+        Kind::ItemSearch,
+        Kind::StashSearch,
+        Kind::XpTracker,
+    ];
 
     /// The `--scene` suffix (`widget-<name>`) and the enum's name.
     pub fn name(self) -> &'static str {
@@ -99,6 +109,7 @@ impl Kind {
             Kind::DelveGrid => "delve-grid",
             Kind::ItemSearch => "item-search",
             Kind::StashSearch => "stash-search",
+            Kind::XpTracker => "xp-tracker",
         }
     }
 
@@ -111,6 +122,7 @@ impl Kind {
             Kind::DelveGrid => delve_grid::WM_TYPE,
             Kind::ItemSearch => item_search::WM_TYPE,
             Kind::StashSearch => stash_search::WM_TYPE,
+            Kind::XpTracker => xp_tracker::WM_TYPE,
         }
     }
 
@@ -359,6 +371,11 @@ pub struct Overlay {
     pub timers: BTreeMap<u32, stopwatch::Timer>,
     /// `WidgetItemSearch.vue`'s state (`instances: 'single'`), once its scene asks for it.
     pub item_search: Option<item_search::State>,
+    /// The client-log snapshot the experience tracker draws (`crate::client_log`), and its
+    /// level input's text. A live shell copies each snapshot in ([`Overlay::set_xp`]); a scene
+    /// starts on a fixed one.
+    pub xp: crate::client_log::State,
+    pub xp_input: TextEdit,
     /// What the widgets asked the shell for, oldest first ([`Overlay::take_actions`]).
     pub actions: Vec<Action>,
 }
@@ -383,6 +400,10 @@ impl Overlay {
         }
         let shown = widgets.iter().find(|widget| widget.wm_type == kind.wm_type()).map(|widget| widget.wm_id);
         let mut overlay = Self::new(game, widgets);
+        if kind == Kind::XpTracker {
+            // The scene's fixed client-log state: a level 72 character in a level 80 area.
+            overlay.set_xp(xp_tracker::scene_state());
+        }
         if let Some(id) = shown {
             // `wm.show` when the scene opens, without an [`Action`]: the scene is the widget
             // being on screen, not a button press.
@@ -417,6 +438,8 @@ impl Overlay {
             title: TextEdit::default(),
             timers: BTreeMap::new(),
             item_search: None,
+            xp: crate::client_log::State::default(),
+            xp_input: TextEdit::new("1"),
             actions: Vec::new(),
         }
     }
@@ -510,6 +533,14 @@ impl Overlay {
     /// The timer widget's state, once it exists.
     pub fn timer(&self, wm_id: u32) -> Option<&stopwatch::Timer> {
         self.timers.get(&wm_id)
+    }
+
+    /// The client-log snapshot the experience tracker draws, as the live shell published it.
+    /// The input follows the character level a level-up set, as the Vue computed does; a scene
+    /// that wants a typed level sets it after this.
+    pub fn set_xp(&mut self, state: crate::client_log::State) {
+        self.xp_input = TextEdit::new(wraex_core::js::number_to_string(state.player_level));
+        self.xp = state;
     }
 
     /// `wm.show(wmId)`: the config's `wmWants` becomes `show` and the shell hears about it.
@@ -751,6 +782,13 @@ fn initialised(wm_type: &str, wm_id: u32) -> Value {
             object.insert("anchor".to_owned(), json!({ "pos": "tc", "x": 50.0, "y": 10.0 }));
             object.insert("images".to_owned(), json!([{ "id": 1, "url": "syndicate.jpg" }]));
         }
+        // `WidgetXpTracker.vue`'s `initInstance`: bottom centre, `showExp` on. It is a
+        // `single` widget, so this only runs for a config that lost its instance.
+        xp_tracker::WM_TYPE => {
+            object.insert("wmTitle".to_owned(), json!(xp_tracker::TITLE));
+            object.insert("anchor".to_owned(), json!({ "pos": "bc", "x": 68.0, "y": 98.0 }));
+            object.insert("showExp".to_owned(), json!(true));
+        }
         _ => {}
     }
     config
@@ -811,6 +849,11 @@ pub fn chrome_for(widget: &Widget) -> Chrome {
         // `WidgetStashSearch.vue`: `move-handles="corners"`, no inline edit.
         stash_search::WM_TYPE => {
             Chrome { hideable: true, editable: true, inline_edit: false, removable: true, handles: Some("corners") }
+        }
+        // `WidgetXpTracker.vue`: `removable="false"`, `inline-edit="false"`,
+        // `move-handles="top-bottom"`.
+        xp_tracker::WM_TYPE => {
+            Chrome { hideable: true, editable: true, inline_edit: false, removable: false, handles: Some("top-bottom") }
         }
         _ => Chrome { hideable: true, editable: true, inline_edit: true, removable: true, handles: Some("all") },
     }
@@ -964,6 +1007,7 @@ pub fn card<S: 'static>(overlay: &Overlay, widget: &Widget, cx: &mut Cx<S>, proj
         delve_grid::WM_TYPE => delve_grid::view(overlay, widget, project),
         item_search::WM_TYPE => item_search::view(overlay, widget, project),
         stash_search::WM_TYPE => stash_search::view(overlay, widget, project),
+        xp_tracker::WM_TYPE => xp_tracker::card(overlay, widget, project),
         _ => menu::view(overlay, widget, project),
     };
     chrome(overlay, widget, body, project)
@@ -995,6 +1039,11 @@ pub fn scene(slug: &str) -> Option<(GameId, Kind)> {
         None => (GameId::Poe1, slug),
     };
     let name = rest.strip_prefix("widget-")?;
+    // Only EE2 has the experience tracker: APT's client log feeds chat and trades, not levels
+    // (`ref/apt/renderer/src/web/client-log/client-log.ts`).
+    if name == Kind::XpTracker.name() && game == GameId::Poe1 {
+        return None;
+    }
     Some((game, Kind::from_name(name)?))
 }
 
@@ -1026,6 +1075,9 @@ pub fn scene_size(game: GameId, kind: Kind) -> (f32, f32) {
             GameId::Poe2 => (160.0, 176.0),
             _ => (166.0, 176.0),
         },
+        // `.xpContainer`: `min-w-48` (12 rem) with its border, `min-h-10` (2.5 rem); measured
+        // from `target/screens/poe2/xp-tracker.png`.
+        Kind::XpTracker => (192.0, 40.0),
     }
 }
 

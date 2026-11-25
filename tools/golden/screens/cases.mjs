@@ -91,8 +91,9 @@ export function corpusFile (game, slug) {
 
 // The settings window's pages, per game: the slug (`settings-<page>`, the same suffix as
 // the Rune scenes in `rust/crates/app/src/lib.rs`) and the menu button that opens it
-// (`t(component.name)` in `SettingsWindow.vue`). EE2's Help and Leveling pages are left
-// out: the port has no scene for them yet (`rust/crates/app/src/settings/mod.rs`).
+// (`t(component.name)` in `SettingsWindow.vue`). EE2's Help page is left out: the port has
+// no scene for it yet (`rust/crates/app/src/settings/mod.rs`); its Leveling page is rendered
+// for PoE2 only, like the port.
 export const SETTINGS_LABELS = {
   poe1: {
     hotkeys: 'Hotkeys',
@@ -111,6 +112,7 @@ export const SETTINGS_LABELS = {
     'price-check': 'Price check',
     maps: 'Map check',
     'item-check': 'Item info',
+    leveling: 'Leveling',
     debug: 'Debug',
     about: 'About'
   }
@@ -139,6 +141,7 @@ export const DEFAULT_SETTINGS_CASES = {
     { settings: 'price-check' },
     { settings: 'maps' },
     { settings: 'item-check' },
+    { settings: 'leveling' },
     { settings: 'debug' },
     { settings: 'about' }
   ]
@@ -156,8 +159,8 @@ export function settingsScreenName (game, page) {
 }
 
 // The overlay widgets the screenshot tool renders, per game: the widget menu, the
-// stopwatch, the image strip, the delve grid, the item search and the stash search
-// (`screens/widgets.mjs` says how each is opened). A widget case is
+// stopwatch, the image strip, the delve grid, the item search, the stash search and EE2's
+// experience tracker (`screens/widgets.mjs` says how each is opened). A widget case is
 // `{ overlay: '<name>' }`; like the settings cases it needs no corpus file, because the
 // host serves `fixtures/config/<game>/default/config.json`. The output is
 // `target/screens/<game>/<name>.png`, the names of the Rune scenes `widget-<name>`
@@ -172,7 +175,7 @@ export function settingsScreenName (game, page) {
 // - `stash-search`: `wmTitle` picks the config instance the menu button opens ("Map
 //   rolling"; "Dump sorting" is the same widget with another list), and an optional `name`
 //   renames the output.
-export const WIDGET_NAMES = ['menu', 'stopwatch', 'image-strip', 'delve-grid', 'item-search', 'stash-search']
+export const WIDGET_NAMES = ['menu', 'stopwatch', 'image-strip', 'delve-grid', 'item-search', 'stash-search', 'xp-tracker']
 
 export const DEFAULT_WIDGET_CASES = {
   poe1: [
@@ -183,7 +186,10 @@ export const DEFAULT_WIDGET_CASES = {
   poe2: [
     ...['menu', 'stopwatch', 'image-strip', 'delve-grid'].map(overlay => ({ overlay })),
     { overlay: 'item-search', tab: 'Uniques', query: 'Mageblood' },
-    { overlay: 'stash-search', wmTitle: 'Map rolling' }
+    { overlay: 'stash-search', wmTitle: 'Map rolling' },
+    // EE2's experience tracker: the first client-log widget (`screens/widgets.mjs` feeds it
+    // a fixed log). APT has none.
+    { overlay: 'xp-tracker' }
   ]
 }
 

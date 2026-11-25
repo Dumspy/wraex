@@ -25,6 +25,7 @@ pub mod http;
 pub mod log;
 pub mod overlay;
 pub mod shortcuts;
+pub mod time;
 pub mod tray;
 pub mod window;
 

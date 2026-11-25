@@ -358,8 +358,8 @@ its own time zone, and the port's output is en-US.
 
 `DEFAULT_SETTINGS_CASES` (`screens/cases.mjs`) renders upstream's settings window for every
 menu page of both games: hotkeys, chat, general, price check, map check, item info, debug and
-about. (EE2's Help and Leveling pages are left out: the port has no scene for them yet, see
-`rust/crates/app/src/settings/mod.rs`.) A case is `{ settings: 'hotkeys' }`; it needs no
+about, and EE2's Leveling page. (EE2's Help page is left out: the port has no scene for it yet,
+see `rust/crates/app/src/settings/mod.rs`.) A case is `{ settings: 'hotkeys' }`; it needs no
 corpus file, because the host serves `fixtures/config/<game>/default/config.json` with the
 same `leagueId: Standard` edit the price-check cases get.
 
@@ -379,9 +379,9 @@ npm run screens -- --settings hotkeys --settings about --game poe2
 ### Overlay widgets
 
 `DEFAULT_WIDGET_CASES` (`screens/cases.mjs`) renders the overlay's own widgets — the widget
-menu, the stopwatch, the image strip, the delve grid, the item search and the stash search —
-for both games. A case is `{ overlay: 'menu' }` (or `--overlay <name>`); like the settings cases
-it needs no corpus file.
+menu, the stopwatch, the image strip, the delve grid, the item search, the stash search and
+EE2's experience tracker — for both games where they exist. A case is `{ overlay: 'menu' }`
+(or `--overlay <name>`); like the settings cases it needs no corpus file.
 The output is `target/screens/<game>/<name>.png` plus a `.txt` of its `innerText`, the names of
 the Rune scenes `widget-<name>` and `poe2-widget-<name>` (`rust/crates/app/src/lib.rs`).
 
@@ -416,6 +416,10 @@ How each one is opened, because three are not visible on load:
   `WidgetDelveGrid.vue` ignores outside Electron (`!Host.isElectron` returns), so a browser
   cannot reach it. The host serves the same config with this widget shown and the menu hidden
   (`host.setConfig`), because the menu sits over the grid's top-left corner in the crop.
+- `xp-tracker`: EE2 only, in the config and hidden; the menu lists it as "XP". Its state comes
+  from the client log, so the run sends one `MAIN->CLIENT::game-log` event after opening it: a
+  level 72 character in a level 80 area, the same fixed state the Rune scene
+  `poe2-widget-xp-tracker` draws (see [docs/client-log-widgets.md](../../docs/client-log-widgets.md)).
 
 The image strip's default picture is `syndicate.jpg` from the reference's own
 `public/images`, so it needs no recording; the port draws it `object-fit: cover`, from

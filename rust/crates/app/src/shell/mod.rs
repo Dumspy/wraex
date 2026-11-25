@@ -391,7 +391,7 @@ fn price_check_hold_key(config: &serde_json::Value) -> Option<String> {
 /// every `hide-on-focus` widget when it is.
 #[cfg(test)]
 fn apply_overlay_event(event: &OverlayEvent, app: &mut App) {
-    let settings_armed = app.live.as_ref().is_none_or(|live| live.settings_armed);
+    let settings_armed = app.shell().is_none_or(|live| live.settings_armed);
     apply_overlay_event_in(event, app, settings_armed);
 }
 
@@ -443,7 +443,7 @@ pub struct Live {
     pub shortcuts: Shortcuts,
     pub overlay: OverlayController,
     pub window: GameWindow,
-    pub clipboard: clipboard::SystemClipboard,
+    pub clipboard: Box<dyn Clipboard>,
     pub keys: keys::OSSender,
     pub handle: AppHandle<App>,
     pub tray: Option<Tray>,
@@ -480,6 +480,8 @@ pub struct Live {
     pub league: String,
     pub updates: updates::Updates,
     pub update: UpdateInfo,
+    /// EE2's `Client.txt` worker (`crate::client_log`), PoE2 only: the XP tracker's data.
+    pub client_log: Option<crate::client_log::Log>,
     /// poe.ninja's prices for the next PoE1 price check, fetched since launch.
     pub prices: Option<crate::poe1::price_check::prices::PriceList>,
     /// EE2's poe.ninja overviews, fetched since launch (`usePoeninja` is app-wide there).
@@ -514,6 +516,30 @@ impl Live {
     /// the prices the first price check will use. `panel` is the overlay's window, created
     /// before the app because Rune hands the window over on creation.
     pub fn new(handle: AppHandle<App>, startup: config::Startup, panel: Arc<Panel>) -> Self {
+        Self::with_mode(handle, startup, panel, Mode::Live, Box::new(clipboard::SystemClipboard::new()))
+    }
+
+    /// [`Live::new`] with where the app's trade requests go and its clipboard given, which is
+    /// what a test varies: the recordings in place of the trade site, and a clipboard holding
+    /// the item a hotkey would have copied.
+    ///
+    /// The handle is a real `AppHandle`: Rune builds it from the spec alone, so a test can drive
+    /// the path `AppSpec::poll` is wired to (`App::poll_with` → [`Live::poll`]) without a window.
+    #[cfg(test)]
+    fn for_tests(startup: config::Startup, clipboard: Box<dyn Clipboard>) -> Self {
+        let spec =
+            AppSpec::<App>::new("Wraex test", (crate::poe1::price_check::WIDTH, HEIGHT), App::default, crate::view);
+        let handle = rune::App::new(spec).handle();
+        Self::with_mode(handle, startup, Arc::new(Panel::default()), Mode::Replay, clipboard)
+    }
+
+    fn with_mode(
+        handle: AppHandle<App>,
+        startup: config::Startup,
+        panel: Arc<Panel>,
+        mode: Mode,
+        clipboard: Box<dyn Clipboard>,
+    ) -> Self {
         let game = startup.game;
         let os = current_os();
         let host = host_config(game, &startup.config);
@@ -535,7 +561,7 @@ impl Live {
 
         // `usePoeninja` runs for the whole renderer at launch; the port's prices live in a
         // price check, so the shell keeps one warm and hands it to the first window opened.
-        let mut prices = crate::poe1::price_check::prices::PriceList::new(Mode::Live);
+        let mut prices = crate::poe1::price_check::prices::PriceList::new(mode);
         prices.queue(&league, false);
 
         if startup.source == config::Source::ImportedUpstream {
@@ -553,7 +579,7 @@ impl Live {
             shortcuts,
             overlay,
             window: GameWindow::new(),
-            clipboard: clipboard::SystemClipboard::new(),
+            clipboard,
             keys: keys::OSSender::new(),
             handle,
             tray: None,
@@ -571,6 +597,7 @@ impl Live {
             league,
             updates: updates::Updates::default(),
             update: UpdateInfo::Initial,
+            client_log: None,
             prices: Some(prices),
             poe2_prices: None,
             settings_was_open: false,
@@ -593,12 +620,28 @@ impl Live {
     pub fn boot(&mut self) {
         self.start_tray();
         self.start_game_window();
+        // EE2 reads the log for both games' renderers, but only its PoE2 build uses it for
+        // level tracking; APT's log reader is for chat and trades (`crate::client_log`).
+        if self.game == GameId::Poe2 && self.client_log.is_none() {
+            let handle = self.handle.clone();
+            self.client_log = Some(crate::client_log::Log::spawn(move || handle.wake()));
+            self.sync_client_log();
+        }
         // With the game's window followed, the hotkeys belong to its focus
         // (`poll_game_window` registers them); before the first report there is nothing to
         // register them for.
         if self.hotkeys_follow_game() {
             self.register_hotkeys();
         }
+    }
+
+    /// `GameLogWatcher.restart(config.clientLog ?? "", config.readClientLog)`: the config's log
+    /// path and switch, applied when the window opens and after the settings save.
+    fn sync_client_log(&mut self) {
+        let Some(log) = &self.client_log else { return };
+        let read = self.startup.config.get("readClientLog").and_then(|value| value.as_bool()).unwrap_or(false);
+        let path = self.startup.config.get("clientLog").and_then(|value| value.as_str()).unwrap_or_default();
+        log.update(read, path);
     }
 
     /// Start following the game's window, by the config's `windowTitle` (`OverlayWindow`'s
@@ -901,6 +944,7 @@ impl Live {
         if self.hotkeys_follow_game() {
             self.register_hotkeys();
         }
+        self.sync_client_log();
     }
 
     /// Whether the hotkeys may be registered now: without a window hook they are system-wide
@@ -945,7 +989,7 @@ impl Live {
                 entry,
                 PressContext {
                     keys,
-                    system_clipboard: clipboard,
+                    system_clipboard: &mut **clipboard,
                     clock: &LiveClock,
                     window,
                     overlay,
@@ -1036,7 +1080,7 @@ impl Live {
             text,
             PressContext {
                 keys,
-                system_clipboard: clipboard,
+                system_clipboard: &mut **clipboard,
                 clock: &LiveClock,
                 window,
                 overlay,
@@ -1254,6 +1298,10 @@ impl Live {
         let mut changed = self.poll_game_window();
         changed |= self.poll_mouse();
         changed |= self.poll_keyboard();
+        if let Some(state) = self.client_log.as_ref().and_then(crate::client_log::Log::take) {
+            app.apply_client_log(state);
+            changed = true;
+        }
 
         let actions: Vec<TrayAction> =
             self.tray_actions.lock().map(|mut queue| std::mem::take(&mut *queue)).unwrap_or_default();
@@ -1263,7 +1311,10 @@ impl Live {
         }
 
         if let Some(info) = self.updates.take() {
-            app.apply_update(info);
+            // The shell's own copy, and the About page's: `App::apply_update` would read
+            // `App::live`, which the shell has taken out while it runs.
+            self.update = info.clone();
+            app.show_update(info);
             changed = true;
         }
 
@@ -1322,6 +1373,7 @@ impl App {
             settings: None,
             item_check: None,
             item_check_poe2: None,
+            client_log: None,
             widgets: None,
             mode: Mode::Live,
             waker: None,
@@ -1331,13 +1383,16 @@ impl App {
 
     /// `AppSpec::poll` in a window: the live half first (it may open or close windows), then
     /// the windows' own polls.
+    ///
+    /// The shell runs with itself taken out of `App::live` ([`App::with_live`]), so nothing it
+    /// runs may read the live state through an `App` method: `App::shown`, `App::overlay_active`
+    /// and `App::hide_widgets_on_blur` would all answer as a headless scene does, and the three
+    /// overlay bugs that reached real Windows runs were exactly that. `Live::poll` and the
+    /// helpers it calls take the state from `self` (`shown_in`, `hide_widgets_on_blur_in`,
+    /// `apply_overlay_event_in`), and [`App::shell`] panics in debug builds if anything asks the
+    /// app instead.
     pub fn poll_with(&mut self, clock: f64, tx: &mut Tx) -> bool {
-        if self.live.is_none() {
-            return self.poll(clock);
-        }
-        let mut live = self.live.take().expect("checked above");
-        let live_changed = live.poll(self, tx);
-        self.live = Some(live);
+        let live_changed = self.with_live(|app, live| live.poll(app, tx)).unwrap_or(false);
         self.poll(clock) || live_changed
     }
 
@@ -1345,7 +1400,7 @@ impl App {
     /// paint order: one per visible widget, each at its own anchor. `None` when the window is
     /// not the overlay — a scene, or a run without a game window to sit over.
     pub fn overlay_cards(&self) -> Option<Vec<Card>> {
-        let live = self.live.as_ref()?;
+        let live = self.shell()?;
         let bounds = live.game_bounds()?;
         Some(live.cards(self, bounds))
     }
@@ -1354,17 +1409,17 @@ impl App {
     /// empty ([`crate::view`]), while the window and the widget's state stay: the game keeps the
     /// mouse and keyboard it had, and nothing closes on a focus change.
     pub fn is_peeked(&self) -> bool {
-        self.live.as_ref().is_some_and(|live| peek_hides(&self.shown(), live.overlay.is_visible()))
+        self.shell().is_some_and(|live| peek_hides(&self.shown(), live.overlay.is_visible()))
     }
 
     /// `OverlayWindow.vue`'s `active`: the overlay is taking the mouse and keyboard.
     pub(crate) fn overlay_active(&self) -> bool {
-        self.live.as_ref().is_some_and(|live| live.overlay.is_interactable())
+        self.shell().is_some_and(|live| live.overlay.is_interactable())
     }
 
     /// What the window draws, in [`crate::view`]'s order.
     pub fn shown(&self) -> Shown {
-        self.shown_state(self.overlay_active(), self.live.is_none())
+        self.shown_state(self.overlay_active(), self.shell().is_none())
     }
 
     /// [`App::shown`] for a live app, with the overlay's own state given: a test has no Rune
@@ -1515,7 +1570,11 @@ impl App {
     /// (`App::poll_with`): a check of `self.live` here would never pass.
     pub(crate) fn ensure_overlay_state(&mut self, game: GameId, config: &serde_json::Value) {
         if self.widgets.is_none() {
-            self.widgets = Some(widgets::Overlay::live(game, config));
+            let mut overlay = widgets::Overlay::live(game, config);
+            if let Some(state) = &self.client_log {
+                overlay.set_xp(state.clone());
+            }
+            self.widgets = Some(overlay);
         }
     }
 
@@ -1524,7 +1583,7 @@ impl App {
         // Closing the window gives the game its focus back first, as Escape and the overlay
         // key's off state do. Without it the overlay would still be active and the shell would
         // draw the widget menu again in the next frame instead of hiding.
-        if let Some(live) = &mut self.live {
+        if let Some(live) = self.shell_mut() {
             let mut panel = OverlayPanel::new(live.panel.clone());
             live.overlay.assert_game_active(&mut live.window, &mut panel);
             live.sync_registration();
@@ -1590,7 +1649,7 @@ impl App {
     /// drawing it — which [`App::shown_in`] re-checks, so the menu goes with the overlay and
     /// comes back the next time it is activated.
     pub fn hide_widgets_on_blur(&mut self) {
-        let settings_armed = self.live.as_ref().is_none_or(|live| live.settings_armed);
+        let settings_armed = self.shell().is_none_or(|live| live.settings_armed);
         self.hide_widgets_on_blur_in(settings_armed);
     }
 
@@ -1648,16 +1707,14 @@ impl App {
 
     /// A global hotkey fired: one press, one action, as upstream's `Shortcuts.press`.
     fn on_hotkey(&mut self, entry: &ShortcutAction) {
-        let Some(mut live) = self.live.take() else { return };
-        live.press(self, entry);
-        self.live = Some(live);
+        self.with_live(|app, live| live.press(app, entry));
     }
 
     /// `AppSpec::on_focus`: whether the overlay window itself has the focus. The library's
     /// `blur` rule needs it — a widget whose window is in front stays while the game is not —
     /// and it settles a focus the overlay asked for (`focusNext`).
     pub fn on_focus(&mut self, focused: bool, _tx: &mut Tx) {
-        if let Some(live) = &mut self.live {
+        if let Some(live) = self.shell_mut() {
             live.overlay_focused = focused;
             live.panel.focus_settled();
             // The settings window's blur rule waits for this: see `Live::settings_armed`.
@@ -1669,10 +1726,7 @@ impl App {
     /// keyboard they are upstream's `handleExtraCommands` (Escape and Ctrl+W give the game its
     /// focus, the overlay key toggles); otherwise the widget keeps them.
     pub fn on_key(&mut self, event: &rune::KeyEvent, _tx: &mut Tx) -> bool {
-        let Some(mut live) = self.live.take() else { return false };
-        let handled = live.overlay_key(event);
-        self.live = Some(live);
-        handled
+        self.with_live(|_, live| live.overlay_key(event)).unwrap_or(false)
     }
 
     /// The tray's "Settings/League", a widget's edit button, or `wm.show` on the settings
@@ -1714,7 +1768,7 @@ impl App {
     /// outside the widgets gives the game its focus back. The `focus-change` that follows
     /// closes the `invisible-on-blur` menu and every `hide-on-blur` widget.
     pub(crate) fn on_overlay_background(&mut self) {
-        let Some(live) = &mut self.live else { return };
+        let Some(live) = self.shell_mut() else { return };
         if !live.overlay.is_interactable() || !overlay_background_close(&live.startup.config) {
             return;
         }
@@ -1729,7 +1783,8 @@ impl App {
         let warm = live.prices.take();
         let overviews = live.poe2_prices.take();
         let league = live.league.clone();
-        self.open_price_check_for(live.game, &league, Mode::Live, text, warm, overviews);
+        // `self.mode`, not `Mode::Live`: a test's shell opens the window on the recordings.
+        self.open_price_check_for(live.game, &league, self.mode, text, warm, overviews);
         self.settings = None;
         // The press recorded where the cursor was; that is where the widget goes.
     }
@@ -1783,7 +1838,7 @@ impl App {
     /// `MAIN->CLIENT::item-text` for `item-check`, and its own hotkeys, which press the
     /// button whose page they open.
     fn open_item_check(&mut self, live: &mut Live, text: &str, action: Option<ItemAction>) {
-        self.open_item_check_for(live.game, &live.startup.config, Mode::Live, text, action);
+        self.open_item_check_for(live.game, &live.startup.config, self.mode, text, action);
         if self.item_check.as_ref().is_some_and(|check| check.open)
             || self.item_check_poe2.as_ref().is_some_and(|check| check.open)
         {
@@ -1905,14 +1960,30 @@ impl App {
         live.activate_on_show = standalone;
     }
 
-    /// The update worker's answer, for the settings window's About page (`Host.updateInfo`).
+    /// The update worker's answer: the shell's copy for the next settings window, and the About
+    /// page's. Called from the worker's `AppHandle::update`, outside `Live::poll`.
     fn apply_update(&mut self, info: UpdateInfo) {
-        if let Some(live) = &mut self.live {
+        if let Some(live) = self.shell_mut() {
             live.update = info.clone();
         }
+        self.show_update(info);
+    }
+
+    /// [`App::apply_update`]'s window half. The shell calls it from `Live::poll`, where
+    /// `App::live` is taken out and `Live::update` is the caller's own field.
+    fn show_update(&mut self, info: UpdateInfo) {
         if let Some(settings) = &mut self.settings {
             settings.update = info;
         }
+    }
+
+    /// The client-log worker's newest snapshot: the experience tracker draws it, and the
+    /// overlay keeps it when it is built later.
+    pub fn apply_client_log(&mut self, state: crate::client_log::State) {
+        if let Some(overlay) = &mut self.widgets {
+            overlay.set_xp(state.clone());
+        }
+        self.client_log = Some(state);
     }
 
     /// The startup worker's answers: the trade site's leagues, the selected league and EE2's
@@ -1923,23 +1994,25 @@ impl App {
         league: Option<String>,
         overviews: Option<Vec<(&'static str, String)>>,
     ) {
-        let Some(live) = &mut self.live else { return };
-        if let Some(error) = &leagues.error {
-            live.warn(format!("loading the leagues failed: {error}"));
-        }
-        if let Some(league) = league.filter(|league| *league != live.league) {
-            live.warn(format!("price checks now use the league \"{league}\""));
-            live.league = league.clone();
-            if let Some(prices) = &mut live.prices {
-                prices.queue(&league, true);
+        {
+            let Some(live) = self.shell_mut() else { return };
+            if let Some(error) = &leagues.error {
+                live.warn(format!("loading the leagues failed: {error}"));
             }
+            if let Some(league) = league.filter(|league| *league != live.league) {
+                live.warn(format!("price checks now use the league \"{league}\""));
+                live.league = league.clone();
+                if let Some(prices) = &mut live.prices {
+                    prices.queue(&league, true);
+                }
+            }
+            live.poe2_prices = overviews.clone();
         }
         if let Some(overviews) = overviews {
             // A window that is already open takes them now; otherwise the next one does.
             if let Some(check) = &mut self.poe2 {
                 check.apply_price_overviews(&overviews);
             }
-            live.poe2_prices = Some(overviews);
         }
     }
 }
@@ -2285,7 +2358,7 @@ pub fn run(game: GameId) {
     // The tray and the hotkeys need the running host: this update runs on the UI thread as
     // soon as the loop starts.
     handle.update(|app, _tx| {
-        if let Some(live) = &mut app.live {
+        if let Some(live) = app.shell_mut() {
             live.boot();
         }
     });
@@ -2353,7 +2426,7 @@ fn spawn_update_check(handle: AppHandle<App>) {
         Some(NoDownloadReason::NotSupported),
     );
     handle.update(move |app, _tx| {
-        if let Some(live) = &mut app.live {
+        if let Some(live) = app.shell_mut() {
             live.updates = worker;
         }
     });

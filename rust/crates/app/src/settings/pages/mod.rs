@@ -6,6 +6,7 @@ pub mod debug;
 pub mod general;
 pub mod hotkeys;
 pub mod item_check;
+pub mod leveling;
 pub mod maps;
 pub mod price_check;
 
@@ -25,6 +26,7 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
         Page::PriceCheck => price_check::view(settings, project),
         Page::Maps => maps::view(settings, project),
         Page::ItemCheck => item_check::view(settings, project),
+        Page::Leveling => leveling::view(settings, project),
         Page::Debug => debug::view(settings, project),
         Page::About => about::view(settings, project),
     }

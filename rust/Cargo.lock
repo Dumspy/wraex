@@ -5296,6 +5296,7 @@ name = "wraex-platform"
 version = "0.1.0"
 dependencies = [
  "cookie_store",
+ "libc",
  "serde",
  "serde_json",
  "tray-icon",

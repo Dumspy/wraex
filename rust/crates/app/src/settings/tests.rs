@@ -73,8 +73,8 @@ fn release(runtime: &mut Runtime<App>, key: rune::KeyEvent) {
 #[test]
 fn every_settings_page_shows_its_labels() {
     for game in [GameId::Poe1, GameId::Poe2] {
-        // The menu is on every page.
-        for page in Page::ALL {
+        // The menu is on every page. APT has no Leveling page.
+        for page in Page::for_game(game) {
             let runtime = scene(game, page);
             let menu = runtime
                 .elements()
@@ -86,7 +86,7 @@ fn every_settings_page_shows_its_labels() {
                         .is_some_and(|key| key.starts_with("settings-menu-") && key.ends_with("-label"))
                 })
                 .count();
-            assert_eq!(menu, Page::ALL.len(), "{game:?}/{page:?}: menu entries");
+            assert_eq!(menu, Page::for_game(game).count(), "{game:?}/{page:?}: menu entries");
             assert!(runtime.find("titlebar-title").is_some(), "{game:?}/{page:?}: title bar");
             assert!(runtime.find("settings-save").is_some(), "{game:?}/{page:?}: Save");
             assert!(runtime.find("settings-cancel").is_some(), "{game:?}/{page:?}: Cancel");
@@ -126,6 +126,14 @@ fn every_settings_page_shows_its_labels() {
         assert!(has_text(&item_check, "Open item on wiki"), "{game:?}: wiki hotkey");
         assert!(has_text(&item_check, "Find in Stash"), "{game:?}: stash hotkey");
         assert!(item_check.find("item-check-stash-search-input").is_some(), "{game:?}: stash field");
+
+        if game == GameId::Poe2 {
+            let leveling = scene(game, Page::Leveling);
+            assert!(has_text(&leveling, "Experience Tracker"), "{game:?}: leveling heading");
+            assert!(has_text(&leveling, "Show experience gain percentage"), "{game:?}: showExp");
+            assert!(leveling.find("leveling-show-exp").is_some(), "{game:?}: showExp toggle");
+            assert!(leveling.find("leveling-client-log").is_some(), "{game:?}: log field");
+        }
 
         let debug = scene(game, Page::Debug);
         assert!(has_text(&debug, "Record all key presses"), "{game:?}: debug toggle");

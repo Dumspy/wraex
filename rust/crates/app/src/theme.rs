@@ -93,6 +93,7 @@ pub fn green(shade: u16) -> Color {
     c(match shade {
         100 => "#f0fff4",
         500 => "#48bb78",
+        600 => "#38a169",
         700 => "#2f855a",
         900 => "#22543d",
         _ => panic!("no `green.{shade}` in upstream's tailwind.config.js"),

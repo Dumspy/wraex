@@ -14,7 +14,8 @@
 //! ([`crate::shell::Live`]). Save itself still stops at the store.
 //!
 //! Ported for both games: general, hotkeys (with the recorder), price check, chat, map check,
-//! item check, debug and about. Still missing: EE2's Help and Leveling pages, the league list
+//! item check, debug and about, plus EE2's Leveling page for PoE2. Still missing: EE2's Help
+//! page, the league list
 //! (`useLeagues`), the patrons strip's names, the debug log tail, and poe.ninja's currency
 //! icons on EE2's primary-currency radios.
 //!
@@ -59,30 +60,45 @@ pub enum Page {
     PriceCheck,
     Maps,
     ItemCheck,
+    /// EE2's Leveling page (`web/leveling/settings-leveling.vue`), PoE2 only.
+    Leveling,
     Debug,
     About,
 }
 
 impl Page {
     /// Every page, in menu order.
-    pub const ALL: [Page; 8] = [
+    pub const ALL: [Page; 9] = [
         Page::Hotkeys,
         Page::Chat,
         Page::General,
         Page::PriceCheck,
         Page::Maps,
         Page::ItemCheck,
+        Page::Leveling,
         Page::Debug,
         Page::About,
     ];
 
     /// The menu's groups: a separator goes under each group (`flatJoin`).
-    pub const MENU: [&'static [Page]; 4] = [
+    pub const MENU: [&'static [Page]; 5] = [
         &[Page::Hotkeys, Page::Chat],
         &[Page::General],
         &[Page::PriceCheck, Page::Maps, Page::ItemCheck],
+        &[Page::Leveling],
         &[Page::Debug, Page::About],
     ];
+
+    /// Whether the game has this page: APT has no leveling widget, so its settings window has
+    /// no Leveling page either.
+    pub fn applies_to(self, game: GameId) -> bool {
+        self != Page::Leveling || game == GameId::Poe2
+    }
+
+    /// The pages of `game`, in menu order.
+    pub fn for_game(game: GameId) -> impl Iterator<Item = Page> {
+        Page::ALL.into_iter().filter(move |page| page.applies_to(game))
+    }
 
     /// The `--scene` suffix and the element keys' prefix.
     pub fn slug(self) -> &'static str {
@@ -93,6 +109,7 @@ impl Page {
             Page::PriceCheck => "price-check",
             Page::Maps => "maps",
             Page::ItemCheck => "item-check",
+            Page::Leveling => "leveling",
             Page::Debug => "debug",
             Page::About => "about",
         }
@@ -111,6 +128,7 @@ impl Page {
             Page::PriceCheck => "price_check.name",
             Page::Maps => "map_check.name",
             Page::ItemCheck => "item.info",
+            Page::Leveling => "leveling.name",
             Page::Debug => "settings.debug",
             Page::About => "settings.about",
         }
@@ -393,6 +411,9 @@ impl Settings {
             }
             Page::Maps => {
                 edits.insert("maps-search".to_owned(), TextEdit::new(self.maps_search.clone()));
+            }
+            Page::Leveling => {
+                edits.insert("leveling-client-log".to_owned(), TextEdit::new(text(Field::Root("clientLog"))));
             }
             _ => {}
         }

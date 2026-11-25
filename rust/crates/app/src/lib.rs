@@ -7,7 +7,8 @@
 //! [`poe2::item_check`]) draws its map check ([`poe1::map_check`], [`poe2::map_check`]) for a
 //! map-like item. The settings window ([`settings`]) opens over either game's check, one scene
 //! per page. The overlay's own widgets ([`widgets`]) — the menu, the stopwatch, the image strip,
-//! the delve grid, the item search and the stash search — are one scene each.
+//! the delve grid, the item search, the stash search and EE2's experience tracker — are one
+//! scene each.
 //!
 //! `cargo run -p wraex-app` runs the app: a tray, the config's global hotkeys and a window
 //! opened on demand ([`shell`]). `-- --game poe2` picks the other game. Anything else —
@@ -15,6 +16,7 @@
 //! which renders one corpus case headlessly and touches no OS state (`--list-scenes` lists
 //! the cases).
 
+pub mod client_log;
 pub mod poe1;
 pub mod poe2;
 pub mod replay;
@@ -57,8 +59,12 @@ pub struct App {
     pub item_check: Option<poe1::item_check::ItemCheck>,
     /// The item check window on PoE2.
     pub item_check_poe2: Option<poe2::item_check::ItemCheck>,
+    /// The latest client-log snapshot the live worker published, before or after an overlay
+    /// exists ([`client_log`]). Scenes set the overlay's own copy instead.
+    pub client_log: Option<client_log::State>,
     /// An overlay widget (`widgets`): the menu, the stopwatch, the image strip, the delve grid,
-    /// the item search or the stash search, one per scene. A live window draws every widget the
+    /// the item search, the stash search or EE2's experience tracker, one per scene. A live
+    /// window draws every widget the
     /// config shows at once, each at its own anchor (`OverlayWindow.vue`'s `visibilityState`);
     /// without a game window to sit over, the window is the one widget that was opened.
     pub widgets: Option<widgets::Overlay>,
@@ -81,11 +87,56 @@ impl std::fmt::Debug for App {
             .field("settings", &self.settings)
             .field("item_check", &self.item_check)
             .field("item_check_poe2", &self.item_check_poe2)
+            .field("client_log", &self.client_log)
             .field("widgets", &self.widgets)
             .field("mode", &self.mode)
             .field("live", &self.live)
             .finish()
     }
+}
+
+// Whether this thread is inside an [`App::with_live`] call: the shell is out of `App::live`
+// while `Live::poll`, a hotkey press or the overlay's keys run, so nothing may read it then.
+#[cfg(debug_assertions)]
+thread_local! {
+    static SHELL_TAKEN: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// [`App::with_live`]'s flag, cleared when the shell is put back — also when the guard's
+/// assertion panics, so one failed test cannot poison the next.
+struct ShellTaken(#[cfg(debug_assertions)] bool);
+
+impl ShellTaken {
+    fn take() -> Self {
+        #[cfg(debug_assertions)]
+        {
+            Self(SHELL_TAKEN.with(|taken| taken.replace(true)))
+        }
+        #[cfg(not(debug_assertions))]
+        {
+            Self()
+        }
+    }
+}
+
+impl Drop for ShellTaken {
+    fn drop(&mut self) {
+        #[cfg(debug_assertions)]
+        SHELL_TAKEN.with(|taken| taken.set(self.0));
+    }
+}
+
+/// Fails (debug builds, tests included) when an `App` method asks what the live shell says from
+/// inside the shell: `App::live` is empty there, so every answer would be a headless scene's.
+/// A release build drops the check and the flag with it.
+#[cfg_attr(debug_assertions, track_caller)]
+fn assert_shell_in_place() {
+    #[cfg(debug_assertions)]
+    assert!(
+        !SHELL_TAKEN.with(std::cell::Cell::get),
+        "the shell is out of `App::live` while `Live::poll` runs: use the `Live` the shell was \
+         given (or `shown_in`/`hide_widgets_on_blur_in`), not an `App` method that reads it"
+    );
 }
 
 impl App {
@@ -103,6 +154,7 @@ impl App {
             settings: None,
             item_check: None,
             item_check_poe2: None,
+            client_log: None,
             widgets: None,
             mode,
             waker: None,
@@ -121,6 +173,7 @@ impl App {
             settings: None,
             item_check: None,
             item_check_poe2: None,
+            client_log: None,
             widgets: None,
             mode,
             waker: None,
@@ -252,7 +305,7 @@ impl App {
     pub fn set_waker(&mut self, waker: Waker) {
         self.price_check.set_waker(waker.clone());
         // The live shell's startup price fetch lands on the same waker.
-        if let Some(prices) = self.live.as_ref().and_then(|live| live.prices.as_ref()) {
+        if let Some(prices) = self.shell().and_then(|live| live.prices.as_ref()) {
             prices.set_waker(waker.clone());
         }
         // The about page's update check lands on the same waker.
@@ -270,6 +323,39 @@ impl App {
         if let (Some(waker), Some(check)) = (&self.waker, &self.poe2) {
             check.set_waker(waker.clone());
         }
+    }
+
+    /// The live shell, or `None` in a scene, a `--snap` render and a test.
+    ///
+    /// Panics in debug builds when the shell itself asks: [`App::with_live`] has taken it out of
+    /// `App::live` while the shell runs, and an answer read from here would be a scene's — the
+    /// bug that shipped three times (the overlay key drawing nothing, the widget list never
+    /// built, the settings window closing at once). Code the shell runs reads its own `Live`.
+    #[cfg_attr(debug_assertions, track_caller)]
+    pub(crate) fn shell(&self) -> Option<&shell::Live> {
+        assert_shell_in_place();
+        self.live.as_ref()
+    }
+
+    /// [`App::shell`] when the caller changes it. Rune's window callbacks (`App::on_focus`, the
+    /// close button, the update and startup workers) run outside the poll; the shell's own
+    /// parts take the `Live` they were given.
+    #[cfg_attr(debug_assertions, track_caller)]
+    pub(crate) fn shell_mut(&mut self) -> Option<&mut shell::Live> {
+        assert_shell_in_place();
+        self.live.as_mut()
+    }
+
+    /// Runs `f` with the shell taken out of `App::live`, as Rune calls every shell entry point
+    /// (`AppSpec::poll`, a registered hotkey, `AppSpec::on_key`). Inside, an `App` method that
+    /// read the live state would answer as a scene does, so [`App::shell`] asserts instead.
+    pub(crate) fn with_live<T>(&mut self, f: impl FnOnce(&mut App, &mut shell::Live) -> T) -> Option<T> {
+        let mut live = self.live.take()?;
+        let taken = ShellTaken::take();
+        let result = f(self, &mut live);
+        drop(taken);
+        self.live = Some(live);
+        Some(result)
     }
 
     /// `AppSpec::poll`: a landed answer in whichever window is open, the overlay's stopwatches
@@ -385,14 +471,14 @@ pub fn view(app: &App, cx: &mut Cx<App>) -> El {
     // this only keeps the frame it was hidden in from drawing a widget. `is_peeked` is
     // `OverlayVisibility`'s Alt peek: the widget is not drawn while Alt is held, and comes back
     // exactly where it was when Alt is released.
-    if app.live.is_some() && (app.shown() == shell::Shown::None || app.is_peeked()) {
+    if app.shell().is_some() && (app.shown() == shell::Shown::None || app.is_peeked()) {
         return rune::el();
     }
     // Upstream's cards appear, swap and close at once. Rune's default fades a removed element
     // out over 0.15 s and springs moved ones, which in the overlay left the previous card on
     // screen beside the next one (and, with no frame to finish the fade, after closing). In a
     // live window every change lands at once; hover colours keep their springs.
-    let live = app.live.is_some();
+    let live = app.shell().is_some();
     // The overlay over the game: one window, every visible widget drawn at once, each placed by
     // its config's `anchor` (`OverlayWindow.vue` draws all of them over one background).
     if let Some(cards) = app.overlay_cards() {
@@ -546,6 +632,9 @@ pub const SCENES: &[Scene] = &[
         });
     }),
     ("poe2-widget-stash-search", |app| app.show_widget(GameId::Poe2, widgets::Kind::StashSearch)),
+    // EE2's experience tracker: the first client-log-driven widget, fed the scene's fixed
+    // level 72 / area 80 state ([`widgets::xp_tracker::scene_state`]).
+    ("poe2-widget-xp-tracker", |app| app.show_widget(GameId::Poe2, widgets::Kind::XpTracker)),
     // The settings window, one scene per menu page, for both games.
     ("settings-poe1-hotkeys", |app| app.settings_page(GameId::Poe1, Page::Hotkeys)),
     ("settings-poe1-chat", |app| app.settings_page(GameId::Poe1, Page::Chat)),
@@ -561,6 +650,7 @@ pub const SCENES: &[Scene] = &[
     ("settings-poe2-price-check", |app| app.settings_page(GameId::Poe2, Page::PriceCheck)),
     ("settings-poe2-maps", |app| app.settings_page(GameId::Poe2, Page::Maps)),
     ("settings-poe2-item-check", |app| app.settings_page(GameId::Poe2, Page::ItemCheck)),
+    ("settings-poe2-leveling", |app| app.settings_page(GameId::Poe2, Page::Leveling)),
     ("settings-poe2-debug", |app| app.settings_page(GameId::Poe2, Page::Debug)),
     ("settings-poe2-about", |app| app.settings_page(GameId::Poe2, Page::About)),
 ];

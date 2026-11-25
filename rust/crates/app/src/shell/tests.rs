@@ -1,5 +1,9 @@
 //! The shell's pure parts: which game a run picks, the window sizes, the overlay's mouse
 //! wiring with fakes, and the fact that a scene never reaches the live path.
+//!
+//! The last tests drive the real path end to end — `App::poll_with` → `Live::poll`, with a Rune
+//! handle and a `Panel` but no window — because every overlay bug that reached a Windows run
+//! came from the shell asking `App` about a live state it had taken out of `App::live`.
 
 use super::*;
 use crate::settings::Page;
@@ -965,4 +969,239 @@ fn a_key_pressed_while_alt_is_held_ends_the_peek() {
     apply_key_event(controller, &shortcuts, KeyEvent::Up(InputEvent { alt: false, ..alt }), &clock);
     assert!(controller.is_visible());
     assert!(controller.take_events().is_empty());
+}
+
+/// A shell a unit test drives the way Rune does: [`Live::for_tests`] gives it a real (never-run)
+/// `AppHandle` and a `Panel` with no native window behind it, the config lives in a temp folder,
+/// and the app's trade requests go to the recordings (`Mode::Replay`).
+fn live_app(name: &str, clipboard: TestClipboard) -> App {
+    let dir = std::env::temp_dir().join(format!("wraex-shell-{name}-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let startup = config::load(GameId::Poe1, &dir);
+    let mut app = App::live(Live::for_tests(startup, Box::new(clipboard)));
+    app.mode = Mode::Replay;
+    app
+}
+
+/// One frame of the real path: exactly what `AppSpec::poll` is wired to in [`run`].
+fn poll(app: &mut App) -> bool {
+    let mut tx = Tx::default();
+    app.poll_with(0.0, &mut tx)
+}
+
+/// The config's `toggle-overlay` hotkey (upstream's `overlayKey`, `Shift + Space`).
+fn overlay_key(app: &App) -> ShortcutAction {
+    let live = app.live.as_ref().expect("the live shell");
+    live.shortcuts
+        .actions()
+        .iter()
+        .find(|entry| entry.action == Action::ToggleOverlay)
+        .cloned()
+        .expect("the config's overlay key")
+}
+
+/// The config's plain price-check hotkey (`copy-item` to `price-check`, `focusOverlay: false`).
+fn price_check_hotkey(app: &App) -> ShortcutAction {
+    let live = app.live.as_ref().expect("the live shell");
+    live.shortcuts
+        .actions()
+        .iter()
+        .find(|entry| matches!(&entry.action, Action::CopyItem { target, .. } if target == "price-check"))
+        .cloned()
+        .expect("the config's price-check hotkey")
+}
+
+/// A hotkey press as Rune delivers it: the handler `Live::register_hotkeys` installs, which is
+/// `App::on_hotkey` around `Live::press`.
+fn press(app: &mut App, of: fn(&App) -> ShortcutAction) {
+    let entry = of(app);
+    app.on_hotkey(&entry);
+}
+
+/// The OS window hook's report, fed through the overlay controller as `Live::poll_game_window`
+/// does. A test's shell has no `Watcher`, so the queued `focus-change` is what the next
+/// `Live::poll` drains.
+fn game_window(app: &mut App, event: window::GameWindowEvents) {
+    let live = app.live.as_mut().expect("the live shell");
+    let mut panel = OverlayPanel::new(live.panel.clone());
+    if let Some(change) = live.window.feed(event) {
+        live.overlay.on_window_event(&change, &live.window, &mut panel);
+    }
+}
+
+/// What the overlay window is doing, as the shell recorded it: the window's `Panel` (the
+/// `AppHandle` is Rune's and never shown in a test) and the cards its last poll drew.
+fn drawn(app: &App) -> Vec<Shown> {
+    app.live.as_ref().expect("the live shell").drawn.clone()
+}
+
+fn window_visible(app: &App) -> bool {
+    app.live.as_ref().expect("the live shell").panel.visible()
+}
+
+/// The clipboard the shell reads, without an OS behind it.
+#[derive(Debug, Default)]
+struct TestClipboard {
+    /// What `read_text` answers next.
+    text: String,
+    /// What the game writes over it when the app's copy key clears it.
+    copies: Option<String>,
+}
+
+impl TestClipboard {
+    /// The item already on the clipboard: what the no-synthesis path prices.
+    fn holding(item: &str) -> Self {
+        Self { text: item.to_owned(), copies: None }
+    }
+
+    /// An empty clipboard the game fills with `item` once the copy key clears it.
+    fn copy_of(item: &str) -> Self {
+        Self { text: String::new(), copies: Some(item.to_owned()) }
+    }
+}
+
+impl Clipboard for TestClipboard {
+    fn read_text(&mut self) -> String {
+        let text = std::mem::take(&mut self.text);
+        if let Some(item) = &self.copies {
+            self.text = item.clone();
+        }
+        text
+    }
+
+    fn write_text(&mut self, text: &str) {
+        self.text = text.to_owned();
+    }
+}
+
+/// The first in-game bug, through the real path: the overlay key activates the overlay, and the
+/// shell's own poll has to draw the widget menu and keep the window on screen.
+///
+/// The old shell asked `App::shown()` from inside `Live::sync_window`, where `App::poll_with`
+/// has taken the shell out of `App::live`; that answer is a headless scene's, so the overlay key
+/// activated the overlay and the window hid again at once.
+#[test]
+fn the_overlay_key_through_poll_with_draws_the_menu() {
+    let mut app = live_app("overlay-key", TestClipboard::default());
+
+    press(&mut app, overlay_key);
+    poll(&mut app);
+
+    let live = app.live.as_ref().expect("the live shell");
+    assert!(live.overlay.is_interactable(), "the overlay key took the mouse and keyboard");
+    assert_eq!(
+        drawn(&app),
+        vec![Shown::Widget(widgets::menu::WM_TYPE.to_owned())],
+        "the active overlay draws its menu"
+    );
+    assert!(window_visible(&app), "the overlay window stays on screen");
+    let shown = app.shown_state(true, false);
+    assert!(!hides_window(&shown, false, true), "nothing hides a window with a card to draw");
+
+    // And the other side of the same read: the game takes the focus back, and the menu is
+    // `invisible-on-blur`, so the overlay draws nothing and its window hides. A shell that
+    // asked `App::shown()` would fall back to the scene case here and keep drawing the menu.
+    game_window(&mut app, window::GameWindowEvents::Focus);
+    poll(&mut app);
+    assert!(drawn(&app).is_empty(), "an inactive overlay draws nothing: {:?}", drawn(&app));
+    assert!(!window_visible(&app), "the overlay window hides with nothing to draw");
+}
+
+/// The widget state is the shell's to build: the first poll has to create it, with the app not
+/// knowing it is live at all (`App::poll_with` has it out). The second in-game bug guarded the
+/// build on `self.live.is_some()`, so there was never a widget list to draw from.
+#[test]
+fn the_first_poll_with_builds_the_overlay_state() {
+    let mut app = live_app("widget-state", TestClipboard::default());
+    assert!(app.widgets.is_none(), "a fresh app has no widget state");
+
+    poll(&mut app);
+
+    let overlay = app.widgets.as_ref().expect("the first poll builds the widget list");
+    assert!(
+        overlay.widgets.iter().any(|widget| widget.wm_type == widgets::menu::WM_TYPE),
+        "the config's menu is in it"
+    );
+}
+
+/// The third in-game bug: opening the settings from the tray bounces the game's foreground back
+/// before the overlay's own focus lands (the tray menu closing), and that bounce used to cancel
+/// the window at once. Only a focus after the overlay has held it closes the settings.
+#[test]
+fn the_settings_focus_bounce_keeps_the_window_open() {
+    let mut app = live_app("settings-bounce", TestClipboard::default());
+    // The tray's "Settings/League" click, as the native menu callback queues it.
+    app.live
+        .as_mut()
+        .expect("the live shell")
+        .tray_actions
+        .lock()
+        .expect("the tray queue")
+        .push(TrayAction::ShowSettingsHint);
+    poll(&mut app);
+    let live = app.live.as_ref().expect("the live shell");
+    assert!(app.settings.as_ref().is_some_and(|settings| settings.open), "the tray opened the settings");
+    assert!(!live.settings_armed, "the overlay's focus has not landed yet");
+
+    // The tray menu closing hands the foreground back to the game; the overlay then focuses.
+    // The bounce is not the user going back to the game.
+    game_window(&mut app, window::GameWindowEvents::Focus);
+    poll(&mut app);
+    assert!(
+        app.settings.as_ref().is_some_and(|settings| settings.open),
+        "the focus bounce keeps the settings window open"
+    );
+
+    // The overlay's focus lands (`AppSpec::on_focus`), and only now does a game focus count.
+    let mut tx = Tx::default();
+    app.on_focus(true, &mut tx);
+    assert!(app.live.as_ref().expect("the live shell").settings_armed, "the overlay held the focus");
+    game_window(&mut app, window::GameWindowEvents::Blur);
+    game_window(&mut app, window::GameWindowEvents::Focus);
+    poll(&mut app);
+
+    assert!(
+        !app.settings.as_ref().is_some_and(|settings| settings.open),
+        "a real game focus closes the settings window"
+    );
+    assert!(drawn(&app).is_empty(), "and nothing is left to draw: {:?}", drawn(&app));
+    assert!(!window_visible(&app), "the window is hidden");
+}
+
+/// The price-check hotkey through the real path: the copied item's card is drawn, and the game
+/// taking the focus back closes it (`PriceCheckWindow.vue`'s `hide-on-blur`). Both halves are
+/// the shell's own state, read while `App::poll_with` has `App::live` out of the app.
+#[test]
+fn the_price_check_hotkey_draws_its_card_until_the_game_takes_the_focus() {
+    let text = crate::corpus("currency-divine-orb");
+    let mut app = live_app("price-check", TestClipboard::holding(&text));
+    if app.live.as_ref().is_some_and(|live| live.keys.can_synthesize()) {
+        // A build that can press the game's copy key reads the clipboard after the press.
+        app.live.as_mut().expect("the live shell").clipboard = Box::new(TestClipboard::copy_of(&text));
+    }
+
+    press(&mut app, price_check_hotkey);
+    poll(&mut app);
+
+    assert!(app.price_check.open, "the hotkey opened the price check");
+    assert_eq!(drawn(&app), vec![Shown::PriceCheck], "the shell draws the price check's card");
+    assert!(window_visible(&app), "the window is on screen");
+
+    // The player clicks back into the game: the `focus-change` closes the card.
+    game_window(&mut app, window::GameWindowEvents::Focus);
+    poll(&mut app);
+
+    assert!(!app.price_check.open, "`hide-on-blur`");
+    assert!(drawn(&app).is_empty(), "nothing is drawn any more: {:?}", drawn(&app));
+    assert!(!window_visible(&app), "the window is hidden");
+}
+
+/// The guard: while `App::with_live` runs, `App::live` is empty, so an `App` method answering
+/// from it would answer as a scene does. Asking anyway is a test failure, not a silent
+/// fallback — that is how the class stayed hidden through three Windows runs.
+#[test]
+#[should_panic(expected = "the shell is out of `App::live` while `Live::poll` runs")]
+fn asking_the_app_about_the_shell_from_inside_poll_panics() {
+    let mut app = live_app("guard", TestClipboard::default());
+    app.with_live(|app, _live| app.shown());
 }

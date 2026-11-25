@@ -1,6 +1,6 @@
-// The ORIGINAL app's overlay widgets (the widget menu, the stopwatch, the image strip
-// and the delve grid), rendered with the rest of the reference renderer in headless
-// Chromium.
+// The ORIGINAL app's overlay widgets (the widget menu, the stopwatch, the image strip,
+// the delve grid, the item search, the stash search and EE2's experience tracker),
+// rendered with the rest of the reference renderer in headless Chromium.
 //
 // They are overlay widgets, not windows: each is a card positioned by its `anchor`
 // inside the 1600x900 overlay page, hidden until `wmWants` says show. The element to
@@ -154,6 +154,25 @@ export async function shootWidget ({ browser, host, game, name, testCase = {}, c
       await button.click()
     } else if (name === 'delve-grid') {
       id = widgetId(config, 'delve-grid')
+    } else if (name === 'xp-tracker') {
+      // EE2's experience tracker: in `defaultConfig()`, hidden, listed in the menu as "XP".
+      // Its state comes from the client log, which the fake main process feeds with one zone
+      // line and one level-up: level 72 in a level 80 area (the Rune scene's fixed state).
+      id = widgetId(config, 'experience-tracker')
+      const button = page.locator(`#widget-${menuId} button:has-text("XP")`)
+      if (!(await button.count())) throw new Error(`no XP tracker button in the menu (${game})`)
+      await button.click()
+      host.sendEvent({
+        name: 'MAIN->CLIENT::game-log',
+        payload: {
+          lines: [
+            '2026/04/26 09:28:58 1785282093 a1b2c3d4 [INFO Client 443804] Generating level 80 area "G1_9" with seed 1',
+            '2026/04/26 09:29:16 168144002 a1b2c3d4 [INFO Client 443804] : SomeChar (Mercenary) is now level 72'
+          ]
+        }
+      })
+      // Let the queued lines reach `handleLine` and Vue re-render before the screenshot.
+      await page.waitForTimeout(300)
     } else if (name === 'item-search') {
       id = widgetId(config, 'item-search')
       // `wmTitle: '{icon=fa-search}'` is an icon-only button in the menu.

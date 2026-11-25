@@ -75,8 +75,8 @@ fn actions(runtime: &mut Runtime<App>) -> Vec<Action> {
     overlay_mut(runtime).take_actions()
 }
 
-/// The four widgets this module ports (`Kind::ALL` also holds the other agent's item and stash
-/// searches, which have their own tests).
+/// The four chrome widgets this module ports (`Kind::ALL` also holds the item and stash searches
+/// and EE2's XP tracker, which have their own tests).
 const PORTED: [Kind; 4] = [Kind::Menu, Kind::Stopwatch, Kind::ImageStrip, Kind::DelveGrid];
 
 /// Every widget scene renders its card on both games, at the size its screenshot crops.
@@ -93,6 +93,7 @@ fn every_widget_scene_draws_its_card() {
                 Kind::DelveGrid => "delve-grid",
                 Kind::ItemSearch => "item-search",
                 Kind::StashSearch => "stash-search",
+                Kind::XpTracker => "xp-tracker",
             };
             let elements = runtime.elements();
             let card = element(&elements, key).unwrap_or_else(|| panic!("{game:?}/{kind:?}: no `{key}`"));
@@ -634,4 +635,26 @@ fn the_poe2_item_search_prices_a_picked_unique() {
     assert_eq!(item.info().name.as_deref(), Some("Mageblood"));
     assert_eq!(item.raw_text, "VIRTUAL_ITEM");
     assert_eq!(text_of(&runtime, "filter-name-text").as_deref(), Some("Mageblood"));
+}
+
+/// `WidgetXpTracker.vue`: the scene's fixed level 72 / area 80 state prints a `98.3%`
+/// penalty, `Over: -1`, the untested-range asterisk, and the level in its input.
+#[test]
+fn the_xp_tracker_shows_the_logs_levels_and_penalty() {
+    let runtime = runtime_game(GameId::Poe2, Kind::XpTracker);
+    assert_eq!(text_of(&runtime, "xp-tracker-level").as_deref(), Some("72"));
+    assert_eq!(text_of(&runtime, "xp-tracker-exp-label").as_deref(), Some("Exp *:"));
+    assert_eq!(text_of(&runtime, "xp-tracker-exp-value").as_deref(), Some("98.3%"));
+    assert_eq!(text_of(&runtime, "xp-tracker-over-label").as_deref(), Some("Over:"));
+    assert_eq!(text_of(&runtime, "xp-tracker-over-value").as_deref(), Some("-1"));
+
+    // The reference's card is 192 × 40 (`target/screens/poe2/xp-tracker.png`).
+    let elements = runtime.elements();
+    let card = element(&elements, "xp-tracker").expect("the card");
+    assert!((card.rect[2] - 192.0).abs() <= 2.0, "width {}", card.rect[2]);
+    assert!((card.rect[3] - 40.0).abs() <= 2.0, "height {}", card.rect[3]);
+
+    // APT has no experience tracker, so its scenes cannot open one.
+    assert!(widgets::scene("widget-xp-tracker").is_none(), "PoE1 has no client-log widget");
+    assert!(widgets::scene("poe2-widget-xp-tracker").is_some());
 }

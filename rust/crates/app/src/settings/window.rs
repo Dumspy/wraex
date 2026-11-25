@@ -67,7 +67,13 @@ fn menu<S: 'static>(settings: &Settings, project: Project<S>) -> El {
         .pt(theme::rem(0.5))
         .gap(theme::rem(0.25));
 
-    for (group, pages) in Page::MENU.iter().enumerate() {
+    // `menuByType`'s groups with the pages this game has: APT has no Leveling page.
+    let groups: Vec<Vec<Page>> = Page::MENU
+        .iter()
+        .map(|pages| pages.iter().copied().filter(|page| page.applies_to(settings.game)).collect())
+        .filter(|pages: &Vec<Page>| !pages.is_empty())
+        .collect();
+    for (group, pages) in groups.iter().enumerate() {
         for page in pages.iter().copied() {
             let active = settings.page == page;
             let label = t(settings.game, page.title_key());
@@ -94,7 +100,7 @@ fn menu<S: 'static>(settings: &Settings, project: Project<S>) -> El {
                     ),
             );
         }
-        if group + 1 < Page::MENU.len() {
+        if group + 1 < groups.len() {
             // `<div class="border-b mx-2 border-gray-800" />`
             column = column.child(
                 row().key(format!("settings-menu-separator-{group}")).h(1.0).mx(theme::rem(0.5)).fill(theme::gray(800)),
