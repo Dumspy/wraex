@@ -78,6 +78,8 @@ struct Hook {
     keys: Sender<KeyEvent>,
     /// The modifiers the keyboard hook has seen held, which the mouse hook's events carry too.
     modifiers: ModifierState,
+    /// What the wheel's last ticks left short of a whole notch ([`super::wheel_rotation`]).
+    wheel_leftover: i16,
     /// Move events are the bulk of the hook's traffic and are only wanted while a widget's
     /// area is tracked (upstream adds its `mousemove` listener for exactly that time); the
     /// flag keeps the hook from waking the app on every desktop mouse move.
@@ -365,10 +367,15 @@ unsafe extern "system" fn mouse_proc(code: i32, wparam: WPARAM, lparam: LPARAM) 
                 hook.emit_mouse(MouseEvent::Down { point });
             }
             WM_MOUSEWHEEL => {
-                // The high word of `mouseData` is the signed wheel delta; the sign is the
-                // notch's direction (a high-resolution wheel may send less than 120 at once).
-                let delta = i32::from((info.mouseData >> 16) as u16 as i16);
-                hook.emit_mouse(MouseEvent::Wheel { point, rotation: delta.signum(), ctrl: hook.modifiers.ctrl() });
+                // The high word of `mouseData` is the signed wheel delta (`GET_WHEEL_DELTA_WPARAM`),
+                // turned into `uiohook`'s rotation: whole notches, inverted (#13).
+                let delta = (info.mouseData >> 16) as u16 as i16;
+                let rotation = super::wheel_rotation(&mut hook.wheel_leftover, delta);
+                hook.emit_mouse(MouseEvent::Wheel {
+                    point,
+                    rotation: i32::from(rotation),
+                    ctrl: hook.modifiers.ctrl(),
+                });
             }
             _ => {}
         });
@@ -554,6 +561,7 @@ fn hook_thread(
                 mouse,
                 keys,
                 modifiers: system_modifiers(),
+                wheel_leftover: 0,
                 mouse_moves,
                 wake,
                 game,
