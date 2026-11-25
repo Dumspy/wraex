@@ -448,6 +448,35 @@ mod row_tests {
         // No prices loaded: nothing to normalise to.
         assert_eq!((first.normalized_price.as_deref(), first.normalized_price_currency.as_ref()), (None, None));
     }
+
+    /// `specs/web/price-check/trade/pathofexile-trade.test.ts`: the affix tiers
+    /// of each explicit line of a listing's tooltip.
+    #[test]
+    fn listing_tooltips_keep_their_affix_tiers() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/ee2/renderer/specs/docs/fetchResponses.json");
+        let answer: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let tiers = |prefix: &str| {
+            let result = answer["result"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|result| result["id"].as_str().unwrap_or_default().starts_with(prefix))
+                .unwrap_or_else(|| panic!("no result {prefix}"));
+            let display = parse_fetch_result(en(), result).unwrap();
+            display
+                .explicit_mods
+                .unwrap()
+                .into_iter()
+                .map(|line| line.tier.unwrap_or_default())
+                .collect::<Vec<_>>()
+                .join(" ")
+        };
+        assert_eq!(tiers("65c7c4e8"), "P2 S3");
+        // A hybrid modifier's lines share one tier.
+        assert_eq!(tiers("ece06af2"), "P7 P7 P5 S5 S6");
+        assert_eq!(tiers("2fa2f1ee"), "P2 + P5 P6 P5 S4 S4 S4");
+        assert_eq!(tiers("91c9f13"), "P19 S1 S1 S1");
+    }
 }
 
 /// `CONVERT_CURRENCY`: the trade site's ids of greater and perfect orbs, as

@@ -414,4 +414,189 @@ mod tests {
         assert_eq!(life.stats.len(), 5);
         assert_eq!(life.stats[1].multiplier, 2.0);
     }
+
+    /// `createStatHelper` (`specs/web/price-check/filters/pseudo/index.test.ts`):
+    /// one calculated stat with one contributing source.
+    fn create_stat_helper(d: &crate::data::Data, stat_ref: &str, value: f64, kind: ModifierType) -> StatCalculated {
+        use crate::parser::advanced_mod_desc::{ModifierInfo, ParsedModifier};
+        use crate::parser::modifiers::{StatRoll, StatSource};
+        use crate::parser::stat_translations::{ParsedStat, StatRollInfo};
+
+        let stat = d.stat_by_ref(stat_ref).unwrap_or_else(|| panic!("no stat {stat_ref}"));
+        let parsed = ParsedStat {
+            stat: stat.clone(),
+            translation: stat.matchers[0].clone(),
+            roll: Some(StatRollInfo {
+                unscalable: false,
+                legacy: None,
+                dp: false,
+                value,
+                min: value,
+                max: value,
+                option: None,
+            }),
+            from_added_augment: None,
+        };
+        StatCalculated {
+            stat,
+            kind,
+            sources: vec![StatSource {
+                modifier: ParsedModifier { info: ModifierInfo::new(kind), stats: vec![parsed.clone()] },
+                stat: parsed,
+                contributes: Some(StatRoll { value, min: value, max: value, option: None }),
+            }],
+        }
+    }
+
+    fn pseudo_item() -> crate::parser::item::Item {
+        let mut item = crate::parser::item::Item::test_item();
+        item.info.as_mut().unwrap().ref_name = Some("name".to_owned());
+        item
+    }
+
+    fn make_ctx<'a>(
+        d: &'a crate::data::Data,
+        item: &'a crate::parser::item::Item,
+        stats_by_type: Vec<StatCalculated>,
+    ) -> Ctx<'a> {
+        Ctx { d, item, search_in_range: 0.0, filters: vec![], stats_by_type }
+    }
+
+    const FIRE_RES: &str = "#% to Fire Resistance";
+    const COLD_RES: &str = "#% to Cold Resistance";
+    const MOVEMENT_SPEED: &str = "#% increased Movement Speed";
+    const STRENGTH: &str = "# to Strength";
+    const MAX_LIFE: &str = "# to maximum Life";
+    const BREACH_TABLET: &str = "Adds an Otherworldy Breach to a Map \n# use remaining";
+
+    /// `specs/web/price-check/filters/pseudo/index.test.ts` (`filterPseudo`):
+    /// nothing without stats.
+    #[test]
+    fn filter_pseudo_does_nothing_without_stats() {
+        let d = en();
+        let item = pseudo_item();
+        let mut ctx = make_ctx(d, &item, vec![]);
+        filter_pseudo(&mut ctx).unwrap();
+        assert!(ctx.stats_by_type.is_empty());
+        assert!(ctx.filters.is_empty());
+    }
+
+    /// `specs/web/price-check/filters/pseudo/index.test.ts` (`filterPseudo`): a
+    /// resistance becomes the total and the element's own pseudo.
+    #[test]
+    fn filter_pseudo_adds_the_total_and_elemental_resistance_stats() {
+        let d = en();
+        let item = pseudo_item();
+        let mut ctx = make_ctx(d, &item, vec![create_stat_helper(d, FIRE_RES, 25.0, ModifierType::Explicit)]);
+        filter_pseudo(&mut ctx).unwrap();
+        assert!(ctx.stats_by_type.is_empty());
+        assert_eq!(ctx.filters.len(), 2);
+        let total = ctx.filters.iter().find(|f| f.stat_ref == "#% total Elemental Resistance").unwrap();
+        let fire = ctx.filters.iter().find(|f| f.stat_ref == "#% total to Fire Resistance").unwrap();
+        assert_eq!((total.disabled, total.roll.as_ref().unwrap().value), (false, 25.0));
+        assert_eq!((fire.disabled, fire.roll.as_ref().unwrap().value), (true, 25.0));
+    }
+
+    /// `specs/web/price-check/filters/pseudo/index.test.ts` (`filterPseudo`): an
+    /// unrelated stat keeps its own filter.
+    #[test]
+    fn filter_pseudo_keeps_unrelated_stats() {
+        let d = en();
+        let item = pseudo_item();
+        let mut ctx = make_ctx(
+            d,
+            &item,
+            vec![
+                create_stat_helper(d, FIRE_RES, 25.0, ModifierType::Explicit),
+                create_stat_helper(d, MOVEMENT_SPEED, 25.0, ModifierType::Explicit),
+            ],
+        );
+        filter_pseudo(&mut ctx).unwrap();
+        assert!(ctx.stats_by_type.is_empty());
+        assert_eq!(ctx.filters.len(), 3);
+        assert!(ctx.filters.iter().any(|f| f.stat_ref == "#% total Elemental Resistance"));
+        assert!(ctx.filters.iter().any(|f| f.stat_ref == "#% total to Fire Resistance"));
+        let movement = ctx.filters.iter().find(|f| f.stat_ref == MOVEMENT_SPEED).unwrap();
+        assert!(!movement.disabled);
+    }
+
+    /// `specs/web/price-check/filters/pseudo/index.test.ts` (`filterPseudo`): two
+    /// of the same stat merge into one filter with both sources.
+    #[test]
+    fn filter_pseudo_merges_two_of_the_same_stat() {
+        let d = en();
+        let item = pseudo_item();
+        let mut ctx = make_ctx(
+            d,
+            &item,
+            vec![
+                create_stat_helper(d, FIRE_RES, 25.0, ModifierType::Explicit),
+                create_stat_helper(d, FIRE_RES, 25.0, ModifierType::Explicit),
+            ],
+        );
+        filter_pseudo(&mut ctx).unwrap();
+        assert_eq!(ctx.filters.len(), 2);
+        let total = ctx.filters.iter().find(|f| f.stat_ref == "#% total Elemental Resistance").unwrap();
+        let fire = ctx.filters.iter().find(|f| f.stat_ref == "#% total to Fire Resistance").unwrap();
+        assert_eq!((total.sources.len(), total.roll.as_ref().unwrap().value), (2, 50.0));
+        assert_eq!((fire.sources.len(), fire.roll.as_ref().unwrap().value), (2, 50.0));
+    }
+
+    /// `specs/web/price-check/filters/pseudo/index.test.ts` (`filterPseudo`): life
+    /// counts twice the strength's contribution.
+    #[test]
+    fn filter_pseudo_joins_life_and_strength() {
+        let d = en();
+        let item = pseudo_item();
+        let mut ctx = make_ctx(
+            d,
+            &item,
+            vec![
+                create_stat_helper(d, MAX_LIFE, 25.0, ModifierType::Explicit),
+                create_stat_helper(d, STRENGTH, 25.0, ModifierType::Explicit),
+            ],
+        );
+        filter_pseudo(&mut ctx).unwrap();
+        assert_eq!(ctx.filters.len(), 2);
+        let life = ctx.filters.iter().find(|f| f.stat_ref == "+# total maximum Life").unwrap();
+        let strength = ctx.filters.iter().find(|f| f.stat_ref == "+# total to Strength").unwrap();
+        assert_eq!((life.sources.len(), life.roll.as_ref().unwrap().value), (2, 75.0));
+        assert_eq!((strength.sources.len(), strength.roll.as_ref().unwrap().value), (1, 25.0));
+    }
+
+    /// `specs/web/price-check/filters/pseudo/index.test.ts` (`filterPseudo`): only
+    /// the highest elemental resistance is kept.
+    #[test]
+    fn filter_pseudo_keeps_only_the_highest_elemental_resistance() {
+        let d = en();
+        let item = pseudo_item();
+        let mut ctx = make_ctx(
+            d,
+            &item,
+            vec![
+                create_stat_helper(d, FIRE_RES, 25.0, ModifierType::Explicit),
+                create_stat_helper(d, COLD_RES, 50.0, ModifierType::Explicit),
+            ],
+        );
+        filter_pseudo(&mut ctx).unwrap();
+        assert_eq!(ctx.filters.len(), 2);
+        let total = ctx.filters.iter().find(|f| f.stat_ref == "#% total Elemental Resistance").unwrap();
+        let cold = ctx.filters.iter().find(|f| f.stat_ref == "#% total to Cold Resistance").unwrap();
+        assert_eq!((total.disabled, total.roll.as_ref().unwrap().value), (false, 75.0));
+        assert_eq!((cold.disabled, cold.roll.as_ref().unwrap().value), (true, 50.0));
+        assert!(ctx.filters.iter().all(|f| f.stat_ref != "#% total to Fire Resistance"));
+    }
+
+    /// `specs/web/price-check/filters/pseudo/index.test.ts` (`filterPseudo`): a
+    /// tablet's "uses remaining" implicit becomes its own filter.
+    #[test]
+    fn filter_pseudo_turns_tablet_implicits_into_uses_remaining() {
+        let d = en();
+        let item = pseudo_item();
+        let mut ctx = make_ctx(d, &item, vec![create_stat_helper(d, BREACH_TABLET, 8.0, ModifierType::Implicit)]);
+        filter_pseudo(&mut ctx).unwrap();
+        assert_eq!(ctx.filters.len(), 1);
+        let uses = ctx.filters.iter().find(|f| f.stat_ref == "# uses remaining").unwrap();
+        assert_eq!((uses.disabled, uses.roll.as_ref().unwrap().value), (false, 8.0));
+    }
 }

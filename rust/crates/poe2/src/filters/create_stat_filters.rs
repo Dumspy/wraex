@@ -803,3 +803,77 @@ fn item_max_modifiers_by_slot(item: &Item, filters: &[StatFilter]) -> [f64; 3] {
         max[ItemHasEmptyModifier::Prefix as usize] + max[ItemHasEmptyModifier::Suffix as usize];
     max
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parser::item::Item;
+
+    fn plain_filter(stat_ref: &str, value: f64) -> StatFilter {
+        let roll = FilterRoll {
+            value,
+            min: Some(value),
+            max: Some(value),
+            default: MinMax { min: value, max: value },
+            bounds: None,
+            trade_invert: None,
+            dp: false,
+            is_negated: false,
+            goodness: None,
+        };
+        StatFilter { roll: Some(roll), ..StatFilter::plain(stat_ref, stat_ref, FilterTag::EXPLICIT, false) }
+    }
+
+    fn item_of(rarity: Rarity) -> Item {
+        let mut item = Item::test_item();
+        item.rarity = Some(rarity);
+        item
+    }
+
+    /// `specs/web/price-check/filters/create-stat-filters.test.ts` (`item mod count
+    /// tests`): the base counts per rarity.
+    #[test]
+    fn max_modifiers_by_slot_follows_the_rarity() {
+        for (rarity, expected) in [(Rarity::Normal, 0.0), (Rarity::Magic, 1.0), (Rarity::Rare, 3.0)] {
+            assert_eq!(item_max_modifiers_by_slot(&item_of(rarity), &[]), [expected * 2.0, expected, expected]);
+        }
+    }
+
+    /// `specs/web/price-check/filters/create-stat-filters.test.ts` (`item mod count
+    /// tests`): stats that allow more (or fewer) prefixes and suffixes.
+    #[test]
+    #[allow(clippy::type_complexity)]
+    fn max_modifiers_by_slot_reads_the_allowed_modifier_stats() {
+        let cases: [(Rarity, &[(&str, f64)], f64, f64); 20] = [
+            (Rarity::Rare, &[], 3.0, 3.0),
+            (Rarity::Rare, &[("# to all Attributes", 1.0)], 3.0, 3.0),
+            (Rarity::Magic, &[("# Suffix Modifier allowed", 2.0)], 1.0, 3.0),
+            (Rarity::Magic, &[("# Prefix Modifier allowed", -1.0)], 0.0, 1.0),
+            (Rarity::Rare, &[("# Suffix Modifier allowed", 2.0)], 3.0, 5.0),
+            (Rarity::Rare, &[("# Suffix Modifier allowed", 1.0)], 3.0, 4.0),
+            (Rarity::Rare, &[("# Suffix Modifier allowed", -1.0)], 3.0, 2.0),
+            (Rarity::Rare, &[("# Suffix Modifier allowed", -2.0)], 3.0, 1.0),
+            (Rarity::Rare, &[("# Suffix Modifier allowed", -3.0)], 3.0, 0.0),
+            (Rarity::Rare, &[("# Prefix Modifier allowed", 2.0)], 5.0, 3.0),
+            (Rarity::Rare, &[("# Prefix Modifier allowed", 1.0)], 4.0, 3.0),
+            (Rarity::Rare, &[("# Prefix Modifier allowed", -1.0)], 2.0, 3.0),
+            (Rarity::Rare, &[("# Prefix Modifier allowed", -2.0)], 1.0, 3.0),
+            (Rarity::Rare, &[("# Prefix Modifier allowed", -3.0)], 0.0, 3.0),
+            (Rarity::Rare, &[("# Prefix Modifier allowed", 1.0), ("# Suffix Modifier allowed", 1.0)], 4.0, 4.0),
+            (Rarity::Rare, &[("# Prefix Modifier allowed", 2.0), ("# Suffix Modifier allowed", -1.0)], 5.0, 2.0),
+            (Rarity::Rare, &[("# Prefix Modifier allowed", -1.0), ("# Suffix Modifier allowed", 2.0)], 2.0, 5.0),
+            (Rarity::Rare, &[("# Prefix Modifier allowed", -2.0), ("# Suffix Modifier allowed", -2.0)], 1.0, 1.0),
+            (Rarity::Rare, &[("# Prefix Modifier allowed", -3.0), ("# Suffix Modifier allowed", 2.0)], 0.0, 5.0),
+            (Rarity::Rare, &[("# Suffix Modifier allowed", 2.0), ("# Suffix Modifier allowed", 2.0)], 3.0, 7.0),
+        ];
+        for (rarity, stats, prefixes, suffixes) in cases {
+            let filters: Vec<StatFilter> =
+                stats.iter().map(|(stat_ref, value)| plain_filter(stat_ref, *value)).collect();
+            assert_eq!(
+                item_max_modifiers_by_slot(&item_of(rarity), &filters),
+                [prefixes + suffixes, prefixes, suffixes],
+                "{stats:?}"
+            );
+        }
+    }
+}

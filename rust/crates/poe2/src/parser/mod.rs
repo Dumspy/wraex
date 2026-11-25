@@ -1552,6 +1552,7 @@ pub fn parse_affix_strings(text: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data::tests::en;
 
     #[test]
     fn combinations_follow_the_reference_order() {
@@ -1570,5 +1571,643 @@ mod tests {
     #[test]
     fn affix_markup_takes_the_text() {
         assert_eq!(parse_affix_strings("[Fire|Fire Damage] and [Cold]"), "Fire Damage and Cold");
+    }
+
+    // --- `ref/ee2/renderer/specs/Parser/*.test.ts` ---
+
+    /// The clipboard text of a fixture's case (`corpus/poe2/<slug>.txt`).
+    fn case_input(slug: &str) -> String {
+        wraex_golden::cases(wraex_core::GameId::Poe2)
+            .into_iter()
+            .find(|case| case.slug == slug)
+            .unwrap_or_else(|| panic!("no fixture {slug}"))
+            .input
+    }
+
+    /// The case's sections, as `itemTextToSections` splits them.
+    fn sections(slug: &str) -> Vec<Vec<String>> {
+        item_text_to_sections(&case_input(slug))
+    }
+
+    /// A hand-built item with the name plate's rarity and category.
+    fn test_item(rarity: Rarity, category: ItemCategory) -> Item {
+        let mut item = Item::test_item();
+        item.rarity = Some(rarity);
+        item.category = Some(category);
+        item
+    }
+
+    /// `makeCalcStat` (`specs/helper.ts`): a summed stat with one source.
+    fn make_calc_stat(d: &Data, stat_ref: &str, value: f64, kind: ModifierType) -> StatCalculated {
+        let stat = d.stat_by_ref(stat_ref).unwrap_or_else(|| panic!("no stat {stat_ref}"));
+        let parsed = ParsedStat {
+            stat: stat.clone(),
+            translation: stat.matchers[0].clone(),
+            roll: Some(StatRollInfo {
+                unscalable: false,
+                legacy: None,
+                dp: stat.dp == Some(true),
+                value,
+                min: value,
+                max: value,
+                option: None,
+            }),
+            from_added_augment: None,
+        };
+        StatCalculated {
+            stat,
+            kind,
+            sources: vec![crate::parser::modifiers::StatSource {
+                modifier: ParsedModifier { info: ModifierInfo::new(kind), stats: vec![parsed.clone()] },
+                stat: parsed,
+                contributes: Some(crate::parser::modifiers::StatRoll { value, min: value, max: value, option: None }),
+            }],
+        }
+    }
+
+    /// The rarity and category the test items' name plates carry.
+    fn test_item_props(slug: &str) -> (Rarity, ItemCategory) {
+        match slug {
+            "ee2-magic-item" => (Rarity::Magic, ItemCategory::TwoHandedMace),
+            "ee2-rare-item" => (Rarity::Rare, ItemCategory::Bow),
+            "ee2-unique-item" => (Rarity::Unique, ItemCategory::Focus),
+            "ee2-rare-with-implicit" => (Rarity::Rare, ItemCategory::Ring),
+            "ee2-high-damage-rare-item" => (Rarity::Rare, ItemCategory::Crossbow),
+            "ee2-armour-high-value-rare-item" => (Rarity::Rare, ItemCategory::BodyArmour),
+            "ee2-wand-rare-item" => (Rarity::Rare, ItemCategory::Wand),
+            "ee2-normal-shield" => (Rarity::Normal, ItemCategory::Shield),
+            "ee2-two-implicit-item" => (Rarity::Rare, ItemCategory::Belt),
+            "ee2-two-line-one-implicit-item" => (Rarity::Rare, ItemCategory::Tablet),
+            other => panic!("no test item {other}"),
+        }
+    }
+
+    fn parsed_test_item(slug: &str) -> Item {
+        let (rarity, category) = test_item_props(slug);
+        test_item(rarity, category)
+    }
+
+    fn lines_of(text: &str) -> Vec<String> {
+        text.split('\n').map(str::to_owned).collect()
+    }
+
+    /// `specs/Parser/parsers.test.ts` (`itemTextToSections`): an empty text has no
+    /// sections, and the test items split into the expected counts.
+    #[test]
+    fn an_empty_item_text_has_no_sections() {
+        assert!(item_text_to_sections("").is_empty());
+    }
+
+    #[test]
+    fn test_items_split_into_the_expected_sections() {
+        for (slug, expected) in [
+            ("ee2-rare-item", 5),
+            ("ee2-magic-item", 5),
+            ("ee2-normal-item", 4),
+            ("ee2-unique-item", 6),
+            ("ee2-rare-with-implicit", 5),
+            ("ee2-high-damage-rare-item", 9),
+            ("ee2-armour-high-value-rare-item", 8),
+            ("ee2-wand-rare-item", 6),
+        ] {
+            assert_eq!(sections(slug).len(), expected, "{slug}");
+        }
+    }
+
+    /// `specs/Parser/parsers.test.ts` (`parseWeapon`).
+    #[test]
+    fn parses_the_test_items_weapons() {
+        let d = en();
+        #[allow(clippy::type_complexity)]
+        let cases: [(&str, f64, Option<f64>, f64, f64, Option<f64>, Option<f64>); 3] = [
+            // physical, elemental, attacks per second, crit, reload, quality
+            ("ee2-magic-item", 53.5, Some(25.5), 1.2, 5.0, None, None),
+            ("ee2-rare-item", 48.5, Some(86.0), 1.2, 5.0, None, None),
+            ("ee2-high-damage-rare-item", 728.5, None, 2.07, 5.0, Some(0.6), Some(29.0)),
+        ];
+        for (slug, physical, elemental, aps, crit, reload, quality) in cases {
+            let mut item = Item::test_item();
+            let section = &sections(slug)[1];
+            assert_eq!(parse_weapon(section, &mut item, d), Ok(Parsed), "{slug}");
+            assert_eq!(item.weapon_physical, Some(physical), "{slug}: physical");
+            assert_eq!(item.weapon_elemental, elemental, "{slug}: elemental");
+            assert_eq!(item.weapon_as, Some(aps), "{slug}: attack speed");
+            assert_eq!(item.weapon_crit, Some(crit), "{slug}: crit");
+            assert_eq!(item.weapon_reload, reload, "{slug}: reload");
+            assert_eq!(item.quality, quality, "{slug}: quality");
+        }
+    }
+
+    /// `specs/Parser/parsers.test.ts` (`parseArmour`).
+    #[test]
+    fn parses_the_test_items_armour() {
+        let d = en();
+        #[allow(clippy::type_complexity)]
+        let cases: [(&str, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>); 3] = [
+            // armour, evasion, energy shield, quality, block
+            ("ee2-normal-item", Some(174.0), None, Some(60.0), Some(9.0), None),
+            ("ee2-unique-item", None, None, Some(44.0), None, None),
+            ("ee2-armour-high-value-rare-item", Some(3075.0), None, None, Some(20.0), None),
+        ];
+        for (slug, ar, ev, es, quality, block) in cases {
+            let mut item = Item::test_item();
+            let section = &sections(slug)[1];
+            assert_eq!(parse_armour(section, &mut item, d), Ok(Parsed), "{slug}");
+            assert_eq!(item.armour_ar, ar, "{slug}: armour");
+            assert_eq!(item.armour_ev, ev, "{slug}: evasion");
+            assert_eq!(item.armour_es, es, "{slug}: energy shield");
+            assert_eq!(item.quality, quality, "{slug}: quality");
+            assert_eq!(item.armour_block, block, "{slug}: block");
+        }
+    }
+
+    /// `specs/Parser/parsers.test.ts` (`parseRequirements`).
+    #[test]
+    fn parses_the_test_items_requirements() {
+        let d = en();
+        let cases = [
+            ("ee2-normal-item", Requires { level: 75.0, str: 67.0, dex: 0.0, int: 67.0 }),
+            ("ee2-magic-item", Requires { level: 28.0, str: 57.0, dex: 0.0, int: 0.0 }),
+            ("ee2-rare-item", Requires { level: 51.0, str: 0.0, dex: 103.0, int: 0.0 }),
+            ("ee2-unique-item", Requires { level: 26.0, str: 0.0, dex: 0.0, int: 43.0 }),
+            ("ee2-rare-with-implicit", Requires { level: 45.0, str: 0.0, dex: 0.0, int: 0.0 }),
+            ("ee2-high-damage-rare-item", Requires { level: 79.0, str: 89.0, dex: 89.0, int: 0.0 }),
+            ("ee2-armour-high-value-rare-item", Requires { level: 65.0, str: 121.0, dex: 0.0, int: 0.0 }),
+            ("ee2-wand-rare-item", Requires { level: 90.0, str: 0.0, dex: 0.0, int: 125.0 }),
+            ("ee2-requires-one-attribute", Requires { level: 0.0, str: 0.0, dex: 0.0, int: 78.0 }),
+        ];
+        for (slug, requires) in cases {
+            let mut item = Item::test_item();
+            let requires_prefix = d.s("REQUIRES");
+            let section = sections(slug)
+                .into_iter()
+                .find(|section| section.iter().any(|line| line.starts_with(requires_prefix)))
+                .unwrap_or_else(|| panic!("{slug}: no requirements section"));
+            assert_eq!(parse_requirements(&section, &mut item, d), Ok(Parsed), "{slug}");
+            assert_eq!(item.requires, Some(requires), "{slug}");
+        }
+    }
+
+    /// `specs/Parser/parsers.test.ts` (`parseRequirements`): the localized lines.
+    #[test]
+    fn parses_localized_requirements_lines() {
+        let cases = [
+            ("en", "Requires: Level 28, 57 (augmented) Str", Requires { level: 28.0, str: 57.0, dex: 0.0, int: 0.0 }),
+            ("cmn-Hant", "需求: 等級 80, 108 (unmet) 智慧", Requires { level: 80.0, str: 0.0, dex: 0.0, int: 108.0 }),
+            ("ja", "装備条件：レベル 72, 70 筋力, 70 知性", Requires { level: 72.0, str: 70.0, dex: 0.0, int: 70.0 }),
+            (
+                "ko",
+                "요구 사항: 레벨 78, 89 힘, 89 (unmet) 민첩",
+                Requires { level: 78.0, str: 89.0, dex: 89.0, int: 0.0 },
+            ),
+            ("cmn-Hant", "需求: 等級 78, 54 力量, 138 智慧", Requires { level: 78.0, str: 54.0, dex: 0.0, int: 138.0 }),
+            (
+                "ru",
+                "Требуется: Уровень 80, 59 (unmet) Ловк, 59 Инт",
+                Requires { level: 80.0, str: 0.0, dex: 59.0, int: 59.0 },
+            ),
+        ];
+        for (lang, line, requires) in cases {
+            let data = Data::load(&crate::data::reference_source(), lang, Some(crate::data::reference_trade_data()))
+                .unwrap_or_else(|e| panic!("{lang}: {e}"));
+            let mut item = Item::test_item();
+            assert_eq!(parse_requirements(&[line.to_owned()], &mut item, &data), Ok(Parsed), "{lang}");
+            assert_eq!(item.requires, Some(requires), "{lang}: {line}");
+        }
+    }
+
+    /// `specs/Parser/modifiersParsers.test.ts` (`[e2e] parseModifiers`): every
+    /// listed mod section is recognized.
+    #[test]
+    fn every_test_items_mod_sections_are_recognized() {
+        let d = en();
+        let cases: [(&str, &[usize]); 9] = [
+            ("ee2-magic-item", &[4]),
+            ("ee2-rare-item", &[4]),
+            ("ee2-unique-item", &[4]),
+            ("ee2-rare-with-implicit", &[3, 4]),
+            ("ee2-high-damage-rare-item", &[5, 6, 7]),
+            ("ee2-armour-high-value-rare-item", &[5, 6]),
+            ("ee2-wand-rare-item", &[3, 4]),
+            ("ee2-two-implicit-item", &[3, 4]),
+            ("ee2-two-line-one-implicit-item", &[2, 3]),
+        ];
+        for (slug, indexes) in cases {
+            let item_sections = sections(slug);
+            for &index in indexes {
+                let mut item = parsed_test_item(slug);
+                assert_eq!(parse_modifiers(&item_sections[index], &mut item, d), Ok(Parsed), "{slug} section {index}");
+            }
+        }
+    }
+
+    /// `specs/Parser/modifiersParsers.test.ts` (`[e2e] parseModifiers`): a section
+    /// adds the right number of modifiers and leaves no unknown ones.
+    #[test]
+    fn every_test_items_mod_section_adds_the_expected_mods() {
+        let d = en();
+        let cases = [
+            ("ee2-magic-item", 4, 2),
+            ("ee2-rare-item", 4, 4),
+            ("ee2-unique-item", 4, 5),
+            ("ee2-rare-with-implicit", 3, 1),
+            ("ee2-rare-with-implicit", 4, 4),
+            ("ee2-high-damage-rare-item", 5, 1),
+            ("ee2-high-damage-rare-item", 6, 1),
+            ("ee2-high-damage-rare-item", 7, 6),
+            ("ee2-armour-high-value-rare-item", 5, 1),
+            ("ee2-armour-high-value-rare-item", 6, 6),
+            ("ee2-wand-rare-item", 3, 1),
+            ("ee2-wand-rare-item", 4, 4),
+            ("ee2-normal-shield", 4, 1),
+            ("ee2-two-implicit-item", 3, 2),
+            ("ee2-two-implicit-item", 4, 5),
+            ("ee2-two-line-one-implicit-item", 2, 1),
+            ("ee2-two-line-one-implicit-item", 3, 4),
+        ];
+        for (slug, index, expected) in cases {
+            let mut item = parsed_test_item(slug);
+            assert_eq!(parse_modifiers(&sections(slug)[index], &mut item, d), Ok(Parsed), "{slug} section {index}");
+            assert_eq!(item.new_mods.len(), expected, "{slug} section {index}: mods");
+            assert!(item.unknown_modifiers.is_empty(), "{slug} section {index}: unknown mods");
+        }
+    }
+
+    /// `specs/Parser/modifiersParsers.test.ts` (`[unit] parseModifiers`): explicit
+    /// modifier sections, including a fractured and a desecrated affix.
+    #[test]
+    fn parses_an_explicit_modifier_section() {
+        let section = lines_of(
+            "{ Fractured Prefix Modifier \"Electrocuting\" (Tier: 2) — Damage, Elemental, Lightning, Attack }
+Adds 10(1-16) to 273(239-300) Lightning Damage
+{ Prefix Modifier \"Razor-sharp\" (Tier: 3) — Damage, Physical, Attack }
+Adds 24(23-35) to 51(39-59) Physical Damage
+{ Master Crafted Prefix Modifier \"Overpowering\" (Tier: 2) — Damage, Elemental, Attack }
+109(100-119)% increased Elemental Damage with Attacks
+{ Suffix Modifier \"of the Drought\" (Tier: 1) — Mana, Physical, Attack }
+Leeches 7.59(7-7.9)% of Physical Damage as Mana
+{ Desecrated Suffix Modifier \"of Siphoning\" (Tier: 3) — Mana }
+Gain 21(21-27) Mana per enemy killed
+{ Suffix Modifier \"of Acclaim\" (Tier: 1) — Attack, Speed }
+18(17-19)% increased Attack Speed
+",
+        );
+        let mut item = test_item(Rarity::Rare, ItemCategory::Bow);
+        assert_eq!(parse_modifiers(&section, &mut item, en()), Ok(Parsed));
+    }
+
+    /// `specs/Parser/modifiersParsers.test.ts` (`[unit] parseModifiers`): implicit,
+    /// granted skill, augment and enchant sections.
+    #[test]
+    fn parses_the_other_modifier_section_kinds() {
+        let d = en();
+        let cases = [
+            ("{ Implicit Modifier — Attack }\nLoads an additional bolt\n", ModifierType::Implicit),
+            ("Grants Skill: Level 18 Cackling Companions\n", ModifierType::Skill),
+            ("18% increased Physical Damage (rune)\nGain 24 Mana per enemy killed (rune)\n", ModifierType::Augment),
+            ("{ Enhancement }\nAllocates Core of the Guardian — Unscalable Value\n", ModifierType::Enchant),
+        ];
+        for (text, kind) in cases {
+            let mut item = test_item(Rarity::Rare, ItemCategory::Bow);
+            assert_eq!(parse_modifiers(&lines_of(text), &mut item, d), Ok(Parsed), "{text}");
+            assert_eq!(item.new_mods.len(), 1, "{text}");
+            assert!(item.unknown_modifiers.is_empty(), "{text}");
+            assert_eq!(item.new_mods[0].info.kind, kind, "{text}");
+        }
+
+        let mut item = test_item(Rarity::Rare, ItemCategory::Bow);
+        assert_eq!(
+            parse_modifiers(&lines_of("45% increased Elemental Damage with Attacks (enchant)\n"), &mut item, d),
+            Ok(Parsed)
+        );
+    }
+
+    /// `specs/Parser/fractureParsers.test.ts` (`parseFractured`).
+    #[test]
+    fn a_fractured_mod_marks_the_item_fractured() {
+        let d = en();
+        let mut item = Item::test_item();
+        item.new_mods = [ModifierType::Fractured, ModifierType::Explicit, ModifierType::Explicit]
+            .into_iter()
+            .map(|kind| ParsedModifier { info: ModifierInfo::new(kind), stats: vec![] })
+            .collect();
+        parse_fractured(&mut item, d).unwrap();
+        assert_eq!(item.is_fractured, Some(true));
+
+        let mut item = Item::test_item();
+        item.new_mods = [ModifierType::Implicit, ModifierType::Explicit]
+            .into_iter()
+            .map(|kind| ParsedModifier { info: ModifierInfo::new(kind), stats: vec![] })
+            .collect();
+        parse_fractured(&mut item, d).unwrap();
+        assert_eq!(item.is_fractured, None);
+    }
+
+    /// `specs/Parser/mapParser.test.ts` (`parseMap`): the waystone section sets the
+    /// map tier and its properties.
+    #[test]
+    fn parses_a_waystones_properties() {
+        let d = en();
+        #[allow(clippy::type_complexity)]
+        let cases: [(&str, u32, f64, f64, Option<f64>, f64, f64, Option<f64>); 2] = [
+            // tier, revives, pack size, magic monsters, rare monsters, drop chance
+            ("ee2-rare-map", 14, 2.0, 34.0, None, 28.0, 75.0, None),
+            ("ee2-rare-map-fake-all-props", 16, 0.0, 20.0, Some(30.0), 71.0, 90.0, Some(17.0)),
+        ];
+        for (slug, tier, revives, pack, magic, rare, drop, rarity) in cases {
+            let mut item = Item::test_item();
+            item.category = Some(ItemCategory::Map);
+            item.info.as_mut().unwrap().map = Some(crate::data::MapInfo { screenshot: None, tier: Some(tier) });
+            let section = &sections(slug)[1];
+            assert_eq!(parse_waystone(section, &mut item, d), Ok(Parsed), "{slug}");
+            assert_eq!(item.map_tier, Some(f64::from(tier)), "{slug}: tier");
+            assert_eq!(item.map_revives, Some(revives), "{slug}: revives");
+            assert_eq!(item.map_pack_size, Some(pack), "{slug}: pack size");
+            assert_eq!(item.map_magic_monsters, magic, "{slug}: magic monsters");
+            assert_eq!(item.map_rare_monsters, Some(rare), "{slug}: rare monsters");
+            assert_eq!(item.map_drop_chance, Some(drop), "{slug}: drop chance");
+            assert_eq!(item.map_item_rarity, rarity, "{slug}: item rarity");
+        }
+    }
+
+    /// `specs/Parser/sectionUnit.test.ts` (`parseUnidentified`).
+    #[test]
+    fn parses_unidentified_sections() {
+        let d = en();
+        let mut item = Item::test_item();
+        assert_eq!(parse_unidentified(&["Unidentified".to_owned()], &mut item, d), Ok(Parsed));
+        assert!(item.is_unidentified);
+        assert_eq!(item.unidentified_tier, None);
+
+        let mut item = Item::test_item();
+        assert_eq!(parse_unidentified(&["Unidentified (Tier 4)".to_owned()], &mut item, d), Ok(Parsed));
+        assert!(item.is_unidentified);
+        assert_eq!(item.unidentified_tier, Some(4.0));
+
+        for lines in [
+            vec!["Item Level: 54".to_owned()],
+            vec![
+                "{ Implicit Modifier — Elemental, Cold, Resistance }".to_owned(),
+                "+23(20-30)% to Cold Resistance".to_owned(),
+            ],
+            vec!["Item Class: Rings".to_owned(), "Rarity: Magic".to_owned(), "Sapphire Ring".to_owned()],
+        ] {
+            let mut item = Item::test_item();
+            assert_eq!(parse_unidentified(&lines, &mut item, d), Ok(Skipped), "{lines:?}");
+            assert!(!item.is_unidentified);
+            assert_eq!(item.unidentified_tier, None);
+        }
+    }
+
+    /// `specs/Parser/sectionUnit.test.ts` (`parseTrials`).
+    #[test]
+    #[allow(clippy::type_complexity)]
+    fn parses_djinn_barya_and_inscribed_ultimatum_trials() {
+        let d = en();
+        let cases: [(&str, &[&str], f64, f64, Option<&str>); 10] = [
+            ("Djinn Barya", &["Area Level: 25", "Number of Trials: 1"], 25.0, 1.0, None),
+            ("Djinn Barya", &["Area Level: 58", "Number of Trials: 2"], 58.0, 2.0, None),
+            ("Djinn Barya", &["Area Level: 70", "Number of Trials: 3"], 70.0, 3.0, None),
+            ("Djinn Barya", &["Area Level: 80", "Number of Trials: 4"], 80.0, 4.0, None),
+            ("Inscribed Ultimatum", &["Area Level: 27", "Number of Trials: 1"], 27.0, 1.0, None),
+            ("Inscribed Ultimatum", &["Area Level: 56", "Number of Trials: 2"], 56.0, 2.0, None),
+            ("Inscribed Ultimatum", &["Area Level: 69", "Number of Trials: 3"], 69.0, 3.0, None),
+            (
+                "Inscribed Ultimatum",
+                &["Area Level: 75", "Number of Trials: 4", "Victorious"],
+                75.0,
+                4.0,
+                Some("Victorious"),
+            ),
+            (
+                "Inscribed Ultimatum",
+                &["Area Level: 76", "Number of Trials: 4", "Cowardly"],
+                76.0,
+                4.0,
+                Some("Cowardly"),
+            ),
+            ("Inscribed Ultimatum", &["Area Level: 79", "Number of Trials: 4", "Deadly"], 79.0, 4.0, Some("Deadly")),
+        ];
+        for (ref_name, lines, area, count, hint) in cases {
+            let mut item = test_item(Rarity::Rare, ItemCategory::Unknown);
+            item.info.as_mut().unwrap().ref_name = Some(ref_name.to_owned());
+            let lines: Vec<String> = lines.iter().map(|l| (*l).to_owned()).collect();
+            assert_eq!(parse_trials(&lines, &mut item, d), Ok(Parsed), "{ref_name} {lines:?}");
+            assert_eq!(item.area_level, Some(area), "{ref_name} {lines:?}: area");
+            let trials = item.trials.expect("trials");
+            assert_eq!(trials.number_of_trials, Some(count), "{ref_name} {lines:?}: count");
+            assert_eq!(trials.ultimatum_hint, hint, "{ref_name} {lines:?}: hint");
+        }
+
+        let skipped: [(&str, &[&str]); 6] = [
+            ("Divine Crown", &["Area Level: 27", "Number of Trials: 1"]),
+            ("Withered Wand", &["Area Level: 56", "Number of Trials: 2"]),
+            ("Uncut Support Gem (Level 5)", &["Area Level: 69", "Number of Trials: 3"]),
+            ("Ornate Belt", &["Area Level: 75", "Number of Trials: 4", "Victorious"]),
+            ("Rider Bow", &["Area Level: 76", "Number of Trials: 4", "Cowardly"]),
+            ("", &["Area Level: 79", "Number of Trials: 4", "Deadly"]),
+        ];
+        for (ref_name, lines) in skipped {
+            let mut item = Item::test_item();
+            item.info.as_mut().unwrap().ref_name = Some(ref_name.to_owned());
+            let lines: Vec<String> = lines.iter().map(|l| (*l).to_owned()).collect();
+            assert_eq!(parse_trials(&lines, &mut item, d), Ok(ParserSkipped), "{ref_name}");
+            assert_eq!(item.area_level, None, "{ref_name}");
+            assert!(item.trials.is_none(), "{ref_name}");
+        }
+    }
+
+    /// `specs/Parser/skillGem.test.ts` (`isItemMissingItemClass`): meta skill gems
+    /// come without an item class line.
+    #[test]
+    fn recognizes_meta_skill_gems_without_an_item_class() {
+        let d = en();
+        assert!(is_item_missing_item_class(d, &sections("ee2-meta-skill-gem")[0]));
+        assert!(!is_item_missing_item_class(d, &sections("ee2-rare-item")[0]));
+    }
+
+    /// `specs/Parser/skillGem.test.ts`: uncut gems parse without a gem level, meta
+    /// skill gems with theirs.
+    #[test]
+    fn parses_uncut_and_meta_gems() {
+        let d = en();
+        for (slug, category, gem_level) in [
+            ("ee2-uncut-skill-gem", ItemCategory::Currency, None),
+            ("ee2-uncut-spirit-gem", ItemCategory::Currency, None),
+            ("ee2-uncut-support-gem", ItemCategory::Currency, None),
+            ("ee2-meta-skill-gem", ItemCategory::Gem, Some(14.0)),
+        ] {
+            let item = parse_clipboard(d, &case_input(slug)).unwrap();
+            assert_eq!(item.category, Some(category), "{slug}");
+            assert_eq!(item.gem_level, gem_level, "{slug}");
+        }
+    }
+
+    /// `specs/Parser/augment.test.ts` (`determineAugments`).
+    #[test]
+    fn determines_the_augments_that_explain_rune_stats() {
+        let d = en();
+        let augment_mod = ParsedModifier { info: ModifierInfo::new(ModifierType::Augment), stats: vec![] };
+        let names = |calcs: &[StatCalculated]| {
+            let refs: Vec<&StatCalculated> = calcs.iter().collect();
+            let mut found = determine_augments(d, &augment_mod, &refs).unwrap();
+            found.sort_by_key(|a| std::cmp::Reverse(a.ref_name.as_deref().unwrap_or("").to_owned()));
+            found.into_iter().map(|a| a.ref_name.unwrap_or_default()).collect::<Vec<_>>()
+        };
+
+        let two_iron = names(&[make_calc_stat(d, "#% increased Physical Damage", 36.0, ModifierType::Augment)]);
+        assert_eq!(two_iron, ["Greater Iron Rune", "Greater Iron Rune"]);
+
+        let storm = names(&[make_calc_stat(d, "#% to Lightning Resistance", 10.0, ModifierType::Augment)]);
+        assert_eq!(storm, ["Lesser Storm Rune"]);
+
+        let range = names(&[make_calc_stat(d, "Adds # to # Lightning Damage", 15.5, ModifierType::Augment)]);
+        assert_eq!(range, ["Greater Storm Rune"]);
+
+        let bonded = names(&[make_calc_stat(
+            d,
+            "Idols socketed in this item gain the benefits of their Bonded modifiers",
+            1.0,
+            ModifierType::Augment,
+        )]);
+        assert_eq!(bonded, ["Fox Idol"]);
+    }
+
+    /// `specs/Parser/augment.test.ts` (`BFS`, `modifiedBfs`).
+    #[test]
+    fn modified_bfs_finds_the_fewest_repeated_augment_values() {
+        let bfs = |target: f64, options: &[f64]| modified_bfs(target, &mut Vec::new(), options);
+        assert_eq!(bfs(36.0, &[14.0, 16.0, 18.0, 20.0]), Some(vec![18.0, 18.0]));
+        assert_eq!(bfs(40.0, &[14.0, 16.0, 18.0, 20.0]), Some(vec![20.0, 20.0]));
+        assert_eq!(bfs(20.0, &[14.0, 16.0, 18.0, 20.0]), Some(vec![20.0]));
+        assert_eq!(bfs(19.0, &[14.0, 16.0, 18.0, 20.0]), None);
+        assert_eq!(bfs(15.0, &[5.0, 7.5, 10.0]), Some(vec![7.5, 7.5]));
+        assert_eq!(bfs(34.0, &[14.0, 16.0, 18.0]), Some(vec![18.0, 16.0]));
+        assert_eq!(bfs(10.0, &[10.0]), Some(vec![10.0]));
+        assert_eq!(bfs(10.0, &[]), None);
+        assert_eq!(bfs(40.0, &[10.0, 20.0, 30.0]), Some(vec![20.0, 20.0]));
+        // No infinite loop when nothing fits.
+        assert_eq!(bfs(100.0, &[0.0; 100]).unwrap_or_default().len(), 0);
+        assert_eq!(bfs(15.5, &[1.0; 4]).unwrap_or_default().len(), 0);
+    }
+
+    /// `specs/Parser/augment.test.ts` (`parseAugmentSockets`).
+    #[test]
+    fn parses_augment_sockets_from_the_sockets_line() {
+        let d = en();
+        let sockets_prefix = d.s("SOCKETS");
+        for (line, current) in [("S", 1.0), ("S S", 2.0), ("S S S", 3.0), ("S S S S", 4.0), ("S S S S S", 5.0)] {
+            let mut item = test_item(Rarity::Rare, ItemCategory::Gloves);
+            let lines = vec![format!("{sockets_prefix}{line}")];
+            assert_eq!(parse_augment_sockets(&lines, &mut item, d), Ok(Parsed), "{line}");
+            let sockets = item.augment_sockets.expect("sockets");
+            assert_eq!((sockets.normal, sockets.empty, sockets.current), (1.0, 0.0, current), "{line}");
+            assert_eq!(sockets.augments.len(), current as usize, "{line}");
+            assert!(sockets.augments.iter().all(Option::is_none), "{line}");
+        }
+
+        let mut item = test_item(Rarity::Rare, ItemCategory::Gloves);
+        assert_eq!(parse_augment_sockets(&["text".to_owned()], &mut item, d), Ok(Skipped));
+        let sockets = item.augment_sockets.expect("sockets");
+        assert_eq!((sockets.normal, sockets.empty, sockets.current), (1.0, 1.0, 0.0));
+        assert_eq!(sockets.augments.len(), 1);
+        assert!(sockets.augments.iter().all(Option::is_none));
+
+        let mut item = Item::test_item();
+        assert_eq!(parse_augment_sockets(&[], &mut item, d), Ok(ParserSkipped));
+    }
+
+    /// `specs/Parser/augment.test.ts` (`applyAugmentSockets`).
+    #[test]
+    fn applies_the_augments_that_fit_the_sockets() {
+        let d = en();
+        let sockets =
+            |empty, current, normal, len| AugmentSockets { empty, current, normal, augments: vec![None; len] };
+        let editor_names = |item: &Item| {
+            item.augment_sockets
+                .as_ref()
+                .unwrap()
+                .augments
+                .iter()
+                .map(|a| a.as_ref().and_then(|a| a.ref_name.clone()))
+                .collect::<Vec<_>>()
+        };
+
+        let mut item = Item::test_item();
+        let before = item.clone();
+        apply_augment_sockets(&mut item, d).unwrap();
+        assert_eq!(item, before);
+
+        let mut item = test_item(Rarity::Rare, ItemCategory::Gloves);
+        item.augment_sockets = Some(sockets(0.0, 2.0, 2.0, 2));
+        apply_augment_sockets(&mut item, d).unwrap();
+        assert_eq!(item.augment_sockets.as_ref().unwrap().empty, 2.0);
+        assert!(item.augment_sockets.as_ref().unwrap().augments.iter().all(Option::is_none));
+
+        let mut item = test_item(Rarity::Rare, ItemCategory::Bow);
+        item.augment_sockets = Some(sockets(0.0, 2.0, 2.0, 2));
+        item.stats_by_type = vec![make_calc_stat(d, "#% increased Physical Damage", 18.0, ModifierType::Augment)];
+        item.new_mods = vec![ParsedModifier {
+            info: ModifierInfo::new(ModifierType::Augment),
+            stats: vec![item.stats_by_type[0].sources[0].stat.clone()],
+        }];
+        apply_augment_sockets(&mut item, d).unwrap();
+        assert_eq!(editor_names(&item), [Some("Greater Iron Rune".to_owned()), None]);
+        assert_eq!(item.augment_sockets.as_ref().unwrap().empty, 1.0);
+
+        let mut item = test_item(Rarity::Rare, ItemCategory::Bow);
+        item.augment_sockets = Some(sockets(0.0, 2.0, 2.0, 2));
+        item.stats_by_type = vec![
+            make_calc_stat(d, "#% increased Physical Damage", 18.0, ModifierType::Augment),
+            make_calc_stat(d, "Bow Attacks fire # additional Arrows", 1.0, ModifierType::Augment),
+        ];
+        item.new_mods = vec![ParsedModifier {
+            info: ModifierInfo::new(ModifierType::Augment),
+            stats: item.stats_by_type.iter().map(|c| c.sources[0].stat.clone()).collect(),
+        }];
+        apply_augment_sockets(&mut item, d).unwrap();
+        let names = editor_names(&item);
+        assert!(names.iter().any(|n| n.as_deref() == Some("Greater Iron Rune")), "{names:?}");
+        assert!(names.iter().any(|n| n.as_deref() == Some("Countess Seske's Rune of Archery")), "{names:?}");
+        assert_eq!(item.augment_sockets.as_ref().unwrap().empty, 0.0);
+
+        // Multiline augments: the stats split across the runes that explain them.
+        let mut item = test_item(Rarity::Rare, ItemCategory::Staff);
+        item.augment_sockets = Some(sockets(0.0, 2.0, 2.0, 2));
+        item.stats_by_type = vec![
+            make_calc_stat(d, "Meta Skills gain #% increased Energy", 40.0, ModifierType::Augment),
+            make_calc_stat(d, "#% increased Spirit", -25.0, ModifierType::Augment),
+            make_calc_stat(d, "#% increased Mana Regeneration Rate", 20.0, ModifierType::Augment),
+        ];
+        item.new_mods = vec![ParsedModifier {
+            info: ModifierInfo::new(ModifierType::Augment),
+            stats: item.stats_by_type.iter().map(|c| c.sources[0].stat.clone()).collect(),
+        }];
+        apply_augment_sockets(&mut item, d).unwrap();
+        let names = editor_names(&item);
+        assert!(names.iter().any(|n| n.as_deref() == Some("Idol of the Martyr")), "{names:?}");
+        assert!(names.iter().any(|n| n.as_deref() == Some("Lesser Inspiration Rune")), "{names:?}");
+        assert_eq!(item.augment_sockets.as_ref().unwrap().empty, 0.0);
+
+        // Bonded stats are not socketed runes themselves.
+        let mut item = test_item(Rarity::Rare, ItemCategory::BodyArmour);
+        item.augment_sockets = Some(sockets(1.0, 1.0, 2.0, 2));
+        item.stats_by_type = vec![
+            make_calc_stat(d, "Bonded: #% to Quality of all Skills", 5.0, ModifierType::Augment),
+            make_calc_stat(
+                d,
+                "Idols socketed in this item gain the benefits of their Bonded modifiers",
+                1.0,
+                ModifierType::Augment,
+            ),
+        ];
+        item.new_mods = vec![ParsedModifier {
+            info: ModifierInfo::new(ModifierType::Augment),
+            stats: item.stats_by_type.iter().map(|c| c.sources[0].stat.clone()).collect(),
+        }];
+        apply_augment_sockets(&mut item, d).unwrap();
+        assert_eq!(editor_names(&item), [Some("Fox Idol".to_owned()), None]);
+        let sockets = item.augment_sockets.as_ref().unwrap();
+        assert_eq!((sockets.empty, sockets.current, sockets.normal), (1.0, 1.0, 2.0));
     }
 }

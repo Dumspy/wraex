@@ -49,3 +49,59 @@ pub fn magic_basetype(d: &Data, name: &str) -> Result<Option<String>, Fail> {
     found.sort_by_key(|f| std::cmp::Reverse(key(f)));
     Ok(found.into_iter().next().map(|f| f.name))
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::OnceLock;
+
+    use super::*;
+    use crate::data::{Data, reference_source, reference_trade_data};
+
+    fn data(lang: &'static str) -> &'static Data {
+        static EN: OnceLock<Data> = OnceLock::new();
+        static HANT: OnceLock<Data> = OnceLock::new();
+        match lang {
+            "en" => EN.get_or_init(|| Data::load(&reference_source(), "en", Some(reference_trade_data())).unwrap()),
+            "cmn-Hant" => {
+                HANT.get_or_init(|| Data::load(&reference_source(), "cmn-Hant", Some(reference_trade_data())).unwrap())
+            }
+            other => panic!("no cached data for {other}"),
+        }
+    }
+
+    fn base(d: &Data, name: &str) -> Option<String> {
+        magic_basetype(d, name).unwrap()
+    }
+
+    /// `specs/Parser/magic-name.test.ts` (`Check Magic Name (en)`).
+    #[test]
+    fn finds_the_english_base_type_inside_a_magic_name() {
+        let d = data("en");
+        assert_eq!(base(d, "Rattling Sceptre").as_deref(), Some("Rattling Sceptre"));
+        assert_eq!(base(d, "Cultist Greathammer of Nourishment").as_deref(), Some("Cultist Greathammer"));
+        assert_eq!(base(d, "Pulsing Antler Focus").as_deref(), Some("Antler Focus"));
+        assert_eq!(base(d, "Reaver's Temple Maul of Stunning").as_deref(), Some("Temple Maul"));
+    }
+
+    /// `specs/Parser/magic-name.test.ts` (`Check Magic Name (cmn-Hant)`): names
+    /// without spaces split into characters.
+    #[test]
+    fn finds_the_traditional_chinese_base_type_inside_a_magic_name() {
+        let d = data("cmn-Hant");
+        assert_eq!(base(d, "雜響權杖").as_deref(), Some("雜響權杖"));
+        assert_eq!(base(d, "營養之教徒巨錘").as_deref(), Some("教徒巨錘"));
+        assert_eq!(base(d, "脈衝的靈鹿法器").as_deref(), Some("靈鹿法器"));
+        assert_eq!(base(d, "掠奪者的擊暈之神殿重錘").as_deref(), Some("神殿重錘"));
+    }
+
+    /// `specs/Parser/magic-name.test.ts` (`Check Magic Name (cmn-Hant) when UI
+    /// returns english name`): the ref names are English in every language.
+    #[test]
+    fn finds_the_english_base_type_with_traditional_chinese_data() {
+        let d = data("cmn-Hant");
+        assert_eq!(base(d, "Rattling Sceptre").as_deref(), Some("Rattling Sceptre"));
+        assert_eq!(base(d, "Cultist Greathammer of Nourishment").as_deref(), Some("Cultist Greathammer"));
+        assert_eq!(base(d, "Pulsing Antler Focus").as_deref(), Some("Antler Focus"));
+        assert_eq!(base(d, "Reaver's Temple Maul of Stunning").as_deref(), Some("Temple Maul"));
+    }
+}

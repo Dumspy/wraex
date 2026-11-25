@@ -275,6 +275,7 @@ fn try_secondary_parse_translation(d: &Data, stat: &str) -> Option<ParsedStat> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data::tests::en;
 
     #[test]
     fn placeholder_combinations_include_single_placeholders() {
@@ -291,4 +292,88 @@ mod tests {
         assert_eq!(get_roll_or_minmax_avg(&[3.0, 7.0]), 5.0);
         assert_eq!(get_roll_or_minmax_avg(&[3.0, 7.0, 9.0]), 3.0);
     }
+
+    // `specs/Parser/stat-translation.test.ts` mocks `@/assets/data` to count the
+    // lookups; the port has no such seam, so these tests pin what the lookups
+    // return. The two cases that need a forced match-str miss are ignored below.
+
+    fn parse(d: &Data, line: &str, kind: ModifierType) -> Option<ParsedStat> {
+        try_parse_translation(d, &StatString { string: line.to_owned(), unscalable: false }, kind).unwrap()
+    }
+
+    /// `specs/Parser/stat-translation.test.ts` (`should return undefined if no
+    /// translation is found`).
+    #[test]
+    fn an_unknown_stat_has_no_translation() {
+        assert_eq!(parse(en(), "no such stat text", ModifierType::Explicit), None);
+    }
+
+    /// `specs/Parser/stat-translation.test.ts` (`should not call trade stats if
+    /// stat found in normal stats`, `should parse roll from stat, when by match
+    /// str`): a stat the data knows rolls from its match string.
+    #[test]
+    fn parses_a_roll_from_the_matching_stat() {
+        let found = parse(en(), "180(170-190)% increased Physical Damage", ModifierType::Explicit).unwrap();
+        assert_eq!(found.stat.stat_ref, "#% increased Physical Damage");
+        assert_eq!(found.translation.string, "#% increased Physical Damage");
+        let roll = found.roll.unwrap();
+        assert_eq!((roll.value, roll.min, roll.max), (180.0, 170.0, 190.0));
+        assert_eq!(roll.legacy, None);
+        assert!(!roll.dp);
+    }
+
+    /// `specs/Parser/stat-translation.test.ts` (`should give simple parsed stat if
+    /// match string fails but trade stat works`, `should handle exact match with
+    /// trade stat`): a trade-site-only text becomes a naive stat.
+    #[test]
+    fn falls_back_to_the_trade_sites_stat() {
+        let found = parse(en(), "+#% total to Cold Resistance", ModifierType::Explicit).unwrap();
+        assert_eq!(found.stat.stat_ref, "+#% total to Cold Resistance");
+        assert_eq!(found.translation.string, "+#% total to Cold Resistance");
+        assert_eq!(found.roll, None);
+        let ids = found.stat.trade.ids.as_ref().expect("trade ids");
+        assert_eq!(ids["pseudo"], ["pseudo.pseudo_total_cold_resistance"]);
+    }
+
+    /// `specs/Parser/stat-translation.test.ts` (`should handle legacy rolls`): a
+    /// roll past the range widens it and is marked legacy.
+    #[test]
+    fn marks_rolls_outside_the_data_range_as_legacy() {
+        let found = parse(en(), "220(170-190)% increased Physical Damage", ModifierType::Explicit).unwrap();
+        let roll = found.roll.unwrap();
+        assert_eq!((roll.value, roll.min, roll.max), (220.0, 170.0, 220.0));
+        assert_eq!(roll.legacy, Some(true));
+    }
+
+    /// `specs/Parser/stat-translation.test.ts` (`should prefer match str on exact
+    /// match`).
+    #[test]
+    fn an_exact_match_has_no_roll() {
+        let found = parse(en(), "Players are Cursed with Enfeeble", ModifierType::Explicit).unwrap();
+        assert_eq!(found.stat.id.as_deref(), Some("map_player_has_level_X_enfeeble"));
+        assert_eq!(found.translation.string, "Players are Cursed with Enfeeble");
+        assert_eq!(found.roll, None);
+    }
+
+    /// `specs/Parser/stat-translation.test.ts` (`should handle options in match
+    /// str`): an option matcher's value becomes the roll.
+    #[test]
+    fn an_option_matcher_gives_the_roll_its_option_value() {
+        let found = parse(en(), "Upgrades Radius to Large", ModifierType::Explicit).unwrap();
+        assert_eq!(found.stat.id.as_deref(), Some("local_jewel_display_radius_change"));
+        let roll = found.roll.unwrap();
+        assert_eq!((roll.value, roll.option), (2.0, Some(2.0)));
+    }
+
+    /// `specs/Parser/stat-translation.test.ts` (`should parse roll from stat, when
+    /// by trade stat`): needs the reference's mock to hide the match string.
+    #[test]
+    #[ignore = "the reference mocks the data layer; the port has no seam to force a match-str miss"]
+    fn parses_a_roll_from_a_trade_side_stat() {}
+
+    /// `specs/Parser/stat-translation.test.ts` (`should handle options in trade
+    /// stat`): needs the reference's mock to return an option trade id.
+    #[test]
+    #[ignore = "the reference mocks the data layer; the port has no seam to force option trade ids"]
+    fn parses_an_option_from_a_trade_side_stat() {}
 }

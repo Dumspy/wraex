@@ -47,6 +47,38 @@ mod tests {
         assert_eq!(Poe2.id(), GameId::Poe2);
     }
 
+    /// `specs/Parser/integration.test.ts` (`Parse Item Properties`, `Parse Charm
+    /// Properties`): the fields those assertions read off whole items.
+    #[test]
+    fn test_items_parse_the_properties_the_spec_asserts() {
+        use crate::parser::item::Requires;
+
+        let data = data::Data::load(&data::reference_source(), "en", Some(data::reference_trade_data())).unwrap();
+        let parse = |slug: &str| {
+            let input = wraex_golden::cases(GameId::Poe2)
+                .into_iter()
+                .find(|case| case.slug == slug)
+                .unwrap_or_else(|| panic!("no fixture {slug}"))
+                .input;
+            parser::parse_clipboard(&data, &input).unwrap()
+        };
+
+        let rare = parse("ee2-rare-item");
+        assert_eq!((rare.weapon_physical, rare.weapon_elemental), (Some(48.5), Some(86.0)));
+        assert_eq!((rare.weapon_as, rare.weapon_crit), (Some(1.2), Some(5.0)));
+        assert_eq!(rare.requires, Some(Requires { level: 51.0, str: 0.0, dex: 103.0, int: 0.0 }));
+
+        let spectre = parse("ee2-spectre-inc-spirit");
+        assert_eq!(spectre.weapon_spirit, Some(152.0));
+        assert_eq!(spectre.requires, Some(Requires { level: 72.0, str: 39.0, dex: 0.0, int: 98.0 }));
+
+        let normal = parse("ee2-normal-item");
+        assert_eq!((normal.armour_ar, normal.armour_ev, normal.armour_es), (Some(174.0), None, Some(60.0)));
+        assert_eq!(normal.requires, Some(Requires { level: 75.0, str: 67.0, dex: 0.0, int: 67.0 }));
+
+        assert_eq!(parse("ee2-charm-quality").quality, Some(14.0));
+    }
+
     /// `parseClipboard` output equals `parsed.json` for every PoE2 fixture. The
     /// harness serves EE2's trade data snapshot, so the tests load it too.
     #[test]

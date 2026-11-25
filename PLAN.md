@@ -112,7 +112,17 @@ texts from EE2's `specs/Parser/items.ts` and port its vitest assertions too.
   (Rust, `wraex_golden::{cases, diff}` in each ported module's tests) → diff report.
 - Still open: map-check / item-check data (step 3 above), a real PoE1 corpus
   (the current one is hand-written, see `tools/golden/corpus/README.md`),
-  non-English cases, and porting EE2's vitest assertions.
+  non-English cases, and the rest of EE2's vitest assertions. Ported as Rust
+  tests against the modules above: `Parser/{advanced-mod-desc, augment,
+  fractureParsers, integration, magic-name, mapParser, modifiersParsers,
+  parsers, sectionUnit, skillGem, stat-translation}`, `data/dataLoader`,
+  `web/item-check`, `web/price-check/filters/{create-item-filters,
+  create-stat-filters, missing-fracture-rules, pseudo/index}` and
+  `web/price-check/trade/pathofexile-trade`. Still open: `web/client-log`
+  (client log not ported), `web/library/libraryChaos` (library widget not
+  ported), `web/useTradeApi` (Vue composable) and `web/prices` (its
+  `parseXchg`/`splitJsonBlob` read upstream's own server blob, which Wraex
+  replaces by asking poe.ninja directly); `Parser/example` is a smoke test.
 
 ## Phase 2: platform spike on Windows (≈ 1–2 weeks, go/no-go)
 

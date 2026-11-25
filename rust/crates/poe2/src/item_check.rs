@@ -208,3 +208,17 @@ pub fn find_same_priced_items(item: &Item, same_priced_type: SamePricedType) -> 
     };
     Some(stash_search(Some(text)))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// `specs/web/item-check.test.ts` (`encodePoe2dbUri`).
+    #[test]
+    fn encodes_poe2db_uris() {
+        assert_eq!(encode_poe2db_uri("a b c"), "a_b_c");
+        assert_eq!(encode_poe2db_uri("a'b'c"), "abc");
+        assert_eq!(encode_poe2db_uri("a'b c"), "ab_c");
+        assert_eq!(encode_poe2db_uri("A/b-cö"), "A/b-cö");
+    }
+}

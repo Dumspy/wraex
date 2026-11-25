@@ -549,15 +549,145 @@ pub fn ascendancy_points_by_area_level(ref_name: &str, area_level: f64) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data::tests::en;
 
+    fn test_options() -> CreateOptions {
+        // `createTestCreateOptions()` (`specs/helper.ts`).
+        CreateOptions {
+            league: "Standard".into(),
+            currency: None,
+            listing_type: None,
+            collapse_listings: "app".into(),
+            activate_stock_filter: false,
+            exact: false,
+            use_en: true,
+        }
+    }
+
+    /// `specs/web/price-check/filters/create-item-filters.test.ts`
+    /// (`Ascendancy Points calcs`): points awarded for a trial's area level.
     #[test]
     fn ascendancy_points_follow_area_level() {
-        assert_eq!(ascendancy_points_by_area_level("Djinn Barya", 50.0), 2.0);
-        assert_eq!(ascendancy_points_by_area_level("Djinn Barya", 81.0), 4.0);
-        assert_eq!(ascendancy_points_by_area_level("Inscribed Ultimatum", 75.0), 3.0);
-        assert_eq!(ascendancy_points_by_area_level("Inscribed Ultimatum", 10.0), 1.0);
+        for (ref_name, area_level, expected) in [
+            ("Inscribed Ultimatum", 1.0, 1.0),
+            ("Inscribed Ultimatum", 23.0, 1.0),
+            ("Inscribed Ultimatum", 34.0, 1.0),
+            ("Inscribed Ultimatum", 42.0, 1.0),
+            ("Inscribed Ultimatum", 48.0, 1.0),
+            ("Inscribed Ultimatum", 55.0, 1.0),
+            ("Inscribed Ultimatum", 70.0, 2.0),
+            ("Inscribed Ultimatum", 78.0, 3.0),
+            ("Inscribed Ultimatum", 80.0, 3.0),
+            ("Inscribed Ultimatum", 100.0, 3.0),
+            ("Djinn Barya", 1.0, 1.0),
+            ("Djinn Barya", 23.0, 1.0),
+            ("Djinn Barya", 34.0, 1.0),
+            ("Djinn Barya", 42.0, 1.0),
+            ("Djinn Barya", 48.0, 2.0),
+            ("Djinn Barya", 55.0, 2.0),
+            ("Djinn Barya", 70.0, 3.0),
+            ("Djinn Barya", 78.0, 4.0),
+            ("Djinn Barya", 80.0, 4.0),
+            ("Djinn Barya", 100.0, 4.0),
+        ] {
+            assert_eq!(ascendancy_points_by_area_level(ref_name, area_level), expected, "{ref_name} {area_level}");
+        }
         assert_eq!(ascendancy_points_by_area_level("Other", 75.0), 0.0);
-        assert_eq!(area_level_by_ascendancy_points("Djinn Barya", 3.0), Some(60.0));
-        assert_eq!(area_level_by_ascendancy_points("Djinn Barya", 5.0), Some(75.0));
+    }
+
+    /// `specs/web/price-check/filters/create-item-filters.test.ts`
+    /// (`Ascendancy Points calcs`): the area level for a point count.
+    #[test]
+    fn area_levels_follow_ascendancy_points() {
+        for (ref_name, points, expected) in [
+            ("Inscribed Ultimatum", 0.0, 1.0),
+            ("Inscribed Ultimatum", 1.0, 1.0),
+            ("Inscribed Ultimatum", 2.0, 60.0),
+            ("Inscribed Ultimatum", 3.0, 75.0),
+            ("Inscribed Ultimatum", 4.0, 75.0),
+            ("Inscribed Ultimatum", 5.0, 75.0),
+            ("Djinn Barya", 0.0, 1.0),
+            ("Djinn Barya", 1.0, 1.0),
+            ("Djinn Barya", 2.0, 45.0),
+            ("Djinn Barya", 3.0, 60.0),
+            ("Djinn Barya", 4.0, 75.0),
+            ("Djinn Barya", 5.0, 75.0),
+        ] {
+            assert_eq!(area_level_by_ascendancy_points(ref_name, points), Some(expected), "{ref_name} {points}");
+        }
+    }
+
+    /// `specs/web/price-check/filters/create-item-filters.test.ts` (`unidentified
+    /// item tests`): the unidentified and unidentified-tier filters.
+    #[test]
+    fn unidentified_filters_follow_the_item() {
+        let d = en();
+        let opts = test_options();
+
+        let mut item = Item::test_item();
+        item.is_unidentified = false;
+        assert!(create_filters(d, &item, &opts).unwrap().unidentified.is_none());
+
+        let mut item = Item::test_item();
+        item.is_unidentified = true;
+        let filters = create_filters(d, &item, &opts).unwrap();
+        assert!(filters.unidentified.as_ref().is_some_and(|u| u.value));
+        assert!(filters.unidentified_tier.is_none());
+
+        let mut item = Item::test_item();
+        item.is_unidentified = true;
+        item.unidentified_tier = Some(4.0);
+        let filters = create_filters(d, &item, &opts).unwrap();
+        assert!(filters.unidentified.is_none());
+        assert_eq!(filters.unidentified_tier.as_ref().map(|t| t.value), Some(4.0));
+    }
+
+    /// `specs/web/price-check/filters/create-item-filters.test.ts` (`unidentified
+    /// item tests`): enabled by default only on uniques.
+    #[test]
+    fn unidentified_filters_are_enabled_only_on_uniques() {
+        let d = en();
+        let opts = test_options();
+        for (rarity, disabled) in [(Rarity::Magic, true), (Rarity::Rare, true), (Rarity::Unique, false)] {
+            let mut item = Item::test_item();
+            item.is_unidentified = true;
+            item.rarity = Some(rarity);
+            let filters = create_filters(d, &item, &opts).unwrap();
+            assert_eq!(filters.unidentified.as_ref().map(|u| u.disabled), Some(disabled), "{rarity:?}");
+        }
+    }
+
+    /// `specs/web/price-check/filters/create-item-filters.test.ts` (`unidentified
+    /// item tests`): enabled by default only on tier 5.
+    #[test]
+    fn unidentified_tier_filters_are_enabled_only_on_tier_five() {
+        let d = en();
+        let opts = test_options();
+        for (tier, disabled) in [(2.0, true), (3.0, true), (4.0, true), (5.0, false)] {
+            let mut item = Item::test_item();
+            item.is_unidentified = true;
+            item.unidentified_tier = Some(tier);
+            let filters = create_filters(d, &item, &opts).unwrap();
+            let filter = filters.unidentified_tier.expect("unidentified tier filter");
+            assert_eq!((filter.value, filter.disabled), (tier, disabled), "tier {tier}");
+        }
+    }
+
+    /// `specs/Parser/skillGem.test.ts` (`Create Filter for uncut gems`): uncut gems
+    /// search by name, without a gem level filter.
+    #[test]
+    fn uncut_gems_search_by_name_and_have_no_gem_level_filter() {
+        let d = en();
+        for (name, level) in [("Uncut Skill Gem", 19.0), ("Uncut Spirit Gem", 16.0), ("Uncut Support Gem", 5.0)] {
+            let mut item = Item::test_item();
+            item.category = Some(ItemCategory::Currency);
+            item.gem_level = Some(level);
+            let info = item.info.as_mut().unwrap();
+            info.name = Some(name.to_owned());
+            info.ref_name = Some(name.to_owned());
+            let filters = create_filters(d, &item, &test_options()).unwrap();
+            assert_eq!(filters.search_exact.base_type.as_deref(), Some(name), "{name}");
+            assert!(filters.gem_level.is_none(), "{name}");
+        }
     }
 }

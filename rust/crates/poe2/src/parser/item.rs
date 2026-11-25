@@ -10,6 +10,40 @@ use super::meta::ItemCategory;
 use super::modifiers::{ModifierType, StatCalculated};
 use crate::data::{AugmentLineData, BaseType};
 
+#[cfg(test)]
+mod test_item {
+    use crate::data::{BaseType, Craftable, Namespace};
+
+    use super::Item;
+
+    impl Item {
+        /// `createTestItem()` (`ref/ee2/renderer/specs/helper.ts`): an item the tests
+        /// build by hand, with a stub `info` and no category or rarity.
+        pub(crate) fn test_item() -> Self {
+            let mut item = Self::empty(String::new(), None);
+            item.info = Some(BaseType {
+                name: Some("test".into()),
+                ref_name: Some("test".into()),
+                namespace: Namespace::Item,
+                icon: "test".into(),
+                w: None,
+                h: None,
+                trade_tag: None,
+                trade_disc: None,
+                disc: None,
+                craftable: Some(Craftable { category: "Unknown".into(), corrupted: None, unique_only: None }),
+                unique: None,
+                map: None,
+                gem: None,
+                armour: None,
+                augment: None,
+                tags: Vec::new(),
+            });
+            item
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
 pub enum ItemInfluence {
     Crusader,
