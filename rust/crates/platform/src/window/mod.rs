@@ -102,7 +102,8 @@ pub enum MouseEvent {
     Move { point: Point, ctrl: bool, alt: bool },
     /// `uIOhook`'s `mousedown` (any button).
     Down { point: Point },
-    /// `uIOhook`'s `wheel`: positive is away from the user, one notch per `120` Win32 units.
+    /// `uIOhook`'s `wheel`: whole notches, positive toward the user (scrolling down), as
+    /// libuiohook reports them on Windows ([`wheel_rotation`]).
     Wheel { point: Point, rotation: i32, ctrl: bool },
 }
 
@@ -127,6 +128,20 @@ pub enum KeyEvent {
 /// `GetAsyncKeyState`'s snapshot (which can lag the key event it belongs to). The mouse hook
 /// passes the same state along with its moves, as `uiohook`'s mouse events carry the keyboard
 /// modifiers.
+/// One wheel tick's `rotation`, as `uiohook-napi`'s libuiohook computes it on Windows
+/// (`get_scroll_wheel_rotation`, vertical): the hook's signed delta (`WHEEL_DELTA`, 120, per
+/// notch) is added to what earlier ticks left over, the whole notches are reported with the
+/// sign inverted ("to conform with other platforms": positive is toward the user, scrolling
+/// down), and the remainder is kept for the next tick. A high-resolution wheel's small deltas
+/// therefore make no rotation until they add up to a notch. Same 16-bit arithmetic as the C.
+#[cfg(any(windows, test))]
+pub(crate) fn wheel_rotation(leftover: &mut i16, delta: i16) -> i16 {
+    *leftover = leftover.wrapping_add(delta);
+    let rotation = *leftover / -120;
+    *leftover %= 120;
+    rotation
+}
+
 #[cfg(any(windows, test))]
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub(crate) struct ModifierState {
@@ -364,6 +379,31 @@ impl std::error::Error for WatchError {}
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// libuiohook's sign: Windows reports a notch away from the user (scrolling up) as +120,
+    /// `uiohook` as rotation -1, and upstream's `Shortcuts.ts` turns negative into ArrowLeft
+    /// (#13: wheel down goes right, up goes left).
+    #[test]
+    fn a_wheel_notch_is_inverted_as_uiohook_reports_it() {
+        let mut leftover = 0;
+        assert_eq!(wheel_rotation(&mut leftover, 120), -1, "up, away from the user");
+        assert_eq!(wheel_rotation(&mut leftover, -120), 1, "down, toward the user");
+        assert_eq!(wheel_rotation(&mut leftover, -240), 2, "two notches at once");
+        assert_eq!(leftover, 0);
+    }
+
+    /// A high-resolution wheel's partial deltas add up to a notch before any rotation.
+    #[test]
+    fn partial_wheel_deltas_wait_for_a_whole_notch() {
+        let mut leftover = 0;
+        assert_eq!(wheel_rotation(&mut leftover, -40), 0);
+        assert_eq!(wheel_rotation(&mut leftover, -40), 0);
+        assert_eq!(wheel_rotation(&mut leftover, -40), 1, "three thirds of a notch down");
+        assert_eq!(leftover, 0);
+        assert_eq!(wheel_rotation(&mut leftover, -100), 0);
+        assert_eq!(wheel_rotation(&mut leftover, 60), 0, "turning back undoes the leftover");
+        assert_eq!(leftover, -40);
+    }
 
     const RECT: Bounds = Bounds { x: 100.0, y: 50.0, width: 1600.0, height: 1200.0 };
 
