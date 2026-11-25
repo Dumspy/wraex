@@ -54,7 +54,7 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     items = items.child(single_row(
         settings,
         "hotkeys-price-check-locked",
-        "price_check.hotkey_locked",
+        &tr(settings, "price_check.hotkey_locked"),
         Field::Widget("price-check", "hotkeyLocked"),
         false,
         project,
@@ -62,15 +62,16 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     group = group.child(items);
     list = list.child(group);
 
-    for (key, label_key, field, required) in [
-        ("hotkeys-overlay", "settings.overlay", Field::Root("overlayKey"), true),
-        ("hotkeys-map-check", "map_check.name", Field::Widget("item-check", "hotkey"), false),
-        // Upstream reads the item check's own hotkey twice: `item.info` and `map_check.name`
-        // both edit `itemCheckWidget.hotkey` (APT and EE2 alike), so the port does too.
-        ("hotkeys-item-info", "item.info", Field::Widget("item-check", "hotkey"), false),
-        ("hotkeys-delve-grid", "settings.delve_grid", Field::Widget("delve-grid", "toggleKey"), false),
+    // Upstream lists the item check's one hotkey twice, as `map_check.name` and `item.info`
+    // (APT and EE2 alike): two rows that always change together. The port shows it once, under
+    // both names (decided with the user after the first in-game test).
+    let item_check = format!("{} / {}", tr(settings, "map_check.name"), tr(settings, "item.info"));
+    for (key, label, field, required) in [
+        ("hotkeys-overlay", tr(settings, "settings.overlay"), Field::Root("overlayKey"), true),
+        ("hotkeys-item-check", item_check, Field::Widget("item-check", "hotkey"), false),
+        ("hotkeys-delve-grid", tr(settings, "settings.delve_grid"), Field::Widget("delve-grid", "toggleKey"), false),
     ] {
-        list = list.child(single_row(settings, key, label_key, field, required, project));
+        list = list.child(single_row(settings, key, &label, field, required, project));
     }
     page = page.child(list);
 
@@ -116,7 +117,7 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
 pub(super) fn single_row<S: 'static>(
     settings: &Settings,
     key: &str,
-    label_key: &str,
+    label: &str,
     field: Field,
     required: bool,
     project: Project<S>,
@@ -128,7 +129,7 @@ pub(super) fn single_row<S: 'static>(
         .min_w(0.0)
         .items_center()
         .gap(theme::rem(0.25))
-        .child(text(tr(settings, label_key)).key(format!("{key}-label")).font(type_::SM).truncate());
+        .child(text(label.to_owned()).key(format!("{key}-label")).font(type_::SM).truncate());
     if required {
         // `<span v-if="schema.required" :class="$style.required">*</span>`
         label_line = label_line.child(text("*").key(format!("{key}-required")).font(type_::LG).color(theme::red(500)));

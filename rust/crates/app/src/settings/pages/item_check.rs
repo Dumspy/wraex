@@ -24,7 +24,7 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
         if key == "item-check-craft-of-exile" && !is_english(settings) {
             continue;
         }
-        rows = rows.child(single_row(settings, key, label_key, field, false, project));
+        rows = rows.child(single_row(settings, key, &tr(settings, label_key), field, false, project));
     }
 
     // EE2: `item.find_same_price` — a label, the kind select and the hotkey.
