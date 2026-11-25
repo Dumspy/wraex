@@ -304,10 +304,10 @@ Two suffixes keep the name unambiguous:
 - a request with a body (the search and exchange endpoints answer by body) appends
   `--body<8 hex of sha1(body)>`, so two searches of the same URL are two files. A
   POST never falls back to a body-less name.
-- a name longer than 200 characters (a trade fetch lists the ids it wants) is cut to
-  160 and gets `--len<length>-<16 hex of sha1(name)>`: one path component cannot
-  exceed 255 bytes. Both are pure functions of the URL and body, so recording and
-  replay agree.
+- a name longer than 100 characters (a trade fetch lists the ids it wants) is cut to
+  64 and gets `--len<length>-<16 hex of sha1(name)>`: Windows limits a whole path to
+  `MAX_PATH` (260 characters), not just one component to 255 bytes. Both are pure
+  functions of the URL and body, so recording and replay agree.
 
 Lookup order is `<name>.<METHOD>.json`, then `<name>.json`, so a POST and a GET to
 the same URL can be answered differently. Missing URLs are logged to stderr and
