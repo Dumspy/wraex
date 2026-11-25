@@ -147,6 +147,31 @@ jobs:
             dist/*.AppImage
           if-no-files-found: error
 
+      # Start the packaged executable once per scene, the way a tester would, so a
+      # build that cannot find its assets, fonts or a renderer fails here and not on
+      # the tester's machine. The runners have no GPU: Rune draws on D3D12's WARP on
+      # Windows. The scenes need no network (no trade or poe.ninja answers).
+      - name: Smoke test
+        if: runner.os == 'Windows'
+        run: |
+          set -euo pipefail
+          dir="dist/wraex-${{ steps.version.outputs.version }}-${{ matrix.target }}"
+          mkdir -p snaps
+          for scene in widget-stopwatch poe2-widget-menu settings-poe1-general \
+                       map-check-map-rare-t16-corrupted poe2-map-check-ee2-rare-map; do
+            echo "::group::$scene"
+            (cd "$dir" && ./wraex.exe --scene "$scene" --snap "../../snaps/$scene.png")
+            test -s "snaps/$scene.png"
+            echo "::endgroup::"
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: always() && runner.os == 'Windows'
+        with:
+          name: wraex-windows-snaps
+          path: snaps/*.png
+          if-no-files-found: warn
+
   release:
     name: draft release
     needs: package
