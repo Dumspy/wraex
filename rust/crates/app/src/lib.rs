@@ -377,7 +377,13 @@ pub fn view(app: &App, cx: &mut Cx<App>) -> El {
     if app.live.is_some() && (app.shown() == shell::Shown::None || app.is_peeked()) {
         return rune::el();
     }
+    // Upstream's cards appear, swap and close at once. Rune's default fades a removed element
+    // out over 0.15 s and springs moved ones, which in the overlay left the previous card on
+    // screen beside the next one (and, with no frame to finish the fade, after closing). In a
+    // live window every change lands at once; hover colours keep their springs.
+    let live = app.live.is_some();
     let card = card(app, cx);
+    let card = if live { card.instant_changes() } else { card };
     match app.overlay_offset() {
         // The window is the overlay over the game (Windows, PLAN.md phase 2): the widget is
         // placed inside it where the cursor asked for it, or centred for the tray's windows.
@@ -388,7 +394,7 @@ pub fn view(app: &App, cx: &mut Cx<App>) -> El {
             if let Some((width, height)) = app.overlay_size() {
                 placed = placed.w(width).h(height);
             }
-            rune::col().w_full().h_full().child(placed)
+            rune::col().w_full().h_full().instant_changes().child(placed)
         }
         None => card,
     }
