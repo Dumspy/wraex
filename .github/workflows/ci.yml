@@ -58,35 +58,27 @@ jobs:
         working-directory: rust
 
   test:
-    name: test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    name: test
+    runs-on: ubuntu-latest
     timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
     defaults:
       run:
         working-directory: rust
     steps:
-      # The references have no .gitattributes; keep their data files byte for byte
-      # as shipped instead of converting them to CRLF.
-      - name: No CRLF conversion
-        if: runner.os == 'Windows'
-        run: git config --global core.autocrlf false
-        working-directory: ${{ github.workspace }}
       - uses: actions/checkout@v6
         with:
           # The game data the poe1/poe2 crates load lives in the references.
           submodules: true
 
       - name: Linux build dependencies
-        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libxkbcommon-dev libwayland-dev pkg-config
           # The tray icon's default AppIndicator backend (tray-icon README).
           sudo apt-get install -y --no-install-recommends libgtk-3-dev libayatana-appindicator3-dev
+          # Mesa's software Vulkan (lavapipe): the runner has no GPU, and the headless
+          # snapshot below needs an adapter.
+          sudo apt-get install -y --no-install-recommends mesa-vulkan-drivers
 
       - run: rustup toolchain install
 
@@ -100,11 +92,37 @@ jobs:
 
       # Rune's headless renderer is the only CI check that the UI actually draws.
       - name: Headless UI smoke
-        if: runner.os == 'macOS'
         run: cargo run --locked -p wraex-app -- --snap "$RUNNER_TEMP/wraex.png"
       - name: Headless UI snapshot exists
-        if: runner.os == 'macOS'
         run: test -s "$RUNNER_TEMP/wraex.png"
+
+  # The Win32 code (window tracking, hooks, overlay) only compiles for Windows.
+  # Checked on Linux with cargo-xwin, as `devenv shell` does; running it is the
+  # manual test in docs/windows-spike.md. Only Linux runners are used.
+  windows:
+    name: windows (cross-check)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - run: rustup toolchain install
+      # cargo-xwin and the LLVM tools it drives (clang-cl, lld-link, llvm-lib).
+      - name: Windows cross-compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang lld llvm
+          cargo install --locked cargo-xwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+          key: x86_64-pc-windows-msvc
+          save-if: ${{ github.ref == 'refs/heads/development' }}
+      - run: cargo xwin clippy --locked --workspace --all-targets --target x86_64-pc-windows-msvc -- -D warnings
 
   # Regenerates the fixtures from the pinned TypeScript references and fails on
   # any diff: committed fixtures must be exactly what the references produce.

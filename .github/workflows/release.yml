@@ -1,7 +1,10 @@
-# Release: on a `v*` tag (or by hand), build Wraex on Windows and Linux, lay out the
+# Release: on a `v*` tag (or by hand), build Wraex for Windows and Linux, lay out the
 # binary with the assets it reads at runtime (`tools/package/package.py`), and attach
 # the results to a **draft** GitHub release (tags only; a manual run just uploads the
 # packages as workflow artifacts, for testing). Publishing the draft is a human decision.
+#
+# Every job runs on Linux: the Windows package is cross-compiled with cargo-xwin
+# (MSVC target, Microsoft's CRT and SDK downloaded by xwin), as `devenv shell` does.
 #
 # The setup steps mirror ci.yml: the references are submodules (they hold the game
 # data and images the package ships), and the Linux build needs the same dev
@@ -33,40 +36,29 @@ env:
 jobs:
   package:
     name: package (${{ matrix.name }})
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
         include:
           - name: windows
-            os: windows-latest
             target: x86_64-pc-windows-msvc
-            python: python
             archive: zip
           - name: linux
-            os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            python: python3
             archive: tar.gz
     defaults:
       run:
         shell: bash
     steps:
-      # The references have no .gitattributes; keep their data files byte for byte
-      # as shipped instead of converting them to CRLF (as ci.yml does).
-      - name: No CRLF conversion
-        if: runner.os == 'Windows'
-        run: git config --global core.autocrlf false
-        working-directory: ${{ github.workspace }}
-
       - uses: actions/checkout@v6
         with:
           # The game data and images the package copies out of ref/apt and ref/ee2.
           submodules: true
 
       - name: Linux build dependencies
-        if: runner.os == 'Linux'
+        if: matrix.name == 'linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libxkbcommon-dev libwayland-dev pkg-config
@@ -77,9 +69,18 @@ jobs:
 
       - run: rustup toolchain install
 
+      # cargo-xwin and the LLVM tools it drives (clang-cl, lld-link, llvm-lib).
+      - name: Windows cross-compiler
+        if: matrix.name == 'windows'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang lld llvm
+          cargo install --locked cargo-xwin
+
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: rust
+          key: ${{ matrix.target }}
 
       - name: Version
         id: version
@@ -97,12 +98,22 @@ jobs:
 
       # `cargo build --release` plus dist/wraex-<version>-<target>/ with assets/ and
       # licences/, then the archive the release attaches.
+      - name: Cross-compile for Windows
+        if: matrix.name == 'windows'
+        run: cargo xwin build --release --locked -p wraex-app --target ${{ matrix.target }}
+        working-directory: rust
+
       - name: Package
         run: |
-          ${{ matrix.python }} tools/package/package.py \
+          binary=()
+          if [[ "${{ matrix.name }}" == windows ]]; then
+            binary=(--no-build --binary "rust/target/${{ matrix.target }}/release/wraex.exe")
+          fi
+          python3 tools/package/package.py \
             --version "${{ steps.version.outputs.version }}" \
             --target "${{ matrix.target }}" \
-            --archive "${{ matrix.archive }}"
+            --archive "${{ matrix.archive }}" \
+            "${binary[@]}"
 
       # An AppImage is a directory image of the same layout: `usr/bin/` holds the
       # binary with `assets/` next to it, which is exactly what `wraex_core::assets`
@@ -110,7 +121,7 @@ jobs:
       # X11/Wayland and the tray GTK through the system), which is why the tarball is
       # uploaded too: it is the artifact for a distro that lacks them.
       - name: AppImage
-        if: runner.os == 'Linux'
+        if: matrix.name == 'linux'
         run: |
           set -euo pipefail
           name="wraex-${{ steps.version.outputs.version }}-${{ matrix.target }}"
@@ -147,30 +158,6 @@ jobs:
             dist/*.AppImage
           if-no-files-found: error
 
-      # Start the packaged executable once per scene, the way a tester would, so a
-      # build that cannot find its assets, fonts or a renderer fails here and not on
-      # the tester's machine. The runners have no GPU: Rune draws on D3D12's WARP on
-      # Windows. The scenes need no network (no trade or poe.ninja answers).
-      - name: Smoke test
-        if: runner.os == 'Windows'
-        run: |
-          set -euo pipefail
-          dir="dist/wraex-${{ steps.version.outputs.version }}-${{ matrix.target }}"
-          mkdir -p snaps
-          for scene in widget-stopwatch poe2-widget-menu settings-poe1-general \
-                       map-check-map-rare-t16-corrupted poe2-map-check-ee2-rare-map; do
-            echo "::group::$scene"
-            (cd "$dir" && ./wraex.exe --scene "$scene" --snap "../../snaps/$scene.png")
-            test -s "snaps/$scene.png"
-            echo "::endgroup::"
-          done
-
-      - uses: actions/upload-artifact@v4
-        if: always() && runner.os == 'Windows'
-        with:
-          name: wraex-windows-snaps
-          path: snaps/*.png
-          if-no-files-found: warn
 
   release:
     name: draft release
