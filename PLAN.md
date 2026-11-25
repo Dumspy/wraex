@@ -147,6 +147,17 @@ unsupported there, so note what's lost).
 If this fails: report issues to Rune, or fall back to a different native UI
 framework for the overlay. Phases 1 and 3 are not affected either way.
 
+**Status (2026-11-25): passed on Windows.** Tested in-game with PoE1 in windowed and
+borderless-windowed mode, with two game instances (standalone and Steam) at once: the
+price-check hotkey copies the item, the overlay shows a clickable card at the cursor, focus
+returns to the game, the widget menu (overlay key), settings and the other widgets work over
+the game. What the test found and how it was fixed is in `docs/windows-spike.md` ("What the
+first Windows run found"); Rune problems and their workarounds are in `docs/rune-issues.md`.
+Not tested yet: exclusive fullscreen (lower priority: the user plays windowed or
+borderless), the setup exe, Ctrl+wheel stash scrolling against the game's own, X11 and
+Wayland. Still open from the spike: dragging widgets to a new anchor, and keeping
+`wmZorder` in the config.
+
 ## Phase 3: port core logic (≈ 2–4 weeks per game)
 
 Before porting, diff upstream and EE2 module by module to decide what goes in
@@ -294,7 +305,7 @@ and checked against reference screenshots from `tools/golden/screens` (upstream'
 own renderer in Playwright, replaying recorded trade/poe.ninja answers and images).
 Widgets, settings included, draw in the one overlay window, as upstream's do (it has
 a single `BrowserWindow`; settings is a widget flagged `invisible-on-blur` and
-`ignore-ui-visibility`). Known gaps: the stopwatch's text shadow (Rune has none).
+`ignore-ui-visibility`). The stopwatch has no text shadow (Rune has none; accepted, see `docs/rune-issues.md`).
 Step 5 is out of scope for now (English only).
 
 Verification per widget: run the Electron widget with fixture state and take a

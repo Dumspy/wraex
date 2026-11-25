@@ -17,6 +17,9 @@ the phases and why they are ordered the way they are.
   patch rev can still compile when the vendored crate's version did not change, so
   `devenv tasks run check:rune-pin` and CI check that the revs match and that
   `Cargo.lock` has no unused patches.
+- **Rune problems are documented here, not filed elsewhere.** Add each one (symptom, cause,
+  workaround and where it lives) to [docs/rune-issues.md](docs/rune-issues.md), and re-check
+  the list when Rune is bumped.
 - **Static game data stays** as shipped by upstream/EE2 for now. Access it through
   the data layer so it can be swapped later.
 - Do not send PRs or issues to Exiled Exchange 2: its `AI_POLICY.md` forbids
