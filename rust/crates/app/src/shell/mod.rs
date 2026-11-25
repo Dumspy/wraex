@@ -389,10 +389,18 @@ fn price_check_hold_key(config: &serde_json::Value) -> Option<String> {
 /// hides every `hide-on-blur` widget whenever a `focus-change` says the overlay is not in
 /// front (Escape, Ctrl+W, the overlay key's off state, the game taking the focus back) and
 /// every `hide-on-focus` widget when it is.
+#[cfg(test)]
 fn apply_overlay_event(event: &OverlayEvent, app: &mut App) {
+    let settings_armed = app.live.as_ref().is_none_or(|live| live.settings_armed);
+    apply_overlay_event_in(event, app, settings_armed);
+}
+
+/// [`apply_overlay_event`] from inside the shell, which runs with itself taken out of `app.live`
+/// (`App::poll_with`) and so passes its own `settings_armed`.
+fn apply_overlay_event_in(event: &OverlayEvent, app: &mut App, settings_armed: bool) {
     match event {
         OverlayEvent::HideExclusiveWidget => app.close_exclusive_widget(),
-        OverlayEvent::FocusChange { overlay: false, .. } => app.hide_widgets_on_blur(),
+        OverlayEvent::FocusChange { overlay: false, .. } => app.hide_widgets_on_blur_in(settings_armed),
         OverlayEvent::FocusChange { overlay: true, .. } => app.hide_widgets_on_focus(),
         _ => {}
     }
@@ -673,11 +681,11 @@ impl Live {
                 OverlayEvent::Attached => wraex_platform::log!("wraex: overlay attached to the game window"),
                 OverlayEvent::FocusChange { game, overlay, using_hotkey } => {
                     wraex_platform::log!("wraex: focus game={game} overlay={overlay} hotkey={using_hotkey}");
-                    apply_overlay_event(&event, app);
+                    apply_overlay_event_in(&event, app, self.settings_armed);
                 }
                 OverlayEvent::HideExclusiveWidget => {
                     wraex_platform::log!("wraex: the cursor moved away from the card: closing it");
-                    apply_overlay_event(&event, app);
+                    apply_overlay_event_in(&event, app, self.settings_armed);
                 }
                 // The Alt peek: `sync_window` reads `OverlayController::is_visible`, which is
                 // the state this event reports; there is no renderer channel to forward it to.
@@ -1502,8 +1510,11 @@ impl App {
 
     /// Build the overlay's widget state from the config, once: every live overlay reads its
     /// cards from it. A scene or a test built its own.
+    ///
+    /// Only the shell calls it, from its poll, where it has taken itself out of `app.live`
+    /// (`App::poll_with`): a check of `self.live` here would never pass.
     pub(crate) fn ensure_overlay_state(&mut self, game: GameId, config: &serde_json::Value) {
-        if self.live.is_some() && self.widgets.is_none() {
+        if self.widgets.is_none() {
             self.widgets = Some(widgets::Overlay::live(game, config));
         }
     }
@@ -1579,10 +1590,14 @@ impl App {
     /// drawing it — which [`App::shown_in`] re-checks, so the menu goes with the overlay and
     /// comes back the next time it is activated.
     pub fn hide_widgets_on_blur(&mut self) {
-        wraex_platform::log!(
-            "wraex: the overlay lost the focus: closing hide-on-blur widgets (showing {:?})",
-            self.shown()
-        );
+        let settings_armed = self.live.as_ref().is_none_or(|live| live.settings_armed);
+        self.hide_widgets_on_blur_in(settings_armed);
+    }
+
+    /// [`App::hide_widgets_on_blur`] with the shell's `settings_armed` given: the shell runs with
+    /// itself taken out of `app.live`, where the app cannot read it.
+    pub fn hide_widgets_on_blur_in(&mut self, settings_armed: bool) {
+        wraex_platform::log!("wraex: the overlay lost the focus: closing hide-on-blur widgets");
         self.close_exclusive_widget();
         if let Some(check) = &mut self.item_check {
             check.open = false;
@@ -1592,7 +1607,7 @@ impl App {
         }
         if let Some(settings) = &mut self.settings
             && settings.open
-            && self.live.as_ref().is_none_or(|live| live.settings_armed)
+            && settings_armed
         {
             settings.cancel();
         }

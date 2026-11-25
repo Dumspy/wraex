@@ -53,8 +53,10 @@ What is implemented where:
    Get-Content "$env:APPDATA\Wraex\Path of Exile\wraex.log" -Wait
    ```
 
-   The first line names the version and the file: `wraex 0.1.0: logging to …`. If the file
-   cannot be created, that is in the console instead and the log goes to the console only.
+   The first line names the version and the file: `wraex 0.1.0: logging to …`. The release
+   build is a windowed program, as upstream's is: it opens no console (so no second taskbar
+   button), and the log file is the only place its lines go. Wraex runs in the tray; quit it
+   from there.
 
 4. What the log says on a healthy start (a few lines each):
 
