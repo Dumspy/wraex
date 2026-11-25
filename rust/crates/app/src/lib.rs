@@ -325,6 +325,15 @@ impl App {
         }
     }
 
+    /// The Inscribed Ultimatum the port can price-check (`ULTIMATUM_SCENE`). Upstream has no
+    /// Ultimatum support, so there is no reference screenshot; the item text is the parser's
+    /// fixture, and the search row stays up because no trade answer was recorded for it.
+    pub fn ultimatum_scene() -> Self {
+        let mut app = Self::with_mode(ULTIMATUM_TEXT, Mode::Replay);
+        app.price_check.reset_search();
+        app
+    }
+
     /// The live shell, or `None` in a scene, a `--snap` render and a test.
     ///
     /// Panics in debug builds when the shell itself asks: [`App::with_live`] has taken it out of
@@ -561,6 +570,13 @@ fn card(app: &App, cx: &mut Cx<App>) -> El {
 /// A named state for `--scene` (`AppSpec::scenes`).
 pub type Scene = (&'static str, fn(&mut App));
 
+/// The port's Inscribed Ultimatum price check (`--scene ultimatum-survive-currency`): upstream
+/// has no Ultimatum support, so the fixture is the parser's own item text rather than a corpus
+/// case or a reference screenshot.
+pub const ULTIMATUM_SCENE: &str = "ultimatum-survive-currency";
+
+const ULTIMATUM_TEXT: &str = include_str!("../../poe1/testdata/ultimatum/survive-currency.txt");
+
 /// The PoE1 corpus cases the reference screenshots render
 /// (`tools/golden/screens/cases.mjs`), plus a text that isn't an item and three cases that
 /// exercise the other kinds of filter row: a magic flask (explicit stats), a cluster jewel
@@ -576,6 +592,8 @@ pub const SCENES: &[Scene] = &[
     ("adv-magic-flask-charge-recovery", |app| app.load("adv-magic-flask-charge-recovery")),
     ("jewel-cluster-large", |app| app.load("jewel-cluster-large")),
     ("adv-rare-amulet-anointed", |app| app.load("adv-rare-amulet-anointed")),
+    // The port's own feature: an Inscribed Ultimatum, which upstream cannot price-check.
+    (ULTIMATUM_SCENE, |app| *app = App::ultimatum_scene()),
     // The item check (`WidgetItemCheck.vue`): the map check for every PoE1 map case, and the
     // item info for a rare, a unique, a gem and a weapon.
     ("map-check-real-map-rare-t16-max-res", |app| app.load_item_check("real-map-rare-t16-max-res")),
@@ -827,6 +845,9 @@ mod tests {
         }
         if let Some(case) = slug.strip_prefix("map-check-").or_else(|| slug.strip_prefix("item-check-")) {
             return runtime_app(App::item_check_scene(GameId::Poe1, case), size);
+        }
+        if slug == ULTIMATUM_SCENE {
+            return runtime_app(App::ultimatum_scene(), size);
         }
         match slug.strip_prefix("poe2-") {
             Some(case) => runtime_app(App::with_mode_poe2(&corpus_poe2(case), Mode::Replay), size),
@@ -1157,6 +1178,43 @@ mod tests {
         let runtime = runtime("real-map-rare-t16-max-res");
         assert!(runtime.find("trend-price").is_none());
         assert!(runtime.find("trend").is_none());
+    }
+
+    /// An Inscribed Ultimatum, which upstream cannot price-check: one chip per filter, the
+    /// sacrifice-count note, the poe.ninja estimate, and no stat rows for its modifier lines.
+    #[test]
+    fn an_inscribed_ultimatum_shows_its_deal() {
+        let mut runtime = runtime(ULTIMATUM_SCENE);
+        assert_eq!(text_of(&runtime, "filter-name-text").as_deref(), Some("Inscribed Ultimatum"));
+        assert_eq!(text_of(&runtime, "btn-ultimatum-challenge-label").as_deref(), Some("Challenge: Survive"));
+        assert_eq!(text_of(&runtime, "btn-ultimatum-reward-label").as_deref(), Some("Reward: Currency"));
+        assert_eq!(text_of(&runtime, "btn-ultimatum-input-label").as_deref(), Some("Sacrifice: Vaal Orb"));
+        assert!(runtime.find("btn-ultimatum-output").is_none(), "a doubling reward pays no unique");
+        assert_eq!(text_of(&runtime, "ultimatum-note").as_deref(), Some("Listings mix sacrifice counts"));
+        // Vaal Orb is 4.35 chaos, so the twenty it demands are 87, and doubling pays 174.
+        assert_eq!(
+            text_of(&runtime, "ultimatum-value").as_deref(),
+            Some("Sacrifice worth 87c \u{b7} Reward worth 174c")
+        );
+        // The modifier lines are the encounter's: not stats, and not unknown modifiers either.
+        assert!(runtime.find("btn-stats").is_none());
+        assert!(runtime.find("filters-stats").is_none());
+        assert!(runtime.find("unknown-0").is_none());
+        assert!(runtime.find("search-label").is_some(), "the scene leaves the search row up");
+
+        // The challenge is off by default and searches once it is ticked.
+        let challenge = |runtime: &Runtime<App>| {
+            runtime
+                .state
+                .price_check
+                .item_filters()
+                .and_then(|filters| filters.ultimatum.as_ref())
+                .and_then(|ultimatum| ultimatum.challenge.as_ref())
+                .map(|filter| filter.disabled)
+        };
+        assert_eq!(challenge(&runtime), Some(true));
+        click(&mut runtime, "btn-ultimatum-challenge");
+        assert_eq!(challenge(&runtime), Some(false));
     }
 
     /// A map has no name to search by: `FilterName` shows its category.

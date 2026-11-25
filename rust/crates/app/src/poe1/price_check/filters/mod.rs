@@ -31,10 +31,11 @@ use wraex_poe1::filters::{FilterOrGroup, FilterTag, ItemFilters, SearchFilter, S
 use wraex_poe1::parser::item::Item;
 use wraex_poe1::parser::meta::ItemCategory;
 use wraex_poe1::parser::modifiers::ModifierMechanic;
+use wraex_poe1::prices::{Prices, display_rounding};
 
 use crate::poe1::i18n;
 use crate::poe1::price_check::view::Project;
-use crate::poe1::price_check::{InputField, LogicalToggle, NumericFilter, PriceCheck, StatPath};
+use crate::poe1::price_check::{InputField, LogicalToggle, NumericFilter, PriceCheck, StatPath, UltimatumFilterKind};
 use crate::theme::{self, text as type_};
 use crate::ui::art;
 use crate::ui::{self, icon};
@@ -79,6 +80,20 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
     if let Some(reward) = &filters.map_completion_reward {
         let label = i18n::fmt("item.map_foil_reward", &[&reward.name]);
         chips = chips.child(btn::logical("map-foil", &label, true, None, None, |_: &mut S| {}));
+    }
+    if let Some(ultimatum) = &filters.ultimatum {
+        for which in UltimatumFilterKind::ALL {
+            let Some(filter) = which.get(ultimatum) else { continue };
+            let label = i18n::fmt(which.label_key(), &[&filter.label]);
+            chips = chips.child(btn::logical(
+                &format!("ultimatum-{}", which.key()),
+                &label,
+                !filter.disabled,
+                None,
+                None,
+                move |s: &mut S| project(s).toggle_logical(LogicalToggle::Ultimatum(which)),
+            ));
+        }
     }
     for which in [
         NumericFilter::AreaLevel,
@@ -197,6 +212,35 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
     }
     root = root.child(chips);
 
+    // An Inscribed Ultimatum has no trade stats; what to show below its chips is the count the
+    // trade site cannot filter and, once poe.ninja answers, what the deal is worth.
+    if let Some(ultimatum) = &check.ultimatum {
+        if ultimatum.sacrifice.count.is_some() {
+            root = root.child(
+                text(i18n::t("ultimatum.sacrifice_note")).key("ultimatum-note").font(type_::SM).color(theme::gray(500)),
+            );
+        }
+        if let Some(value) = check.ultimatum_value() {
+            let prices = check.prices.prices();
+            let part =
+                |key: &str, chaos: Option<f64>| chaos.map(|chaos| i18n::fmt(key, &[&compact_price(prices, chaos)]));
+            let parts: Vec<String> =
+                [part("ultimatum.value_sacrifice", value.sacrifice), part("ultimatum.value_reward", value.reward)]
+                    .into_iter()
+                    .flatten()
+                    .collect();
+            if !parts.is_empty() {
+                root = root.child(
+                    text(parts.join(" \u{b7} "))
+                        .key("ultimatum-value")
+                        .font(type_::SM)
+                        .color(theme::gray(400))
+                        .py(theme::rem(0.25)),
+                );
+            }
+        }
+    }
+
     if check.stats_collapsed || !has_stats {
         return root;
     }
@@ -303,13 +347,27 @@ fn preset_count(check: &PriceCheck) -> usize {
     }
 }
 
-/// `showUnknownMods`: the unknown rows are for craftable items, not maps or Sentinels.
+/// `showUnknownMods`: the unknown rows are for craftable items, not maps or Sentinels — and an
+/// Inscribed Ultimatum's lines are the encounter's modifiers, which no trade filter takes.
 fn unknown_count(check: &PriceCheck) -> usize {
     let Some(item) = check.item() else { return 0 };
-    if matches!(item.category, Some(ItemCategory::Sentinel) | Some(ItemCategory::Map)) {
+    if matches!(item.category, Some(ItemCategory::Sentinel) | Some(ItemCategory::Map))
+        || wraex_poe1::ultimatum::is_ultimatum(item)
+    {
         return 0;
     }
     item.unknown_modifiers.len()
+}
+
+/// `autoCurrency` and `displayRounding`, in the short form the Ultimatum value line uses
+/// (`87c`, `2.4div`).
+fn compact_price(prices: &Prices, chaos: f64) -> String {
+    let price = prices.auto_currency(chaos);
+    let amount = display_rounding(price.min, false);
+    match price.currency {
+        "div" => format!("{amount}div"),
+        _ => format!("{amount}c"),
+    }
 }
 
 /// A `FilterOrGroup`'s `hidden`.

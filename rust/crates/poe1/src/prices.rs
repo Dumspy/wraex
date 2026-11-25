@@ -255,6 +255,17 @@ impl Prices {
         None
     }
 
+    /// The first entry named `name` in `ns`, whatever its variant. Not upstream: the
+    /// Inscribed Ultimatum's value estimate knows a unique only by name.
+    pub fn find_price_any_variant(&self, ns: &str, name: &str) -> Option<NinjaPrice> {
+        let search = format!("{{\"name\":{},", wraex_core::js::json_string(name));
+        let overview = self.database.iter().filter(|o| o.ns == ns).find(|o| o.lines.contains(&search))?;
+        let start = overview.lines.find(&search)?;
+        let end = overview.lines[start..].find('}').map(|i| start + i)?;
+        let info: NinjaDenseInfo = serde_json::from_str(&overview.lines[start..=end]).ok()?;
+        self.find_price(&DbQuery { ns, name, variant: info.variant.as_deref() })
+    }
+
     fn rate(&self) -> f64 {
         self.xchg_rate.filter(|r| *r != 0.0).unwrap_or(9999.0)
     }

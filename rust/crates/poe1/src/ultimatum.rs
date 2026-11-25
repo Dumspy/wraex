@@ -8,6 +8,7 @@ use serde::Serialize;
 
 use crate::data::{Data, Namespace};
 use crate::parser::item::Item;
+use crate::prices::{DbQuery, Prices};
 
 /// One Inscribed Ultimatum.
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -46,6 +47,17 @@ impl Challenge {
             Challenge::Unknown(_) => None,
         }
     }
+
+    /// The challenge's own text, as the item writes it (`Challenge: Survive`).
+    pub fn label(&self) -> &str {
+        match self {
+            Challenge::Exterminate => "Defeat waves of enemies",
+            Challenge::Survival => "Survive",
+            Challenge::Defense => "Protect the Altar",
+            Challenge::Conquer => "Stand in the Stone Circles",
+            Challenge::Unknown(text) => text,
+        }
+    }
 }
 
 /// What the item demands to start the encounter.
@@ -78,6 +90,17 @@ impl Reward {
             Reward::Unknown(_) => None,
         }
     }
+
+    /// The short name a filter chip shows (`Reward: Currency`); the trade site's wording.
+    pub fn label(&self) -> &str {
+        match self {
+            Reward::DoubleCurrency => "Currency",
+            Reward::DoubleDivCards => "Divination Cards",
+            Reward::MirrorRare => "Mirrored Rare Item",
+            Reward::ExchangeUnique(_) => "Unique Item",
+            Reward::Unknown(text) => text,
+        }
+    }
 }
 
 /// One rolled modifier and its explanation.
@@ -88,6 +111,52 @@ pub struct UltimatumModifier {
     /// `1` when the name carries no numeral.
     pub tier: u8,
     pub description: String,
+}
+
+/// What an Inscribed Ultimatum is worth in chaos, both sides of the deal. The sacrifice is the
+/// whole stack the item demands, not one unit; `None` where poe.ninja has no price for it.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct UltimatumValue {
+    pub sacrifice: Option<f64>,
+    pub reward: Option<f64>,
+}
+
+/// `value`: the sacrifice and the reward in chaos, from poe.ninja. Doubling rewards are worth
+/// twice the sacrifice; a unique swap is the two uniques' prices, each looked up on its own.
+pub fn value(u: &Ultimatum, d: &Data, prices: &Prices) -> UltimatumValue {
+    // The sacrifice is a divination card when the reward doubles cards, a unique when it has
+    // no stack count, and otherwise currency (or something else poe.ninja lists under `ITEM`).
+    let sacrifice = match (&u.reward, u.sacrifice.count) {
+        (Reward::DoubleDivCards, Some(count)) => {
+            unit_price(prices, Namespace::DivinationCard, &u.sacrifice.name).map(|unit| unit * f64::from(count))
+        }
+        (_, Some(count)) => unit_price(prices, Namespace::Item, &u.sacrifice.name).map(|unit| unit * f64::from(count)),
+        (_, None) => unique_price(d, prices, &u.sacrifice.name),
+    };
+    let reward = match &u.reward {
+        Reward::DoubleCurrency | Reward::DoubleDivCards => sacrifice.map(|sacrifice| sacrifice * 2.0),
+        Reward::ExchangeUnique(name) => unique_price(d, prices, name),
+        Reward::MirrorRare | Reward::Unknown(_) => None,
+    };
+    UltimatumValue { sacrifice, reward }
+}
+
+/// One poe.ninja entry's chaos value.
+fn unit_price(prices: &Prices, ns: Namespace, name: &str) -> Option<f64> {
+    prices.find_price(&DbQuery { ns: ns.as_str(), name, variant: None }).map(|price| price.info.chaos)
+}
+
+/// A unique's chaos value. poe.ninja lists uniques by name and a variant (mostly the base
+/// type), so try the base, then whichever entry carries the name.
+fn unique_price(d: &Data, prices: &Prices, name: &str) -> Option<f64> {
+    let ns = Namespace::Unique.as_str();
+    let base = d
+        .item_by_ref(Namespace::Unique, name)
+        .and_then(|items| items.into_iter().find_map(|i| i.unique))
+        .map(|u| u.base);
+    base.and_then(|base| prices.find_price(&DbQuery { ns, name, variant: Some(&base) }))
+        .or_else(|| prices.find_price_any_variant(ns, name))
+        .map(|price| price.info.chaos)
 }
 
 /// `item.info.refName === "Inscribed Ultimatum"`.
@@ -461,6 +530,94 @@ mod tests {
         assert_eq!(Reward::MirrorRare.trade_id(), Some("MirrorRare"));
         assert_eq!(Reward::ExchangeUnique("Grasping Nightshade".into()).trade_id(), Some("ExchangeUnique"));
         assert_eq!(Reward::Unknown("?".into()).trade_id(), None);
+    }
+
+    #[test]
+    fn labels_are_the_items_own_words() {
+        assert_eq!(Challenge::Survival.label(), "Survive");
+        assert_eq!(Challenge::Unknown("Hold the line".into()).label(), "Hold the line");
+        assert_eq!(Reward::DoubleCurrency.label(), "Currency");
+        assert_eq!(Reward::DoubleDivCards.label(), "Divination Cards");
+        assert_eq!(Reward::ExchangeUnique("Grasping Nightshade".into()).label(), "Unique Item");
+    }
+
+    /// A small poe.ninja blob: the units `value` looks up, in their overview types.
+    const PRICES: &str = concat!(
+        r#"{"overviews":[{"type":"Currency","lines":[{"name":"Chaos Orb","chaos":1,"graph":[]},"#,
+        r#"{"name":"Vaal Orb","chaos":4.5,"graph":[]},{"name":"Divine Orb","chaos":200,"graph":[]}]},"#,
+        r#"{"type":"DivinationCard","lines":[{"name":"Monochrome","chaos":100,"graph":[]}]},"#,
+        r#"{"type":"UniqueArmour","lines":[{"name":"Prospero's Protection","variant":"Iron Ring","chaos":5,"graph":[]}]},"#,
+        r#"{"type":"UniqueTincture","lines":[{"name":"Grasping Nightshade","variant":"Tincture","chaos":40,"graph":[]}]}]}"#
+    );
+
+    fn prices() -> Prices {
+        let mut prices = Prices::default();
+        prices.loaded(PRICES, 0);
+        prices
+    }
+
+    #[test]
+    fn value_prices_both_sides_of_the_deal() {
+        let prices = prices();
+        let value_of = |name: &str, text: &str| value(&parse_text(name, text).unwrap(), en(), &prices);
+
+        // Twenty Vaal Orbs at 4.5 chaos double to 180.
+        assert_eq!(
+            value_of("survive-currency", include_str!("../testdata/ultimatum/survive-currency.txt")),
+            UltimatumValue { sacrifice: Some(90.0), reward: Some(180.0) }
+        );
+        // Twenty Chaos Orbs, which poe.ninja prices at 1 chaos each.
+        assert_eq!(
+            value_of("stone-circles-currency", include_str!("../testdata/ultimatum/stone-circles-currency.txt")),
+            UltimatumValue { sacrifice: Some(20.0), reward: Some(40.0) }
+        );
+        // Two divination cards price in the card overview, not the currency one.
+        assert_eq!(
+            value_of("waves-div-cards", include_str!("../testdata/ultimatum/waves-div-cards.txt")),
+            UltimatumValue { sacrifice: Some(200.0), reward: Some(400.0) }
+        );
+        // A unique swap: poe.ninja lists uniques with a variant, found by base type (Iron Ring)
+        // or, failing that, by name alone (Tincture).
+        assert_eq!(
+            value_of("survive-unique-swap", include_str!("../testdata/ultimatum/survive-unique-swap.txt")),
+            UltimatumValue { sacrifice: Some(5.0), reward: Some(40.0) }
+        );
+    }
+
+    #[test]
+    fn an_unknown_challenge_or_reward_has_no_filter() {
+        let u = Ultimatum {
+            challenge: Challenge::Unknown("Hold the line".into()),
+            area_level: None,
+            sacrifice: Sacrifice { name: "Vaal Orb".into(), count: Some(1) },
+            reward: Reward::Unknown("Something new".into()),
+            modifiers: vec![],
+            monster_damage: None,
+            monster_life: None,
+        };
+        let filters = crate::filters::UltimatumFilters::from(&u);
+        assert!(filters.challenge.is_none());
+        assert!(filters.reward.is_none());
+        assert!(filters.output.is_none());
+        assert_eq!(filters.input.map(|filter| filter.value), Some("Vaal Orb".to_owned()));
+    }
+
+    #[test]
+    fn value_prices_a_sacrifice_whose_reward_it_cannot() {
+        let prices = prices();
+        let u = Ultimatum {
+            challenge: Challenge::Survival,
+            area_level: None,
+            sacrifice: Sacrifice { name: "Vaal Orb".into(), count: Some(2) },
+            reward: Reward::MirrorRare,
+            modifiers: vec![],
+            monster_damage: None,
+            monster_life: None,
+        };
+        assert_eq!(value(&u, en(), &prices), UltimatumValue { sacrifice: Some(9.0), reward: None });
+
+        let u = Ultimatum { sacrifice: Sacrifice { name: "Not An Item".into(), count: Some(1) }, ..u };
+        assert_eq!(value(&u, en(), &prices), UltimatumValue { sacrifice: None, reward: None });
     }
 
     #[test]

@@ -334,6 +334,19 @@ pub fn create_trade_request(d: &Data, filters: &ItemFilters, stats: &[FilterOrGr
         set(f, "map_filters.filters.map_completion_reward.option", json!(reward.name_trade));
     }
 
+    if let Some(ultimatum) = &filters.ultimatum {
+        for (id, filter) in [
+            ("ultimatum_challenge", ultimatum.challenge.as_ref()),
+            ("ultimatum_reward", ultimatum.reward.as_ref()),
+            ("ultimatum_input", ultimatum.input.as_ref()),
+            ("ultimatum_output", ultimatum.output.as_ref()),
+        ] {
+            if let Some(filter) = filter.filter(|filter| !filter.disabled) {
+                set(f, &format!("ultimatum_filters.filters.{id}.option"), json!(filter.value));
+            }
+        }
+    }
+
     if filters.unidentified.as_ref().is_some_and(|u| !u.disabled) {
         set(f, "misc_filters.filters.identified.option", text(false));
     }

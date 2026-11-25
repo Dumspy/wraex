@@ -8,6 +8,9 @@
 //!
 //! This is a stopgap for the price check's few labels: PLAN phase 5's last step replaces it
 //! with upstream's Crowdin files in every language (`ru`, `ko`, `cmn-Hant`).
+//!
+//! The port's own features (`EXTRA`, the Inscribed Ultimatum chips) have no upstream key, so
+//! their `en` text lives here until the feature is a data file of its own.
 
 use std::sync::OnceLock;
 
@@ -17,6 +20,17 @@ use wraex_poe1::data::source;
 
 /// The `en` messages, relative to the game data root (`poe1::data::source`).
 const PATH: &str = "en/app_i18n.json";
+
+/// The port's own strings: upstream has no Inscribed Ultimatum support, so `app_i18n.json`
+/// has no entry for the Ultimatum chips and the value estimate.
+const EXTRA: &[(&str, &str)] = &[
+    ("ultimatum.challenge", "Challenge: {0}"),
+    ("ultimatum.reward", "Reward: {0}"),
+    ("ultimatum.sacrifice", "Sacrifice: {0}"),
+    ("ultimatum.sacrifice_note", "Listings mix sacrifice counts"),
+    ("ultimatum.value_sacrifice", "Sacrifice worth {0}"),
+    ("ultimatum.value_reward", "Reward worth {0}"),
+];
 
 fn strings() -> &'static Value {
     static STRINGS: OnceLock<Value> = OnceLock::new();
@@ -28,6 +42,9 @@ fn strings() -> &'static Value {
 
 /// `t(key)`: the message at `key`, or `key` itself.
 pub fn t(key: &str) -> String {
+    if let Some((_, message)) = EXTRA.iter().find(|(extra, _)| *extra == key) {
+        return (*message).to_owned();
+    }
     match lookup(key) {
         Some(Value::String(message)) => message.clone(),
         _ => key.to_owned(),
