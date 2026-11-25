@@ -287,9 +287,10 @@ Widget by widget, most used first:
 **Status (2026-11-24):** steps 1–4 are ported for both games in `rust/crates/app`
 and checked against reference screenshots from `tools/golden/screens` (upstream's
 own renderer in Playwright, replaying recorded trade/poe.ninja answers and images).
-Known gaps: Font Awesome icons are drawn stand-ins, and every widget renders in its
-own window until the overlay shell exists (phase 2). Step 5 is out of scope for now
-(English only).
+Widgets, settings included, draw in the one overlay window, as upstream's do (it has
+a single `BrowserWindow`; settings is a widget flagged `invisible-on-blur` and
+`ignore-ui-visibility`). Known gaps: the stopwatch's text shadow (Rune has none).
+Step 5 is out of scope for now (English only).
 
 Verification per widget: run the Electron widget with fixture state and take a
 screenshot; render the Rune widget headlessly with the same state; the agent

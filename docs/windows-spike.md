@@ -221,9 +221,6 @@ timing/modifier tracking from the keyboard hook (step 8 above).
 
 These are deliberate, and each is a follow-up rather than a bug:
 
-- **Settings and the widget share one window.** Upstream has a separate overlay window and a
-  separate settings window; the port draws both in the overlay (settings centred). Splitting
-  them is phase 5 work.
 - **The input hooks are Win32 only.** macOS, X11 and Wayland have no window, mouse or keyboard
   hook (`wraex_platform::window::Watcher::start` reports `Unsupported` there). Rune's
   interactive overlays are unsupported on Wayland, which PLAN.md notes as a known loss.
