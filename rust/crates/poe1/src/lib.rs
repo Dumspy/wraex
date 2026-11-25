@@ -2,8 +2,9 @@
 //!
 //! Ported from `ref/apt` (Awakened PoE Trade). Ported so far: the data layer
 //! ([`data`]), the parser ([`parser`]), the default filters ([`filters`]),
-//! trade request building ([`trade`]), the map check ([`map_check`]) and the
-//! item check's actions ([`item_check`]).
+//! trade request building ([`trade`]), the map check ([`map_check`]), the
+//! item check's actions ([`item_check`]) and Inscribed Ultimatum items
+//! ([`ultimatum`]).
 
 pub mod client_log;
 pub mod config;
@@ -17,6 +18,7 @@ pub mod prices;
 pub mod results;
 pub mod trade;
 pub mod trends;
+pub mod ultimatum;
 
 use wraex_core::GameId;
 use wraex_game::{Game, ParseError};
