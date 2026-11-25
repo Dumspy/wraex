@@ -103,11 +103,13 @@ const MIME = {
 //
 // A request with a body (the trade search and exchange endpoints answer by body)
 // gets `--body<8 hex of sha1(body)>` appended, so two searches of the same URL
-// are two files. A name longer than 200 characters (a trade fetch URL lists the
-// ids it wants) is cut to 160 and gets `--len<length>-<16 hex of sha1(name)>`,
-// because one path component cannot exceed 255 bytes; the name is a pure
-// function of the URL and body, so recording and replay agree.
-const MAX_NAME = 200
+// are two files. A name longer than 100 characters (a trade fetch URL lists the
+// ids it wants) is cut to 72 and gets `--len<length>-<16 hex of sha1(name)>`.
+// That keeps a recording's path in the repo near 150 characters, so a checkout
+// or unzip on Windows stays under its 260-character path limit (MAX_PATH). The
+// name is a pure function of the URL and body, so recording and replay agree.
+const MAX_NAME = 100
+const KEEP = 72
 
 export function proxyFileName (rawUrl, { body } = {}) {
   const queryAt = rawUrl.indexOf('?')
@@ -127,7 +129,7 @@ export function proxyFileName (rawUrl, { body } = {}) {
   if (query) name += `--${sanitize(query)}`
   if (body?.length) name += `--body${hash(body).slice(0, 8)}`
   if (name.length > MAX_NAME) {
-    name = `${name.slice(0, 160)}--len${name.length}-${hash(name).slice(0, 16)}`
+    name = `${name.slice(0, KEEP)}--len${name.length}-${hash(name).slice(0, 16)}`
   }
   return name
 }

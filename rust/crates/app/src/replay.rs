@@ -12,8 +12,8 @@
 //! - the name is the URL after `/proxy/` with `/` -> `__`, `?` -> `--`, `&` -> `-`,
 //!   `=` -> `_` and anything outside `[A-Za-z0-9._-]` -> `_`;
 //! - a request with a body appends `--body<8 hex of sha1(body)>`;
-//! - a name over 200 characters is cut to 160 and gets `--len<length>-<16 hex of
-//!   sha1(name)>`;
+//! - a name over 100 characters is cut to 72 and gets `--len<length>-<16 hex of
+//!   sha1(name)>`, so paths stay under Windows' 260-character limit;
 //! - lookup is `<name>.<METHOD>.json`, then `<name>.json`.
 //!
 //! A missing recording is an error: the app never falls back to the network, so a
@@ -28,7 +28,10 @@ use wraex_core::relative_time::{EpochMillis, parse_iso};
 use wraex_core::trade::api::{Clock, HttpRequest, HttpResponse, Method, Transport};
 
 /// `MAX_NAME`: the longest file name the harness writes before truncating.
-pub const MAX_NAME: usize = 200;
+pub const MAX_NAME: usize = 100;
+
+/// How much of a name over `MAX_NAME` is kept before its length and hash.
+const KEEP: usize = 72;
 
 /// The name a request's recording has, as `proxyFileName` builds it. `raw_url` is
 /// the URL after `/proxy/` (no `https://`, no leading slash).
@@ -48,7 +51,7 @@ pub fn proxy_file_name(raw_url: &str, body: Option<&str>) -> String {
     }
     if name.len() > MAX_NAME {
         let hash = sha1_hex(&name);
-        name = format!("{}--len{}-{}", &name[..160], name.len(), &hash[..16]);
+        name = format!("{}--len{}-{}", &name[..KEEP], name.len(), &hash[..16]);
     }
     name
 }
@@ -221,11 +224,12 @@ mod tests {
             proxy_file_name("www.pathofexile.com/api/trade/search/Standard", Some(body)),
             format!("www.pathofexile.com__api__trade__search__Standard--body{}", &sha1_hex(body)[..8])
         );
-        // Over 200 characters: 160, then the length and a hash of the whole name.
+        // Over 100 characters: 72, then the length and a hash of the whole name.
         let long = format!("www.pathofexile.com/api/trade/fetch/{}?query={}", "a".repeat(300), "b".repeat(60));
+        let full = format!("www.pathofexile.com__api__trade__fetch__{}--query_{}", "a".repeat(300), "b".repeat(60));
         let name = proxy_file_name(&long, None);
-        assert!(name.len() < 200, "{name}");
-        assert!(name.contains("--len"));
+        assert!(name.len() <= MAX_NAME, "{name}");
+        assert_eq!(name, format!("{}--len{}-{}", &full[..KEEP], full.len(), &sha1_hex(&full)[..16]));
     }
 
     /// The truncation rule agrees with the files on disk: a fetch of the timeless
@@ -254,6 +258,21 @@ mod tests {
         let raw = request.url.strip_prefix("https://").unwrap();
         let name = proxy_file_name(raw, None);
         assert_eq!(path.file_name().unwrap().to_str().unwrap(), format!("{name}.GET.json"));
+    }
+
+    /// Windows refuses paths over 260 characters (MAX_PATH), counting the folder the
+    /// repo is cloned or unzipped into. Keeping each recording's repo-relative path
+    /// at 160 or less leaves 100 characters for that folder.
+    #[test]
+    fn recordings_fit_in_a_windows_path() {
+        for game in ["poe1", "poe2"] {
+            let dir = corpus().join(game).join("proxy");
+            for entry in std::fs::read_dir(&dir).unwrap() {
+                let name = entry.unwrap().file_name().into_string().unwrap();
+                let repo_path = format!("tools/golden/corpus/screens/{game}/proxy/{name}");
+                assert!(repo_path.len() <= 160, "{} characters: {repo_path}", repo_path.len());
+            }
+        }
     }
 
     #[test]
