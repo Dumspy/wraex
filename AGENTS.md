@@ -76,6 +76,9 @@ Add fields only with the module that produces them; do not guess at the shape.
 ## Checks the agent can run itself
 
 - `cargo fmt` / `cargo clippy -D warnings` / `cargo test`.
+- PR CI skips the slow game-data and render tests and the headless smoke (they run
+  on push to development and main), so run the full suite locally before a PR:
+  `cargo test --workspace`, which `devenv tasks run check:all` already runs.
 - Rune pin: `devenv tasks run check:rune-pin`.
 - Fixture diff: `devenv tasks run golden:prepare` once, then
   `devenv tasks run check:fixtures` (regenerates, fails on any change in `fixtures/`).

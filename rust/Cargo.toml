@@ -68,3 +68,9 @@ accesskit_macos = { git = "https://github.com/anomalyco/rune", rev = "209e119c27
 
 [workspace.lints.rust]
 missing_debug_implementations = "warn"
+
+# Build dependencies (never the workspace crates) optimised: the tests spend much
+# of their time in dependency code (JSON, Rune's renderer); about 20-30% faster.
+# A clean dependency build takes ~3x longer, which rust-cache pays once in CI.
+[profile.dev.package."*"]
+opt-level = 2

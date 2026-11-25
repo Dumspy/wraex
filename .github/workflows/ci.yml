@@ -14,6 +14,10 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  # Debuginfo is most of rust-cache's ~1.8 GB and slows linking; the cost is line
+  # numbers in CI backtraces. `test` inherits `dev`, and rust-cache already sets
+  # CARGO_INCREMENTAL=0.
+  CARGO_PROFILE_DEV_DEBUG: "0"
 
 jobs:
   fmt:
@@ -61,6 +65,13 @@ jobs:
     name: test
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      # Read by the prebuilt nextest install; bump it when the config needs a
+      # newer one.
+      CARGO_NEXTEST_VERSION: "0.9.152"
+      # Pull requests run the fast set; pushes to development and main run
+      # everything (see rust/.config/nextest.toml).
+      NEXTEST_PROFILE: ${{ github.event_name == 'pull_request' && 'pr' || 'ci' }}
     defaults:
       run:
         working-directory: rust
@@ -87,13 +98,25 @@ jobs:
           workspaces: rust
           save-if: ${{ github.ref == 'refs/heads/development' }}
 
+      # The prebuilt binary: `cargo install` would compile nextest from source.
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest@${{ env.CARGO_NEXTEST_VERSION }}
+
       - run: cargo clippy --locked --workspace --all-targets -- -D warnings
-      - run: cargo test --locked --workspace
+
+      # nextest runs each test in its own process, in parallel. It does not run
+      # doctests: the workspace's only two are `ignore`d, so no step is missing.
+      - name: Tests
+        run: cargo nextest run --locked --workspace --profile "$NEXTEST_PROFILE"
 
       # Rune's headless renderer is the only CI check that the UI actually draws.
+      # Pull requests skip it, as they skip the slow UI render tests.
       - name: Headless UI smoke
+        if: github.event_name != 'pull_request'
         run: cargo run --locked -p wraex-app -- --snap "$RUNNER_TEMP/wraex.png"
       - name: Headless UI snapshot exists
+        if: github.event_name != 'pull_request'
         run: test -s "$RUNNER_TEMP/wraex.png"
 
   # The Win32 code (window tracking, hooks, overlay) only compiles for Windows.
@@ -165,6 +188,11 @@ jobs:
       # The Rust data layer builds its indexes in memory; check they hold the same
       # rows as the `*.index.bin` files prepare-refs just generated.
       - run: rustup toolchain install
+      # Dependencies build at opt-level 2 (rust/Cargo.toml), so keep them cached.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+          save-if: ${{ github.ref == 'refs/heads/development' }}
       - name: Rust indexes match the generated index files
         run: cargo test --locked -p wraex-poe1 -p wraex-poe2 -- --ignored
         working-directory: rust
