@@ -847,7 +847,7 @@ impl Live {
         if let Action::CopyItem { target, focus_overlay } = &entry.action
             && target == "price-check"
             && !focus_overlay
-            && app.shown() != Shown::None
+            && app.shown_in(self.overlay.is_interactable()) != Shown::None
         {
             self.pending_track = Some(cursor);
         }
@@ -945,8 +945,12 @@ impl Live {
         // `OverlayWindow.vue` draws the widget menu while the overlay is active (it is
         // `wmWants: 'show'`), and this shell draws one card at a time: focus the menu before
         // `shown` is read, so the window that opens already has it.
-        app.sync_overlay_menu();
-        let shown = app.shown();
+        //
+        // The shell runs with itself taken out of `app.live` (`App::poll_with`), so `app.shown()`
+        // would see no live shell and answer as a scene; the overlay's state comes from here.
+        let active = self.overlay.is_interactable();
+        app.sync_overlay_menu(active, self.game, &self.startup.config);
+        let shown = app.shown_in(active);
         let opened = shown != self.shown;
         let over_game = self.game_bounds();
         if opened {
@@ -1320,16 +1324,14 @@ impl App {
     /// active and the menu is what it names, focus the menu widget, so [`crate::widgets::view`]
     /// draws the same card (`OverlayWindow.vue` draws the menu as a widget of its own). True
     /// when it changed the focused widget.
-    fn sync_overlay_menu(&mut self) -> bool {
-        if !self.overlay_active() {
+    fn sync_overlay_menu(&mut self, overlay_active: bool, game: GameId, config: &serde_json::Value) -> bool {
+        if !overlay_active {
             return false;
         }
         if !matches!(self.shown_in(true), Shown::Widget(wm_type) if wm_type == widgets::menu::WM_TYPE) {
             return false;
         }
-        let Some(live) = &self.live else { return false };
-        let (game, config) = (live.game, live.startup.config.clone());
-        let overlay = self.widgets.get_or_insert_with(|| widgets::Overlay::live(game, &config));
+        let overlay = self.widgets.get_or_insert_with(|| widgets::Overlay::live(game, config));
         let Some(menu) =
             overlay.widgets.iter().find(|widget| widget.wm_type == widgets::menu::WM_TYPE).map(|widget| widget.wm_id)
         else {
