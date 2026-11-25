@@ -293,7 +293,7 @@ fn settle(image: Image) -> Option<Image> {
     }
     let _ = image.wait();
     if let Some(error) = image.error() {
-        eprintln!("wraex: image error: {error}");
+        wraex_platform::log!("wraex: image error: {error}");
         return None;
     }
     Some(image)
@@ -417,7 +417,7 @@ fn fetch(key: String, url: String) {
         wake();
     });
     if let Err(error) = spawned {
-        eprintln!("wraex: could not start the image worker: {error}");
+        wraex_platform::log!("wraex: could not start the image worker: {error}");
     }
 }
 
@@ -428,7 +428,7 @@ fn store(key: String, image: Image) {
 }
 
 fn fail(key: String, why: String) {
-    eprintln!("wraex: no image: {why}");
+    wraex_platform::log!("wraex: no image: {why}");
     let mut registry = REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     registry.pending.remove(&key);
     registry.failed.insert(key);

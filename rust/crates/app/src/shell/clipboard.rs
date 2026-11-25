@@ -27,7 +27,7 @@ impl Clipboard for SystemClipboard {
         match arboard::Clipboard::new() {
             Ok(mut clipboard) => clipboard.get_text().unwrap_or_default(),
             Err(error) => {
-                eprintln!("wraex: the clipboard is unavailable: {error}");
+                wraex_platform::log!("wraex: the clipboard is unavailable: {error}");
                 String::new()
             }
         }
@@ -37,10 +37,10 @@ impl Clipboard for SystemClipboard {
         match arboard::Clipboard::new() {
             Ok(mut clipboard) => {
                 if let Err(error) = clipboard.set_text(text) {
-                    eprintln!("wraex: writing to the clipboard failed: {error}");
+                    wraex_platform::log!("wraex: writing to the clipboard failed: {error}");
                 }
             }
-            Err(error) => eprintln!("wraex: the clipboard is unavailable: {error}"),
+            Err(error) => wraex_platform::log!("wraex: the clipboard is unavailable: {error}"),
         }
     }
 }

@@ -278,7 +278,7 @@ mod platform {
 
     pub(super) fn key(sender: &mut OSSender, name: &str, down: bool) {
         let Some(key) = keycode(name) else {
-            eprintln!("wraex: cannot synthesize the key `{name}`");
+            wraex_platform::log!("wraex: cannot synthesize the key `{name}`");
             return;
         };
         if let Some((_, flag)) = modifier_flag(name) {
@@ -465,7 +465,7 @@ mod platform {
 
     pub(super) fn key(_sender: &mut OSSender, name: &str, down: bool) {
         let Some((virtual_key, extended)) = virtual_key(name) else {
-            eprintln!("wraex: cannot synthesize the key `{name}`");
+            wraex_platform::log!("wraex: cannot synthesize the key `{name}`");
             return;
         };
         send(virtual_key, extended, !down);
@@ -511,13 +511,13 @@ mod platform {
         // know the app cannot type into the game yet.
         static WARNED: std::sync::Once = std::sync::Once::new();
         WARNED.call_once(|| {
-            eprintln!(
+            wraex_platform::log!(
                 "wraex: this build cannot synthesize keys (no XTest/Wayland implementation yet); \
                  hotkeys act on the clipboard's item text instead"
             );
         });
         let action = if down { "down" } else { "up" };
-        eprintln!("wraex: key {name} {action} (not synthesized)");
+        wraex_platform::log!("wraex: key {name} {action} (not synthesized)");
     }
 
     /// No implementation yet (see the module's note): XTest would need `libXtst` and an X11

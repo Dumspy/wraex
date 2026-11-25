@@ -29,21 +29,20 @@ What is implemented where:
    to you), download the `wraex-windows` artifact at the bottom of the run's page, and unzip it.
    Inside is `wraex-<version>-x86_64-pc-windows-msvc.zip`: unzip that anywhere too. Keep
    `wraex.exe` next to its `assets` folder.
-3. Run it from PowerShell in that folder, with the log going to a file:
+3. Run it: double-click `wraex.exe`, or from PowerShell in that folder
+   `.\wraex.exe --game poe1` (or `--game poe2`).
+
+   The log is written to `%APPDATA%\Wraex\Path of Exile\wraex.log` (PoE2:
+   `%APPDATA%\Wraex\Path of Exile 2\wraex.log`), each line with the seconds since start;
+   panics land there too. Each start keeps the previous run's file as `wraex.old.log`, so copy
+   the file somewhere before starting a third time. To watch it live, in PowerShell:
 
    ```powershell
-   .\wraex.exe --game poe1 2> wraex.log        # or: --game poe2
+   Get-Content "$env:APPDATA\Wraex\Path of Exile\wraex.log" -Wait
    ```
 
-   The app writes everything to stderr. To watch the log live, in a second PowerShell window
-   in the same folder:
-
-   ```powershell
-   Get-Content wraex.log -Wait
-   ```
-
-   Keep `wraex.log` after the session: it is what a report needs (see "When something
-   fails"). Each start overwrites it, so rename it before running again.
+   The first line names the version and the file: `wraex 0.1.0: logging to …`. If the file
+   cannot be created, that is in the console instead and the log goes to the console only.
 
 4. What the log says on a healthy start (a few lines each):
 

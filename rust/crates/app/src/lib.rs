@@ -570,12 +570,21 @@ pub fn main() {
     let args = rune::tooling::Args::parse();
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let game = shell::game_from_args(&argv);
+    let live = !rune::is_headless() && args.scene.is_none();
+    // A live run also logs to `wraex.log` beside its settings (`wraex_platform::log`), so a
+    // run started without a console still leaves its log, panics included.
+    if live && let Some(app_data) = settings::app_data_dir() {
+        let path = settings::config_path_in(game, &app_data).with_file_name("wraex.log");
+        if let Some(path) = wraex_platform::log::init(&path) {
+            wraex_platform::log!("wraex {}: logging to {}", env!("CARGO_PKG_VERSION"), path.display());
+        }
+    }
     // Where the data, images and tray icon come from: the packaged `assets/` directory, or
     // the reference checkouts in development (`wraex_core::assets`). Resolved here, once.
-    eprintln!("wraex: assets {}", wraex_core::assets::Assets::get().summary());
+    wraex_platform::log!("wraex: assets {}", wraex_core::assets::Assets::get().summary());
     // A live run is the app proper: tray, hotkeys, a window on demand. Everything else — a
     // scene, a snapshot, a scripted run — is the port's screenshot mode, unchanged.
-    if !rune::is_headless() && args.scene.is_none() {
+    if live {
         shell::run(game);
         return;
     }

@@ -242,13 +242,13 @@ fn apply_key_event(overlay: &mut OverlayController, shortcuts: &Shortcuts, event
         KeyEvent::Down(event) => {
             overlay.on_global_key_down(&event, clock);
             if let Some(line) = shortcuts.log_key_down(&event) {
-                eprintln!("{line}");
+                wraex_platform::log!("{line}");
             }
         }
         KeyEvent::Up(event) => {
             overlay.on_global_key_up(event.alt);
             if let Some(line) = shortcuts.log_key_up(event.key) {
-                eprintln!("{line}");
+                wraex_platform::log!("{line}");
             }
         }
     }
@@ -405,7 +405,7 @@ impl Live {
     /// The app's log line for a problem: printed once, and kept for the debug page.
     pub fn warn(&mut self, message: impl Into<String>) {
         let message = message.into();
-        eprintln!("wraex: {message}");
+        wraex_platform::log!("wraex: {message}");
         self.warnings.push(message);
     }
 
@@ -437,7 +437,7 @@ impl Live {
         let handle = self.handle.clone();
         match window::Watcher::start(WindowTarget::new(title.clone()), Box::new(move || handle.wake())) {
             Ok(watcher) => {
-                eprintln!("wraex: following the \"{title}\" window");
+                wraex_platform::log!("wraex: following the \"{title}\" window");
                 self.watcher = Some(watcher);
                 self.watched_title = Some(title);
                 // Hotkeys now exist only while the game is focused, so pressing keys is safe
@@ -500,9 +500,9 @@ impl Live {
                     "the game is running with administrator rights: start Wraex as administrator too, \
                      or the overlay cannot reach its window",
                 ),
-                OverlayEvent::Attached => eprintln!("wraex: overlay attached to the game window"),
+                OverlayEvent::Attached => wraex_platform::log!("wraex: overlay attached to the game window"),
                 OverlayEvent::FocusChange { game, overlay, using_hotkey } => {
-                    eprintln!("wraex: focus game={game} overlay={overlay} hotkey={using_hotkey}");
+                    wraex_platform::log!("wraex: focus game={game} overlay={overlay} hotkey={using_hotkey}");
                     apply_overlay_event(&event, app);
                 }
                 OverlayEvent::HideExclusiveWidget => apply_overlay_event(&event, app),
@@ -594,7 +594,7 @@ impl Live {
         match Tray::new(VERSION, &overlay_key, rgba, width, height) {
             Ok(tray) => {
                 self.tray = Some(tray);
-                eprintln!("wraex: tray icon shown ({}x{width})", height);
+                wraex_platform::log!("wraex: tray icon shown ({}x{width})", height);
                 // `AppTray.ts`'s click handler: the entries report themselves; the app drains
                 // them in `poll`, which this callback wakes.
                 let pending = self.tray_actions.clone();
@@ -660,7 +660,7 @@ impl Live {
             }
         } else {
             let hotkeys: Vec<&str> = self.shortcuts.actions().iter().map(|entry| entry.shortcut.as_str()).collect();
-            eprintln!("wraex: {} hotkeys registered: {}", self.registered.len(), hotkeys.join(", "));
+            wraex_platform::log!("wraex: {} hotkeys registered: {}", self.registered.len(), hotkeys.join(", "));
         }
     }
 
@@ -1672,7 +1672,7 @@ impl Panel {
         if let Some(click_through) = self.click_through.lock().ok().and_then(|click_through| *click_through)
             && let Err(error) = window.set_click_through(click_through)
         {
-            eprintln!("wraex: the overlay's click-through could not be set: {error}");
+            wraex_platform::log!("wraex: the overlay's click-through could not be set: {error}");
         }
         if self.take_focus.load(Ordering::Relaxed) {
             window.focus();
@@ -1750,7 +1750,7 @@ impl OverlayHandle for OverlayPanel {
         // No window yet: `Panel::attach` applies both when Rune creates one.
         let Some(window) = self.panel.window() else { return };
         if let Err(error) = window.set_click_through(click_through) {
-            eprintln!("wraex: the overlay's click-through could not be changed: {error}");
+            wraex_platform::log!("wraex: the overlay's click-through could not be changed: {error}");
             return;
         }
         if !click_through {
@@ -1761,7 +1761,7 @@ impl OverlayHandle for OverlayPanel {
     fn focus_game(&mut self) {
         let Some(game) = self.panel.game.lock().ok().and_then(|game| *game) else { return };
         if !window::focus_window(game) && cfg!(target_os = "windows") {
-            eprintln!("wraex: could not give the game's window its focus back");
+            wraex_platform::log!("wraex: could not give the game's window its focus back");
         }
     }
 
@@ -1794,7 +1794,7 @@ pub fn game_from_args(args: &[String]) -> GameId {
 /// one app per game; this binary picks with `--game`.
 pub fn run(game: GameId) {
     let startup = config::startup(game);
-    eprintln!("wraex: {:?}, config {} ({:?})", game, startup.store.path().display(), startup.source);
+    wraex_platform::log!("wraex: {:?}, config {} ({:?})", game, startup.store.path().display(), startup.source);
     let configured_league = startup
         .config
         .get("leagueId")
@@ -1839,7 +1839,7 @@ pub fn run(game: GameId) {
 
     let live = Live::new(handle.clone(), startup, panel);
     for warning in &live.warnings {
-        eprintln!("wraex: {warning}");
+        wraex_platform::log!("wraex: {warning}");
     }
     app = app.init(move || App::live(live));
 

@@ -22,6 +22,7 @@
 
 pub mod clipboard;
 pub mod http;
+pub mod log;
 pub mod overlay;
 pub mod shortcuts;
 pub mod tray;

@@ -263,7 +263,7 @@ impl Hook {
             );
         }
         let has_access = has_uipi_access(hwnd, self.uipi_message);
-        eprintln!(
+        crate::log!(
             "wraex: following window \"{title}\"{} (access: {})",
             class.map(|class| format!(" of class \"{class}\"")).unwrap_or_default(),
             if has_access { "yes" } else { "no, the game may run elevated" }
@@ -592,13 +592,13 @@ fn hook_thread(
         let mouse_hook = SetWindowsHookExW(WH_MOUSE_LL, Some(mouse_proc), None, 0);
         match mouse_hook {
             Ok(hook) => with_hook(|state| state.mouse_hook = hook),
-            Err(error) => eprintln!("wraex: the global mouse hook could not be installed: {error}"),
+            Err(error) => crate::log!("wraex: the global mouse hook could not be installed: {error}"),
         }
         // The global keyboard hook, observed only too: the Alt peek and the key log.
         let keyboard_hook = SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_proc), None, 0);
         match keyboard_hook {
             Ok(hook) => with_hook(|state| state.keyboard_hook = hook),
-            Err(error) => eprintln!("wraex: the global keyboard hook could not be installed: {error}"),
+            Err(error) => crate::log!("wraex: the global keyboard hook could not be installed: {error}"),
         }
         let timer = SetTimer(None, 0, FOREGROUND_TIMER_MS, Some(foreground_timer));
         // Create this thread's message queue before reporting ready, so a stop posted right

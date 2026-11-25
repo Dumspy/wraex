@@ -59,7 +59,7 @@ pub fn data(mode: Mode) -> &'static Data {
         Mode::Replay => REPLAY.get_or_init(|| load_with(Some(recorded_trade_data()))),
         Mode::Live => LIVE.get_or_init(|| {
             let trade = live_trade_data()
-                .inspect_err(|error| eprintln!("wraex: fetching the trade site's data failed ({error})"))
+                .inspect_err(|error| wraex_platform::log!("wraex: fetching the trade site's data failed ({error})"))
                 .ok();
             load_with(trade)
         }),
@@ -326,7 +326,7 @@ impl PriceCheck {
                 let now = crate::trade::now(self.mode);
                 self.prices.loaded(data(self.mode), &overviews, now);
             }
-            Err(error) => eprintln!("wraex: fetching poe.ninja prices failed: {error}"),
+            Err(error) => wraex_platform::log!("wraex: fetching poe.ninja prices failed: {error}"),
         }
         true
     }
