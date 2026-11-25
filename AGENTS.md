@@ -89,3 +89,27 @@ Add fields only with the module that produces them; do not guess at the shape.
   Silicon, so it is slow but validates the workflow end to end). Cache saves fail
   there (`tar` cannot stat under Rosetta), so local runs are always cold; time the
   workflows on GitHub, not locally.
+
+## Screenshots and video
+
+Every PR follows [.github/pull_request_template.md](.github/pull_request_template.md).
+A PR that adds a feature or changes anything visible must show it working, with
+screenshots (`--snap`, or a capture of the running overlay) or a short video. Only
+PRs with nothing to see (CI, tooling, refactors, parser or data work) may say
+"None: <why>" instead.
+
+`gh` cannot upload images, so put them on the orphan `pr-media` branch, in a
+folder named after your PR branch, and link them with `?raw=true` (the repo is
+private, so raw.githubusercontent links do not render):
+
+```sh
+git fetch origin pr-media:pr-media 2>/dev/null
+git worktree add /tmp/pr-media pr-media 2>/dev/null \
+  || git worktree add --orphan -b pr-media /tmp/pr-media
+mkdir -p /tmp/pr-media/<branch> && cp /tmp/wraex.png /tmp/pr-media/<branch>/
+git -C /tmp/pr-media add -A && git -C /tmp/pr-media commit -m "Media for <branch>"
+git -C /tmp/pr-media push -u origin pr-media && git worktree remove /tmp/pr-media
+# ![overlay](https://github.com/Dumspy/wraex/blob/pr-media/<branch>/wraex.png?raw=true)
+```
+
+Look at each image before linking it; an empty or wrong window is not evidence.

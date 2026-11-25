@@ -1,9 +1,17 @@
 name: CI
 
+# Docs-only changes skip CI. No check is required on the branches, so a skipped run
+# blocks nothing; if one becomes required, this needs a job that always reports.
 on:
   push:
     branches: [development, main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
   pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
 
 permissions:
   contents: read
