@@ -4,6 +4,7 @@
 //! `ref/ee2/renderer/specs/` passes at the pinned revision (527 passed, 2 skipped,
 //! after `npm run make-index-files`) and seeds the PoE2 fixtures.
 
+pub mod client_log;
 pub mod config;
 pub mod data;
 pub mod filters;

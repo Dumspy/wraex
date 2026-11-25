@@ -5,6 +5,7 @@
 //! trade request building ([`trade`]), the map check ([`map_check`]) and the
 //! item check's actions ([`item_check`]).
 
+pub mod client_log;
 pub mod config;
 pub mod data;
 pub mod filters;
