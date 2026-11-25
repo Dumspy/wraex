@@ -4,7 +4,7 @@
 //! ([`data`]), the parser ([`parser`]), the default filters ([`filters`]),
 //! trade request building ([`trade`]), the map check ([`map_check`]), the
 //! item check's actions ([`item_check`]) and Inscribed Ultimatum items
-//! ([`ultimatum`]).
+//! ([`ultimatum`], with their check in [`ultimatum_check`]).
 
 pub mod client_log;
 pub mod config;
@@ -19,6 +19,7 @@ pub mod results;
 pub mod trade;
 pub mod trends;
 pub mod ultimatum;
+pub mod ultimatum_check;
 
 use wraex_core::GameId;
 use wraex_game::{Game, ParseError};

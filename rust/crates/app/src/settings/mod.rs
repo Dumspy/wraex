@@ -59,6 +59,8 @@ pub enum Page {
     General,
     PriceCheck,
     Maps,
+    /// The port's Inscribed Ultimatum decisions, PoE1 only (upstream has no Ultimatum).
+    Ultimatum,
     ItemCheck,
     /// EE2's Leveling page (`web/leveling/settings-leveling.vue`), PoE2 only.
     Leveling,
@@ -68,12 +70,13 @@ pub enum Page {
 
 impl Page {
     /// Every page, in menu order.
-    pub const ALL: [Page; 9] = [
+    pub const ALL: [Page; 10] = [
         Page::Hotkeys,
         Page::Chat,
         Page::General,
         Page::PriceCheck,
         Page::Maps,
+        Page::Ultimatum,
         Page::ItemCheck,
         Page::Leveling,
         Page::Debug,
@@ -84,15 +87,19 @@ impl Page {
     pub const MENU: [&'static [Page]; 5] = [
         &[Page::Hotkeys, Page::Chat],
         &[Page::General],
-        &[Page::PriceCheck, Page::Maps, Page::ItemCheck],
+        &[Page::PriceCheck, Page::Maps, Page::Ultimatum, Page::ItemCheck],
         &[Page::Leveling],
         &[Page::Debug, Page::About],
     ];
 
     /// Whether the game has this page: APT has no leveling widget, so its settings window has
-    /// no Leveling page either.
+    /// no Leveling page either, and Ultimatum is PoE1's.
     pub fn applies_to(self, game: GameId) -> bool {
-        self != Page::Leveling || game == GameId::Poe2
+        match self {
+            Page::Leveling => game == GameId::Poe2,
+            Page::Ultimatum => game == GameId::Poe1,
+            _ => true,
+        }
     }
 
     /// The pages of `game`, in menu order.
@@ -108,6 +115,7 @@ impl Page {
             Page::General => "general",
             Page::PriceCheck => "price-check",
             Page::Maps => "maps",
+            Page::Ultimatum => "ultimatum",
             Page::ItemCheck => "item-check",
             Page::Leveling => "leveling",
             Page::Debug => "debug",
@@ -127,6 +135,7 @@ impl Page {
             Page::General => "settings.general",
             Page::PriceCheck => "price_check.name",
             Page::Maps => "map_check.name",
+            Page::Ultimatum => "ultimatum.name",
             Page::ItemCheck => "item.info",
             Page::Leveling => "leveling.name",
             Page::Debug => "settings.debug",

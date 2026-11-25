@@ -22,14 +22,24 @@ use wraex_poe1::data::source;
 const PATH: &str = "en/app_i18n.json";
 
 /// The port's own strings: upstream has no Inscribed Ultimatum support, so `app_i18n.json`
-/// has no entry for the Ultimatum chips and the value estimate.
+/// has no entry for the Ultimatum chips, the value estimate or the check.
 const EXTRA: &[(&str, &str)] = &[
+    ("ultimatum.name", "Ultimatum"),
+    ("ultimatum.title", "Inscribed Ultimatum"),
     ("ultimatum.challenge", "Challenge: {0}"),
+    ("ultimatum.area_level", "Area Level {0}"),
     ("ultimatum.reward", "Reward: {0}"),
     ("ultimatum.sacrifice", "Sacrifice: {0}"),
     ("ultimatum.sacrifice_note", "Listings mix sacrifice counts"),
     ("ultimatum.value_sacrifice", "Sacrifice worth {0}"),
     ("ultimatum.value_reward", "Reward worth {0}"),
+    ("ultimatum.monsters", "Monsters: {0}"),
+    ("ultimatum.monster_damage", "{0}% increased damage"),
+    ("ultimatum.monster_life", "{0}% more life"),
+    ("ultimatum.dont_run", "Don't run"),
+    ("ultimatum.careful", "Careful"),
+    ("ultimatum.settings_hint", "Each chip sets one tier for the current profile."),
+    ("ultimatum.settings_empty", "Mark an Ultimatum modifier in the item check to see it here."),
 ];
 
 fn strings() -> &'static Value {

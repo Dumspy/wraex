@@ -69,26 +69,6 @@ pub fn view<S: 'static>(item: &Item, config: &MapCheckConfig, project: Project<S
 
 /// `MapCheck.vue`'s header: the map's name, then `Profile` and the three numerals.
 fn header<S: 'static>(item: &Item, config: &MapCheckConfig, project: Project<S>) -> El {
-    let profile = config.profile;
-    let mut profiles = row().key("map-check-profiles").gap(2.0).items_center();
-    for (index, numeral) in PROFILES.iter().enumerate() {
-        let number = index as u32 + 1;
-        let mut button = row()
-            .key(format!("map-check-profile-{number}"))
-            .w(theme::rem(1.5))
-            .justify_center()
-            .fill(theme::gray(800))
-            .focusable(true)
-            .role("button")
-            .label(*numeral)
-            .on_press(move |s: &mut S| project(s).maps.profile = number)
-            .child(text(*numeral).key(format!("map-check-profile-{number}-text")).font(type_::SM));
-        // `:class="{ 'border border-gray-600': profile.active }"`
-        if profile == number {
-            button = button.border(1.0, theme::gray(600)).border_layout();
-        }
-        profiles = profiles.child(button);
-    }
     row()
         .key("map-check-header")
         .w_full()
@@ -105,7 +85,32 @@ fn header<S: 'static>(item: &Item, config: &MapCheckConfig, project: Project<S>)
                 .color(theme::gray(400))
                 .ml(theme::rem(2.0)),
         )
-        .child(profiles)
+        .child(profile_picker("map-check", config.profile, project))
+}
+
+/// `Profile`'s three numerals: the map check and the Ultimatum check share them, because both
+/// read the item check's one `maps.profile`.
+pub fn profile_picker<S: 'static>(prefix: &'static str, profile: u32, project: Project<S>) -> El {
+    let mut picker = row().key(format!("{prefix}-profiles")).gap(2.0).items_center();
+    for (index, numeral) in PROFILES.iter().enumerate() {
+        let number = index as u32 + 1;
+        let mut button = row()
+            .key(format!("{prefix}-profile-{number}"))
+            .w(theme::rem(1.5))
+            .justify_center()
+            .fill(theme::gray(800))
+            .focusable(true)
+            .role("button")
+            .label(*numeral)
+            .on_press(move |s: &mut S| project(s).maps.profile = number)
+            .child(text(*numeral).key(format!("{prefix}-profile-{number}-text")).font(type_::SM));
+        // `:class="{ 'border border-gray-600': profile.active }"`
+        if profile == number {
+            button = button.border(1.0, theme::gray(600)).border_layout();
+        }
+        picker = picker.child(button);
+    }
+    picker
 }
 
 /// `mapName`: a blighted area's own name, else the base map's name.

@@ -1895,6 +1895,14 @@ impl App {
             live.warn(format!("the copied text is not a {:?} item", live.game));
             return;
         }
+        // The Ultimatum card's value line reads poe.ninja, which the shell keeps warm: copy the
+        // blob into the widget's own prices, only for an Inscribed Ultimatum.
+        if let Some(check) = self.item_check.as_mut()
+            && check.item().is_some_and(wraex_poe1::ultimatum::is_ultimatum)
+            && let Some(prices) = live.prices.as_ref()
+        {
+            check.prices = prices.prices().clone();
+        }
         let requests: Vec<dispatch::Request> = match live.game {
             GameId::Poe2 => self
                 .item_check_poe2

@@ -101,6 +101,16 @@ impl Reward {
             Reward::Unknown(text) => text,
         }
     }
+
+    /// The reward as the item writes it (`Doubles sacrificed Currency`, or the unique's name).
+    pub fn description(&self) -> &str {
+        match self {
+            Reward::DoubleCurrency => "Doubles sacrificed Currency",
+            Reward::DoubleDivCards => "Doubles sacrificed Divination Cards",
+            Reward::MirrorRare => "Mirrored Rare Item",
+            Reward::ExchangeUnique(name) | Reward::Unknown(name) => name,
+        }
+    }
 }
 
 /// One rolled modifier and its explanation.
