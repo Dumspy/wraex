@@ -623,6 +623,16 @@ pub fn main() {
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let game = shell::game_from_args(&argv);
     let live = !rune::is_headless() && args.scene.is_none();
+    // Rune's Win32 windows present only the rectangles a frame changed (`Present1` dirty
+    // rectangles). On the transparent overlay that left earlier frames on screen: the previous
+    // card beside the next, the widget menu where it had been. `RUNE_WHOLE_FRAMES=1` (Rune's
+    // own switch, read once when its first window draws) presents every frame whole; the
+    // overlay's few cards make that cheap. A value the user set is kept.
+    if live && cfg!(target_os = "windows") && std::env::var_os("RUNE_WHOLE_FRAMES").is_none() {
+        // SAFETY: `main` runs this before Rune, the log or any worker starts a thread, so no
+        // other thread can read the environment while it changes.
+        unsafe { std::env::set_var("RUNE_WHOLE_FRAMES", "1") };
+    }
     // A live run also logs to `wraex.log` beside its settings (`wraex_platform::log`), so a
     // run started without a console still leaves its log, panics included.
     if live && let Some(app_data) = settings::app_data_dir() {
