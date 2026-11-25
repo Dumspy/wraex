@@ -192,9 +192,9 @@ two Font Awesome Free faces vendored in `rust/crates/app/assets/fontawesome`:
 - Font Awesome Free 6.7.1: fonts SIL OFL 1.1, icons CC BY 4.0; see
   `FONT-AWESOME-LICENSE`.
 
-Neither reference ships a separate licence file for the three text faces. Confirm
-their redistribution terms with upstream before publishing binaries; see the
-release notes.
+Neither reference ships a separate licence file for the three text faces. Wraex
+ships them as both references do (decided 2026-11-25); the redesign (#5) is
+expected to replace Fontin and Friz Quadrata with faces of its own.
 
 ## Generated data
 
