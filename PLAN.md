@@ -310,8 +310,17 @@ Visual similarity, not pixel identity.
   `Contents/Resources/assets`, else the source tree), and every runtime read (game
   data, images, tray icon, i18n) goes through it; `tools/package/package.py` builds a
   release directory with the assets and licence notices, and
-  `.github/workflows/release.yml` drafts a release from a `v*` tag. Still open: an
-  installer, code signing, and a macOS bundle (the packager writes a portable
+  `.github/workflows/release.yml` drafts a release from a `v*` tag.
+  **Windows installer done** (2026-11-25): `--installer` builds
+  `dist/wraex-<version>-<target>-setup.exe` from that directory with NSIS
+  (`tools/package/installer.nsi`, `makensis` on the same Linux runner), matching
+  upstream's electron-builder shape: assisted rather than one-click, per-user under
+  `%LOCALAPPDATA%\Programs\Wraex` with no elevation, a Start menu entry and an
+  optional desktop shortcut, and an HKCU Add/Remove Programs entry. Uninstalling
+  keeps `%APPDATA%\Wraex` (settings, log), and a setup started with `/S` installs
+  over the previous version in the directory its uninstall entry records, which is
+  where the self-updater (#3) hooks in. The zip remains the portable build.
+  Still open: code signing, and a macOS bundle (the packager writes a portable
   directory for now).
 - Per upstream or EE2 release: bump the `ref/` submodule → `golden regen` → diff
   fixtures → port changed logic → update UI where their UI changed → release.

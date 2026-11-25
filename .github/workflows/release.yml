@@ -4,7 +4,9 @@
 # packages as workflow artifacts, for testing). Publishing the draft is a human decision.
 #
 # Every job runs on Linux: the Windows package is cross-compiled with cargo-xwin
-# (MSVC target, Microsoft's CRT and SDK downloaded by xwin), as `devenv shell` does.
+# (MSVC target, Microsoft's CRT and SDK downloaded by xwin), as `devenv shell` does,
+# and its installer is built here too (NSIS via makensis, tools/package/installer.nsi),
+# so no Windows or macOS runner is needed for either Windows download.
 #
 # The setup steps mirror ci.yml: the references are submodules (they hold the game
 # data and images the package ships), and the Linux build needs the same dev
@@ -69,12 +71,14 @@ jobs:
 
       - run: rustup toolchain install
 
-      # cargo-xwin and the LLVM tools it drives (clang-cl, lld-link, llvm-lib).
-      - name: Windows cross-compiler
+      # cargo-xwin and the LLVM tools it drives (clang-cl, lld-link, llvm-lib), plus
+      # makensis (NSIS 3) and ImageMagick, which package.py uses to turn the package's
+      # PNG icon into the multi-size .ico the setup needs.
+      - name: Windows cross-compiler and installer tooling
         if: matrix.name == 'windows'
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends clang lld llvm
+          sudo apt-get install -y --no-install-recommends clang lld llvm nsis imagemagick
           cargo install --locked cargo-xwin
 
       - uses: Swatinem/rust-cache@v2
@@ -97,7 +101,9 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       # `cargo build --release` plus dist/wraex-<version>-<target>/ with assets/ and
-      # licences/, then the archive the release attaches.
+      # licences/, then the archive the release attaches. The Windows run also builds
+      # the assisted NSIS installer beside it (dist/*-setup.exe) from the same
+      # directory, so the setup and the zip always hold the same files.
       - name: Cross-compile for Windows
         if: matrix.name == 'windows'
         run: cargo xwin build --release --locked -p wraex-app --target ${{ matrix.target }}
@@ -106,14 +112,16 @@ jobs:
       - name: Package
         run: |
           binary=()
+          installer=()
           if [[ "${{ matrix.name }}" == windows ]]; then
             binary=(--no-build --binary "rust/target/${{ matrix.target }}/release/wraex.exe")
+            installer=(--installer)
           fi
           python3 tools/package/package.py \
             --version "${{ steps.version.outputs.version }}" \
             --target "${{ matrix.target }}" \
             --archive "${{ matrix.archive }}" \
-            "${binary[@]}"
+            "${binary[@]}" "${installer[@]}"
 
       # An AppImage is a directory image of the same layout: `usr/bin/` holds the
       # binary with `assets/` next to it, which is exactly what `wraex_core::assets`
@@ -154,6 +162,7 @@ jobs:
           name: wraex-${{ matrix.name }}
           path: |
             dist/*.zip
+            dist/*-setup.exe
             dist/*.tar.gz
             dist/*.AppImage
           if-no-files-found: error
@@ -198,12 +207,17 @@ jobs:
           body: |
             Wraex ${{ steps.version.outputs.version }}.
 
-            - **Windows**: unzip `wraex-*-x86_64-pc-windows-msvc.zip` anywhere and run
-              `wraex.exe`. `assets/` must stay next to the executable.
+            - **Windows**: run `wraex-*-x86_64-pc-windows-msvc-setup.exe`: an assisted
+              install for the current user, no administrator rights needed, with a Start
+              menu entry, an optional desktop shortcut and an uninstaller in Settings >
+              Apps. Your settings and log in `%APPDATA%\Wraex` survive uninstalling and
+              updating (and a newer setup run with `/S` installs over the old one in
+              place). Or unzip `wraex-*-x86_64-pc-windows-msvc.zip` anywhere and run
+              `wraex.exe`; `assets/` must stay next to the executable.
             - **Linux**: `tar xf wraex-*-x86_64-unknown-linux-gnu.tar.gz` and run
               `wraex-*/wraex`, or use the AppImage (it needs the distro's Vulkan,
               X11/Wayland and GTK 3; the tarball is for systems without them).
 
-            The layout inside the archive is the app plus `assets/` (game data, images,
-            tray icon) and `licences/`; set `WRAEX_ASSETS` to point at another assets
-            directory.
+            The layout inside the archive (and the installed directory) is the app plus
+            `assets/` (game data, images, tray icon) and `licences/`; set `WRAEX_ASSETS`
+            to point at another assets directory.

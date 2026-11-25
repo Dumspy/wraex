@@ -5,6 +5,7 @@ Usage (from the repository root, ideally inside `devenv shell`):
 
     python3 tools/package/package.py                          # host target, version from rust/Cargo.toml
     python3 tools/package/package.py --target x86_64-pc-windows-msvc --archive zip
+    python3 tools/package/package.py --target x86_64-pc-windows-msvc --archive zip --installer
     python3 tools/package/package.py --no-build --binary path/to/wraex --version 0.1.0
 
 The output is `dist/wraex-<version>-<target>/`, laid out the way
@@ -20,6 +21,12 @@ The output is `dist/wraex-<version>-<target>/`, laid out the way
 The app finds `assets/` next to its executable (or in a macOS bundle's
 `Contents/Resources/assets`), so the directory can be renamed or moved as a unit;
 `WRAEX_ASSETS` overrides it.
+
+`--installer` additionally builds `dist/wraex-<version>-<target>-setup.exe` from that
+directory for Windows targets: the assisted, per-user NSIS install in
+`tools/package/installer.nsi` (the same shape as upstream's electron-builder setup).
+It needs `makensis` (NSIS 3) and ImageMagick, which the release workflow installs;
+the packaged `assets/poe1/icon.png` is converted to the multi-size .ico NSIS takes.
 
 The references' generated `*.index.bin` files are *not* shipped: they exist for the
 TypeScript apps and for the Rust data layer's cross-check test
@@ -38,6 +45,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -56,6 +64,11 @@ GAMES = {
 
 # Editor sources that sit in the images directories but are not images the app loads.
 EDITOR_SOURCES = ("*.pdn", "*.psd", "*.xcf")
+
+# The sizes the installer's .ico gets. The packaged PNG is 78x78, so these are the
+# sizes that need no upscaling: Windows uses 16 for menus and the title bar, 32 for
+# Apps & Features, 48/64 for Explorer and the Start menu.
+ICON_SIZES = "64,48,32,24,16"
 
 
 def workspace_version() -> str:
@@ -229,10 +242,14 @@ def build(target: str | None, explicit_target: bool) -> Path:
     return binary_path(target, explicit_target)
 
 
+def binary_name(target: str) -> str:
+    """The packaged binary's name, which is also what the installer expects."""
+    return "wraex.exe" if "windows" in target else "wraex"
+
+
 def binary_path(target: str, explicit_target: bool) -> Path:
     directory = RUST / "target" / (target if explicit_target else "") / "release"
-    name = "wraex.exe" if "windows" in target else "wraex"
-    return directory / name
+    return directory / binary_name(target)
 
 
 def archive(stage: Path, kind: str) -> Path:
@@ -240,6 +257,74 @@ def archive(stage: Path, kind: str) -> Path:
     formats = {"zip": "zip", "tar.gz": "gztar"}
     created = shutil.make_archive(str(stage), formats[kind], root_dir=stage.parent, base_dir=stage.name)
     return Path(created)
+
+
+def image_magick() -> str:
+    """ImageMagick's command: `magick` (7) or `convert` (6)."""
+    for name in ("magick", "convert"):
+        found = shutil.which(name)
+        if found:
+            return found
+    raise SystemExit(
+        "building the installer needs ImageMagick for the .ico NSIS takes:\n"
+        "  Debian/Ubuntu: apt-get install imagemagick;  macOS: brew install imagemagick"
+    )
+
+
+def setup_icon(stage: Path, target: Path) -> None:
+    """The package's icon as the multi-size .ico the installer's Icon/MUI_ICON want."""
+    png = stage / "assets" / "poe1" / "icon.png"
+    if not png.is_file():
+        raise SystemExit(f"{png} is missing; the setup's icon comes from the packaged assets")
+    command = [
+        image_magick(),
+        str(png),
+        "-background",
+        "none",
+        "-define",
+        f"icon:auto-resize={ICON_SIZES}",
+        str(target),
+    ]
+    subprocess.run(command, check=True)
+    if not target.is_file():
+        raise SystemExit(f"{command[0]} did not write {target}")
+
+
+def windows_version(version: str) -> str:
+    """`0.1.0` -> `0.1.0.0`: the four numbers VIProductVersion takes."""
+    numbers = re.findall(r"\d+", re.split(r"[-+]", version, maxsplit=1)[0])[:4]
+    return ".".join((numbers + ["0"] * 4)[:4])
+
+
+def build_setup(stage: Path, version: str) -> Path:
+    """`<stage>-setup.exe`: the NSIS install of `stage` (tools/package/installer.nsi)."""
+    makensis = shutil.which("makensis")
+    if makensis is None:
+        raise SystemExit(
+            "--installer needs makensis (NSIS 3):\n"
+            "  Debian/Ubuntu: apt-get install nsis;  macOS: brew install makensis"
+        )
+    setup = stage.parent / f"{stage.name}-setup.exe"
+    setup.unlink(missing_ok=True)
+    with tempfile.TemporaryDirectory(prefix="wraex-setup-") as temporary:
+        icon = Path(temporary) / "wraex.ico"
+        setup_icon(stage, icon)
+        # `-D` with the raw value: makensis reads `/D` as a path on POSIX, and keeps
+        # quotes as characters. Paths may contain spaces.
+        command = [
+            makensis,
+            f"-DVERSION={version}",
+            f"-DVI_VERSION={windows_version(version)}",
+            f"-DSTAGE_DIR={stage}",
+            f"-DICON_FILE={icon}",
+            f"-DOUT_FILE={setup}",
+            str(ROOT / "tools" / "package" / "installer.nsi"),
+        ]
+        print("$", " ".join(command), flush=True)
+        subprocess.run(command, check=True)
+    if not setup.is_file():
+        raise SystemExit(f"makensis did not write {setup}")
+    return setup
 
 
 def main() -> None:
@@ -255,6 +340,11 @@ def main() -> None:
         help="game-data languages to ship: a comma-separated list or `all` (default: en)",
     )
     parser.add_argument("--archive", choices=["none", "zip", "tar.gz"], default="none", help="also write an archive")
+    parser.add_argument(
+        "--installer",
+        action="store_true",
+        help="also build <stage>-setup.exe with makensis (Windows targets; needs NSIS and ImageMagick)",
+    )
     args = parser.parse_args()
 
     version = args.version or workspace_version()
@@ -263,6 +353,9 @@ def main() -> None:
 
     if args.no_build and args.binary is None:
         parser.error("--no-build needs --binary")
+
+    if args.installer and "windows" not in target:
+        parser.error(f"--installer is for Windows targets, not {target} (there is no wraex.exe to install)")
 
     if args.binary is not None:
         binary = Path(args.binary).resolve()
@@ -280,14 +373,17 @@ def main() -> None:
     if stage.exists():
         shutil.rmtree(stage)
     stage.mkdir(parents=True)
-    shutil.copy2(binary, stage / binary.name)
+    # Named after the target, not after --binary: the installer and the layout
+    # `wraex_core::assets` documents expect `wraex.exe` beside `assets/`.
+    staged = stage / binary_name(target)
+    shutil.copy2(binary, staged)
 
     for game, public in GAMES.items():
         copy(game, public, stage, args.languages)
     write_licences(stage, version)
 
     print(f"\nstaged {stage}")
-    parts = [(stage / binary.name, "binary")]
+    parts = [(staged, "binary")]
     parts += [(stage / "assets" / game, f"{game} assets") for game in GAMES]
     parts += [(stage / "licences", "licences")]
     width = max(len(label) for _, label in parts)
@@ -302,6 +398,10 @@ def main() -> None:
     if args.archive != "none":
         created = archive(stage, args.archive)
         print(f"  archive           {human(created.stat().st_size):>10}  {created.name}")
+
+    if args.installer:
+        setup = build_setup(stage, version)
+        print(f"  setup             {human(setup.stat().st_size):>10}  {setup.name}")
 
 
 if __name__ == "__main__":

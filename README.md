@@ -72,13 +72,18 @@ unpacked:
 ```sh
 python3 tools/package/package.py                  # host target -> dist/wraex-<version>-<target>/
 python3 tools/package/package.py --archive zip    # plus dist/wraex-<version>-<target>.zip
+python3 tools/package/package.py --target x86_64-pc-windows-msvc --archive zip --installer
+                                                  # plus the NSIS setup exe (needs makensis, ImageMagick)
 ```
 
 The app looks for `assets/` next to its executable (or `Contents/Resources/assets` in
 a macOS bundle); `WRAEX_ASSETS` points it at another directory. `assets/<game>/` holds
 the reference's `data/<lang>/`, `images/` and `icon.png`, and `licences/` the notices.
-`.github/workflows/release.yml` runs the script on Windows and Linux for a `v*` tag
-and attaches the archives to a draft release.
+`--installer` builds the assisted per-user setup
+(`tools/package/installer.nsi`) from the packaged directory; it matches upstream's
+electron-builder installer. `.github/workflows/release.yml` runs the script on Linux
+for a `v*` tag (the Windows build is cross-compiled there) and attaches the archives
+and the setup exe to a draft release.
 
 ## Porting rules
 

@@ -28,9 +28,20 @@ What is implemented where:
    **Release** run on `development` under the repository's **Actions** tab (or the one linked
    to you), download the `wraex-windows` artifact at the bottom of the run's page, and unzip it.
    Inside is `wraex-<version>-x86_64-pc-windows-msvc.zip`: unzip that anywhere too. Keep
-   `wraex.exe` next to its `assets` folder.
-3. Run it: double-click `wraex.exe`, or from PowerShell in that folder
-   `.\wraex.exe --game poe1` (or `--game poe2`).
+   `wraex.exe` next to its `assets` folder. That stays the main test path: it is the same
+   files however they are started, and it needs no install. The same artifact also holds
+   `wraex-<version>-x86_64-pc-windows-msvc-setup.exe`, the installer, for testing the
+   installed copy instead or as well. On Windows, for a setup run:
+
+   - it should install into `%LOCALAPPDATA%\Programs\Wraex` (or the folder you pick), with
+     no administrator prompt, a Start menu entry and, if ticked, a desktop shortcut;
+   - **Settings > Apps** should list "Wraex" with the version, the icon and an uninstall
+     entry; uninstalling it should ask you to quit Wraex while it is still running, and
+     leave `%APPDATA%\Wraex` (settings, log) alone;
+   - running the setup again with `/S` (what the future self-updater will do) should
+     install over the same folder without any window, and keep working after a restart.
+3. Run it: double-click `wraex.exe` (or use the Start menu entry, if you ran the setup
+   instead), or from PowerShell in that folder `.\wraex.exe --game poe1` (or `--game poe2`).
 
    The log is written to `%APPDATA%\Wraex\Path of Exile\wraex.log` (PoE2:
    `%APPDATA%\Wraex\Path of Exile 2\wraex.log`), each line with the seconds since start;
