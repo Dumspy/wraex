@@ -158,15 +158,11 @@ fn toggling_a_setting_changes_the_working_copy() {
 #[test]
 fn radios_and_fields_write_the_config() {
     let mut runtime = scene(GameId::Poe1, Page::General);
-    // The overlay background's Transparent radio, and the field that follows it.
-    click(&mut runtime, "general-overlay-background-none");
-    assert_eq!(
-        runtime.state.settings.as_ref().unwrap().string(Field::Root("overlayBackground")),
-        "rgba(255, 255, 255, 0)"
-    );
-    assert_eq!(text_of(&runtime, "general-overlay-background-input").as_deref(), Some("rgba(255, 255, 255, 0)"));
-    // The Transparent state hides the "focuses the game" checkbox.
-    assert!(runtime.find("general-overlay-background-close").is_none());
+    // No overlay background colour or Transparent radio (Wraex draws no dim); the
+    // background-click checkbox is always there.
+    assert!(runtime.find("general-overlay-background-input").is_none());
+    assert!(runtime.find("general-overlay-background-none").is_none());
+    assert!(runtime.find("general-overlay-background-close").is_some());
 
     click(&mut runtime, "general-language-select");
     assert_eq!(runtime.state.settings.as_ref().unwrap().select_open, Some("general-language-select"));

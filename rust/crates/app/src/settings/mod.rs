@@ -367,10 +367,6 @@ impl Settings {
                 edits.insert("general-font-size-input".to_owned(), TextEdit::new(number(Field::Root("fontSize"))));
                 edits.insert("general-client-log".to_owned(), TextEdit::new(text(Field::Root("clientLog"))));
                 edits.insert("general-game-config".to_owned(), TextEdit::new(text(Field::Root("gameConfig"))));
-                edits.insert(
-                    "general-overlay-background-input".to_owned(),
-                    TextEdit::new(text(Field::Root("overlayBackground"))),
-                );
                 edits.insert("general-window-title-input".to_owned(), TextEdit::new(text(Field::Root("windowTitle"))));
             }
             Page::PriceCheck => {

@@ -25,9 +25,6 @@ const LANGUAGES_POE2: [(&str, &str); 9] = [
     ("fr", "Français"),
 ];
 
-/// `'rgba(255, 255, 255, 0)'`: the Transparent radio's value.
-const TRANSPARENT: &str = "rgba(255, 255, 255, 0)";
-
 pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     let game = settings.game;
     let language = settings.string(Field::Root("language"));
@@ -202,50 +199,16 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
         row().key("general-rule").h(1.0).mx(theme::rem(2.0)).mb(theme::rem(1.0)).fill(theme::gray(700)).border_layout(),
     );
 
-    // The clickable-background colour, with its Transparent radio.
-    let background = settings.string(Field::Root("overlayBackground"));
-    page = page.child(
-        col()
-            .key("general-overlay-background")
-            .mb(theme::rem(0.5))
-            .child(label("general-overlay-background-label", &tr(settings, "settings.overlay_bg")))
-            .child(
-                row()
-                    .gap(theme::rem(1.0))
-                    .items_center()
-                    .flex_wrap()
-                    .child(text_field(
-                        settings,
-                        "general-overlay-background-input",
-                        Field::Root("overlayBackground"),
-                        Kind::Text,
-                        Some(theme::rem(12.0)),
-                        "",
-                        project,
-                    ))
-                    .child(ui::radio(
-                        "general-overlay-background-none",
-                        &tr(settings, "settings.overlay_bg_none"),
-                        background == TRANSPARENT,
-                        false,
-                        move |s: &mut S| {
-                            project(s).set_string(Field::Root("overlayBackground"), TRANSPARENT);
-                            // The text field's value is the working copy's string.
-                            project(s).edit_mut("general-overlay-background-input").replace_text(TRANSPARENT);
-                        },
-                    )),
-            ),
-    );
-
-    if background != TRANSPARENT {
-        page = page.child(row().key("general-overlay-close-row").mb(theme::rem(0.5)).child(checkbox(
-            settings,
-            "general-overlay-background-close",
-            Field::Root("overlayBackgroundClose"),
-            &tr(settings, "settings.overlay_bg_focus_game"),
-            project,
-        )));
-    }
+    // Upstream's "Background when the overlay is clickable" colour and its Transparent radio
+    // are left out: Wraex draws no overlay dim, so the colour had no effect (and the radio
+    // could not be turned off again). `overlayBackground` stays in the config as read.
+    page = page.child(row().key("general-overlay-close-row").mb(theme::rem(0.5)).child(checkbox(
+        settings,
+        "general-overlay-background-close",
+        Field::Root("overlayBackgroundClose"),
+        &tr(settings, "settings.overlay_bg_focus_game"),
+        project,
+    )));
 
     page = page.child(row().key("general-attach-notification-row").mb(theme::rem(1.0)).child(checkbox(
         settings,
