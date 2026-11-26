@@ -1509,3 +1509,41 @@ fn warm_overviews_reach_the_first_automatic_search() {
     check.start_search();
     assert_eq!(refreshed, check.trade.rows.iter().map(|row| row.normalized_price.clone()).collect::<Vec<_>>());
 }
+
+#[test]
+fn picked_and_copied_items_use_the_same_league_and_trade_link() {
+    let mut app = App::with_mode("", Mode::Replay);
+    let league = "Covens";
+    app.open_price_check_for(
+        GameId::Poe1,
+        league,
+        &serde_json::Value::Null,
+        &crate::corpus("adv-rare-ring-mirrored-catalyst"),
+        None,
+        None,
+    );
+    let link = app.price_check.trade_link().unwrap();
+    let item = app.price_check.item().unwrap().clone();
+    app.open_picked_item(crate::widgets::item_search::Picked::Poe1(Box::new(item)));
+    assert_eq!(app.price_check.league, league);
+    assert_eq!(app.price_check.item_filters().unwrap().trade.league, league);
+    assert!(link.contains(league));
+    assert_eq!(app.price_check.trade_link().unwrap(), link);
+    app.open_price_check_for(
+        GameId::Poe2,
+        league,
+        &serde_json::Value::Null,
+        &crate::corpus_poe2("ee2-rare-item"),
+        None,
+        None,
+    );
+    let check = app.poe2.as_ref().unwrap();
+    let link = check.trade_link().unwrap();
+    let item = check.item().unwrap().clone();
+    app.open_picked_item(crate::widgets::item_search::Picked::Poe2(Box::new(item)));
+    let check = app.poe2.as_ref().unwrap();
+    assert_eq!(check.title(), league);
+    assert_eq!(check.filters().trade.league, league);
+    assert!(link.contains(league));
+    assert_eq!(check.trade_link().unwrap(), link);
+}
