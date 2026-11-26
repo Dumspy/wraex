@@ -17,11 +17,8 @@ path = "src/main.rs"
 
 [dependencies]
 rune = { workspace = true }
-# The live shell's OS halves: the clipboard behind `wraex_platform::clipboard::Clipboard`
-# (Rune's own clipboard API is asynchronous and only writes; the platform module's poll
-# loop is a blocking read) and PNG decoding for the tray icon.
+# The platform poll loop reads the clipboard synchronously.
 arboard = { version = "3.7", default-features = false }
-image = { version = "0.25", default-features = false, features = ["png"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha1 = { workspace = true }
@@ -33,6 +30,9 @@ wraex-poe2 = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 dirs = "7"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+image = { version = "0.25", default-features = false }
 
 [lints]
 workspace = true
