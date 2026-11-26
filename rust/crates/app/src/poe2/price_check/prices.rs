@@ -67,5 +67,22 @@ mod tests {
         assert!(!poe1.initial_loading());
         assert_eq!(poe1.xchg_rate(), None);
         assert!(fetch(&league).unwrap().is_empty());
+        let unlisted = Leagues::default().selected(Some("Standard"), "pc-ggg").unwrap();
+        poe1.queue_selected(Some(&unlisted), true);
+        assert_eq!(poe1.xchg_rate(), None, "a Standard recording exists, but an unlisted league skips it");
+        assert!(fetch(&unlisted).unwrap().is_empty());
+
+        let check = crate::poe1::price_check::PriceCheck::with_mode_league(
+            &crate::corpus("adv-rare-ring-mirrored-catalyst"),
+            Mode::Replay,
+            &league.id,
+        );
+        assert!(check.trade_link().unwrap().contains(&league.id));
+        let check = crate::poe2::price_check::PriceCheck::with_mode_league(
+            &crate::corpus_poe2("ee2-rare-item"),
+            Mode::Replay,
+            &league.id,
+        );
+        assert!(check.trade_link().unwrap().contains(&league.id));
     }
 }

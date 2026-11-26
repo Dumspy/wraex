@@ -369,6 +369,14 @@ impl App {
         // The overlay draws every widget whose `wmWants` is `show` at once: a timer it starts
         // and the item search's prices have to exist for each of them, not just the focused one.
         let prepared = self.widgets.as_mut().is_some_and(|overlay| overlay.ensure_states(self.mode));
+        let market_updated = if let Some(live) = &self.live
+            && let Some(search) = self.widgets.as_mut().and_then(|overlay| overlay.item_search.as_mut())
+            && search.game == GameId::Poe1
+        {
+            search.poll_market(live.market())
+        } else {
+            false
+        };
         // The item search's field shows the query its results came from: Rune's write-back of a
         // blurred field's model can land empty, and the view rebuilds the field from it.
         let repaired = self
@@ -385,7 +393,7 @@ impl App {
             }
             None => false,
         };
-        poe1 || poe2 || settings || widgets || opened || repaired || prepared
+        poe1 || poe2 || settings || widgets || opened || repaired || prepared || market_updated
     }
 
     /// `MAIN->CLIENT::item-text` with an item the parser never saw: the item search's
