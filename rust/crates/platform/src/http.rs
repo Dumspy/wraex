@@ -163,6 +163,9 @@ impl HttpTransport {
     /// (`None`: memory only).
     pub fn new(cookie_file: Option<PathBuf>) -> Self {
         let config = Agent::config_builder()
+            // All endpoints are addressed directly. Following Location would bypass
+            // our per-request host and cookie checks. Return the original response.
+            .max_redirects(0)
             .http_status_as_error(false)
             .user_agent(USER_AGENT)
             .timeout_global(Some(Duration::from_secs(30)))
@@ -305,6 +308,33 @@ mod tests {
             HttpTransport::default().get_bytes("https://example.com/x.png").unwrap_err(),
             "host not allowed: example.com"
         );
+    }
+
+    #[test]
+    fn redirects_stop_at_the_responding_endpoint() {
+        use std::io::{BufRead, Write};
+        use std::net::TcpListener;
+        for location in ["https://poe.ninja/next", "https://example.com/next"] {
+            let server = TcpListener::bind("127.0.0.1:0").unwrap();
+            let address = server.local_addr().unwrap();
+            let responder = std::thread::spawn(move || {
+                let (mut stream, _) = server.accept().unwrap();
+                for line in std::io::BufReader::new(&stream).lines() {
+                    if line.unwrap().is_empty() {
+                        break;
+                    }
+                }
+                write!(stream, "HTTP/1.1 302 Found\r\nLocation: {location}\r\nSet-Cookie: source=1; Secure\r\nContent-Length: 0\r\n\r\n").unwrap();
+            });
+            let transport = HttpTransport::default();
+            let response = transport.agent.get(format!("http://{address}/original/item")).call().unwrap();
+            assert_eq!(response.status().as_u16(), 302);
+            transport.remember_cookies("https://web.poecdn.com/original/item", set_cookies(response.headers()));
+            assert_eq!(transport.cookies.header("https://web.poecdn.com/original/other").as_deref(), Some("source=1"));
+            assert!(transport.cookies.header("https://web.poecdn.com/next").is_none());
+            assert!(transport.cookies.header(location).is_none());
+            responder.join().unwrap();
+        }
     }
 
     /// Cloudflare's challenge cookie carries `Partitioned`, which upstream strips before
