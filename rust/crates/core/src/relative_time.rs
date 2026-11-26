@@ -53,24 +53,22 @@ fn plus_months(ms: EpochMillis, months: i64) -> EpochMillis {
 /// Parses an ISO 8601 timestamp (`2024-11-21T13:02:11Z`, with optional
 /// fraction and `±HH:MM` offset; no offset is read as UTC).
 pub fn parse_iso(text: &str) -> Option<EpochMillis> {
-    let (date, rest) = text.split_once('T')?;
-    let mut d = date.split('-');
-    let (y, m, day) = (d.next()?.parse().ok()?, d.next()?.parse().ok()?, d.next()?.parse().ok()?);
-    let (time, offset_minutes) = if let Some(t) = rest.strip_suffix('Z') {
-        (t, 0)
-    } else if let Some(i) = rest.rfind(['+', '-']) {
-        let (t, off) = rest.split_at(i);
-        let sign = if off.starts_with('-') { -1 } else { 1 };
-        let (oh, om) = off[1..].split_once(':').unwrap_or((&off[1..3.min(off.len())], "0"));
-        (t, sign * (oh.parse::<i64>().ok()? * 60 + om.parse::<i64>().ok()?))
-    } else {
-        (rest, 0)
+    use time::format_description::well_known::Iso8601;
+    use time::{PrimitiveDateTime, UtcOffset};
+
+    // Luxon allows a compact offset on an extended calendar date. Parsing the
+    // two pieces separately lets each use its own ISO representation.
+    let (_, clock) = text.split_once('T')?;
+    let zone = clock.find(['+', '-', 'Z']).map(|at| text.len() - clock.len() + at);
+    let (local, offset) = match zone {
+        Some(at) => {
+            let (local, zone) = text.split_at(at);
+            (local, UtcOffset::parse(zone, &Iso8601::DEFAULT).ok()?)
+        }
+        None => (text, UtcOffset::UTC),
     };
-    let mut t = time.split(':');
-    let (h, min): (i64, i64) = (t.next()?.parse().ok()?, t.next()?.parse().ok()?);
-    let sec: f64 = t.next().unwrap_or("0").parse().ok()?;
-    let ms = days_from_civil(y, m, day) * DAY + (h * 3600 + min * 60) * 1000 + (sec * 1000.0).round() as i64;
-    Some(ms - offset_minutes * 60_000)
+    let instant = PrimitiveDateTime::parse(local, &Iso8601::DEFAULT).ok()?.assume_offset(offset);
+    instant.unix_timestamp_nanos().div_euclid(1_000_000).try_into().ok()
 }
 
 /// Whole calendar steps of `months` from `start` to `end` (`end >= start`).
@@ -149,7 +147,12 @@ mod tests {
         assert_eq!(parse_iso("1970-01-01T00:00:00Z"), Some(0));
         assert_eq!(parse_iso("2024-02-29T12:00:00.5Z"), Some(1_709_208_000_500));
         assert_eq!(parse_iso("2024-02-29T13:00:00+01:00"), Some(1_709_208_000_000));
-        assert_eq!(parse_iso("nonsense"), None);
+        assert_eq!(parse_iso("1970-01-01T03:00:00+0130"), Some(5_400_000));
+        assert_eq!(parse_iso("1970-01-01T03:00:00+01:30"), Some(5_400_000));
+        assert_eq!(parse_iso("1970-01-01T00:00"), Some(0));
+        for invalid in ["2023-02-29T00:00:00Z", "2024-02-29T28:00:00Z", "1970-01-01T00:60:00Z", "nonsense"] {
+            assert_eq!(parse_iso(invalid), None);
+        }
     }
 
     #[test]
