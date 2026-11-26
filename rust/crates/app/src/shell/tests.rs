@@ -1442,12 +1442,26 @@ fn hotkeys_use_saved_price_check_settings_for_both_games() {
     let text = crate::corpus("adv-rare-ring-mirrored-catalyst");
     app.open_price_check_for(GameId::Poe1, "Standard", &config, &text, None, None);
     assert_eq!(app.price_check.item_filters().unwrap().trade.collapse_listings, "app");
+    let rolls = serde_json::to_value(app.price_check.item_stats()).unwrap();
+    assert_eq!(rolls[0]["roll"]["min"].as_f64(), Some(94.));
     app.price_check.start_search();
     assert_eq!(crate::trade::lock(&app.price_check.trade.client).latency_seconds, 4.5);
     let text = crate::corpus_poe2("ee2-rare-item");
     app.open_price_check_for(GameId::Poe2, "Standard", &config, &text, None, None);
     let check = app.poe2.as_mut().unwrap();
     assert_eq!(check.filters().trade.collapse_listings, "app");
+    assert_eq!(check.item_stats()[0].roll.as_ref().unwrap().min, Some(173.));
     check.start_search();
     assert_eq!(crate::trade::lock(&check.trade.client).latency_seconds, 4.5);
+
+    let stack = crate::corpus("currency-divine-orb");
+    app.open_price_check_for(GameId::Poe1, "Standard", &config, &stack, None, None);
+    let check = &app.price_check;
+    let bulk = wraex_poe1::trade::create_bulk_request(check.item_filters().unwrap(), check.item().unwrap(), vec![]);
+    assert_eq!(bulk.query.minimum, Some(3.));
+
+    app.open_price_check_for(GameId::Poe2, "Standard", &config, &stack, None, None);
+    let check = app.poe2.as_ref().unwrap();
+    let bulk = wraex_poe2::trade::create_bulk_request(check.filters(), check.item().unwrap(), vec![]);
+    assert_eq!(bulk.query.minimum, Some(3.));
 }
