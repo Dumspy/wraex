@@ -36,7 +36,7 @@ use crate::trade::{self, Mode, Shared};
 #[derive(Debug, Clone)]
 pub enum Query {
     /// `requestTradeResultList` + `requestResults`.
-    Trade { league: String, request: Result<TradeRequest, String>, prices: Prices },
+    Trade { league: String, request: Result<Box<TradeRequest>, String>, prices: Prices },
     /// `execBulkSearch` with the currencies the item trades for.
     Bulk { league: String, request: BulkRequest },
     /// `TradeBulk.vue`'s lazy load of a currency the optimistic search left out.
@@ -339,8 +339,8 @@ fn run(mode: Mode, client: &Shared, query: &Query, latency: f64) -> Result<Outco
     let now = client.clock.now() as EpochMillis;
     match query {
         Query::Trade { league, request, prices } => {
-            let request = request.clone()?;
-            let list = client.search(&request, league).map_err(|error| error.to_string())?;
+            let request = request.as_ref().map_err(Clone::clone)?;
+            let list = client.search(request, league).map_err(|error| error.to_string())?;
             let rows = fetch_rows(&mut client, data, prices, &list, now)?;
             Ok(Outcome::Trade { list, rows })
         }
@@ -530,7 +530,11 @@ mod tests {
         .expect("a trade request");
         let client = crate::trade::shared_site(Mode::Replay, "www.pathofexile.com", crate::trade::Site::Poe2, 2.0);
         let mut trade = Trade::new(Mode::Live, client);
-        trade.begin(Query::Trade { league: "Standard".into(), request: Ok(request), prices: check.prices.clone() });
+        trade.begin(Query::Trade {
+            league: "Standard".into(),
+            request: Ok(Box::new(request)),
+            prices: check.prices.clone(),
+        });
 
         let mut landed = false;
         for _ in 0..300 {

@@ -510,7 +510,7 @@ impl PriceCheck {
                 self.trade.lazy_request = None;
                 let request =
                     create_trade_request(data(self.mode), &filters, &stats, &item).map_err(|error| error.to_string());
-                trade::Query::Trade { league, request, prices: self.prices.clone() }
+                trade::Query::Trade { league, request: request.map(Box::new), prices: self.prices.clone() }
             }
             Api::Bulk => {
                 // `CheckedItem.vue` forces online listings before a bulk search.
