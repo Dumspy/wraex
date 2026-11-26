@@ -1116,11 +1116,28 @@ fn price_check_hotkey(app: &App) -> ShortcutAction {
         .expect("the config's price-check hotkey")
 }
 
+/// The config's chat-command hotkey that types `text` (`paste-in-chat`): `/hideout` on F5.
+fn chat_hotkey(app: &App, text: &str) -> ShortcutAction {
+    let live = app.live.as_ref().expect("the live shell");
+    live.shortcuts
+        .actions()
+        .iter()
+        .find(|entry| matches!(&entry.action, Action::PasteInChat { text: command, .. } if command.as_str() == text))
+        .cloned()
+        .unwrap_or_else(|| panic!("no `{text}` chat hotkey"))
+}
+
 /// A hotkey press as Rune delivers it: the handler `Live::register_hotkeys` installs, which is
 /// `App::on_hotkey` around `Live::press`.
 fn press(app: &mut App, of: fn(&App) -> ShortcutAction) {
     let entry = of(app);
-    app.on_hotkey(&entry);
+    press_entry(app, &entry);
+}
+
+/// A press of one entry already resolved, with the `Tx` the shortcut handler gets.
+fn press_entry(app: &mut App, entry: &ShortcutAction) {
+    let mut tx = Tx::default();
+    app.on_hotkey(entry, &mut tx);
 }
 
 /// The OS window hook's report, fed through the overlay controller as `Live::poll_game_window`
@@ -1151,17 +1168,19 @@ struct TestClipboard {
     text: String,
     /// What the game writes over it when the app's copy key clears it.
     copies: Option<String>,
+    /// Everything the app wrote, shared so a test keeps it after the shell takes the clipboard.
+    written: std::sync::Arc<std::sync::Mutex<Vec<String>>>,
 }
 
 impl TestClipboard {
     /// The item already on the clipboard: what the no-synthesis path prices.
     fn holding(item: &str) -> Self {
-        Self { text: item.to_owned(), copies: None }
+        Self { text: item.to_owned(), copies: None, written: Default::default() }
     }
 
     /// An empty clipboard the game fills with `item` once the copy key clears it.
     fn copy_of(item: &str) -> Self {
-        Self { text: String::new(), copies: Some(item.to_owned()) }
+        Self { text: String::new(), copies: Some(item.to_owned()), written: Default::default() }
     }
 }
 
@@ -1176,6 +1195,7 @@ impl Clipboard for TestClipboard {
 
     fn write_text(&mut self, text: &str) {
         self.text = text.to_owned();
+        self.written.lock().expect("the write log").push(text.to_owned());
     }
 }
 
@@ -1299,6 +1319,48 @@ fn the_price_check_hotkey_draws_its_card_until_the_game_takes_the_focus() {
     assert!(!app.price_check.open, "`hide-on-blur`");
     assert!(drawn(&app).is_empty(), "nothing is drawn any more: {:?}", drawn(&app));
     assert!(!window_visible(&app), "the window is hidden");
+}
+
+/// `/hideout` twice through the real path: the first press writes the command and schedules the
+/// clipboard restore (`RESTORE_AFTER`); the shell's poll has to run that timer, or the restore
+/// stays pending and every later chat command is silently dropped by `restore_shortly`'s
+/// throttle. With `restoreClipboard` on, the user's text comes back in between.
+#[test]
+fn a_chat_command_works_again_after_its_clipboard_restore() {
+    let written = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let dir = live_dir("chat-restore");
+    let mut startup = config::load(GameId::Poe1, &dir);
+    startup.config["restoreClipboard"] = serde_json::json!(true);
+    let clipboard =
+        TestClipboard { text: "a password".to_owned(), written: written.clone(), ..TestClipboard::default() };
+    let mut app = App::live(Live::for_tests(startup, Box::new(clipboard)));
+    app.mode = Mode::Replay;
+
+    let entry = chat_hotkey(&app, "/hideout");
+    press_entry(&mut app, &entry);
+    assert_eq!(*written.lock().unwrap(), vec!["/hideout"], "the first press types the command");
+    assert!(
+        app.live.as_mut().expect("the live shell").shortcuts.clipboard_mut().pending_restore_deadline().is_some(),
+        "the restore is scheduled"
+    );
+
+    // Before the deadline the throttle still holds, as upstream's `setTimeout` does.
+    poll(&mut app);
+    assert_eq!(*written.lock().unwrap(), vec!["/hideout"], "the restore is not due yet");
+
+    // The press (and the poll) armed a wake at the deadline; the live clock has passed it, so
+    // the next poll applies the restore and puts the previous clipboard text back.
+    std::thread::sleep(std::time::Duration::from_millis(wraex_platform::clipboard::RESTORE_AFTER + 20));
+    poll(&mut app);
+    assert_eq!(*written.lock().unwrap(), vec!["/hideout", "a password"], "`restoreClipboard` puts the text back");
+    assert!(
+        app.live.as_mut().expect("the live shell").shortcuts.clipboard_mut().pending_restore_deadline().is_none(),
+        "the restore ran"
+    );
+
+    // The bug: with the restore left pending, this second press was dropped.
+    press_entry(&mut app, &entry);
+    assert_eq!(*written.lock().unwrap(), vec!["/hideout", "a password", "/hideout"], "the second press goes through");
 }
 
 /// `Widget.vue`'s move handles through the real path: a drag of the stopwatch's centre handle

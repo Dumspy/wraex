@@ -213,7 +213,14 @@ impl HostClipboard {
         write: impl FnOnce(&mut dyn Clipboard) -> T,
     ) -> Option<T> {
         if !self.is_restored {
-            return None;
+            // Upstream's throttle: a press within `RESTORE_AFTER` of the last one is dropped.
+            // If the restore is already due, its timer has not run (the app was busy or
+            // woken late), so apply it now rather than let it swallow this press for good.
+            let due = self.pending_restore.as_ref().map_or(0, |pending| pending.due);
+            if clock.now() < due {
+                return None;
+            }
+            self.apply_pending_restore(clipboard, clock);
         }
 
         self.is_restored = false;
@@ -453,6 +460,24 @@ mod tests {
         assert!(host.apply_pending_restore(&mut clipboard, &clock));
         assert_eq!(host.restore_shortly(&mut clipboard, &clock, |cb| cb.write_text("third")), Some(()));
         assert_eq!(clipboard.written(), vec!["first", "third"], "restoreClipboard is off");
+    }
+
+    #[test]
+    fn an_overdue_restore_does_not_swallow_the_next_call() {
+        let mut host = HostClipboard::new(GameId::Poe1, Os::Windows);
+        host.update_options(true);
+        let mut clipboard = FakeClipboard::scripted(&["a password"]);
+        let clock = FakeClock::default();
+
+        assert_eq!(host.restore_shortly(&mut clipboard, &clock, |cb| cb.write_text("/hideout")), Some(()));
+        assert_eq!(clipboard.written(), vec!["/hideout"]);
+
+        // The timer never ran (a blocked or woken-late app): the restore is due, so the next
+        // press applies it first and still goes through, rather than being throttled forever.
+        clock.advance(RESTORE_AFTER);
+        assert_eq!(host.restore_shortly(&mut clipboard, &clock, |cb| cb.write_text("/exit")), Some(()));
+        assert_eq!(clipboard.written(), vec!["/hideout", "a password", "/exit"]);
+        assert_eq!(host.pending_restore_deadline(), Some(RESTORE_AFTER * 2), "the new press has its own restore");
     }
 
     #[test]

@@ -865,7 +865,7 @@ impl Live {
                     continue;
                 }
             };
-            let handler = move |app: &mut App, _tx: &mut Tx| app.on_hotkey(&entry);
+            let handler = move |app: &mut App, tx: &mut Tx| app.on_hotkey(&entry, tx);
             match self.handle.register_shortcut(shortcut.clone(), handler) {
                 Ok(id) => self.registered.push(id),
                 Err(error) => {
@@ -990,7 +990,7 @@ impl Live {
 
     /// A press of one configured hotkey: upstream's `Shortcuts.press`, then whatever the
     /// press produced.
-    fn press(&mut self, app: &mut App, entry: &ShortcutAction) {
+    fn press(&mut self, app: &mut App, entry: &ShortcutAction, tx: &mut Tx) {
         let cursor = cursor_point();
 
         // Without key synthesis the game's copy key cannot be pressed, so a copy action reads
@@ -1009,6 +1009,7 @@ impl Live {
                 self.deliver(app, dispatch::shortcut_requests(events));
                 self.after_press(app, entry, cursor);
                 self.sync_registration();
+                self.poll_clipboard_restore(tx);
                 return;
             }
             return self.warn(format!(
@@ -1038,6 +1039,23 @@ impl Live {
         self.after_press(app, entry, cursor);
         // `focus-overlay` may have taken the focus from the game.
         self.sync_registration();
+        self.poll_clipboard_restore(tx);
+    }
+
+    /// Upstream's `setTimeout(RESTORE_AFTER)`: the clipboard restore a chat command or a stash
+    /// search scheduled must run, or [`crate::shell::clipboard`]'s throttle swallows every
+    /// later one. Applying it here also puts the user's clipboard back when `restoreClipboard`
+    /// is on; while it is still pending, the poll is kept awake until it is due, so an idle app
+    /// does not leave it set.
+    fn poll_clipboard_restore(&mut self, tx: &mut Tx) {
+        let now = LiveClock.now();
+        let Live { shortcuts, clipboard, .. } = self;
+        let Some(due) = shortcuts.clipboard_mut().pending_restore_deadline() else { return };
+        if now >= due {
+            shortcuts.clipboard_mut().apply_pending_restore(&mut **clipboard, &LiveClock);
+        } else {
+            tx.wake_after(std::time::Duration::from_millis(due - now));
+        }
     }
 
     /// What a press leaves behind for the window: where an opened widget goes and how it is
@@ -1400,6 +1418,9 @@ impl Live {
 
         self.drain_overlay_events(app);
         self.sync_window(app, tx);
+        // After the actions above, so a stash-search button schedules its restore's wake in the
+        // same poll; a hotkey press has already done the same from `press`.
+        self.poll_clipboard_restore(tx);
         changed
     }
 }
@@ -1753,8 +1774,8 @@ impl App {
     }
 
     /// A global hotkey fired: one press, one action, as upstream's `Shortcuts.press`.
-    fn on_hotkey(&mut self, entry: &ShortcutAction) {
-        self.with_live(|app, live| live.press(app, entry));
+    fn on_hotkey(&mut self, entry: &ShortcutAction, tx: &mut Tx) {
+        self.with_live(|app, live| live.press(app, entry, tx));
     }
 
     /// `AppSpec::on_focus`: whether the overlay window itself has the focus. The library's
