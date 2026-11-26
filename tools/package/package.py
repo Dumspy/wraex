@@ -303,7 +303,7 @@ def write_uninstall_list(stage: Path, output: Path) -> None:
     commands = []
     for path in reversed(paths):
         # Reject NSIS wildcards and command delimiters even on a non-Windows build host.
-        if any(c in str(path) for c in '*?"\r\n\\'):
+        if any(c in path.as_posix() for c in '*?"\r\n\\'):
             raise ValueError(f"unsupported Windows package path: {path}")
         name = str(path.as_posix()).replace("/", chr(92)).replace("$", "$$")
         command = "RMDir" if (stage / path).is_dir() else "Delete"
