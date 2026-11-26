@@ -821,7 +821,7 @@ impl Live {
         match Tray::new(VERSION, &overlay_key, rgba, width, height) {
             Ok(tray) => {
                 self.tray = Some(tray);
-                wraex_platform::log!("wraex: tray icon shown ({}x{width})", height);
+                wraex_platform::log!("wraex: tray icon created ({}x{width})", height);
                 // `AppTray.ts`'s click handler: the entries report themselves; the app drains
                 // them in `poll`, which this callback wakes.
                 let pending = self.tray_actions.clone();

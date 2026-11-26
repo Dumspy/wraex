@@ -6,8 +6,7 @@
 //! app's job, so this module knows nothing about dialogs or paths.
 //!
 //! On macOS the tray must be created on the main thread with an event loop
-//! already running. On Linux `tray-icon`'s default backend needs GTK 3 and
-//! `libayatana-appindicator3` at runtime.
+//! already running. On Linux the ksni backend serves the menu on the session bus.
 
 use tray_icon::menu::{IsMenuItem, Menu, MenuEvent, MenuItem, PredefinedMenuItem};
 use tray_icon::{Icon, TrayIcon, TrayIconBuilder};
