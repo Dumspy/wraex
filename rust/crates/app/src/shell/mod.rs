@@ -865,7 +865,7 @@ impl Live {
                     continue;
                 }
             };
-            let handler = move |app: &mut App, _tx: &mut Tx| app.on_hotkey(&entry);
+            let handler = move |app: &mut App, tx: &mut Tx| app.on_hotkey(&entry, tx.clock());
             match self.handle.register_shortcut(shortcut.clone(), handler) {
                 Ok(id) => self.registered.push(id),
                 Err(error) => {
@@ -990,7 +990,7 @@ impl Live {
 
     /// A press of one configured hotkey: upstream's `Shortcuts.press`, then whatever the
     /// press produced.
-    fn press(&mut self, app: &mut App, entry: &ShortcutAction) {
+    fn press(&mut self, app: &mut App, entry: &ShortcutAction, elapsed_ms: u64) {
         let cursor = cursor_point();
 
         // Without key synthesis the game's copy key cannot be pressed, so a copy action reads
@@ -1006,7 +1006,7 @@ impl Live {
                     position: cursor,
                     focus_overlay: *focus_overlay,
                 })];
-                self.deliver(app, dispatch::shortcut_requests(events));
+                self.deliver(app, dispatch::shortcut_requests(events, elapsed_ms));
                 self.after_press(app, entry, cursor);
                 self.sync_registration();
                 return;
@@ -1034,7 +1034,7 @@ impl Live {
                 },
             )
         };
-        self.deliver(app, dispatch::shortcut_requests(events));
+        self.deliver(app, dispatch::shortcut_requests(events, elapsed_ms));
         self.after_press(app, entry, cursor);
         // `focus-overlay` may have taken the focus from the game.
         self.sync_registration();
@@ -1098,7 +1098,7 @@ impl Live {
             dispatch::Request::StashSearch(text) => self.stash_search(&text),
             dispatch::Request::PriceCheck(text) => app.open_price_check(self, &text),
             dispatch::Request::ItemCheck { text, action } => app.open_item_check(self, &text, action),
-            dispatch::Request::WidgetAction(target) => app.widget_action(self, &target),
+            dispatch::Request::WidgetAction { target, elapsed_ms } => app.widget_action(self, &target, elapsed_ms),
             dispatch::Request::ShowWidget(wm_id) => app.open_widget(self, wm_id),
             dispatch::Request::Unsupported(what) => self.warn(format!("not wired yet: {what}")),
         }
@@ -1753,8 +1753,8 @@ impl App {
     }
 
     /// A global hotkey fired: one press, one action, as upstream's `Shortcuts.press`.
-    fn on_hotkey(&mut self, entry: &ShortcutAction) {
-        self.with_live(|app, live| live.press(app, entry));
+    fn on_hotkey(&mut self, entry: &ShortcutAction, clock: f64) {
+        self.with_live(|app, live| live.press(app, entry, (clock * 1000.0).round() as u64));
     }
 
     /// `AppSpec::on_focus`: whether the overlay window itself has the focus. The library's
@@ -1955,8 +1955,7 @@ impl App {
 
     /// `MAIN->CLIENT::widget-action`: a widget's hotkey (the delve grid's toggle, a timer's
     /// play/pause).
-    fn widget_action(&mut self, live: &mut Live, target: &str) {
-        let now = crate::trade::now(Mode::Live) as f64;
+    fn widget_action(&mut self, live: &mut Live, target: &str, elapsed_ms: u64) {
         let config = live.startup.config.clone();
         let overlay = self.widgets.get_or_insert_with(|| widgets::Overlay::live(live.game, &config));
         // A timer's own state has to exist before its toggle (the target names its `wmId`).
@@ -1965,7 +1964,7 @@ impl App {
         {
             overlay.focus(wm_id, Mode::Live);
         }
-        overlay.widget_action(target, now);
+        overlay.widget_action(target, elapsed_ms as f64);
         // The widget whose type the target names is drawn at its own anchor; the overlay draws
         // it among the others, so it only needs to be on top.
         let wm_type = target.split(':').next().unwrap_or(target);

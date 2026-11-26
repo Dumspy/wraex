@@ -32,7 +32,7 @@ pub enum Request {
     ItemCheck { text: String, action: Option<ItemAction> },
     /// `MAIN->CLIENT::widget-action`: a widget's hotkey (the delve grid's toggle, a timer's
     /// start/stop).
-    WidgetAction(String),
+    WidgetAction { target: String, elapsed_ms: u64 },
     /// Draw the widget the config's `wmWants` now shows (`wm.show(wmId)` from the menu).
     ShowWidget(u32),
     /// Nothing the port does yet, and why.
@@ -100,7 +100,7 @@ pub fn widget_request(action: &crate::widgets::Action) -> Request {
 }
 
 /// A hotkey press's events ([`wraex_platform::shortcuts::press`]).
-pub fn shortcut_requests(events: Vec<ShortcutEvent>) -> Vec<Request> {
+pub fn shortcut_requests(events: Vec<ShortcutEvent>, elapsed_ms: u64) -> Vec<Request> {
     events
         .into_iter()
         .map(|event| match event {
@@ -118,7 +118,7 @@ pub fn shortcut_requests(events: Vec<ShortcutEvent>) -> Vec<Request> {
                     other => Request::Unsupported(format!("item text for {other}")),
                 }
             }
-            ShortcutEvent::WidgetAction { target } => Request::WidgetAction(target),
+            ShortcutEvent::WidgetAction { target } => Request::WidgetAction { target, elapsed_ms },
             ShortcutEvent::OcrRequest { target, .. } => Request::Unsupported(format!("OCR for {target}")),
         })
         .collect()
@@ -145,7 +145,7 @@ mod tests {
             position: Point { x: 1.0, y: 2.0 },
             focus_overlay: false,
         })];
-        assert_eq!(shortcut_requests(events), vec![Request::PriceCheck("Rarity: Currency\nDivine Orb".to_owned())]);
+        assert_eq!(shortcut_requests(events, 0), vec![Request::PriceCheck("Rarity: Currency\nDivine Orb".to_owned())]);
     }
 
     #[test]
@@ -169,15 +169,15 @@ mod tests {
             } else {
                 Request::ItemCheck { text: text.clone(), action: Some(action) }
             };
-            assert_eq!(shortcut_requests(events), vec![expected], "{target}");
+            assert_eq!(shortcut_requests(events, 0), vec![expected], "{target}");
         }
     }
 
     #[test]
     fn a_timer_or_delve_hotkey_is_a_widget_action() {
         assert_eq!(
-            shortcut_requests(vec![ShortcutEvent::WidgetAction { target: "stopwatch-start-stop:3".to_owned() }]),
-            vec![Request::WidgetAction("stopwatch-start-stop:3".to_owned())]
+            shortcut_requests(vec![ShortcutEvent::WidgetAction { target: "stopwatch-start-stop:3".to_owned() }], 1234),
+            vec![Request::WidgetAction { target: "stopwatch-start-stop:3".to_owned(), elapsed_ms: 1234 }]
         );
     }
 

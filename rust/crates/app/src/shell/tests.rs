@@ -1120,7 +1120,7 @@ fn price_check_hotkey(app: &App) -> ShortcutAction {
 /// `App::on_hotkey` around `Live::press`.
 fn press(app: &mut App, of: fn(&App) -> ShortcutAction) {
     let entry = of(app);
-    app.on_hotkey(&entry);
+    app.on_hotkey(&entry, 0.0);
 }
 
 /// The OS window hook's report, fed through the overlay controller as `Live::poll_game_window`
@@ -1412,4 +1412,27 @@ fn clicking_a_lower_widget_raises_it_and_saves_the_order() {
 fn asking_the_app_about_the_shell_from_inside_poll_panics() {
     let mut app = live_app("guard", TestClipboard::default());
     app.with_live(|app, _live| app.shown());
+}
+
+#[test]
+fn stopwatch_shortcuts_and_buttons_measure_the_same_five_seconds() {
+    let mut app = live_app("stopwatch-clock", TestClipboard::default());
+    poll(&mut app);
+    let overlay = app.widgets.as_mut().unwrap();
+    let timer = overlay.create(widgets::Kind::Stopwatch.wm_type());
+    overlay.focus(timer, Mode::Live);
+    let toggle = ShortcutAction {
+        shortcut: "F6".into(),
+        keep_mod_keys: true,
+        action: Action::TriggerEvent { target: format!("stopwatch-start-stop:{timer}") },
+    };
+    overlay.timer_toggle(timer, 12_000.);
+    app.on_hotkey(&toggle, 17.);
+    assert_eq!(app.widgets.as_ref().unwrap().timers[&timer].millis, 5_000.);
+    app.widgets.as_mut().unwrap().timer_reset(timer, 18_000.);
+    app.on_hotkey(&toggle, 19.);
+    let overlay = app.widgets.as_mut().unwrap();
+    overlay.poll(23.);
+    overlay.timer_toggle(timer, 24_000.);
+    assert_eq!(overlay.timers[&timer].millis, 5_000.);
 }
