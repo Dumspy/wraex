@@ -8,13 +8,13 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-time = { version = "0.3", features = ["parsing"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 unicode-normalization = { workspace = true }
 thiserror = { workspace = true }
 indexmap = { workspace = true }
 fancy-regex = { workspace = true }
+time = { version = "0.3", features = ["parsing"] }
 
 [lints]
 workspace = true
