@@ -409,18 +409,24 @@ impl App {
         {
             widget.set_wants(widgets::Wants::Hide);
         }
+        let config = self.live.as_ref().map(|live| &live.startup.config).unwrap_or(&serde_json::Value::Null);
         match picked {
             widgets::item_search::Picked::Poe1(item) => {
                 self.game = GameId::Poe1;
-                self.price_check = PriceCheck::with_item(*item, self.mode, self.price_check.trade.client.clone());
+                self.price_check =
+                    PriceCheck::with_item(*item, self.mode, self.price_check.trade.client.clone(), config);
                 if let Some(waker) = &self.waker {
                     self.price_check.set_waker(waker.clone());
                 }
             }
             widgets::item_search::Picked::Poe2(item) => {
                 self.game = GameId::Poe2;
-                self.poe2 =
-                    Some(poe2::price_check::PriceCheck::with_item(*item, self.mode, self.poe2_client(self.mode)));
+                self.poe2 = Some(poe2::price_check::PriceCheck::with_item(
+                    *item,
+                    self.mode,
+                    self.poe2_client(self.mode),
+                    config,
+                ));
                 self.attach_waker();
             }
         }

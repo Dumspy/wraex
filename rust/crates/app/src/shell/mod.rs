@@ -1840,7 +1840,7 @@ impl App {
         let overviews = live.poe2_prices.take();
         let league = live.league.clone();
         // `self.mode`, not `Mode::Live`: a test's shell opens the window on the recordings.
-        self.open_price_check_for(live.game, &league, self.mode, text, warm, overviews);
+        self.open_price_check_for(live.game, &league, &live.startup.config, text, warm, overviews);
         match live.game {
             GameId::Poe2 => self.poe2.as_mut().unwrap().market = live.market(),
             _ => self.price_check.prices.queue_selected(live.market().as_ref(), false),
@@ -1858,16 +1858,22 @@ impl App {
         &mut self,
         game: GameId,
         league: &str,
-        mode: Mode,
+        config: &serde_json::Value,
         text: &str,
         warm: Option<crate::poe1::price_check::prices::PriceList>,
         overviews: Option<Vec<(&'static str, String)>>,
     ) {
+        let mode = self.mode;
         let waker = self.waker.clone();
         match game {
             GameId::Poe2 => {
-                let mut check =
-                    crate::poe2::price_check::PriceCheck::with_client(text, mode, league, self.poe2_client(mode));
+                let mut check = crate::poe2::price_check::PriceCheck::with_client(
+                    text,
+                    mode,
+                    league,
+                    self.poe2_client(mode),
+                    config,
+                );
                 if let Some(overviews) = overviews {
                     check.apply_price_overviews(&overviews);
                 }
@@ -1883,6 +1889,7 @@ impl App {
                     mode,
                     league,
                     self.price_check.trade.client.clone(),
+                    config,
                 );
                 if let Some(mut warm) = warm {
                     // The startup fetch is the app's prices; the window's own request goes

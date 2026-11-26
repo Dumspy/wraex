@@ -718,7 +718,7 @@ fn the_price_check_hotkey_opens_the_window_on_the_item() {
     assert_eq!(app.shown(), Shown::None);
 
     let text = crate::corpus("currency-divine-orb");
-    app.open_price_check_for(GameId::Poe1, "Standard", Mode::Replay, &text, None, None);
+    app.open_price_check_for(GameId::Poe1, "Standard", &serde_json::Value::Null, &text, None, None);
     assert_eq!(app.shown(), Shown::PriceCheck);
     assert!(app.price_check.open);
     assert!(app.price_check.item.is_ok(), "the item parsed");
@@ -729,7 +729,7 @@ fn the_price_check_hotkey_opens_the_window_on_the_item() {
 
     // A league the recordings do not cover still opens the window, in that league.
     app.close_windows();
-    app.open_price_check_for(GameId::Poe1, "Covens", Mode::Replay, &text, None, None);
+    app.open_price_check_for(GameId::Poe1, "Covens", &serde_json::Value::Null, &text, None, None);
     assert_eq!(app.price_check.league, "Covens");
     assert!(app.price_check.stable_orb_cost().is_none(), "no prices for an unrecorded league");
 }
@@ -746,7 +746,7 @@ fn the_startup_prices_become_the_windows() {
     app.open_price_check_for(
         GameId::Poe1,
         "Standard",
-        Mode::Replay,
+        &serde_json::Value::Null,
         &crate::corpus("currency-divine-orb"),
         Some(warm),
         None,
@@ -784,7 +784,7 @@ fn the_poe2_hotkey_opens_its_own_window() {
     let text = crate::corpus_poe2("currency-djinn-barya");
     let mut app = App::replay("currency-divine-orb");
     app.close_windows();
-    app.open_price_check_for(GameId::Poe2, "Dawn of the Hunt", Mode::Replay, &text, None, None);
+    app.open_price_check_for(GameId::Poe2, "Dawn of the Hunt", &serde_json::Value::Null, &text, None, None);
     assert_eq!(app.game, GameId::Poe2);
     assert_eq!(app.shown(), Shown::Poe2);
     assert_eq!(app.poe2.as_ref().unwrap().league, "Dawn of the Hunt");
@@ -1416,7 +1416,7 @@ fn asking_the_app_about_the_shell_from_inside_poll_panics() {
 fn reopening_an_item_reuses_the_trade_policy_and_cached_rows() {
     let text = crate::corpus("adv-rare-ring-mirrored-catalyst");
     let mut app = App::with_mode("", Mode::Replay);
-    app.open_price_check_for(GameId::Poe1, "Standard", Mode::Replay, &text, None, None);
+    app.open_price_check_for(GameId::Poe1, "Standard", &serde_json::Value::Null, &text, None, None);
     app.price_check.start_search();
     assert_eq!(app.price_check.trade.rows.len(), 20);
     let first = app.price_check.trade.client.clone();
@@ -1426,10 +1426,28 @@ fn reopening_an_item_reuses_the_trade_policy_and_cached_rows() {
             crate::trade::TargetTransport::Replay(crate::replay::ReplayTransport::new("missing-recordings"));
         client.limits.search.clone()
     };
-    app.open_price_check_for(GameId::Poe1, "Standard", Mode::Replay, &text, None, None);
+    app.open_price_check_for(GameId::Poe1, "Standard", &serde_json::Value::Null, &text, None, None);
     assert!(std::sync::Arc::ptr_eq(&first, &app.price_check.trade.client));
     assert_eq!(crate::trade::lock(&app.price_check.trade.client).limits.search, policy);
     app.price_check.start_search();
     assert_eq!(app.price_check.trade.rows.len(), 20);
     assert!(app.price_check.trade.error.is_none());
+}
+
+#[test]
+fn hotkeys_use_saved_price_check_settings_for_both_games() {
+    let config = serde_json::json!({"widgets":[{"wmType":"price-check","searchStatRange":0,
+        "activateStockFilter":true,"collapseListings":"app","apiLatencySeconds":4.5}]});
+    let mut app = App::with_mode("", Mode::Replay);
+    let text = crate::corpus("adv-rare-ring-mirrored-catalyst");
+    app.open_price_check_for(GameId::Poe1, "Standard", &config, &text, None, None);
+    assert_eq!(app.price_check.item_filters().unwrap().trade.collapse_listings, "app");
+    app.price_check.start_search();
+    assert_eq!(crate::trade::lock(&app.price_check.trade.client).latency_seconds, 4.5);
+    let text = crate::corpus_poe2("ee2-rare-item");
+    app.open_price_check_for(GameId::Poe2, "Standard", &config, &text, None, None);
+    let check = app.poe2.as_mut().unwrap();
+    assert_eq!(check.filters().trade.collapse_listings, "app");
+    check.start_search();
+    assert_eq!(crate::trade::lock(&check.trade.client).latency_seconds, 4.5);
 }

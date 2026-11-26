@@ -202,30 +202,36 @@ impl PriceCheck {
 
     /// [`PriceCheck::with_mode`] in the league the app selected from the trade site's list.
     pub fn with_mode_league(text: &str, mode: Mode, league: &str) -> Self {
-        Self::with_client(text, mode, league, Self::new_client(mode))
+        Self::with_client(text, mode, league, Self::new_client(mode), &serde_json::Value::Null)
     }
 
     pub(crate) fn new_client(mode: Mode) -> crate::trade::Shared {
         crate::trade::shared_site(mode, TRADE_HOST, Site::Poe2, API_LATENCY_SECONDS)
     }
 
-    pub(crate) fn with_client(text: &str, mode: Mode, league: &str, client: crate::trade::Shared) -> Self {
+    pub(crate) fn with_client(
+        text: &str,
+        mode: Mode,
+        league: &str,
+        client: crate::trade::Shared,
+        config: &serde_json::Value,
+    ) -> Self {
         // Item art follows the window's switch: a live window fetches from the CDN, a
         // replay reads the screenshot harness's recordings.
         crate::ui::art::set_mode(mode);
         let data = data(mode);
         let item = parse_clipboard(data, text).map_err(|fail| ParseError::Rejected { key: fail.0 });
-        Self::build(text.to_owned(), item, mode, league, client)
+        Self::build(text.to_owned(), item, mode, league, client, config)
     }
 
     /// `MAIN->CLIENT::item-text` with the item already parsed: what the item search sends when
     /// one of its picked entries is pressed (`WidgetItemSearch.vue`'s `starredItemClick`, which
     /// builds a `createVirtualItem` and `Host.selfDispatch`es it). `parseClipboard` is skipped;
     /// the text is the virtual item's own `rawText`.
-    pub(crate) fn with_item(item: Item, mode: Mode, client: crate::trade::Shared) -> Self {
+    pub(crate) fn with_item(item: Item, mode: Mode, client: crate::trade::Shared, config: &serde_json::Value) -> Self {
         crate::ui::art::set_mode(mode);
         let text = item.raw_text.clone();
-        Self::build(text, Ok(item), mode, DEFAULT_LEAGUE, client)
+        Self::build(text, Ok(item), mode, DEFAULT_LEAGUE, client, config)
     }
 
     /// A window with no item: the live app's idle state before a hotkey brings one. Nothing is
@@ -238,6 +244,7 @@ impl PriceCheck {
             mode,
             league,
             Self::new_client(mode),
+            &serde_json::Value::Null,
         )
     }
 
@@ -248,8 +255,19 @@ impl PriceCheck {
         mode: Mode,
         league: &str,
         client: crate::trade::Shared,
+        config: &serde_json::Value,
     ) -> Self {
-        let presets = item.as_ref().ok().map(|item| create_presets(data(mode), item, &preset_options_for(league)));
+        let widget = crate::settings::widget(config, "price-check").unwrap_or(&serde_json::Value::Null);
+        let mut options = preset_options_for(league);
+        options.search_stat_range = widget["searchStatRange"].as_f64().unwrap_or(options.search_stat_range);
+        options.filters.activate_stock_filter = widget["activateStockFilter"].as_bool().unwrap_or(false);
+        if let Some(collapse) = widget["collapseListings"].as_str() {
+            options.filters.collapse_listings = collapse.to_owned();
+        }
+        options.filters.use_en =
+            (config["language"] == "cmn-Hant" && config["realm"] == "pc-ggg") || config["preferredTradeSite"] == "www";
+        options.default_all_selected = widget["defaultAllSelected"].as_bool().unwrap_or(false);
+        let presets = item.as_ref().ok().map(|item| create_presets(data(mode), item, &options));
         let do_search = match (&item, &presets) {
             (Ok(item), Some(Ok(presets))) => initial_do_search(item, presets),
             _ => false,
@@ -284,6 +302,7 @@ impl PriceCheck {
         {
             filters.trade.listing_type = "online".to_owned();
         }
+        check.trade.latency = widget["apiLatencySeconds"].as_f64().unwrap_or(API_LATENCY_SECONDS);
         check.sync_inputs();
         // `CheckedItem.vue`'s `watch(..., { immediate: true })` starts the search the
         // reference makes by itself (a unique, a trial coin, ...).
