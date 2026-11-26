@@ -1,0 +1,52 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "notCatalysed": {
+          "disabled": false
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Leather Belt",
+          "baseTypeTrade": "Leather Belt"
+        },
+        "searchRelaxed": {
+          "category": "Belt",
+          "disabled": true
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": []
+    }
+  ]
+}
