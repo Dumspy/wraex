@@ -9,8 +9,8 @@
 //!   `assets/<game>/images` in a release) through [`wraex_poe1::data::image_path`],
 //!   [`wraex_poe2::data::image_path`].
 //! - **Item art** is a `https://web.poecdn.com/...` URL from the game data (an item's `icon`)
-//!   that the reference's browser fetches itself, outside `/proxy`. A window fetches it once
-//!   per URL on a worker thread ([`wraex_platform::http::HttpTransport::get_bytes`]) and keeps
+//!   that the reference's browser fetches itself, outside `/proxy`. A window fetches it
+//!   on a worker thread ([`wraex_platform::http::HttpTransport::get_bytes`]) and keeps
 //!   the decoded image; a headless run reads the recording the screenshot harness made
 //!   (`tools/golden/corpus/screens/<game>/images/`), so a scene never touches the network.
 //! - **Map screenshots** (`MapCheck.vue`) are `https://i.imgur.com/...` URLs from the game
@@ -24,16 +24,16 @@
 //!   [`icon::image_placeholder`] draws, so the layout never jumps.
 //!
 //! Decoding is Rune's [`ImageCache`]: created once with the app's waker, so an image that
-//! finishes decoding wakes the window. Art read from disk (the reference's files, the
-//! harness's recordings) is waited for, so a `--snap` render and a test frame show their
-//! pictures instead of racing the decoder; a live download never blocks a frame.
+//! finishes decoding wakes the window. Replay waits for pixels so a `--snap` render and a
+//! test frame show the same art. Live frames draw placeholders during asynchronous decoding.
 //!
 //! A ready image is an element whose role is `img` and whose label is its source; the
 //! placeholder is an ordinary box. Tests tell them apart that way.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Arc, LazyLock, Mutex, OnceLock};
+use std::time::{Duration, Instant};
 
 use rune::{El, Image, ImageCache, SurfaceFit, Waker, el};
 use wraex_core::GameId;
@@ -49,9 +49,38 @@ use crate::ui::icon;
 #[derive(Default)]
 struct Registry {
     images: HashMap<String, Image>,
-    failed: HashSet<String>,
-    /// Fetches (live) or reads (replay) that have not finished.
+    failed: HashMap<String, Instant>,
+    order: VecDeque<String>,
+    /// Keys admitted for loading. Live downloads hold a slot through decode.
     pending: HashSet<String>,
+}
+
+const CACHE_ENTRIES: usize = 256;
+const ACTIVE_LOADS: usize = 4;
+const RETRY_DELAY: Duration = Duration::from_secs(30);
+
+impl Registry {
+    fn begin(&mut self, key: &str, now: Instant, live: bool) -> bool {
+        if self.failed.get(key).is_some_and(|at| !live || now.duration_since(*at) < RETRY_DELAY)
+            || (live && self.pending.len() >= ACTIVE_LOADS)
+        {
+            return false;
+        }
+        self.pending.insert(key.to_owned())
+    }
+
+    fn finish(&mut self, key: &str) {
+        self.pending.remove(key);
+        self.order.retain(|existing| existing != key);
+        self.order.push_back(key.to_owned());
+        if self.order.len() > CACHE_ENTRIES
+            && let Some(old) = self.order.pop_front()
+        {
+            self.images.remove(&old);
+            self.failed.remove(&old);
+        }
+        self.failed.remove(key);
+    }
 }
 
 static REGISTRY: LazyLock<Mutex<Registry>> = LazyLock::new(|| Mutex::new(Registry::default()));
@@ -268,17 +297,13 @@ fn ready(source: &Source) -> Option<Image> {
         let mut registry = REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         if let Some(image) = registry.images.get(&key).cloned() {
             Some(image)
-        } else if registry.failed.contains(&key) || !registry.pending.insert(key.clone()) {
+        } else if !registry.begin(&key, Instant::now(), mode() == Mode::Live) {
             return None;
         } else {
             None
         }
     };
     if let Some(image) = stored {
-        // A picture another frame or another state started: still decoding here, and art read
-        // from disk (the reference's files, the harness's recordings) is waited for, so the
-        // frame that first draws it already shows the picture. A live CDN fetch is decoded on
-        // its worker too; the cache's waker brings the next frame if this one has to skip it.
         return settle(image);
     }
     load(source, key);
@@ -286,10 +311,17 @@ fn ready(source: &Source) -> Option<Image> {
     stored.and_then(settle)
 }
 
-/// An image that has finished decoding, waiting for it when it is still on its worker.
+/// A live frame draws a placeholder until the decoder wakes it. Replay waits for pixels.
 fn settle(image: Image) -> Option<Image> {
+    settle_for_mode(image, mode())
+}
+
+fn settle_for_mode(image: Image, mode: Mode) -> Option<Image> {
     if image.is_ready() {
         return image.error().is_none().then_some(image);
+    }
+    if mode == Mode::Live {
+        return None;
     }
     let _ = image.wait();
     if let Some(error) = image.error() {
@@ -310,7 +342,7 @@ fn ready_grey(source: &Source) -> Option<Image> {
         let mut registry = REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         if let Some(image) = registry.images.get(&key).cloned() {
             Some(image)
-        } else if registry.failed.contains(&key) || !registry.pending.insert(key.clone()) {
+        } else if !registry.begin(&key, Instant::now(), mode() == Mode::Live) {
             return None;
         } else {
             None
@@ -408,34 +440,44 @@ fn remote(source: &Source, key: String) {
 
 /// Fetch a CDN image on a worker thread, then wake the window.
 fn fetch(key: String, url: String) {
+    static HTTP: LazyLock<wraex_platform::http::HttpTransport> = LazyLock::new(Default::default);
+    let worker_key = key.clone();
     let spawned = std::thread::Builder::new().name("wraex-image".to_owned()).spawn(move || {
-        let result = wraex_platform::http::HttpTransport::default().get_bytes(&url);
+        let key = worker_key;
+        // Keep the slot until decode finishes so fast downloads cannot flood Rune's decoder.
+        let result = fetched_image(HTTP.get_bytes(&url));
         match result {
-            Ok(bytes) => store(key, cache().load(bytes)),
+            Ok(image) => store(key, image),
             Err(error) => fail(key, error),
         }
         wake();
     });
     if let Err(error) = spawned {
-        wraex_platform::log!("wraex: could not start the image worker: {error}");
+        fail(key, format!("could not start the image worker: {error}"));
     }
+}
+
+fn fetched_image(bytes: Result<Vec<u8>, String>) -> Result<Image, String> {
+    let image = cache().load(bytes?);
+    image.wait().map_err(ToString::to_string)?;
+    Ok(image)
 }
 
 fn store(key: String, image: Image) {
     let mut registry = REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-    registry.pending.remove(&key);
+    registry.finish(&key);
     registry.images.insert(key, image);
 }
 
 fn fail(key: String, why: String) {
     wraex_platform::log!("wraex: no image: {why}");
     let mut registry = REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-    registry.pending.remove(&key);
-    registry.failed.insert(key);
+    registry.finish(&key);
+    registry.failed.insert(key, Instant::now());
 }
 
 fn wake() {
-    // The cache's own waker is the app's; this is for a finished download before decoding.
+    // The decoder can wake the window before the fetch worker publishes its result.
     let waker = WAKE.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).clone();
     if let Some(waker) = waker {
         waker();
@@ -512,7 +554,7 @@ mod tests {
         assert_eq!(image.size(), Some([47, 47]));
         let key = Source::Local { game: GameId::Poe1, name: "nope.png".to_owned() }.key();
         assert!(ready(&Source::Local { game: GameId::Poe1, name: "nope.png".to_owned() }).is_none());
-        assert!(REGISTRY.lock().unwrap().failed.contains(&key), "a miss is remembered");
+        assert!(REGISTRY.lock().unwrap().failed.contains_key(&key), "a miss is remembered");
     }
 
     /// `filter: grayscale(1)`: the Filter Effects matrix's luminance weights over sRGB, alpha
@@ -564,5 +606,62 @@ mod tests {
         // Outside the recording is still a miss, not a network request.
         let miss = Source::Screenshot { game: GameId::Poe1, url: "https://i.imgur.com/nope.jpg".to_owned() };
         assert!(ready(&miss).is_none());
+    }
+}
+
+#[cfg(test)]
+mod registry_tests {
+    use super::*;
+
+    #[test]
+    fn live_loads_and_retained_entries_are_bounded_and_failures_can_retry() {
+        let mut registry = Registry::default();
+        let now = Instant::now();
+        for i in 0..ACTIVE_LOADS {
+            assert!(registry.begin(&format!("cdn/{i}"), now, true));
+        }
+        assert!(!registry.begin("overflow", now, true));
+        for i in 0..CACHE_ENTRIES + 10 {
+            let key = format!("cdn/{i}");
+            registry.finish(&key);
+            registry.failed.insert(key, now);
+        }
+        assert_eq!(registry.failed.len(), CACHE_ENTRIES);
+        assert!(!registry.begin("cdn/20", now, true));
+        assert!(registry.begin("cdn/20", now + RETRY_DELAY, true));
+        registry.finish("cdn/20");
+        assert!(!registry.failed.contains_key("cdn/20"));
+    }
+    #[test]
+    fn a_transient_download_failure_can_be_replaced_by_decoded_pixels() {
+        let key = "live/poe1/cdn/test-retry".to_owned();
+        let begin = |now| REGISTRY.lock().unwrap().begin(&key, now, true);
+        assert!(begin(Instant::now()));
+        fail(key.clone(), fetched_image(Err("temporarily offline".into())).unwrap_err());
+        assert!(!begin(Instant::now()));
+        assert!(begin(Instant::now() + RETRY_DELAY));
+        let bytes = std::fs::read(image_path(GameId::Poe1, "chaos.png")).unwrap();
+        store(key.clone(), fetched_image(Ok(bytes)).unwrap());
+        let registry = REGISTRY.lock().unwrap();
+        assert_eq!(registry.images[&key].size(), Some([47, 47]));
+        assert!(!registry.failed.contains_key(&key));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn live_frame_returns_while_the_decoder_waits_for_bytes() {
+        let path = std::env::temp_dir().join(format!("wraex-delayed-art-{}", std::process::id()));
+        assert!(std::process::Command::new("mkfifo").arg(&path).status().unwrap().success());
+        let image = cache().file(&path, 16.0, 2.0);
+        let pending = image.clone();
+        let (tx, rx) = std::sync::mpsc::channel();
+        let frame = std::thread::spawn(move || tx.send(settle_for_mode(pending, Mode::Live).is_none()));
+        let returned = rx.recv_timeout(Duration::from_secs(2));
+        let bytes = std::fs::read(image_path(GameId::Poe1, "chaos.png")).unwrap();
+        std::fs::write(&path, bytes).unwrap();
+        frame.join().unwrap().unwrap();
+        assert_eq!(returned, Ok(true));
+        assert!(settle_for_mode(image, Mode::Replay).is_some());
+        std::fs::remove_file(path).unwrap();
     }
 }
