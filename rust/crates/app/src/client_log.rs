@@ -211,8 +211,8 @@ fn publish(latest: &Mutex<Option<State>>, state: State, on_change: &impl Fn()) {
 /// `GameLogWatcher.restart`'s file half: the configured path, or the one readable default.
 fn open(configured: &str, utc_offset: i32) -> Result<(LogWatcher, ClientLog), String> {
     let path: PathBuf = if configured.is_empty() {
-        let dirs = crate::shell::user_dirs().ok_or("cannot find the home folder for Client.txt")?;
-        let candidates = game_files::log_paths(GameId::Poe2, crate::shell::current_os(), &dirs);
+        let candidates =
+            game_files::log_paths(GameId::Poe2, crate::shell::current_os(), std::env::home_dir().as_deref());
         game_files::guess_file_location(&candidates).ok_or_else(|| {
             format!(
                 "no readable Client.txt found; enter one in the settings ({})",

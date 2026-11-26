@@ -70,21 +70,22 @@ pub fn config_paths(game: GameId, os: Os, dirs: &UserDirs) -> Vec<PathBuf> {
 
 /// `POSSIBLE_PATH` of `GameLogWatcher.ts`: where the game writes `Client.txt`.
 /// PoE2 on macOS shares PoE1's cache folder upstream.
-pub fn log_paths(game: GameId, os: Os, dirs: &UserDirs) -> Vec<PathBuf> {
+pub fn log_paths(game: GameId, os: Os, home: Option<&Path>) -> Vec<PathBuf> {
     let folder = match game {
         GameId::Poe1 => "Path of Exile",
         GameId::Poe2 => "Path of Exile 2",
     };
-    match os {
-        Os::Windows => vec![
+    match (os, home) {
+        (Os::Windows, _) => vec![
             PathBuf::from(format!(r"C:\Program Files (x86)\Grinding Gear Games\{folder}\logs\Client.txt")),
             PathBuf::from(format!(r"C:\Program Files (x86)\Steam\steamapps\common\{folder}\logs\Client.txt")),
         ],
-        Os::Linux => vec![
-            dirs.home.join(format!(".wine/drive_c/Program Files (x86)/Grinding Gear Games/{folder}/logs/Client.txt")),
-            dirs.home.join(format!(".local/share/Steam/steamapps/common/{folder}/logs/Client.txt")),
+        (Os::Linux, Some(home)) => vec![
+            home.join(format!(".wine/drive_c/Program Files (x86)/Grinding Gear Games/{folder}/logs/Client.txt")),
+            home.join(format!(".local/share/Steam/steamapps/common/{folder}/logs/Client.txt")),
         ],
-        Os::MacOs => vec![dirs.home.join("Library/Caches/com.GGG.PathOfExile/Logs/Client.txt")],
+        (Os::MacOs, Some(home)) => vec![home.join("Library/Caches/com.GGG.PathOfExile/Logs/Client.txt")],
+        (_, None) => vec![],
     }
 }
 
@@ -222,8 +223,18 @@ mod tests {
         assert_eq!(c[0], PathBuf::from("/home/u/Documents/My Games/Path of Exile 2/poe2_production_Config.ini"));
         assert!(c[1].to_string_lossy().contains("compatdata/2694490/"));
         assert_eq!(config_paths(GameId::Poe1, Os::Windows, &dirs()).len(), 1);
-        let l = log_paths(GameId::Poe1, Os::MacOs, &dirs());
+        let l = log_paths(GameId::Poe1, Os::MacOs, Some(&dirs().home));
         assert_eq!(l, [PathBuf::from("/home/u/Library/Caches/com.GGG.PathOfExile/Logs/Client.txt")]);
+    }
+
+    #[test]
+    fn redirected_windows_documents_and_home_independent_logs() {
+        let redirected = UserDirs { documents: PathBuf::from("network/share"), ..dirs() };
+        assert_eq!(
+            config_paths(GameId::Poe2, Os::Windows, &redirected),
+            [redirected.documents.join("My Games/Path of Exile 2/poe2_production_Config.ini")]
+        );
+        assert_eq!(log_paths(GameId::Poe2, Os::Windows, None).len(), 2);
     }
 
     #[test]

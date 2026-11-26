@@ -31,5 +31,8 @@ wraex-platform = { workspace = true }
 wraex-poe1 = { workspace = true }
 wraex-poe2 = { workspace = true }
 
+[target.'cfg(windows)'.dependencies]
+dirs = "7"
+
 [lints]
 workspace = true

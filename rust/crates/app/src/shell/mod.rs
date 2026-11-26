@@ -2147,8 +2147,12 @@ pub fn open_external(target: &str) -> std::io::Result<()> {
 
 /// The user folders the game's files live under, from the environment.
 pub fn user_dirs() -> Option<UserDirs> {
-    let home = std::env::var_os("HOME").map(PathBuf::from)?;
-    Some(UserDirs { documents: home.join("Documents"), app_data: settings::app_data_dir()?, home })
+    let home = std::env::home_dir()?;
+    #[cfg(windows)]
+    let documents = dirs::document_dir()?;
+    #[cfg(not(windows))]
+    let documents = home.join("Documents");
+    Some(UserDirs { home, documents, app_data: settings::app_data_dir()? })
 }
 
 /// The app's OS: the platform modules' selector.

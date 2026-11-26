@@ -546,9 +546,12 @@ pub fn cookies_path_in(app_data: &std::path::Path) -> PathBuf {
 
 /// `app.getPath('appData')`.
 pub fn app_data_dir() -> Option<PathBuf> {
-    if cfg!(target_os = "windows") {
-        std::env::var_os("APPDATA").map(PathBuf::from)
-    } else if cfg!(target_os = "macos") {
+    #[cfg(windows)]
+    {
+        dirs::data_dir()
+    }
+    #[cfg(not(windows))]
+    if cfg!(target_os = "macos") {
         std::env::var_os("HOME").map(|home| PathBuf::from(home).join("Library/Application Support"))
     } else {
         std::env::var_os("XDG_CONFIG_HOME")
