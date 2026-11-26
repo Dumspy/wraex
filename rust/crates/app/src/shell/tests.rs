@@ -1422,3 +1422,34 @@ fn asking_the_app_about_the_shell_from_inside_poll_panics() {
     let mut app = live_app("guard", TestClipboard::default());
     app.with_live(|app, _live| app.shown());
 }
+
+#[test]
+fn idle_widget_edits_survive_restart() {
+    let dir = live_dir("idle-edits");
+    let mut app = live_app_in(&dir, TestClipboard::default());
+    poll(&mut app);
+    let overlay = app.widgets.as_mut().unwrap();
+    let timer = overlay.create(widgets::Kind::Stopwatch.wm_type());
+    poll(&mut app);
+    let mut restarted = live_app_in(&dir, TestClipboard::default());
+    poll(&mut restarted);
+    let strip = widget_id(&restarted, "image-strip");
+    let overlay = restarted.widgets.as_mut().unwrap();
+    assert!(overlay.widget(timer).is_some());
+    overlay.remove(timer);
+    poll(&mut restarted);
+    let overlay = restarted.widgets.as_mut().unwrap();
+    overlay.set_title(strip, "Maps");
+    let images = overlay.widget(strip).unwrap().config["images"].as_array().unwrap();
+    let image_id = images[0]["id"].as_i64().unwrap();
+    overlay.remove_image(strip, image_id);
+    poll(&mut restarted);
+    let mut final_app = live_app_in(&dir, TestClipboard::default());
+    poll(&mut final_app);
+    let overlay = final_app.widgets.as_ref().unwrap();
+    assert!(overlay.widget(timer).is_none());
+    let widget = overlay.widget(strip).unwrap();
+    assert_eq!(widget.wm_title, "Maps");
+    assert!(widget.config["images"].as_array().unwrap().iter().all(|image| image["id"] != image_id));
+    std::fs::remove_dir_all(dir).unwrap();
+}
