@@ -2316,11 +2316,13 @@ impl OverlayHandle for OverlayPanel {
         }
     }
 
-    fn focus_game(&mut self) {
-        let Some(game) = self.panel.game.lock().ok().and_then(|game| *game) else { return };
-        if !window::focus_window(game) && cfg!(target_os = "windows") {
+    fn focus_game(&mut self) -> bool {
+        let Some(game) = self.panel.game.lock().ok().and_then(|game| *game) else { return false };
+        let focused = window::focus_window(game);
+        if !focused && cfg!(target_os = "windows") {
             wraex_platform::log!("wraex: could not give the game's window its focus back");
         }
+        focused
     }
 
     fn is_visible(&self) -> bool {

@@ -53,7 +53,7 @@ pub trait OverlayHandle: std::fmt::Debug {
     /// overlay interactable (`OverlayController.activateOverlay`).
     fn set_click_through(&mut self, click_through: bool);
     /// Give the focus back to the game window (`OverlayController.focusTarget`).
-    fn focus_game(&mut self);
+    fn focus_game(&mut self) -> bool;
     fn is_visible(&self) -> bool;
 }
 
@@ -330,17 +330,28 @@ impl OverlayController {
 
     /// `assertGameActive`: the game takes the focus back and the overlay becomes
     /// click-through again.
-    pub fn assert_game_active(&mut self, window: &mut GameWindow, handle: &mut dyn OverlayHandle) {
+    pub fn assert_game_active(&mut self, window: &mut GameWindow, handle: &mut dyn OverlayHandle) -> bool {
         if !self.is_interactable {
-            return;
+            return window.is_active();
         }
         self.is_interactable = false;
         crate::log!("wraex: the game takes the mouse and keyboard back");
         handle.set_click_through(true);
-        handle.focus_game();
+        let focused = handle.focus_game();
+        if !focused && self.os == Os::Windows {
+            self.is_interactable = true;
+            handle.set_click_through(false);
+            return false;
+        }
         if window.set_active(true).is_some() {
             self.on_game_active_change(true, window, handle);
         }
+        focused
+    }
+
+    /// A stash shortcut must confirm native focus even if the last window event said active.
+    pub fn focus_for_stash(&mut self, window: &mut GameWindow, handle: &mut dyn OverlayHandle) -> bool {
+        if self.is_interactable { self.assert_game_active(window, handle) } else { handle.focus_game() }
     }
 
     /// `toggleActiveState`: the overlay key.

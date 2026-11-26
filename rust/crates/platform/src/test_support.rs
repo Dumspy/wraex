@@ -132,6 +132,7 @@ pub enum OverlayCall {
 /// window, so only a change is recorded.
 #[derive(Debug, Default)]
 pub struct FakeOverlay {
+    pub deny_focus: bool,
     visible: bool,
     calls: Vec<OverlayCall>,
 }
@@ -166,8 +167,9 @@ impl OverlayHandle for FakeOverlay {
         self.calls.push(OverlayCall::ClickThrough(click_through));
     }
 
-    fn focus_game(&mut self) {
+    fn focus_game(&mut self) -> bool {
         self.calls.push(OverlayCall::FocusGame);
+        !self.deny_focus
     }
 
     fn is_visible(&self) -> bool {
