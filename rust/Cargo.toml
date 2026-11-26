@@ -67,7 +67,78 @@ accesskit_windows = { git = "https://github.com/anomalyco/rune", rev = "209e119c
 accesskit_macos = { git = "https://github.com/anomalyco/rune", rev = "209e119c27724f0f6449d519c1e314103bb19047" }
 
 [workspace.lints.rust]
-missing_debug_implementations = "warn"
+warnings = "deny"
+unsafe_code = "deny"
+missing_debug_implementations = "deny"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+nursery = { level = "deny", priority = -1 }
+
+# Documentation and naming conventions this workspace does not require.
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+
+# No panics in production paths; test exemptions live in clippy.toml.
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+unreachable = "deny"
+indexing_slicing = "deny"
+string_slice = "deny"
+arithmetic_side_effects = "deny"
+unchecked_time_subtraction = "deny"
+panic_in_result_fn = "deny"
+exit = "deny"
+
+# Numeric conversions.
+as_conversions = "deny"
+as_underscore = "deny"
+float_cmp_const = "deny"
+
+# Error handling.
+let_underscore_must_use = "deny"
+map_err_ignore = "deny"
+unused_result_ok = "deny"
+try_err = "deny"
+error_impl_error = "deny"
+
+# Debugging and output.
+dbg_macro = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
+use_debug = "deny"
+
+# Allocation and ownership.
+clone_on_ref_ptr = "deny"
+str_to_string = "deny"
+implicit_clone = "deny"
+rc_buffer = "deny"
+rc_mutex = "deny"
+
+# Code shape and native safety.
+allow_attributes = "deny"
+allow_attributes_without_reason = "deny"
+rest_pat_in_fully_bound_structs = "deny"
+same_name_method = "deny"
+unneeded_field_pattern = "deny"
+if_then_some_else_none = "deny"
+mixed_read_write_in_expression = "deny"
+mutex_atomic = "deny"
+tests_outside_test_module = "deny"
+undocumented_unsafe_blocks = "deny"
+multiple_unsafe_ops_per_block = "deny"
+infinite_loop = "deny"
+renamed_function_params = "deny"
+
+# Enforce the configured API restrictions.
+disallowed_macros = "deny"
+disallowed_methods = "deny"
 
 # Build dependencies (never the workspace crates) optimised: the tests spend much
 # of their time in dependency code (JSON, Rune's renderer); about 20-30% faster.
