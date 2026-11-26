@@ -1050,9 +1050,7 @@ fn live_dir(name: &str) -> std::path::PathBuf {
 /// [`live_app`] with the folder given, for a test that restarts from the config it saved.
 fn live_app_in(dir: &std::path::Path, clipboard: TestClipboard) -> App {
     let startup = config::load(GameId::Poe1, dir);
-    let mut app = App::live(Live::for_tests(startup, Box::new(clipboard)));
-    app.mode = Mode::Replay;
-    app
+    App::live(Live::for_tests(startup, Box::new(clipboard)))
 }
 
 /// One frame of the real path: exactly what `AppSpec::poll` is wired to in [`run`].

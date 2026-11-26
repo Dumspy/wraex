@@ -440,6 +440,7 @@ fn overlay_commands_apply(shown: &Shown, interactable: bool) -> bool {
 /// The live app's OS-facing half. Held by [`App`] as `App::live`; `None` in a scene or a
 /// test, which is what keeps every side effect out of them.
 pub struct Live {
+    mode: Mode,
     pub game: GameId,
     pub startup: config::Startup,
     pub host: HostConfig,
@@ -576,6 +577,7 @@ impl Live {
         }
 
         Self {
+            mode,
             game,
             startup,
             host,
@@ -1411,7 +1413,7 @@ impl App {
         let league = live.league.clone();
         // The window that is not shown yet still needs a price check's state. Nothing is
         // parsed (`PriceCheck::empty`), so this does not read the game data.
-        let mut price_check = crate::poe1::price_check::PriceCheck::empty(Mode::Live, &league);
+        let mut price_check = crate::poe1::price_check::PriceCheck::empty(live.mode, &league);
         price_check.open = false;
         Self {
             game,
@@ -1422,7 +1424,7 @@ impl App {
             item_check_poe2: None,
             client_log: None,
             widgets: None,
-            mode: Mode::Live,
+            mode: live.mode,
             waker: None,
             live: Some(live),
         }
