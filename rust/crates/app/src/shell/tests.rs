@@ -1413,3 +1413,25 @@ fn asking_the_app_about_the_shell_from_inside_poll_panics() {
     let mut app = live_app("guard", TestClipboard::default());
     app.with_live(|app, _live| app.shown());
 }
+
+#[test]
+fn reopening_an_item_reuses_the_trade_policy_and_cached_rows() {
+    let text = crate::corpus("adv-rare-ring-mirrored-catalyst");
+    let mut app = App::with_mode("", Mode::Replay);
+    app.open_price_check_for(GameId::Poe1, "Standard", Mode::Replay, &text, None, None);
+    app.price_check.start_search();
+    assert_eq!(app.price_check.trade.rows.len(), 20);
+    let first = app.price_check.trade.client.clone();
+    let policy = {
+        let mut client = crate::trade::lock(&first);
+        client.transport =
+            crate::trade::TargetTransport::Replay(crate::replay::ReplayTransport::new("missing-recordings"));
+        client.limits.search.clone()
+    };
+    app.open_price_check_for(GameId::Poe1, "Standard", Mode::Replay, &text, None, None);
+    assert!(std::sync::Arc::ptr_eq(&first, &app.price_check.trade.client));
+    assert_eq!(crate::trade::lock(&app.price_check.trade.client).limits.search, policy);
+    app.price_check.start_search();
+    assert_eq!(app.price_check.trade.rows.len(), 20);
+    assert!(app.price_check.trade.error.is_none());
+}

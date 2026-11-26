@@ -1853,7 +1853,8 @@ impl App {
         let waker = self.waker.clone();
         match game {
             GameId::Poe2 => {
-                let mut check = crate::poe2::price_check::PriceCheck::with_mode_league(text, mode, league);
+                let mut check =
+                    crate::poe2::price_check::PriceCheck::with_client(text, mode, league, self.poe2_client(mode));
                 if let Some(overviews) = overviews {
                     check.apply_price_overviews(&overviews);
                 }
@@ -1864,7 +1865,12 @@ impl App {
                 self.poe2 = Some(check);
             }
             _ => {
-                let mut check = crate::poe1::price_check::PriceCheck::with_mode_league(text, mode, league);
+                let mut check = crate::poe1::price_check::PriceCheck::with_client(
+                    text,
+                    mode,
+                    league,
+                    self.price_check.trade.client.clone(),
+                );
                 if let Some(mut warm) = warm {
                     // The startup fetch is the app's prices; the window's own request goes
                     // with the empty list it replaces.

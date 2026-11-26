@@ -404,17 +404,25 @@ impl App {
         match picked {
             widgets::item_search::Picked::Poe1(item) => {
                 self.game = GameId::Poe1;
-                self.price_check = PriceCheck::with_item(*item, self.mode);
+                self.price_check = PriceCheck::with_item(*item, self.mode, self.price_check.trade.client.clone());
                 if let Some(waker) = &self.waker {
                     self.price_check.set_waker(waker.clone());
                 }
             }
             widgets::item_search::Picked::Poe2(item) => {
                 self.game = GameId::Poe2;
-                self.poe2 = Some(poe2::price_check::PriceCheck::with_item(*item, self.mode));
+                self.poe2 =
+                    Some(poe2::price_check::PriceCheck::with_item(*item, self.mode, self.poe2_client(self.mode)));
                 self.attach_waker();
             }
         }
+    }
+
+    fn poe2_client(&self, mode: Mode) -> trade::Shared {
+        self.poe2
+            .as_ref()
+            .map(|check| check.trade.client.clone())
+            .unwrap_or_else(|| poe2::price_check::PriceCheck::new_client(mode))
     }
 
     /// Run `f` on the item search's state, when the item-search widget built one. The scenes use

@@ -201,33 +201,53 @@ impl PriceCheck {
 
     /// [`PriceCheck::with_mode`] in the league the app selected from the trade site's list.
     pub fn with_mode_league(text: &str, mode: Mode, league: &str) -> Self {
+        Self::with_client(text, mode, league, Self::new_client(mode))
+    }
+
+    pub(crate) fn new_client(mode: Mode) -> crate::trade::Shared {
+        crate::trade::shared_site(mode, TRADE_HOST, Site::Poe2, API_LATENCY_SECONDS)
+    }
+
+    pub(crate) fn with_client(text: &str, mode: Mode, league: &str, client: crate::trade::Shared) -> Self {
         // Item art follows the window's switch: a live window fetches from the CDN, a
         // replay reads the screenshot harness's recordings.
         crate::ui::art::set_mode(mode);
         let data = data(mode);
         let item = parse_clipboard(data, text).map_err(|fail| ParseError::Rejected { key: fail.0 });
-        Self::build(text.to_owned(), item, mode, league)
+        Self::build(text.to_owned(), item, mode, league, client)
     }
 
     /// `MAIN->CLIENT::item-text` with the item already parsed: what the item search sends when
     /// one of its picked entries is pressed (`WidgetItemSearch.vue`'s `starredItemClick`, which
     /// builds a `createVirtualItem` and `Host.selfDispatch`es it). `parseClipboard` is skipped;
     /// the text is the virtual item's own `rawText`.
-    pub fn with_item(item: Item, mode: Mode) -> Self {
+    pub(crate) fn with_item(item: Item, mode: Mode, client: crate::trade::Shared) -> Self {
         crate::ui::art::set_mode(mode);
         let text = item.raw_text.clone();
-        Self::build(text, Ok(item), mode, DEFAULT_LEAGUE)
+        Self::build(text, Ok(item), mode, DEFAULT_LEAGUE, client)
     }
 
     /// A window with no item: the live app's idle state before a hotkey brings one. Nothing is
     /// parsed, so the trade data is not fetched either.
     pub fn empty(mode: Mode, league: &str) -> Self {
         crate::ui::art::set_mode(mode);
-        Self::build(String::new(), Err(ParseError::Rejected { key: "no item".into() }), mode, league)
+        Self::build(
+            String::new(),
+            Err(ParseError::Rejected { key: "no item".into() }),
+            mode,
+            league,
+            Self::new_client(mode),
+        )
     }
 
     /// The window over a parsed item, whatever produced it.
-    fn build(text: String, item: Result<Item, ParseError>, mode: Mode, league: &str) -> Self {
+    fn build(
+        text: String,
+        item: Result<Item, ParseError>,
+        mode: Mode,
+        league: &str,
+        client: crate::trade::Shared,
+    ) -> Self {
         let presets = item.as_ref().ok().map(|item| create_presets(data(mode), item, &preset_options_for(league)));
         let do_search = match (&item, &presets) {
             (Ok(item), Some(Ok(presets))) => initial_do_search(item, presets),
@@ -245,10 +265,7 @@ impl PriceCheck {
             show_hidden: false,
             show_sources: false,
             inputs: HashMap::new(),
-            trade: trade::Trade::new(
-                mode,
-                crate::trade::shared_site(mode, TRADE_HOST, Site::Poe2, API_LATENCY_SECONDS),
-            ),
+            trade: trade::Trade::new(mode, client),
             prices,
             prices_latest: Latest::default(),
             prices_requested: false,
