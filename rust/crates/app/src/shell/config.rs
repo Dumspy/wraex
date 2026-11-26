@@ -54,8 +54,7 @@ impl Startup {
 pub fn load(game: GameId, app_data: &Path) -> Startup {
     let mut store = ConfigStore::new(settings::config_path_in(game, app_data));
     let upstream = upstream_config_path(game, app_data);
-    if let Some(contents) = store.load() {
-        let loaded = settings::load(game, Some(&contents));
+    if let Some(loaded) = settings::load_store(game, &store) {
         return Startup {
             game,
             store,
@@ -208,5 +207,20 @@ mod tests {
         assert!(startup.upstream.is_some());
         assert!(!settings::config_path_in(GameId::Poe1, dir.path()).exists(), "nothing imported");
         assert_eq!(std::fs::read_to_string(&upstream).unwrap(), "{\"configVersion\": \"not a number\"}");
+    }
+    #[test]
+    fn unreadable_wraex_file_prevents_upstream_import() {
+        let dir = Dir::new("invalid-utf8");
+        let game = GameId::Poe1;
+        let own = settings::config_path_in(game, dir.path());
+        let upstream = upstream_config_path(game, dir.path());
+        for (path, bytes) in [(&own, &[255][..]), (&upstream, &b"{}"[..])] {
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(path, bytes).unwrap();
+        }
+        let mut startup = load(game, dir.path());
+        assert!(startup.save_temporary);
+        startup.store.save("{}", startup.save_temporary).unwrap();
+        assert_eq!(std::fs::read(own).unwrap(), [255]);
     }
 }

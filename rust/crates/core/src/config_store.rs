@@ -5,6 +5,7 @@
 //! kept APT's folder name). Wraex keeps its own file and can read upstream's
 //! ([`upstream_config_path`]) so users keep their settings when switching.
 
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 use crate::GameId;
@@ -36,9 +37,13 @@ impl ConfigStore {
         &self.path
     }
 
-    /// `load`: the file's text, `None` when it can't be read.
-    pub fn load(&self) -> Option<String> {
-        std::fs::read_to_string(&self.path).ok()
+    /// `load`: the file's text, `None` only when it is missing.
+    pub fn load(&self) -> io::Result<Option<String>> {
+        match std::fs::read_to_string(&self.path) {
+            Ok(contents) => Ok(Some(contents)),
+            Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(None),
+            Err(e) => Err(e),
+        }
     }
 
     /// `save`. A temporary save (the defaults standing in for an unreadable
@@ -54,7 +59,11 @@ impl ConfigStore {
         if let Some(dir) = self.path.parent() {
             std::fs::create_dir_all(dir)?;
         }
-        std::fs::write(&self.path, contents)
+        let mut file = tempfile::NamedTempFile::new_in(self.path.parent().unwrap_or(Path::new(".")))?;
+        file.write_all(contents.as_bytes())?;
+        file.as_file().sync_all()?;
+        file.persist(&self.path)?;
+        Ok(())
     }
 }
 
@@ -66,9 +75,9 @@ mod tests {
     fn temporary_saves_keep_the_original() {
         let dir = std::env::temp_dir().join(format!("wraex-cfgstore-{}", std::process::id()));
         let mut store = ConfigStore::new(dir.join("apt-data/config.json"));
-        assert_eq!(store.load(), None);
+        assert_eq!(store.load().unwrap(), None);
         store.save("{}", false).unwrap();
-        assert_eq!(store.load().as_deref(), Some("{}"));
+        assert_eq!(store.load().unwrap().as_deref(), Some("{}"));
         store.save("{\"tmp\":1}", true).unwrap();
         store.save("{\"tmp\":2}", false).unwrap();
         assert!(store.path().ends_with("config.json.tmp"));
