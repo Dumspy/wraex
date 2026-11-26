@@ -11,7 +11,11 @@ use super::{Bounds, GameWindowEvents, KeyEvent, MouseEvent, WakeFn, WatchError, 
 pub struct Watcher;
 
 impl Watcher {
-    pub fn start(_target: WindowTarget, _wake: WakeFn) -> Result<Self, WatchError> {
+    pub fn start(
+        _target: WindowTarget,
+        _overlay: std::sync::Arc<std::sync::Mutex<Option<isize>>>,
+        _wake: WakeFn,
+    ) -> Result<Self, WatchError> {
         Err(WatchError::Unsupported("only the Win32 backend exists so far"))
     }
 

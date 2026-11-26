@@ -76,6 +76,7 @@ struct Hook {
     mouse: Sender<MouseEvent>,
     /// The low-level keyboard hook's queue: `uiohook`'s `keydown`/`keyup`.
     keys: Sender<KeyEvent>,
+    overlay: Arc<Mutex<Option<isize>>>,
     /// The modifiers the keyboard hook has seen held, which the mouse hook's events carry too.
     modifiers: ModifierState,
     /// What the wheel's last ticks left short of a whole notch ([`super::wheel_rotation`]).
@@ -409,8 +410,13 @@ unsafe extern "system" fn keyboard_proc(
                     // The released key's modifier is cleared before the event is built, which
                     // is the state `OverlayVisibility`'s keyup handler reads (`!e.altKey`).
                     hook.modifiers.set(info.vkCode, down);
-                    let event = hook.modifiers.input(wraex_core::keys::vk_to_key(info.vkCode));
-                    hook.emit_key(if down { KeyEvent::Down(event) } else { KeyEvent::Up(event) });
+                    let foreground = unsafe { GetForegroundWindow() }.0 as isize;
+                    let overlay = hook.overlay.try_lock().ok().and_then(|hwnd| *hwnd);
+                    let game = if hook.is_destroyed { 0 } else { hook.hwnd.0 as isize };
+                    hook.emit_key(super::scoped_key_event(foreground, game, overlay, || {
+                        let event = hook.modifiers.input(wraex_core::keys::vk_to_key(info.vkCode));
+                        if down { KeyEvent::Down(event) } else { KeyEvent::Up(event) }
+                    }));
                 });
             }
         }
@@ -537,6 +543,7 @@ struct HookChannels {
     events: Sender<GameWindowEvents>,
     mouse: Sender<MouseEvent>,
     keys: Sender<KeyEvent>,
+    overlay: Arc<Mutex<Option<isize>>>,
 }
 
 /// The hook thread: hooks, the timer, the first look at the foreground, then the message
@@ -549,7 +556,7 @@ fn hook_thread(
     game: Arc<Mutex<Option<isize>>>,
     startup: Sender<Startup>,
 ) {
-    let HookChannels { events, mouse, keys } = channels;
+    let HookChannels { events, mouse, keys, overlay } = channels;
     // SAFETY: every call here is a plain Win32 call owned by this thread, which also
     // unhooks everything before it ends.
     unsafe {
@@ -560,6 +567,7 @@ fn hook_thread(
                 events,
                 mouse,
                 keys,
+                overlay,
                 modifiers: system_modifiers(),
                 wheel_leftover: 0,
                 mouse_moves,
@@ -670,7 +678,7 @@ impl std::fmt::Debug for Watcher {
 
 impl Watcher {
     /// Start following the window that has `target`'s title, now or whenever it appears.
-    pub fn start(target: WindowTarget, wake: WakeFn) -> Result<Self, WatchError> {
+    pub fn start(target: WindowTarget, overlay: Arc<Mutex<Option<isize>>>, wake: WakeFn) -> Result<Self, WatchError> {
         let (events, receiver) = mpsc::channel();
         let (mouse, mouse_receiver) = mpsc::channel();
         let (keys, key_receiver) = mpsc::channel();
@@ -685,7 +693,7 @@ impl Watcher {
             .spawn(move || {
                 hook_thread(
                     thread_target,
-                    HookChannels { events, mouse, keys },
+                    HookChannels { events, mouse, keys, overlay },
                     thread_mouse_moves,
                     wake,
                     thread_game,
