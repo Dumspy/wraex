@@ -350,6 +350,14 @@ def main() -> None:
     version = args.version or workspace_version()
     target = args.target or host_target()
     explicit_target = args.target is not None
+    for field, value in (("version", version), ("target", target)):
+        if not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9.+_-]*", value):
+            parser.error(f"invalid {field}: expected a single package name component")
+    output = Path(args.out).resolve()
+    stage = output / f"wraex-{version}-{target}"
+    if stage.is_symlink() or stage.resolve().parent != output:
+        parser.error("staging directory must be a direct child of the output directory")
+
 
     if args.no_build and args.binary is None:
         parser.error("--no-build needs --binary")
@@ -369,7 +377,6 @@ def main() -> None:
     if not binary.is_file():
         raise SystemExit(f"cargo did not write {binary} (is wraex-app's binary still named `wraex`?)")
 
-    stage = Path(args.out).resolve() / f"wraex-{version}-{target}"
     if stage.exists():
         shutil.rmtree(stage)
     stage.mkdir(parents=True)

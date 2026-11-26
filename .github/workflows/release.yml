@@ -117,6 +117,7 @@ jobs:
           else
             version=$(sed -n 's/^version = "\(.*\)"/\1/p' rust/Cargo.toml | head -n 1)
           fi
+          [[ "$version" =~ ^[a-zA-Z0-9][a-zA-Z0-9.+_-]*$ ]] || exit 1
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       # `cargo build --release` plus dist/wraex-<version>-<target>/ with assets/ and
@@ -129,6 +130,8 @@ jobs:
         working-directory: rust
 
       - name: Package
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
         run: |
           binary=()
           installer=()
@@ -137,7 +140,7 @@ jobs:
             installer=(--installer)
           fi
           python3 tools/package/package.py \
-            --version "${{ steps.version.outputs.version }}" \
+            --version "$PACKAGE_VERSION" \
             --target "${{ matrix.target }}" \
             --archive "${{ matrix.archive }}" \
             "${binary[@]}" "${installer[@]}"
@@ -148,10 +151,12 @@ jobs:
       # X11/Wayland and the tray GTK through the system), which is why the tarball is
       # uploaded too: it is the artifact for a distro that lacks them.
       - name: AppImage
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
         if: matrix.name == 'linux'
         run: |
           set -euo pipefail
-          name="wraex-${{ steps.version.outputs.version }}-${{ matrix.target }}"
+          name="wraex-$PACKAGE_VERSION-${{ matrix.target }}"
           appdir=AppDir
           rm -rf "$appdir"
           mkdir -p "$appdir/usr/bin"
@@ -213,6 +218,7 @@ jobs:
           else
             version=$(sed -n 's/^version = "\(.*\)"/\1/p' rust/Cargo.toml | head -n 1)
           fi
+          [[ "$version" =~ ^[a-zA-Z0-9][a-zA-Z0-9.+_-]*$ ]] || exit 1
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - uses: softprops/action-gh-release@v2
