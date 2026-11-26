@@ -1268,6 +1268,42 @@ mod tests {
     }
 
     #[test]
+    fn a_chat_then_stash_press_after_the_restore_deadline_both_paste() {
+        for restore in [false, true] {
+            let mut shortcuts = windows(GameId::Poe1);
+            shortcuts.clipboard_mut().update_options(restore);
+            let mut keys = FakeKeySender::default();
+            let mut clipboard = FakeClipboard::scripted(&["old"]);
+            let clock = FakeClock::default();
+            let mut window = GameWindow::new();
+            let mut controller = OverlayController::new(GameId::Poe1, Os::Windows);
+            let mut handle = FakeOverlay::default();
+            for action in [
+                Action::PasteInChat { text: "/hideout".into(), send: true },
+                Action::StashSearch { text: "maps".into() },
+            ] {
+                shortcuts.press(
+                    &entry("F5", action, false),
+                    PressContext {
+                        keys: &mut keys,
+                        system_clipboard: &mut clipboard,
+                        clock: &clock,
+                        window: &mut window,
+                        overlay: &mut controller,
+                        overlay_handle: &mut handle,
+                        cursor: Point { x: 0., y: 0. },
+                        show_mods_key: "Alt",
+                    },
+                );
+                clock.advance(crate::clipboard::RESTORE_AFTER + 1);
+            }
+            assert!(shortcuts.clipboard_mut().apply_pending_restore(&mut clipboard, &clock));
+            let expected = if restore { vec!["/hideout", "old", "maps", "old"] } else { vec!["/hideout", "maps"] };
+            assert_eq!(clipboard.written(), expected);
+        }
+    }
+
+    #[test]
     fn the_stash_search_focuses_the_game_then_pastes_and_searches() {
         let mut shortcuts = windows(GameId::Poe1);
         let search = entry("Ctrl + 1", Action::StashSearch { text: "\"Pack Size: +3\"".into() }, false);
