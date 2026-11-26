@@ -17,6 +17,7 @@
 //! the cases).
 
 pub mod client_log;
+mod instance;
 pub mod poe1;
 pub mod poe2;
 pub mod replay;
@@ -716,6 +717,23 @@ pub fn main() {
         // other thread can read the environment while it changes.
         unsafe { std::env::set_var("RUNE_WHOLE_FRAMES", "1") };
     }
+    // Acquire before log rotation, settings import or any global shortcut registration.
+    let _owner = if live {
+        let config = settings::config_path(game).unwrap_or_else(|| settings::temp_store(game).path().to_owned());
+        match instance::acquire(&config) {
+            Ok(Some(owner)) => Some(owner),
+            Ok(None) => {
+                eprintln!("wraex: {game:?} already has a live instance");
+                return;
+            }
+            Err(error) => {
+                eprintln!("wraex: cannot lock the {game:?} instance: {error}");
+                return;
+            }
+        }
+    } else {
+        None
+    };
     // A live run also logs to `wraex.log` beside its settings (`wraex_platform::log`), so a
     // run started without a console still leaves its log, panics included.
     if live && let Some(app_data) = settings::app_data_dir() {
