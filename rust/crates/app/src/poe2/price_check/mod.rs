@@ -57,12 +57,29 @@ pub fn data(mode: Mode) -> &'static Data {
     static LIVE: OnceLock<Data> = OnceLock::new();
     match mode {
         Mode::Replay => REPLAY.get_or_init(|| load_with(Some(recorded_trade_data()))),
-        Mode::Live => LIVE.get_or_init(|| {
-            let trade = live_trade_data()
-                .inspect_err(|error| wraex_platform::log!("wraex: fetching the trade site's data failed ({error})"))
-                .ok();
-            load_with(trade)
-        }),
+        Mode::Live => {
+            static STARTED: std::sync::Once = std::sync::Once::new();
+            let data = LIVE.get_or_init(|| load_with(None));
+            STARTED.call_once(|| {
+                std::thread::spawn(move || {
+                    fetch_until_ready(data, live_trade_data, || std::thread::sleep(std::time::Duration::from_secs(60)));
+                });
+            });
+            data
+        }
+    }
+}
+
+fn fetch_until_ready(data: &Data, fetch: impl Fn() -> Result<TradeData, String>, retry: impl Fn()) {
+    loop {
+        match fetch() {
+            Ok(trade) => {
+                data.install_trade_data(trade);
+                return;
+            }
+            Err(error) => wraex_platform::log!("wraex: fetching trade metadata failed: {error}"),
+        }
+        retry();
     }
 }
 
@@ -1040,5 +1057,37 @@ mod tests {
         check.set_listing_type("any");
         assert!(check.do_search, "the trade option change re-searched");
         assert!(!check.trade.rows.is_empty() || check.trade.error.is_some(), "a new request went out");
+    }
+}
+
+#[cfg(test)]
+mod metadata_tests {
+    use super::*;
+
+    #[test]
+    fn local_data_remains_readable_while_a_failed_fetch_retries() {
+        let data = load_with(None);
+        let (failed, wait_for_failure) = std::sync::mpsc::channel();
+        let (resume, wait_for_resume) = std::sync::mpsc::channel();
+        std::thread::scope(|scope| {
+            let data = &data;
+            scope.spawn(move || {
+                let attempts = std::cell::Cell::new(0);
+                fetch_until_ready(
+                    data,
+                    || {
+                        if attempts.replace(1) == 0 { Err("offline".into()) } else { Ok(recorded_trade_data()) }
+                    },
+                    || {
+                        failed.send(()).unwrap();
+                        wait_for_resume.recv().unwrap();
+                    },
+                );
+            });
+            wait_for_failure.recv().unwrap();
+            assert!(data.trade().is_none());
+            resume.send(()).unwrap();
+        });
+        assert!(data.trade().is_some());
     }
 }
