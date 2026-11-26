@@ -36,17 +36,36 @@ pub fn load(mode: Mode) -> Prices {
 /// poe.ninja's overviews for `league`, one request per [`NINJA_TYPES`] entry, sent from the
 /// worker that `poll` collects. (Upstream refreshes every 31 minutes while a price check is
 /// in use; this window loads once when it opens.)
-pub fn fetch(league: &str) -> Result<Vec<(&'static str, String)>, String> {
+pub fn fetch(league: &wraex_core::leagues::SelectedLeague) -> Result<Vec<(&'static str, String)>, String> {
     use wraex_core::trade::api::Transport;
 
+    if !league.is_popular || league.realm != "pc-ggg" {
+        return Ok(Vec::new());
+    }
     let transport = crate::trade::live_transport();
     let mut bodies = Vec::with_capacity(NINJA_TYPES.len());
     for (kind, _, _) in NINJA_TYPES {
-        let response = transport.send(&overview_request(league, kind))?;
+        let response = transport.send(&overview_request(&league.id, kind))?;
         if response.status != 200 {
             return Err(format!("poe.ninja's {kind} overview answered {}", response.status));
         }
         bodies.push((kind, response.body));
     }
     Ok(bodies)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use wraex_core::leagues::Leagues;
+
+    #[test]
+    fn private_leagues_skip_both_price_loaders() {
+        let league = Leagues::default().selected(Some("Guild (PL123)"), "pc-ggg").unwrap();
+        let mut poe1 = crate::poe1::price_check::prices::PriceList::new(Mode::Replay);
+        poe1.queue_selected(Some(&league), true);
+        assert!(!poe1.initial_loading());
+        assert_eq!(poe1.xchg_rate(), None);
+        assert!(fetch(&league).unwrap().is_empty());
+    }
 }

@@ -57,9 +57,15 @@ impl PriceList {
     /// `queuePricesFetch`: the user looked at an item, so keep the prices fresh and
     /// load them when they are missing or stale.
     pub fn queue(&mut self, league: &str, force: bool) {
+        if self.mode == Mode::Replay {
+            self.queue_selected(Some(&selected_league(league)), force);
+        }
+    }
+
+    pub fn queue_selected(&mut self, league: Option<&SelectedLeague>, force: bool) {
         let now = self.clock.now();
         self.prices.mark_interest(now);
-        let Some(request) = self.prices.request(Some(&selected_league(league)), force, now) else { return };
+        let Some(request) = self.prices.request(league, force, now) else { return };
         self.loading = true;
         match self.mode {
             // The blob is a file, so it lands now and the view that follows shows it.
