@@ -38,9 +38,9 @@ pub enum Query {
     /// `requestTradeResultList` + `requestResults`.
     Trade { league: String, request: Result<TradeRequest, String>, prices: Prices },
     /// `execBulkSearch` with the currencies the item trades for.
-    Bulk { league: String, request: BulkRequest, prices: Prices },
+    Bulk { league: String, request: BulkRequest },
     /// `TradeBulk.vue`'s lazy load of a currency the optimistic search left out.
-    BulkLazy { league: String, request: BulkRequest, prices: Prices },
+    BulkLazy { league: String, request: BulkRequest },
 }
 
 /// A finished search: `TradeListing.vue`'s `list` and `fetchResults`, or `TradeBulk.vue`'s
@@ -305,13 +305,8 @@ impl Trade {
     /// asked for on its own when its table is shown.
     pub fn load_missing(&mut self, which: BulkCurrency) {
         let missing = self.bulk.as_ref().is_some_and(|results| results.get(which).is_none());
-        let Some(request) = self.lazy_request.clone() else { return };
-        if missing {
-            self.begin(Query::BulkLazy {
-                league: request.league.clone(),
-                request: request.for_currency(which),
-                prices: request.prices.clone(),
-            });
+        if missing && let Some(request) = &self.lazy_request {
+            self.begin(Query::BulkLazy { league: request.league.clone(), request: request.for_currency(which) });
         }
     }
 }
@@ -323,7 +318,6 @@ pub struct LazyBulk {
     /// The filters and item, kept so a click can rebuild the request.
     pub filters: ItemFilters,
     pub item: Item,
-    pub prices: Prices,
 }
 
 impl LazyBulk {
@@ -350,12 +344,12 @@ fn run(mode: Mode, client: &Shared, query: &Query, latency: f64) -> Result<Outco
             let rows = fetch_rows(&mut client, data, prices, &list, now)?;
             Ok(Outcome::Trade { list, rows })
         }
-        Query::Bulk { league, request, .. } => {
+        Query::Bulk { league, request } => {
             let answer =
                 client.exchange::<bulk::ExchangeListing>(request, league).map_err(|error| error.to_string())?;
             Ok(Outcome::Bulk(bulk::searches(&answer, &request.query.have, "", now)))
         }
-        Query::BulkLazy { league, request, .. } => {
+        Query::BulkLazy { league, request } => {
             let answer =
                 client.exchange::<bulk::ExchangeListing>(request, league).map_err(|error| error.to_string())?;
             let search = bulk::searches(&answer, &request.query.have, "", now)
@@ -476,6 +470,21 @@ mod tests {
             groups.apply_lazy(group(tag, 3.));
             assert_eq!(BulkCurrency::ALL.map(|which| groups.get(which).unwrap().total), expected);
         }
+    }
+
+    #[test]
+    fn selecting_a_loaded_group_keeps_the_existing_search() {
+        let mut check = PriceCheck::with_mode(&crate::corpus_poe2("ee2-uncut-skill-gem"), Mode::Replay);
+        check.start_search();
+        assert!(check.trade.lazy_request.is_some());
+        let group =
+            bulk::BulkSearch { have_tag: "exalted".into(), query_id: "saved".into(), total: 7., listed: vec![] };
+        check.trade.bulk = Some(BulkResults { exalted: Some(group), ..Default::default() });
+        let generation = check.trade.generation;
+        check.trade.select_currency(BulkCurrency::Exalted);
+        assert_eq!(check.trade.generation, generation);
+        check.trade.select_currency(BulkCurrency::Divine);
+        assert_eq!(check.trade.generation, generation + 1);
     }
 
     /// The searches the reference screenshots recorded are the searches this app sends.

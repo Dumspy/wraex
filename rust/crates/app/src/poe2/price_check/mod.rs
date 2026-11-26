@@ -518,9 +518,8 @@ impl PriceCheck {
                 filters.trade.listing_type = "online".to_owned();
                 let ref_name = item.info().ref_name.clone().unwrap_or_default();
                 let request = create_bulk_request(&filters, &item, optimistic_have(&ref_name));
-                self.trade.lazy_request =
-                    Some(trade::LazyBulk { league: league.clone(), filters, item, prices: self.prices.clone() });
-                trade::Query::Bulk { league, request, prices: self.prices.clone() }
+                self.trade.lazy_request = Some(trade::LazyBulk { league: league.clone(), filters, item });
+                trade::Query::Bulk { league, request }
             }
         };
         self.trade.begin(query);
