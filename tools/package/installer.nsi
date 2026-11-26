@@ -35,7 +35,7 @@
 ; * the fixed layout: `wraex.exe`, `assets/`, `licences/`, `wraex.ico`, `Uninstall.exe`
 ;   in `$INSTDIR`. An updater must keep writing those names; the old uninstaller is
 ;   replaced by the new one, so its file list does not need to match. Files an older
-;   version shipped and a newer one does not stay until uninstall, which is harmless:
+;   version shipped and a newer one does not may remain on disk:
 ;   the app reads its assets by path;
 ; * the desktop-shortcut choice is remembered in `HKCU\Software\Wraex`, because a
 ;   silent upgrade has no components page to ask again.
@@ -219,8 +219,8 @@ Section "Uninstall"
 
   Delete "$INSTDIR\${APP_ICON}"
   Delete "$INSTDIR\Uninstall.exe"
-  RMDir /r "$INSTDIR\assets"
-  RMDir /r "$INSTDIR\licences"
+  ; Delete only paths staged into this installer. RMDir preserves nonempty directories.
+  !include "${REMOVE_FILES}"
   ; Deliberately not $APPDATA: settings, the log and the config imported from
   ; Awakened PoE Trade stay, so uninstalling and reinstalling loses nothing.
   RMDir "$INSTDIR"
