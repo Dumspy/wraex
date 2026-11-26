@@ -17,6 +17,7 @@
 //! the cases).
 
 pub mod client_log;
+mod market_cache;
 pub mod poe1;
 pub mod poe2;
 pub mod replay;

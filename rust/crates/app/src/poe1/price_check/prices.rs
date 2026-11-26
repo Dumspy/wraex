@@ -75,7 +75,17 @@ impl PriceList {
             },
             Mode::Live => {
                 let transport = self.transport.clone();
-                self.answer.request((), move |()| transport.send(&request).map(|response| response.body));
+                static CACHE: std::sync::LazyLock<crate::market_cache::MarketCache<String>> =
+                    std::sync::LazyLock::new(Default::default);
+                self.answer.request((), move |()| {
+                    CACHE.get(&request.url, wraex_poe1::prices::UPDATE_INTERVAL_MS, || {
+                        let response = transport.send(&request)?;
+                        if response.status != 200 {
+                            return Err(format!("price request answered {}", response.status));
+                        }
+                        Ok(response.body)
+                    })
+                });
             }
         }
     }

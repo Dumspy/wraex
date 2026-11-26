@@ -925,6 +925,9 @@ impl Live {
             .map(str::to_owned)
         {
             self.league = league.clone();
+            self.poe2_prices = None;
+            self.prices =
+                (self.game == GameId::Poe1).then(|| crate::poe1::price_check::prices::PriceList::new(Mode::Live));
             let market = self.market();
             if let Some(prices) = &mut self.prices {
                 prices.queue_selected(market.as_ref(), true);
@@ -2067,6 +2070,7 @@ impl App {
         league: Option<String>,
         overviews: Option<Vec<(&'static str, String)>>,
     ) {
+        let expected = league.clone();
         {
             let Some(live) = self.shell_mut() else { return };
             if let Some(error) = &leagues.error {
@@ -2085,7 +2089,9 @@ impl App {
         }
         if let Some(overviews) = overviews {
             // A window that is already open takes them now; otherwise the next one does.
-            if let Some(check) = &mut self.poe2 {
+            if let Some(check) = &mut self.poe2
+                && expected.as_deref() == Some(check.league.as_str())
+            {
                 check.apply_price_overviews(&overviews);
             }
         }
