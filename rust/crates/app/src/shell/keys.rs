@@ -48,11 +48,16 @@ pub struct OSSender {
     /// The game's window is followed, so hotkeys only exist while it is focused
     /// ([`OSSender::set_game_focus_tracking`]).
     game_focus_tracking: bool,
+    failure: Option<String>,
     #[cfg(target_os = "macos")]
     flags: u64,
 }
 
 impl OSSender {
+    pub fn take_failure(&mut self) -> Option<String> {
+        self.failure.take()
+    }
+
     pub fn new() -> Self {
         Self::default()
     }
@@ -361,63 +366,6 @@ mod platform {
 mod platform {
     use super::OSSender;
 
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    struct KeybdInput {
-        virtual_key: u16,
-        scan_code: u16,
-        flags: u32,
-        time: u32,
-        extra_info: usize,
-    }
-
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    #[allow(dead_code)]
-    struct MouseInput {
-        dx: i32,
-        dy: i32,
-        mouse_data: u32,
-        flags: u32,
-        time: u32,
-        extra_info: usize,
-    }
-
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    #[allow(dead_code)]
-    struct HardwareInput {
-        message: u32,
-        param_low: u16,
-        param_high: u16,
-    }
-
-    #[repr(C)]
-    union InputUnion {
-        key: KeybdInput,
-        #[allow(dead_code)]
-        mouse: MouseInput,
-        #[allow(dead_code)]
-        hardware: HardwareInput,
-    }
-
-    #[repr(C)]
-    #[allow(dead_code)]
-    struct Input {
-        kind: u32,
-        data: InputUnion,
-    }
-
-    const INPUT_KEYBOARD: u32 = 1;
-    const KEY_UP: u32 = 0x0002;
-    /// Arrows, Home/End, Insert/Delete and the like are "extended" keys.
-    const EXTENDED: u32 = 0x0001;
-
-    #[link(name = "user32")]
-    unsafe extern "system" {
-        fn SendInput(count: u32, inputs: *const Input, size: i32) -> u32;
-    }
-
     /// The virtual-key code for one of upstream's names (`KeyToCode` is exactly Windows'
     /// `VK_*` table), plus whether the key is an extended one.
     fn virtual_key(name: &str) -> Option<(u16, bool)> {
@@ -448,27 +396,17 @@ mod platform {
         Some((code, extended))
     }
 
-    fn send(virtual_key: u16, extended: bool, up: bool) {
-        let mut flags = if up { KEY_UP } else { 0 };
-        if extended {
-            flags |= EXTENDED;
-        }
-        let input = Input {
-            kind: INPUT_KEYBOARD,
-            data: InputUnion { key: KeybdInput { virtual_key, scan_code: 0, flags, time: 0, extra_info: 0 } },
-        };
-        // SAFETY: `input` is a live, fully initialised `INPUT` of the size reported.
-        unsafe {
-            SendInput(1, &input, std::mem::size_of::<Input>() as i32);
-        }
-    }
-
-    pub(super) fn key(_sender: &mut OSSender, name: &str, down: bool) {
-        let Some((virtual_key, extended)) = virtual_key(name) else {
-            wraex_platform::log!("wraex: cannot synthesize the key `{name}`");
+    pub(super) fn key(sender: &mut OSSender, name: &str, down: bool) {
+        if down && sender.failure.is_some() {
             return;
-        };
-        send(virtual_key, extended, !down);
+        }
+        let result = virtual_key(name).ok_or_else(|| format!("unknown key {name}")).and_then(|(vk, extended)| {
+            wraex_platform::keyboard::send_key(vk, extended, down)
+                .map_err(|error| format!("sending {name} failed: {error}"))
+        });
+        if let Err(error) = result {
+            sender.failure.get_or_insert(error);
+        }
     }
 
     /// `GetCursorPos`: the cursor in physical desktop pixels.
