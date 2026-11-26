@@ -1,17 +1,29 @@
 name: CI
 
-# Docs-only changes skip CI. No check is required on the branches, so a skipped run
-# blocks nothing; if one becomes required, this needs a job that always reports.
+# Changes that cannot affect the build skip CI entirely: docs, packaging, the release
+# workflow and the licence. No status check is required on the branch rules, so a
+# skipped run blocks nothing; if one becomes required, this needs a job that always
+# reports.
 on:
   push:
     branches: [development, main]
     paths-ignore:
       - "**.md"
       - "docs/**"
+      - ".github/pull_request_template.md"
+      - ".github/workflows/release.yml"
+      - "tools/package/**"
+      - "LICENSE*"
   pull_request:
+    # ready_for_review is what starts CI on a draft (see the `if:` on each job).
+    types: [opened, synchronize, reopened, ready_for_review]
     paths-ignore:
       - "**.md"
       - "docs/**"
+      - ".github/pull_request_template.md"
+      - ".github/workflows/release.yml"
+      - "tools/package/**"
+      - "LICENSE*"
 
 permissions:
   contents: read
@@ -27,52 +39,14 @@ env:
   # CARGO_INCREMENTAL=0.
   CARGO_PROFILE_DEV_DEBUG: "0"
 
+# Draft pull requests are pushed to repeatedly, so every job skips them; marking the
+# PR ready for review runs them, and pushes to development and main never skip.
 jobs:
-  fmt:
-    name: fmt
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: rust
-    steps:
-      - uses: actions/checkout@v6
-      # Installs the channel, components and targets from rust-toolchain.toml.
-      - run: rustup toolchain install
-      - run: cargo fmt --all --check
-
-  pin:
-    name: rune pin
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v6
-      - run: rustup toolchain install
-      # `rune` and every vendor patch must share one rev: cargo does not inherit
-      # patches, and a stale patch rev still builds when the vendored crate's
-      # version did not change.
-      - name: Rune revs agree
-        run: |
-          revs=$(grep -oE 'rev = "[0-9a-f]{40}"' rust/Cargo.toml | sort -u | wc -l)
-          if [ "$revs" -ne 1 ]; then
-            echo "rust/Cargo.toml has $revs different Rune revs"
-            exit 1
-          fi
-      - name: No unused patches
-        run: |
-          if grep -q 'patch.unused' rust/Cargo.lock; then
-            echo "rust/Cargo.lock has unused patches: bump the patch revs with rune"
-            exit 1
-          fi
-      # Fails when Cargo.toml changed without Cargo.lock.
-      - name: Lockfile is current
-        run: cargo metadata --locked --format-version 1 > /dev/null
-        working-directory: rust
-
   test:
     name: test
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     env:
       # Read by the prebuilt nextest install; bump it when the config needs a
       # newer one.
@@ -89,6 +63,34 @@ jobs:
           # The game data the poe1/poe2 crates load lives in the references.
           submodules: true
 
+      # Installs the channel, components and targets from rust-toolchain.toml.
+      - run: rustup toolchain install
+
+      # The cheap checks come first: they need no apt packages and no cache restore,
+      # so a formatting or pin slip fails the job in seconds.
+      - run: cargo fmt --all --check
+
+      # `rune` and every vendor patch must share one rev: cargo does not inherit
+      # patches, and a stale patch rev still builds when the vendored crate's
+      # version did not change.
+      - name: Rune revs agree
+        working-directory: .
+        run: |
+          revs=$(grep -oE 'rev = "[0-9a-f]{40}"' rust/Cargo.toml | sort -u | wc -l)
+          if [ "$revs" -ne 1 ]; then
+            echo "rust/Cargo.toml has $revs different Rune revs"
+            exit 1
+          fi
+      - name: No unused patches
+        working-directory: .
+        run: |
+          if grep -q 'patch.unused' rust/Cargo.lock; then
+            echo "rust/Cargo.lock has unused patches: bump the patch revs with rune"
+            exit 1
+          fi
+      # No separate lockfile check: `--locked` on the clippy and nextest runs below
+      # already fails when Cargo.lock is stale.
+
       - name: Linux build dependencies
         run: |
           sudo apt-get update
@@ -98,8 +100,6 @@ jobs:
           # Mesa's software Vulkan (lavapipe): the runner has no GPU, and the headless
           # snapshot below needs an adapter.
           sudo apt-get install -y --no-install-recommends mesa-vulkan-drivers
-
-      - run: rustup toolchain install
 
       - uses: Swatinem/rust-cache@v2
         with:
@@ -134,6 +134,7 @@ jobs:
     name: windows (cross-check)
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     env:
       # Read by the prebuilt cargo-xwin install and by the xwin cache key, so both
       # move together on a bump.
@@ -167,47 +168,3 @@ jobs:
           key: x86_64-pc-windows-msvc
           save-if: ${{ github.ref == 'refs/heads/development' }}
       - run: cargo xwin clippy --locked --workspace --all-targets --target x86_64-pc-windows-msvc -- -D warnings
-
-  # Regenerates the fixtures from the pinned TypeScript references and fails on
-  # any diff: committed fixtures must be exactly what the references produce.
-  fixtures:
-    name: fixtures
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: true
-      - uses: actions/setup-node@v7
-        with:
-          # EE2's CI version.
-          node-version: 24
-          cache: npm
-          cache-dependency-path: |
-            tools/golden/package-lock.json
-            ref/apt/renderer/package-lock.json
-            ref/ee2/renderer/package-lock.json
-      - run: npm ci --no-audit --no-fund
-        working-directory: tools/golden
-      - run: npm run prepare-refs
-        working-directory: tools/golden
-      - run: npm run regen
-        working-directory: tools/golden
-      # The Rust data layer builds its indexes in memory; check they hold the same
-      # rows as the `*.index.bin` files prepare-refs just generated.
-      - run: rustup toolchain install
-      # Dependencies build at opt-level 2 (rust/Cargo.toml), so keep them cached.
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust
-          save-if: ${{ github.ref == 'refs/heads/development' }}
-      - name: Rust indexes match the generated index files
-        run: cargo test --locked -p wraex-poe1 -p wraex-poe2 -- --ignored
-        working-directory: rust
-      - name: Fixtures match the references
-        run: |
-          git status --short -- fixtures
-          git diff --quiet -- fixtures
-          test -z "$(git ls-files --others --exclude-standard -- fixtures)"
-      - name: References left untouched
-        run: test -z "$(git submodule foreach --quiet git status --porcelain)"

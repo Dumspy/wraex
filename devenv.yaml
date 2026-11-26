@@ -7,3 +7,10 @@ inputs:
     inputs:
       nixpkgs:
         follows: nixpkgs
+  # The git-hooks module (fmt on commit, Rune pin and clippy on push) is not
+  # built into devenv; it is this input.
+  git-hooks:
+    url: github:cachix/git-hooks.nix
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
