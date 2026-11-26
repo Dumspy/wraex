@@ -355,12 +355,22 @@ impl PriceCheck {
         let overviews: Vec<(&str, &str)> = overviews.iter().map(|(kind, body)| (*kind, body.as_str())).collect();
         let now = crate::trade::now(self.mode);
         self.prices.loaded(data(self.mode), &overviews, now);
+        self.normalize_rows();
+    }
+
+    fn normalize_rows(&mut self) {
+        for row in &mut self.trade.rows {
+            row.normalize_price(data(self.mode), &mut self.prices);
+        }
     }
 
     /// `AppSpec::poll`: applies a landed search or price answer and the blur rule; true
     /// when something changed.
     pub fn poll(&mut self) -> bool {
         let landed = self.trade.poll();
+        if landed && self.prices_requested {
+            self.normalize_rows();
+        }
         let priced = self.poll_prices();
         let blurred = self.sync_input_focus();
         landed || priced || blurred
@@ -383,12 +393,7 @@ impl PriceCheck {
             return false;
         };
         match answer {
-            Ok(overviews) => {
-                let overviews: Vec<(&str, &str)> =
-                    overviews.iter().map(|(kind, body)| (*kind, body.as_str())).collect();
-                let now = crate::trade::now(self.mode);
-                self.prices.loaded(data(self.mode), &overviews, now);
-            }
+            Ok(overviews) => self.apply_price_overviews(&overviews),
             Err(error) => wraex_platform::log!("wraex: fetching poe.ninja prices failed: {error}"),
         }
         true

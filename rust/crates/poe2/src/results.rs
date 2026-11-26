@@ -559,6 +559,20 @@ fn currency_details_id(d: &Data, id: &str) -> crate::prices::DbQuery {
     }
 }
 
+impl PricingResult {
+    /// Recalculate the display amount when newer exchange rates reach the price check.
+    pub fn normalize_price(&mut self, data: &Data, prices: &mut crate::prices::Prices) {
+        let query = currency_details_id(data, &self.price_currency);
+        let converted = prices.cached_currency_by_query(&query, self.price_amount);
+        self.normalized_price = converted.map(|n| crate::prices::display_rounding(n.min, false, false));
+        self.normalized_price_currency = if converted.is_some_and(|n| n.currency == "div") {
+            Some(crate::prices::div_currency())
+        } else {
+            prices.selected_core_currency().cloned()
+        };
+    }
+}
+
 /// `requestResults`' rows, for the user's `account_name` at `now`. A display
 /// item that fails to build is left out, as upstream logs and skips it.
 pub fn pricing_results(
@@ -591,14 +605,6 @@ pub fn pricing_results(
             let amount = price.and_then(|p| p.get("amount")).and_then(Value::as_f64);
             let currency = currency.unwrap_or_else(|| "no price".to_owned());
 
-            let query = currency_details_id(d, &currency);
-            let normalized = prices.cached_currency_by_query(&query, amount.unwrap_or(0.0));
-            let normalized_price_currency = if normalized.is_some_and(|n| n.currency == "div") {
-                Some(crate::prices::div_currency())
-            } else {
-                prices.selected_core_currency().cloned()
-            };
-
             // `gemSockets.length`, else the fewest of the socketed items'.
             let len = |v: Option<&Value>| v.and_then(Value::as_array).map(Vec::len);
             let gem_sockets = len(item.get("gemSockets")).filter(|&n| n > 0).or_else(|| {
@@ -606,7 +612,7 @@ pub fn pricing_results(
                 socketed.iter().filter_map(|s| len(get(s, "gemSockets"))).min()
             });
 
-            PricingResult {
+            let mut row = PricingResult {
                 id: text(result.get("id")),
                 item_level: property(item, 78).map_or_else(|| text(item.get("ilvl")), |v| text(Some(&v))),
                 stack_size: get(item, "stackSize").cloned(),
@@ -622,8 +628,8 @@ pub fn pricing_results(
                 price_amount: amount.unwrap_or(0.0),
                 price_currency: currency,
                 price_currency_rank: rank,
-                normalized_price: normalized.map(|n| crate::prices::display_rounding(n.min, false, false)),
-                normalized_price_currency,
+                normalized_price: None,
+                normalized_price_currency: None,
                 is_mine: account.get("name").and_then(Value::as_str) == Some(account_name),
                 has_note: get(item, "note").is_some(),
                 is_instant_buyout: get(listing, "fee").is_some(),
@@ -637,7 +643,9 @@ pub fn pricing_results(
                 display_item: parse_fetch_result(d, result).ok(),
                 in_demand: get(listing, "in_demand").cloned(),
                 gone: get(result, "gone").cloned(),
-            }
+            };
+            row.normalize_price(d, prices);
+            row
         })
         .collect()
 }

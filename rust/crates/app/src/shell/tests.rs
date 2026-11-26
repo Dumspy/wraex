@@ -1499,7 +1499,13 @@ fn warm_overviews_reach_the_first_automatic_search() {
     );
     let check = app.poe2.as_mut().unwrap();
     let first: Vec<_> = check.trade.rows.iter().map(|row| row.normalized_price.clone()).collect();
-    assert!(!first.is_empty());
+    assert!(first.iter().any(Option::is_some));
     check.start_search();
     assert_eq!(first, check.trade.rows.iter().map(|row| row.normalized_price.clone()).collect::<Vec<_>>());
+    let late = body.replace("primaryValue\":1", "primaryValue\":2");
+    check.apply_price_overviews(&[("Currency", late)]);
+    let refreshed: Vec<_> = check.trade.rows.iter().map(|row| row.normalized_price.clone()).collect();
+    assert_ne!(first, refreshed);
+    check.start_search();
+    assert_eq!(refreshed, check.trade.rows.iter().map(|row| row.normalized_price.clone()).collect::<Vec<_>>());
 }
