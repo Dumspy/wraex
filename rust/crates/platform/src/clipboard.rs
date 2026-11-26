@@ -75,6 +75,13 @@ struct PendingRestore {
     due: Millis,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Capture {
+    saved: String,
+    next_poll: Millis,
+    timeout: Millis,
+}
+
 /// `HostClipboard.ts`: the polling read, and the short-lived restore.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HostClipboard {
@@ -83,7 +90,7 @@ pub struct HostClipboard {
     should_restore: bool,
     initial_delay: Millis,
     /// `this.pollPromise != null`: a read is in flight.
-    is_polling: bool,
+    capture: Option<Capture>,
     /// `this.isRestored`: no restore is pending, so the next
     /// [`Self::restore_shortly`] may run.
     is_restored: bool,
@@ -99,7 +106,7 @@ impl HostClipboard {
             os,
             should_restore: false,
             initial_delay: POLL_DELAY,
-            is_polling: false,
+            capture: None,
             is_restored: true,
             pending_restore: None,
         }
@@ -119,7 +126,7 @@ impl HostClipboard {
 
     /// `isPolling`.
     pub fn is_polling(&self) -> bool {
-        self.is_polling
+        self.capture.is_some()
     }
 
     /// `shouldRestore`.
@@ -137,25 +144,15 @@ impl HostClipboard {
         format!("__{marker}_FORCE_EMPTY_{}", clock.now())
     }
 
-    /// `readItemText()`, in one blocking call: snapshot and blank the clipboard,
-    /// send the copy keys, then poll for item text.
-    ///
-    /// `press_keys` is where Ctrl+C goes out. Upstream calls `readItemText()` and
-    /// then presses the keys while the promise waits for its first poll; a
-    /// blocking port has to press first, and this argument keeps that order
-    /// explicit so the snapshot still happens before the game writes to the
-    /// clipboard.
-    ///
-    /// Upstream returns the in-flight promise when a read is already running. A
-    /// blocking port cannot be re-entered, so the caller must not start a second
-    /// read before this one returns; the app runs each hotkey action to
-    /// completion on one worker.
-    pub fn read_item_text(
-        &mut self,
-        clipboard: &mut dyn Clipboard,
-        clock: &dyn Clock,
-        press_keys: impl FnOnce(),
-    ) -> Result<String, ReadError> {
+    pub fn capture_deadline(&self) -> Option<Millis> {
+        self.capture.as_ref().map(|capture| capture.next_poll)
+    }
+
+    /// Snapshot before sending the copy chord. A pending capture owns the clipboard.
+    pub fn begin_capture(&mut self, clipboard: &mut dyn Clipboard, clock: &dyn Clock, press_keys: impl FnOnce()) {
+        if self.is_polling() {
+            return;
+        }
         let mut text_before = clipboard.read_text();
         if is_poe_item(&text_before, self.game) {
             // An item from the previous copy is not the previous clipboard.
@@ -174,31 +171,31 @@ impl HostClipboard {
 
         press_keys();
 
-        self.is_polling = true;
-        clock.sleep(self.initial_delay);
-        let mut elapsed: Millis = 0;
-        let result = loop {
-            let text_after = clipboard.read_text();
-            if is_poe_item(&text_after, self.game) {
-                if self.should_restore {
-                    clipboard.write_text(&text_before);
-                }
-                break Ok(text_after);
-            }
+        let next_poll = clock.now().saturating_add(self.initial_delay);
+        let timeout = next_poll.saturating_add((POLL_LIMIT.div_ceil(POLL_DELAY) - 1) * POLL_DELAY);
+        self.capture = Some(Capture { saved: text_before, next_poll, timeout });
+    }
 
-            elapsed += POLL_DELAY;
-            if elapsed < POLL_LIMIT {
-                clock.sleep(POLL_DELAY);
-                continue;
-            }
-
-            if self.should_restore {
-                clipboard.write_text(&text_before);
-            }
-            break Err(ReadError::Timeout);
+    /// One clipboard read per deadline. Returning None leaves the event loop free until the next poll.
+    pub fn poll_capture(&mut self, clipboard: &mut dyn Clipboard, now: Millis) -> Option<Result<String, ReadError>> {
+        let capture = self.capture.as_mut()?;
+        if now < capture.next_poll {
+            return None;
+        }
+        let text = clipboard.read_text();
+        let result = if is_poe_item(&text, self.game) {
+            Ok(text)
+        } else if now >= capture.timeout {
+            Err(ReadError::Timeout)
+        } else {
+            capture.next_poll = now.saturating_add(POLL_DELAY).min(capture.timeout);
+            return None;
         };
-        self.is_polling = false;
-        result
+        if self.should_restore {
+            clipboard.write_text(&capture.saved);
+        }
+        self.capture = None;
+        Some(result)
     }
 
     /// `restoreShortly(cb)`: run `write` with the clipboard, then restore what was
@@ -212,7 +209,7 @@ impl HostClipboard {
         clock: &dyn Clock,
         write: impl FnOnce(&mut dyn Clipboard) -> T,
     ) -> Option<T> {
-        if !self.is_restored {
+        if !self.is_restored || self.is_polling() {
             return None;
         }
 
@@ -310,7 +307,13 @@ mod tests {
         clock: &dyn Clock,
         presses: &mut usize,
     ) -> Result<String, ReadError> {
-        host.read_item_text(clipboard, clock, || *presses += 1)
+        host.begin_capture(clipboard, clock, || *presses += 1);
+        loop {
+            clock.sleep(host.capture_deadline().unwrap().saturating_sub(clock.now()));
+            if let Some(result) = host.poll_capture(clipboard, clock.now()) {
+                return result;
+            }
+        }
     }
 
     #[test]

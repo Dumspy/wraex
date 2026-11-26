@@ -440,11 +440,14 @@ impl Shortcuts {
     /// One press of a registered hotkey: release what the user held, then run the
     /// action. Exactly one action per press.
     pub fn press(&mut self, entry: &ShortcutAction, ctx: PressContext<'_>) -> Vec<ShortcutEvent> {
-        let PressContext { keys, system_clipboard, clock, window, overlay, overlay_handle, cursor, show_mods_key } =
+        let PressContext { keys, system_clipboard, clock, window, overlay, overlay_handle, cursor: _, show_mods_key } =
             ctx;
         let game = self.game;
         let os = self.os;
 
+        if matches!(entry.action, Action::CopyItem { .. }) && self.clipboard.is_polling() {
+            return vec![];
+        }
         release_pressed_keys(entry, keys);
 
         let mut events = Vec::new();
@@ -469,23 +472,10 @@ impl Shortcuts {
                     stash_search(text, clipboard, keys, os);
                 });
             }
-            Action::CopyItem { target, focus_overlay } => {
-                let pressed = self.clipboard.read_item_text(system_clipboard, clock, || {
+            Action::CopyItem { .. } => {
+                self.clipboard.begin_capture(system_clipboard, clock, || {
                     press_keys_to_copy_item_text(game, os, entry, show_mods_key, keys);
                 });
-                // `readItemText().catch(() => {})`: a timeout is silent.
-                if let Ok(clipboard) = pressed {
-                    overlay.stop_tracking_area();
-                    events.push(ShortcutEvent::ItemText(ItemText {
-                        target: target.clone(),
-                        clipboard,
-                        position: cursor,
-                        focus_overlay: *focus_overlay,
-                    }));
-                    if *focus_overlay && overlay.was_used_recently() {
-                        overlay.assert_overlay_active(window, overlay_handle);
-                    }
-                }
             }
             Action::OcrText { target } => {
                 if os == Os::Windows && target == "heist-gems" {
@@ -495,6 +485,30 @@ impl Shortcuts {
             Action::TestOnly => {}
         }
         events
+    }
+
+    /// Finish the original copy action with the cursor position recorded at the press.
+    pub fn finish_copy(
+        entry: &ShortcutAction,
+        cursor: Point,
+        clipboard: String,
+        overlay: &mut OverlayController,
+        window: &mut GameWindow,
+        handle: &mut dyn OverlayHandle,
+    ) -> ShortcutEvent {
+        let Action::CopyItem { target, focus_overlay } = &entry.action else {
+            unreachable!("only copy actions capture")
+        };
+        overlay.stop_tracking_area();
+        if *focus_overlay && overlay.was_used_recently() {
+            overlay.assert_overlay_active(window, handle);
+        }
+        ShortcutEvent::ItemText(ItemText {
+            target: target.clone(),
+            clipboard,
+            position: cursor,
+            focus_overlay: *focus_overlay,
+        })
     }
 
     /// Ctrl+wheel outside the stash panel walks the stash tabs. Returns whether a
@@ -792,7 +806,7 @@ mod tests {
         window.set_active(true);
         let mut controller = OverlayController::new(shortcuts.game, shortcuts.os);
         let mut handle = FakeOverlay::default();
-        let events = shortcuts.press(
+        let mut events = shortcuts.press(
             entry,
             PressContext {
                 keys: &mut keys,
@@ -805,6 +819,19 @@ mod tests {
                 show_mods_key,
             },
         );
+        while let Some(due) = shortcuts.clipboard.capture_deadline() {
+            clock.advance(due.saturating_sub(clock.now()));
+            if let Some(Ok(text)) = shortcuts.clipboard.poll_capture(&mut clipboard, clock.now()) {
+                events.push(Shortcuts::finish_copy(
+                    entry,
+                    Point { x: 400., y: 300. },
+                    text,
+                    &mut controller,
+                    &mut window,
+                    &mut handle,
+                ));
+            }
+        }
         Pressed { keys, clipboard, clock, handle, events }
     }
 
@@ -1024,6 +1051,46 @@ mod tests {
                 KeyStep::Up("Ctrl".into()),
             ]
         );
+    }
+
+    #[test]
+    fn slow_capture_allows_another_action_and_times_out_without_a_second_copy() {
+        let mut shortcuts = windows(GameId::Poe1);
+        shortcuts.clipboard.update_options(true);
+        let clock = FakeClock::default();
+        let mut keys = FakeKeySender::default();
+        let mut clipboard = FakeClipboard::scripted(&["old", ""]);
+        let mut window = GameWindow::new();
+        let mut controller = OverlayController::new(GameId::Poe1, Os::Windows);
+        let mut handle = FakeOverlay::default();
+        let mut press = |entry: &ShortcutAction| {
+            shortcuts.press(
+                entry,
+                PressContext {
+                    keys: &mut keys,
+                    system_clipboard: &mut clipboard,
+                    clock: &clock,
+                    window: &mut window,
+                    overlay: &mut controller,
+                    overlay_handle: &mut handle,
+                    cursor: Point { x: 0., y: 0. },
+                    show_mods_key: "Alt",
+                },
+            )
+        };
+        let copy = copy_item("Ctrl + D", true);
+        assert!(press(&copy).is_empty());
+        assert!(press(&copy).is_empty());
+        let other = entry("F1", Action::TriggerEvent { target: "delve-grid".into() }, false);
+        assert_eq!(press(&other), vec![ShortcutEvent::WidgetAction { target: "delve-grid".into() }]);
+        assert_eq!(clock.now(), 0);
+        assert_eq!(keys.steps().iter().filter(|step| matches!(step, KeyStep::Tap {key, ..} if key == "C")).count(), 1);
+        assert_eq!(
+            shortcuts.clipboard.poll_capture(&mut clipboard, 1000),
+            Some(Err(crate::clipboard::ReadError::Timeout))
+        );
+        assert!(shortcuts.clipboard.capture_deadline().is_none());
+        assert_eq!(clipboard.written(), ["old"]);
     }
 
     #[test]

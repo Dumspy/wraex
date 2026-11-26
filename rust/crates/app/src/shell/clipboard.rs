@@ -1,10 +1,7 @@
 //! The OS clipboard behind [`wraex_platform::clipboard::Clipboard`].
 //!
 //! [`wraex_platform::clipboard`] ports `HostClipboard.ts` as a polling state machine and
-//! leaves the clipboard itself to the app; this is that half. Electron's synchronous
-//! `clipboard.readText()`/`writeText()` are what the module's `read_item_text` expects, so the
-//! port needs a blocking read from a worker thread — Rune's clipboard API is asynchronous and
-//! (for reads) hands the text to a UI callback, which the polling loop cannot await.
+//! reads the OS clipboard once per scheduled capture deadline.
 //!
 //! `arboard` is the same crate Rune uses for its own clipboard on Windows and Linux, so this
 //! adds no new platform code. Its `Clipboard` is not `Sync`, so each thread borrows it.
@@ -75,7 +72,10 @@ mod tests {
         assert!(is_poe_item(&clipboard.read_text(), GameId::Poe1));
         // And the platform state machine reads it as the item a copy produced.
         let mut host = HostClipboard::new(GameId::Poe1, Os::MacOs);
-        let text = host.read_item_text(&mut clipboard, &Instant, || {}).unwrap();
+        let item = clipboard.read_text();
+        host.begin_capture(&mut clipboard, &Instant, || {});
+        clipboard.write_text(&item);
+        let text = host.poll_capture(&mut clipboard, host.capture_deadline().unwrap()).unwrap().unwrap();
         assert_eq!(text, "Rarity: Currency\nDivine Orb\n");
     }
 }
