@@ -734,6 +734,22 @@ fn the_price_check_hotkey_opens_the_window_on_the_item() {
     assert!(app.price_check.stable_orb_cost().is_none(), "no prices for an unrecorded league");
 }
 
+#[test]
+fn late_startup_prices_cannot_restore_an_old_market() {
+    let mut app = live_app("late-startup-prices", TestClipboard::holding(""));
+    app.shell_mut().unwrap().league = "Guild (PL123)".into();
+    app.apply_startup(
+        "Standard",
+        "pc-ggg",
+        Leagues::default(),
+        Some("Standard".into()),
+        Some(vec![("Currency", String::new())]),
+    );
+    let live = app.shell().unwrap();
+    assert_eq!(live.league, "Guild (PL123)");
+    assert!(live.poe2_prices.is_none());
+}
+
 /// The warm prices the shell fetched at launch are the window's, not a second fetch.
 #[test]
 fn the_startup_prices_become_the_windows() {

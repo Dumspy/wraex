@@ -49,6 +49,10 @@ impl PriceList {
         Self { mode, transport, clock, prices: Prices::default(), answer: Latest::default(), loading: false }
     }
 
+    pub(crate) fn reset(&mut self) {
+        *self = Self::new(self.mode);
+    }
+
     /// The waker a landed answer uses to run `AppSpec::poll`.
     pub fn set_waker(&self, waker: Waker) {
         self.answer.set_waker(waker);

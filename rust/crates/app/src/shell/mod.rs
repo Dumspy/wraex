@@ -913,23 +913,16 @@ impl Live {
         if loaded.save_temporary {
             return self.warn("the config could not be read back after the settings window");
         }
+        let previous_market = self.market();
         self.startup.config = loaded.config;
-        // `updateConfig` also carries the league: the next price check prices in it, and the
-        // prices the shell kept warm are asked for again.
-        if let Some(league) = self
-            .startup
-            .config
-            .get("leagueId")
-            .and_then(|value| value.as_str())
-            .filter(|league| !league.is_empty() && *league != self.league)
-            .map(str::to_owned)
-        {
-            self.league = league.clone();
+        if let Some(league) = self.startup.config["leagueId"].as_str().filter(|id| !id.is_empty()) {
+            self.league = league.to_owned();
+        }
+        let market = self.market();
+        if previous_market != market {
             self.poe2_prices = None;
-            self.prices =
-                (self.game == GameId::Poe1).then(|| crate::poe1::price_check::prices::PriceList::new(Mode::Live));
-            let market = self.market();
             if let Some(prices) = &mut self.prices {
+                prices.reset();
                 prices.queue_selected(market.as_ref(), true);
             }
         }
@@ -2066,32 +2059,37 @@ impl App {
     /// poe.ninja overviews.
     fn apply_startup(
         &mut self,
+        requested_league: &str,
+        requested_realm: &str,
         leagues: Leagues,
         league: Option<String>,
         overviews: Option<Vec<(&'static str, String)>>,
     ) {
-        let expected = league.clone();
-        {
-            let Some(live) = self.shell_mut() else { return };
-            if let Some(error) = &leagues.error {
-                live.warn(format!("loading the leagues failed: {error}"));
-            }
-            if let Some(league) = league.filter(|league| *league != live.league) {
-                live.warn(format!("price checks now use the league \"{league}\""));
-                live.league = league.clone();
-            }
-            live.leagues = leagues;
-            let market = live.market();
-            if let Some(prices) = &mut live.prices {
-                prices.queue_selected(market.as_ref(), false);
-            }
-            live.poe2_prices = overviews.clone();
+        let Some(live) = self.shell_mut() else { return };
+        if let Some(error) = &leagues.error {
+            live.warn(format!("loading the leagues failed: {error}"));
         }
-        if let Some(overviews) = overviews {
-            // A window that is already open takes them now; otherwise the next one does.
-            if let Some(check) = &mut self.poe2
-                && expected.as_deref() == Some(check.league.as_str())
-            {
+        live.leagues = leagues;
+        let current = requested_league == live.league
+            && requested_realm == live.startup.config["realm"].as_str().unwrap_or("pc-ggg");
+        if current && let Some(league) = league.filter(|league| *league != live.league) {
+            live.warn(format!("price checks now use the league \"{league}\""));
+            live.league = league;
+        }
+        let market = live.market();
+        let league = live.league.clone();
+        let overviews = overviews.filter(|_| current);
+        live.poe2_prices = overviews.clone();
+        if let Some(prices) = &mut live.prices {
+            prices.queue_selected(market.as_ref(), false);
+        } else if self.game == GameId::Poe1 && self.price_check.league == league && self.price_check.item().is_some() {
+            self.price_check.prices.queue_selected(market.as_ref(), false);
+        }
+        if let Some(check) = &mut self.poe2
+            && check.league == league
+        {
+            check.market = market;
+            if let Some(overviews) = overviews {
                 check.apply_price_overviews(&overviews);
             }
         }
@@ -2479,6 +2477,7 @@ fn spawn_startup_work(handle: AppHandle<App>, game: GameId, configured: Option<S
                 _ => LeagueSource::Poe1,
             };
             let mut leagues = Leagues::default();
+            let initial = configured.clone().unwrap_or_else(|| default_league(game).to_owned());
             let fallback = leagues.load(&transport, source, TRADE_HOST, configured.as_deref());
             let league = fallback.or(configured).or_else(|| leagues.list.first().map(|league| league.id.clone()));
 
@@ -2492,7 +2491,7 @@ fn spawn_startup_work(handle: AppHandle<App>, game: GameId, configured: Option<S
                 }
             }
 
-            handle.update(move |app, _tx| app.apply_startup(leagues, league, overviews));
+            handle.update(move |app, _tx| app.apply_startup(&initial, &realm, leagues, league, overviews));
         })
         .expect("start the startup worker");
 }
