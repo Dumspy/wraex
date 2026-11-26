@@ -56,7 +56,6 @@ pub enum Outcome {
     /// guess of another one.
     BulkLazy {
         search: bulk::BulkSearch,
-        other: BulkCurrency,
     },
 }
 
@@ -153,6 +152,15 @@ impl BulkResults {
             BulkCurrency::Chaos => self.chaos.as_mut(),
             BulkCurrency::Divine => self.divine.as_mut(),
         }
+    }
+
+    fn apply_lazy(&mut self, search: bulk::BulkSearch) {
+        let which = BulkCurrency::of_tag(&search.have_tag);
+        let other = if which == BulkCurrency::Divine { BulkCurrency::Exalted } else { BulkCurrency::Divine };
+        if let Some(group) = self.get_mut(other) {
+            group.total -= search.total;
+        }
+        self.set(which, search);
     }
 
     fn set(&mut self, which: BulkCurrency, search: bulk::BulkSearch) {
@@ -274,14 +282,9 @@ impl Trade {
                 self.list = None;
                 self.rows.clear();
             }
-            Ok(Outcome::BulkLazy { search, other }) => {
+            Ok(Outcome::BulkLazy { search }) => {
                 let Some(results) = self.bulk.as_mut() else { return };
-                let which = BulkCurrency::of_tag(&search.have_tag);
-                let total = search.total;
-                results.set(which, search);
-                if let Some(other) = results.get_mut(other) {
-                    other.total -= total;
-                }
+                results.apply_lazy(search);
             }
         }
     }
@@ -360,12 +363,7 @@ fn run(mode: Mode, client: &Shared, query: &Query, latency: f64) -> Result<Outco
                 .flatten()
                 .next()
                 .ok_or_else(|| "The exchange answer had no offers".to_owned())?;
-            let other = match search.have_tag.as_str() {
-                "exalted" => BulkCurrency::Chaos,
-                "divine" => BulkCurrency::Exalted,
-                _ => BulkCurrency::Exalted,
-            };
-            Ok(Outcome::BulkLazy { search, other })
+            Ok(Outcome::BulkLazy { search })
         }
     }
 }
@@ -460,6 +458,25 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn lazy_results_adjust_only_the_matching_optimistic_total() {
+        let group = |tag: &str, total| bulk::BulkSearch {
+            have_tag: tag.into(),
+            query_id: String::new(),
+            total,
+            listed: vec![],
+        };
+        for (tag, expected) in [("exalted", [3., 20., 27.]), ("chaos", [10., 3., 27.]), ("divine", [7., 20., 3.])] {
+            let mut groups = BulkResults {
+                exalted: Some(group("exalted", 10.)),
+                chaos: Some(group("chaos", 20.)),
+                divine: Some(group("divine", 30.)),
+            };
+            groups.apply_lazy(group(tag, 3.));
+            assert_eq!(BulkCurrency::ALL.map(|which| groups.get(which).unwrap().total), expected);
+        }
+    }
 
     /// The searches the reference screenshots recorded are the searches this app sends.
     /// The replay keys on a hash of the body, so a difference here is a parity bug — and
