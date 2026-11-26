@@ -899,11 +899,34 @@ impl Live {
 
     /// Re-read the config after the settings window closed (Save or Cancel) and apply what
     /// changed to the running app, as upstream's `updateConfig` does.
-    fn reload_config(&mut self) {
+    fn reload_config(&mut self, app: &mut App) {
         let Some(contents) = self.startup.store.load() else { return };
         let loaded = settings::load(self.game, Some(&contents));
         if loaded.save_temporary {
             return self.warn("the config could not be read back after the settings window");
+        }
+        // Apply the settings window's edits to the live widget objects too. The overlay
+        // can have its own pending move and runtime flags when that window closes.
+        if let Some(overlay) = &mut app.widgets {
+            let previous = self.startup.config["widgets"].as_array().into_iter().flatten();
+            for saved in loaded.config["widgets"].as_array().into_iter().flatten() {
+                let Some(id) = saved["wmId"].as_u64().and_then(|id| u32::try_from(id).ok()) else { continue };
+                let Some(old) = previous.clone().find(|old| old["wmId"] == id && old["wmType"] == saved["wmType"])
+                else {
+                    continue;
+                };
+                let Some(widget) = overlay.widget_mut(id) else { continue };
+                if let (Some(fields), Some(old_fields), Some(current)) =
+                    (saved.as_object(), old.as_object(), widget.config.as_object_mut())
+                {
+                    current.retain(|key, _| !old_fields.contains_key(key) || fields.contains_key(key));
+                    for (key, value) in fields {
+                        if old_fields.get(key) != Some(value) {
+                            current.insert(key.clone(), value.clone());
+                        }
+                    }
+                }
+            }
         }
         self.startup.config = loaded.config;
         // `updateConfig` also carries the league: the next price check prices in it, and the
@@ -1385,7 +1408,6 @@ impl Live {
             changed = true;
             self.deliver(app, requests);
         }
-        self.save_widget_config(app);
 
         // Save or Cancel closes the settings window; either way the app re-reads its config so
         // the next hotkey press uses what the file now says, and the settings widget goes back
@@ -1393,10 +1415,11 @@ impl Live {
         let settings_open = app.settings.as_ref().is_some_and(|settings| settings.open);
         if self.settings_was_open && !settings_open {
             app.hide_settings_widget();
-            self.reload_config();
+            self.reload_config(app);
             changed = true;
         }
         self.settings_was_open = settings_open;
+        self.save_widget_config(app);
 
         self.drain_overlay_events(app);
         self.sync_window(app, tx);

@@ -1313,6 +1313,14 @@ fn dragging_a_widgets_handle_moves_it_and_saves_the_anchor() {
     // The menu's "add widget…" (`wm.create`): a stopwatch, as `WidgetTimer.vue` mounts it.
     let timer = app.widgets.as_mut().expect("the overlay").create(widgets::Kind::Stopwatch.wm_type());
     poll(&mut app);
+    let price = widget_id(&app, "price-check");
+    let live = app.live.as_mut().unwrap();
+    let mut edited = live.startup.config.clone();
+    let price_config = edited["widgets"].as_array_mut().unwrap().iter_mut().find(|w| w["wmId"] == price).unwrap();
+    price_config["searchStatRange"] = serde_json::json!(37);
+    live.startup.store.save(&edited.to_string(), false).unwrap();
+    live.settings_was_open = true;
+    poll(&mut app);
     let menu = widget_id(&app, widgets::menu::WM_TYPE);
     // The overlay over the game is the game's client area in points, which is what a drag's
     // percentages are of (`Live::sync_window` sets it from the game every frame).
@@ -1351,6 +1359,7 @@ fn dragging_a_widgets_handle_moves_it_and_saves_the_anchor() {
     let mut restarted = live_app_in(&dir, TestClipboard::default());
     poll(&mut restarted);
     let overlay = restarted.widgets.as_ref().expect("the overlay");
+    assert_eq!(overlay.widget(price).unwrap().config["searchStatRange"], 37);
     let widget = overlay.widget(timer).expect("the stopwatch survived the restart");
     assert_eq!(widget.anchor_pos(), "cc");
     assert_eq!(widget.anchor(), (25.0, 25.0));
