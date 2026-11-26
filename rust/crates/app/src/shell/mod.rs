@@ -1863,16 +1863,15 @@ impl App {
         let waker = self.waker.clone();
         match game {
             GameId::Poe2 => {
-                let mut check = crate::poe2::price_check::PriceCheck::with_client(
+                let check = crate::poe2::price_check::PriceCheck::with_client(
                     text,
                     mode,
                     league,
                     self.poe2_client(mode),
                     config,
+                    overviews.as_deref().unwrap_or_default(),
                 );
-                if let Some(overviews) = overviews {
-                    check.apply_price_overviews(&overviews);
-                }
+
                 if let Some(waker) = &waker {
                     check.set_waker(waker.clone());
                 }

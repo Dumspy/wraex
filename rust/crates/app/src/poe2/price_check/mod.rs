@@ -219,7 +219,7 @@ impl PriceCheck {
 
     /// [`PriceCheck::with_mode`] in the league the app selected from the trade site's list.
     pub fn with_mode_league(text: &str, mode: Mode, league: &str) -> Self {
-        Self::with_client(text, mode, league, Self::new_client(mode), &serde_json::Value::Null)
+        Self::with_client(text, mode, league, Self::new_client(mode), &serde_json::Value::Null, &[])
     }
 
     pub(crate) fn new_client(mode: Mode) -> crate::trade::Shared {
@@ -232,13 +232,14 @@ impl PriceCheck {
         league: &str,
         client: crate::trade::Shared,
         config: &serde_json::Value,
+        overviews: &[(&'static str, String)],
     ) -> Self {
         // Item art follows the window's switch: a live window fetches from the CDN, a
         // replay reads the screenshot harness's recordings.
         crate::ui::art::set_mode(mode);
         let data = data(mode);
         let item = parse_clipboard(data, text).map_err(|fail| ParseError::Rejected { key: fail.0 });
-        Self::build(text.to_owned(), item, mode, league, client, config)
+        Self::build(text.to_owned(), item, mode, league, client, config, overviews)
     }
 
     /// `MAIN->CLIENT::item-text` with the item already parsed: what the item search sends when
@@ -248,7 +249,7 @@ impl PriceCheck {
     pub(crate) fn with_item(item: Item, mode: Mode, client: crate::trade::Shared, config: &serde_json::Value) -> Self {
         crate::ui::art::set_mode(mode);
         let text = item.raw_text.clone();
-        Self::build(text, Ok(item), mode, DEFAULT_LEAGUE, client, config)
+        Self::build(text, Ok(item), mode, DEFAULT_LEAGUE, client, config, &[])
     }
 
     /// A window with no item: the live app's idle state before a hotkey brings one. Nothing is
@@ -262,6 +263,7 @@ impl PriceCheck {
             league,
             Self::new_client(mode),
             &serde_json::Value::Null,
+            &[],
         )
     }
 
@@ -273,6 +275,7 @@ impl PriceCheck {
         league: &str,
         client: crate::trade::Shared,
         config: &serde_json::Value,
+        overviews: &[(&'static str, String)],
     ) -> Self {
         let widget = crate::settings::widget(config, "price-check").unwrap_or(&serde_json::Value::Null);
         let mut options = preset_options_for(league);
@@ -320,6 +323,7 @@ impl PriceCheck {
             filters.trade.listing_type = "online".to_owned();
         }
         check.trade.latency = widget["apiLatencySeconds"].as_f64().unwrap_or(API_LATENCY_SECONDS);
+        check.apply_price_overviews(overviews);
         check.sync_inputs();
         // `CheckedItem.vue`'s `watch(..., { immediate: true })` starts the search the
         // reference makes by itself (a unique, a trial coin, ...).

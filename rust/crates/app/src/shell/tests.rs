@@ -1481,3 +1481,25 @@ fn hotkeys_use_saved_price_check_settings_for_both_games() {
     let bulk = wraex_poe2::trade::create_bulk_request(check.filters(), check.item().unwrap(), vec![]);
     assert_eq!(bulk.query.minimum, Some(3.));
 }
+
+#[test]
+fn warm_overviews_reach_the_first_automatic_search() {
+    let text = crate::corpus_poe2("ee2-unique-item");
+    let mut app = App::with_mode("", Mode::Replay);
+    let body = r#"{"core":{"items":[],"rates":{"exalted":123},"primary":"divine","secondary":"exalted"},
+        "lines":[{"id":"exalted","primaryValue":1,"sparkline":{"totalChange":0,"data":[]}}],
+        "items":[{"id":"exalted","name":"Exalted Orb","category":"Currency","detailsId":"exalted-orb","image":""}]}"#;
+    app.open_price_check_for(
+        GameId::Poe2,
+        "Standard",
+        &serde_json::Value::Null,
+        &text,
+        None,
+        Some(vec![("Currency", body.into())]),
+    );
+    let check = app.poe2.as_mut().unwrap();
+    let first: Vec<_> = check.trade.rows.iter().map(|row| row.normalized_price.clone()).collect();
+    assert!(!first.is_empty());
+    check.start_search();
+    assert_eq!(first, check.trade.rows.iter().map(|row| row.normalized_price.clone()).collect::<Vec<_>>());
+}
