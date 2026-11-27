@@ -237,6 +237,7 @@ pub struct State {
     /// A key reached the field since the last change: the edit is the user's, not a write-back.
     user_editing: bool,
     prices: Prices,
+    market: Option<wraex_core::leagues::SelectedLeague>,
     mode: Mode,
 }
 
@@ -269,8 +270,19 @@ impl State {
             active: true,
             user_editing: false,
             prices,
+            market: None,
             mode,
         }
+    }
+
+    pub(crate) fn poll_market(&mut self, league: Option<wraex_core::leagues::SelectedLeague>) -> bool {
+        let Prices::Poe1(prices) = &mut self.prices else { return false };
+        if self.market != league {
+            *prices = PriceList::new(self.mode);
+            self.market = league;
+            prices.queue_selected(self.market.as_ref(), false);
+        }
+        prices.poll()
     }
 
     /// `v-model="searchValue"`: the query, then the `computed` results.
@@ -378,7 +390,11 @@ impl State {
         match (&mut self.prices, record) {
             (Prices::Poe1(prices), Record::Poe1(_)) => {
                 // `queuePricesFetch()`: the blob the lookup reads.
-                prices.queue(poe1_check::DEFAULT_LEAGUE, false);
+                if self.mode == Mode::Replay {
+                    prices.queue(poe1_check::DEFAULT_LEAGUE, false);
+                } else {
+                    prices.queue_selected(self.market.as_ref(), false);
+                }
                 let query = Poe1Query { ns: record.namespace(), name: record.ref_name(), variant };
                 let Some(found) = prices.find_price(&query) else { return (None, None) };
                 let value = found.info.chaos;

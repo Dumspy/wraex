@@ -162,6 +162,7 @@ pub struct PriceCheck {
     pub prices: Prices,
     /// A live download of poe.ninja's overviews, landing in `poll`.
     prices_latest: Latest<Result<Vec<(&'static str, String)>, String>>,
+    pub(crate) market: Option<wraex_core::leagues::SelectedLeague>,
     prices_requested: bool,
     /// `OnlineFilter.vue`'s popover is open.
     pub online_open: bool,
@@ -268,6 +269,7 @@ impl PriceCheck {
             trade: trade::Trade::new(mode, client),
             prices,
             prices_latest: Latest::default(),
+            market: None,
             prices_requested: false,
             online_open: false,
             source_hover: None,
@@ -329,9 +331,13 @@ impl PriceCheck {
     fn poll_prices(&mut self) -> bool {
         let Some(answer) = self.prices_latest.take() else {
             // Nothing landed. A live window asks once; a replay loaded its prices up front.
-            if self.mode == Mode::Live && !self.prices_requested && self.prices.is_empty() && self.item().is_some() {
+            if self.mode == Mode::Live
+                && !self.prices_requested
+                && self.prices.is_empty()
+                && self.item().is_some()
+                && let Some(league) = self.market.clone()
+            {
                 self.prices_requested = true;
-                let league = self.league.clone();
                 self.prices_latest.request(league, |league| prices::fetch(&league));
             }
             return false;

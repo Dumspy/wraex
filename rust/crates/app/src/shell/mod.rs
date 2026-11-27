@@ -482,6 +482,7 @@ pub struct Live {
     pub warnings: Vec<String>,
     /// `leagues.selectedId`: the league prices and searches use.
     pub league: String,
+    leagues: Leagues,
     pub updates: updates::Updates,
     pub update: UpdateInfo,
     /// EE2's `Client.txt` worker (`crate::client_log`), PoE2 only: the XP tracker's data.
@@ -603,7 +604,8 @@ impl Live {
             updates: updates::Updates::default(),
             update: UpdateInfo::Initial,
             client_log: None,
-            prices: Some(prices),
+            leagues: Leagues::default(),
+            prices: (game == GameId::Poe1).then_some(prices),
             poe2_prices: None,
             settings_was_open: false,
             settings_armed: false,
@@ -893,6 +895,10 @@ impl Live {
         }
     }
 
+    pub(crate) fn market(&self) -> Option<wraex_core::leagues::SelectedLeague> {
+        self.leagues.selected(Some(&self.league), self.startup.config["realm"].as_str().unwrap_or("pc-ggg"))
+    }
+
     fn unregister_hotkeys(&mut self) {
         for id in self.registered.drain(..) {
             let _ = self.handle.unregister_shortcut(id);
@@ -919,8 +925,9 @@ impl Live {
             .map(str::to_owned)
         {
             self.league = league.clone();
+            let market = self.market();
             if let Some(prices) = &mut self.prices {
-                prices.queue(&league, true);
+                prices.queue_selected(market.as_ref(), true);
             }
         }
         self.host = host_config(self.game, &self.startup.config);
@@ -1834,6 +1841,10 @@ impl App {
         let league = live.league.clone();
         // `self.mode`, not `Mode::Live`: a test's shell opens the window on the recordings.
         self.open_price_check_for(live.game, &league, self.mode, text, warm, overviews);
+        match live.game {
+            GameId::Poe2 => self.poe2.as_mut().unwrap().market = live.market(),
+            _ => self.price_check.prices.queue_selected(live.market().as_ref(), false),
+        }
         self.settings = None;
         // The press recorded where the cursor was; that is where the widget goes.
     }
@@ -2057,9 +2068,11 @@ impl App {
             if let Some(league) = league.filter(|league| *league != live.league) {
                 live.warn(format!("price checks now use the league \"{league}\""));
                 live.league = league.clone();
-                if let Some(prices) = &mut live.prices {
-                    prices.queue(&league, true);
-                }
+            }
+            live.leagues = leagues;
+            let market = live.market();
+            if let Some(prices) = &mut live.prices {
+                prices.queue_selected(market.as_ref(), false);
             }
             live.poe2_prices = overviews.clone();
         }
@@ -2361,6 +2374,7 @@ pub fn game_from_args(args: &[String]) -> GameId {
 pub fn run(game: GameId) {
     let startup = config::startup(game);
     wraex_platform::log!("wraex: {:?}, config {} ({:?})", game, startup.store.path().display(), startup.source);
+    let realm = startup.config["realm"].as_str().unwrap_or("pc-ggg").to_owned();
     let configured_league = startup
         .config
         .get("leagueId")
@@ -2418,7 +2432,7 @@ pub fn run(game: GameId) {
         }
     });
 
-    spawn_startup_work(handle.clone(), game, configured_league);
+    spawn_startup_work(handle.clone(), game, configured_league, realm);
     spawn_update_check(handle.clone());
     app.run();
 }
@@ -2442,7 +2456,7 @@ fn window_options() -> rune::WindowOptions {
 
 /// [`Live::poll`]'s startup work on a worker: the trade site's leagues, the game data EE2's
 /// parser needs, and poe.ninja's prices.
-fn spawn_startup_work(handle: AppHandle<App>, game: GameId, configured: Option<String>) {
+fn spawn_startup_work(handle: AppHandle<App>, game: GameId, configured: Option<String>, realm: String) {
     std::thread::Builder::new()
         .name("wraex-startup".to_owned())
         .spawn(move || {
@@ -2460,8 +2474,8 @@ fn spawn_startup_work(handle: AppHandle<App>, game: GameId, configured: Option<S
                 // `TradeData.ts`: the trade site's items and stats, which the parser and
                 // `createPresets` read. A failure leaves the empty sets, as upstream's does.
                 let _ = crate::poe2::price_check::data(Mode::Live);
-                if let Some(league) = &league {
-                    overviews = crate::poe2::price_check::prices::fetch(league).ok();
+                if let Some(selected) = leagues.selected(league.as_deref(), &realm) {
+                    overviews = crate::poe2::price_check::prices::fetch(&selected).ok();
                 }
             }
 
