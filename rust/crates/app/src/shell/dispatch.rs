@@ -22,6 +22,9 @@ pub enum Request {
     ConfigFolder,
     /// The tray's "Quit" (`app.quit`).
     Quit,
+    /// `autoUpdater.quitAndInstall(false)`: install the downloaded update and restart
+    /// (the tray's "Update ready" entry and the About page's "Install now").
+    InstallUpdate,
     /// `CLIENT->MAIN::user-action` with `action: 'stash-search'`: type the text into the
     /// stash's search box (one action, the game keeps the focus afterwards).
     StashSearch(String),
@@ -54,6 +57,7 @@ pub fn tray_request(action: TrayAction) -> Request {
     match action {
         TrayAction::ShowSettingsHint => Request::Settings,
         TrayAction::OpenConfigFolder => Request::ConfigFolder,
+        TrayAction::InstallUpdate => Request::InstallUpdate,
         TrayAction::Quit => Request::Quit,
     }
 }
@@ -134,6 +138,7 @@ mod tests {
     fn the_trays_entries_map_to_the_shell() {
         assert_eq!(tray_request(TrayAction::ShowSettingsHint), Request::Settings);
         assert_eq!(tray_request(TrayAction::OpenConfigFolder), Request::ConfigFolder);
+        assert_eq!(tray_request(TrayAction::InstallUpdate), Request::InstallUpdate);
         assert_eq!(tray_request(TrayAction::Quit), Request::Quit);
     }
 

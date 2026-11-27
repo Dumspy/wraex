@@ -31,5 +31,9 @@ wraex-platform = { workspace = true }
 wraex-poe1 = { workspace = true }
 wraex-poe2 = { workspace = true }
 
+[dev-dependencies]
+# The update worker's tests hash their in-memory setup the way a release publishes it.
+sha2 = { workspace = true }
+
 [lints]
 workspace = true

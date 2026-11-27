@@ -30,6 +30,9 @@ serde_json = { version = "1", features = ["float_roundtrip", "preserve_order"] }
 # The screenshot harness names a recorded request after the first 8 hex digits of
 # its body's SHA-1 (`tools/golden/screens/host.mjs`); replay must build the same name.
 sha1 = "0.10"
+# The self-updater checks a downloaded setup against the release's SHA-256 digest
+# (`wraex_core::updates::download`).
+sha2 = "0.10"
 thiserror = "2"
 # Insertion-ordered maps: JavaScript objects iterate in insertion order, and the
 # ported logic walks data maps (`trade.ids`, ...) in that order.

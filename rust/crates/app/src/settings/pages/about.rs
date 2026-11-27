@@ -145,7 +145,8 @@ fn update_state(settings: &Settings) -> (String, String, Option<(&'static str, S
         UpdateInfo::UpdateDownloaded { version } => (
             tr_fmt(settings, "updates.available", &[version]),
             t_key(settings, "updates.installed_on_exit"),
-            Some(("about-install-label", t_key(settings, "updates.install_now"), open_downloads as Action)),
+            // `quitAndInstall`: the download is verified, so the button restarts into it.
+            Some(("about-install-label", t_key(settings, "updates.install_now"), install_now as Action)),
         ),
         UpdateInfo::UpdateAvailable { version, no_download_reason } => (
             tr_fmt(settings, "updates.available", &[version]),
@@ -159,13 +160,21 @@ fn update_state(settings: &Settings) -> (String, String, Option<(&'static str, S
     }
 }
 
-/// `checkForUpdates`: [`UpdateInfo::CheckingForUpdate`] shows at once, and the one request
-/// runs on a worker (the answer lands in [`Settings::poll`]).
+/// `checkForUpdates`: [`UpdateInfo::CheckingForUpdate`] shows at once. A live window asks the
+/// shell's worker (see [`Settings::begin_update_check`]); a scene's check lands in
+/// [`Settings::poll`].
 fn check_now(settings: &mut Settings, _tx: &mut rune::Tx) {
     settings.begin_update_check();
 }
 
-/// `openDownloadPage`: the Wraex releases page (the app is notify-only, see `core::updates`).
+/// The "Install now" button: `autoUpdater.quitAndInstall(false)`, which the shell runs from
+/// [`Settings::install_requested`]. A scene only sets the flag.
+fn install_now(settings: &mut Settings, _tx: &mut rune::Tx) {
+    settings.install_requested = true;
+}
+
+/// `openDownloadPage`: the Wraex releases page, for a copy that cannot install the update
+/// itself (a failed check, a portable build, or `--no-updates`).
 fn open_downloads(_settings: &mut Settings, tx: &mut rune::Tx) {
     let _ = tx.open_url(RELEASES);
 }
