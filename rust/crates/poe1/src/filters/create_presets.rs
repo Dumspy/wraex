@@ -38,6 +38,21 @@ fn stats(filters: Vec<StatFilter>) -> Vec<FilterOrGroup> {
     filters.into_iter().map(FilterOrGroup::Stat).collect()
 }
 
+/// `createPresets`'s Expedition Logbook branch: one preset per area mod.
+fn logbook_presets(d: &Data, item: &Item, exact: &CreateOptions, range: f64) -> R<Presets> {
+    let areas = item.logbook_area_mods.as_ref().ok_or_else(|| missing("logbookAreaMods"))?;
+    let mut presets = Vec::new();
+    for (idx, area) in areas.iter().enumerate() {
+        presets.push(FilterPreset {
+            // `ROMAN_NUMERALS[idx]` is `undefined` past five areas.
+            id: ROMAN_NUMERALS.get(idx).copied().unwrap_or("undefined").to_owned(),
+            filters: create_filters(d, item, exact)?,
+            stats: stats(create_exact_stat_filters(d, item, &sum_stats_by_mod_type(area), range, None)?),
+        });
+    }
+    Ok(Presets { active: ROMAN_NUMERALS[0].to_owned(), presets })
+}
+
 /// `createPresets`
 pub fn create_presets(d: &Data, item: &Item, opts: &CreatePresetsOptions) -> R<Presets> {
     let exact = CreateOptions { exact: true, ..opts.filters.clone() };
@@ -47,17 +62,7 @@ pub fn create_presets(d: &Data, item: &Item, opts: &CreatePresetsOptions) -> R<P
     let is_unique = rarity == Some(Rarity::Unique);
 
     if item.ref_name_is("Expedition Logbook") {
-        let areas = item.logbook_area_mods.as_ref().ok_or_else(|| missing("logbookAreaMods"))?;
-        let mut presets = Vec::new();
-        for (idx, area) in areas.iter().enumerate() {
-            presets.push(FilterPreset {
-                // `ROMAN_NUMERALS[idx]` is `undefined` past five areas.
-                id: ROMAN_NUMERALS.get(idx).copied().unwrap_or("undefined").to_owned(),
-                filters: create_filters(d, item, &exact)?,
-                stats: stats(create_exact_stat_filters(d, item, &sum_stats_by_mod_type(area), range, None)?),
-            });
-        }
-        return Ok(Presets { active: ROMAN_NUMERALS[0].to_owned(), presets });
+        return logbook_presets(d, item, &exact, range);
     } else if item.ref_name_is("Mercenary Warrant") {
         return Ok(Presets {
             active: "filters.preset_exact".to_owned(),

@@ -1,9 +1,11 @@
 //! `ref/apt/renderer/src/web/client-log/client-log.ts`: the chat lines of the
-//! game's `Client.txt`. Upstream reads the log in its overlay window
-//! (`MAIN->CLIENT::game-log`) and builds a [`LogEntry`] per line, but never uses
-//! it yet (`console.log(entry)` is commented out), so the port returns the entry
-//! instead of dropping it. Reading the file is `wraex_core::game_files`'
-//! `LogWatcher`; join each batch's lines into one string and pass it in.
+//! game's `Client.txt`.
+//!
+//! Upstream reads the log in its overlay window (`MAIN->CLIENT::game-log`) and
+//! builds a [`LogEntry`] per line, but never uses it yet (`console.log(entry)` is
+//! commented out), so the port returns the entry instead of dropping it. Reading
+//! the file is `wraex_core::game_files`' `LogWatcher`; join each batch's lines
+//! into one string and pass it in.
 //!
 //! The chat channels come from `CLIENT_STRINGS` (translated); the trade site's
 //! buy whispers come from the module's own per-language tables.
@@ -137,15 +139,13 @@ const TRADE_BULK_WHISPER: [(&str, &str); 4] = [
     ("ko", r"^_FIX_ME_$"),
 ];
 
-fn compile(source: &str) -> Regex {
-    Regex::new(source, "").unwrap_or_else(|e| panic!("{e}"))
-}
-
 /// The table's pattern for `language`, if it has one. The reference would index
 /// `undefined` and then throw on the missing groups; a language with no pattern
-/// simply gets no trade details here.
+/// simply gets no trade details here. The static patterns always compile
+/// (`whisper_tables_compile` tests every one); a pattern that did not would leave
+/// the language without trade details rather than fail at startup.
 fn whisper_regex(language: &str, table: &[(&str, &str)]) -> Option<Regex> {
-    table.iter().find(|(lang, _)| *lang == language).map(|(_, source)| compile(source))
+    table.iter().find(|(lang, _)| *lang == language).and_then(|(_, source)| Regex::new(source, "").ok())
 }
 
 /// `s.split(' ', 1).toString()` and `s.split(' ').slice(1).join(' ')`: the first
@@ -222,7 +222,9 @@ impl ClientLog {
         }
         let (channel, caps) = found?;
 
-        let body = caps.name("body").expect("CHAT_* patterns capture body").to_owned();
+        // Every `CHAT_*` pattern captures `body`; one that did not would be skipped,
+        // as a line that matches no channel is.
+        let body = caps.name("body")?.to_owned();
         let mut entry = LogEntry {
             channel,
             guild_tag: caps.name("guild_tag").map(str::to_owned),
@@ -240,33 +242,35 @@ impl ClientLog {
     /// The trade body checks of `handleLine`, against the item whisper first and
     /// the bulk whisper second.
     fn parse_trade(&self, body: &str) -> Option<Trade> {
+        // Every named group used below is mandatory in its pattern: a pattern that
+        // lacked one would leave this whisper without trade details.
         if let Some(caps) = self.trade_whisper.as_ref().and_then(|re| re.captures(body)) {
-            let price = amount_and_name(caps.name("price").expect("TRADE_WHISPER captures price"));
-            let offered = caps.name("item").expect("TRADE_WHISPER captures item").to_owned();
+            let price = amount_and_name(caps.name("price")?);
+            let offered = caps.name("item")?.to_owned();
             let gem_caps = self.webtrade_gem.captures(&offered);
+            // `CHAT_WEBTRADE_GEM` captures both; a language without them would read
+            // the level and quality as `Number(undefined)`.
             let gem = gem_caps.as_ref().map(|caps| Gem {
-                level: js::number(caps.name("gem_lvl").expect("CHAT_WEBTRADE_GEM captures gem_lvl")),
-                quality: js::number(caps.name("gem_qual").expect("CHAT_WEBTRADE_GEM captures gem_qual")),
+                level: caps.name("gem_lvl").map_or(0.0, js::number),
+                quality: caps.name("gem_qual").map_or(0.0, js::number),
             });
             // The reference renames a gem offer to just the gem's name.
-            let item = match &gem_caps {
-                Some(caps) => caps.name("gem_name").expect("CHAT_WEBTRADE_GEM captures gem_name").to_owned(),
-                None => offered,
-            };
+            let gem_name = gem_caps.as_ref().and_then(|caps| caps.name("gem_name")).map(str::to_owned);
+            let item = gem_name.unwrap_or(offered);
             return Some(Trade {
                 item: TradeItem { name: item, amount: None, gem },
                 price: TradePrice { name: price.1, amount: js::number(&price.0) },
                 tab: Some(TradeTab {
-                    name: caps.name("tab_name").expect("TRADE_WHISPER captures tab_name").to_owned(),
-                    left: js::number(caps.name("tab_left").expect("TRADE_WHISPER captures tab_left")),
-                    top: js::number(caps.name("tab_top").expect("TRADE_WHISPER captures tab_top")),
+                    name: caps.name("tab_name")?.to_owned(),
+                    left: js::number(caps.name("tab_left")?),
+                    top: js::number(caps.name("tab_top")?),
                 }),
             });
         }
 
         let caps = self.bulk_whisper.as_ref().and_then(|re| re.captures(body))?;
-        let price = amount_and_name(caps.name("price").expect("TRADE_BULK_WHISPER captures price"));
-        let item = amount_and_name(caps.name("item").expect("TRADE_BULK_WHISPER captures item"));
+        let price = amount_and_name(caps.name("price")?);
+        let item = amount_and_name(caps.name("item")?);
         Some(Trade {
             item: TradeItem { name: item.1, amount: Some(js::number(&item.0)), gem: None },
             price: TradePrice { name: price.1, amount: js::number(&price.0) },

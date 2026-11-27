@@ -39,7 +39,7 @@ const RULES: [FilterRule; 15] = [
 pub fn apply_rules(filters: &mut Vec<StatFilter>) -> R<()> {
     let mut i = 0;
     while i < filters.len() {
-        let filter = &mut filters[i];
+        let Some(filter) = filters.get_mut(i) else { break };
         match RULES.iter().find(|r| r.stat_ref == filter.stat_ref) {
             None => {
                 let difficulty =
@@ -59,7 +59,7 @@ pub fn apply_rules(filters: &mut Vec<StatFilter>) -> R<()> {
                 }
             }
         }
-        i += 1;
+        i = i.saturating_add(1);
     }
     Ok(())
 }

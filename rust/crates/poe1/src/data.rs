@@ -25,10 +25,7 @@ const REFERENCE_PUBLIC: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../re
 /// The `data` files the running app reads: `assets/poe1/data` in a packaged install (see
 /// [`wraex_core::assets`]), the reference checkout in development.
 pub fn source() -> DirSource {
-    match wraex_core::assets::Assets::get().path("poe1/data") {
-        Some(root) => DirSource::new(root),
-        None => reference_source(),
-    }
+    wraex_core::assets::Assets::get().path("poe1/data").map_or_else(reference_source, DirSource::new)
 }
 
 /// `ref/apt/renderer/public/data`, the data upstream ships: the reference checkout itself,
@@ -37,24 +34,25 @@ pub fn reference_source() -> DirSource {
     DirSource::new(format!("{REFERENCE_PUBLIC}/data"))
 }
 
-/// The small art upstream's page serves (the currency icons, the stash and dust badges, the
-/// influence and roll markers), which the app draws through `wraex_app::ui::art`: read from
-/// `assets/poe1/images/<name>` in a packaged install, from the reference in development.
+/// The small art upstream's page serves, which the app draws through `wraex_app::ui::art`.
+///
+/// That is the currency icons, the stash and dust badges, the influence and roll
+/// markers: read from `assets/poe1/images/<name>` in a packaged install, from the
+/// reference in development.
 pub fn image_path(name: &str) -> std::path::PathBuf {
-    match wraex_core::assets::Assets::get().path("poe1/images") {
-        Some(dir) => dir.join(name),
-        None => std::path::Path::new(REFERENCE_PUBLIC).join("images").join(name),
-    }
+    wraex_core::assets::Assets::get()
+        .path("poe1/images")
+        .map_or_else(|| std::path::Path::new(REFERENCE_PUBLIC).join("images").join(name), |dir| dir.join(name))
 }
 
-/// The product icon upstream ships, which the app puts in the system tray
-/// (`main/build/icon.png` becomes this on install): `assets/poe1/icon.png` in a packaged
+/// The product icon upstream ships, which the app puts in the system tray.
+///
+/// `main/build/icon.png` becomes it on install: `assets/poe1/icon.png` in a packaged
 /// install, `ref/apt/renderer/public/icon.png` in development.
 pub fn icon_path() -> std::path::PathBuf {
-    match wraex_core::assets::Assets::get().path("poe1/icon.png") {
-        Some(path) => path,
-        None => std::path::Path::new(REFERENCE_PUBLIC).join("icon.png"),
-    }
+    wraex_core::assets::Assets::get()
+        .path("poe1/icon.png")
+        .unwrap_or_else(|| std::path::Path::new(REFERENCE_PUBLIC).join("icon.png"))
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -113,7 +111,7 @@ pub struct Anointment {
     pub oils: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MercenaryStat {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -131,12 +129,12 @@ pub struct MercenaryStat {
     pub max_tier: Option<bool>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct JewelleryQuality {
     pub catalyst: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StatTrade {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inverted: Option<bool>,
@@ -152,7 +150,7 @@ pub struct StatGroup {
     pub stats: Vec<Stat>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "strat", rename_all = "kebab-case")]
 pub enum StatGroupResolver {
     Select { test: Vec<Option<String>> },
@@ -182,8 +180,8 @@ impl StatOrGroup {
     /// The group's stats, or the stat itself.
     pub fn stats(&self) -> &[Stat] {
         match self {
-            StatOrGroup::Group(g) => &g.stats,
-            StatOrGroup::Stat(s) => std::slice::from_ref(s),
+            Self::Group(g) => &g.stats,
+            Self::Stat(s) => std::slice::from_ref(s),
         }
     }
 }
@@ -203,13 +201,13 @@ pub enum Namespace {
 impl Namespace {
     pub const fn as_str(self) -> &'static str {
         match self {
-            Namespace::DivinationCard => "DIVINATION_CARD",
-            Namespace::CapturedBeast => "CAPTURED_BEAST",
-            Namespace::Unique => "UNIQUE",
-            Namespace::Item => "ITEM",
-            Namespace::Gem => "GEM",
-            Namespace::Area => "AREA",
-            Namespace::MercenaryBuild => "MERCENARY_BUILD",
+            Self::DivinationCard => "DIVINATION_CARD",
+            Self::CapturedBeast => "CAPTURED_BEAST",
+            Self::Unique => "UNIQUE",
+            Self::Item => "ITEM",
+            Self::Gem => "GEM",
+            Self::Area => "AREA",
+            Self::MercenaryBuild => "MERCENARY_BUILD",
         }
     }
 }
@@ -247,7 +245,7 @@ pub struct BaseType {
     pub mercenary_build: Option<MercenaryBuildRef>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Disc {
     #[serde(rename = "propAR", skip_serializing_if = "Option::is_none")]
@@ -267,13 +265,13 @@ pub struct Disc {
     pub map_tier: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StatRef {
     #[serde(rename = "ref")]
     pub stat_ref: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Craftable {
     /// An `ItemCategory` value; typed when `parser/meta.ts` is ported.
@@ -294,7 +292,7 @@ pub struct UniqueInfo {
     pub disenchant_value: Option<f64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Area {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub screenshot: Option<String>,
@@ -304,7 +302,7 @@ pub struct Area {
     pub blighted: Option<bool>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GemInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -316,7 +314,7 @@ pub struct GemInfo {
     pub max_level: u32,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ArmourInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ar: Option<[u32; 2]>,
@@ -329,19 +327,19 @@ pub struct ArmourInfo {
 }
 
 /// `mercenaryBuild`: another build's `refName`, or the build itself.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum MercenaryBuildRef {
     Ref(String),
     Build(MercenaryBuild),
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MercenaryBuild {
     pub skills: Vec<MercenarySkill>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MercenarySkill {
     /// `"primary"`, `"secondary"` or `"utility"`.
     #[serde(rename = "type")]
@@ -363,6 +361,10 @@ fn stat_keys(line: &StatOrGroup) -> StatKeys {
     keys
 }
 
+#[expect(
+    clippy::expect_used,
+    reason = "the tables indexed this line with the same schema when they were built, so a line a lookup returns always deserialises"
+)]
 fn parse<T: for<'de> Deserialize<'de>>(line: &str) -> T {
     serde_json::from_str(line).expect("every line parsed when the tables were built")
 }
@@ -418,25 +420,37 @@ impl Data {
 
     /// `CLIENT_STRINGS[key]` as text. Every language defines the same keys as
     /// English (tested), so a missing key is a bug in the caller.
+    #[expect(
+        clippy::panic,
+        reason = "`every_language_has_the_english_client_string_keys` proves every key exists in every language"
+    )]
     pub fn s(&self, key: &str) -> &str {
         self.client_strings.text(key).unwrap_or_else(|| panic!("client string {key} is not text"))
     }
 
     /// `CLIENT_STRINGS[key]` as a regex.
+    #[expect(
+        clippy::panic,
+        reason = "`every_language_has_the_english_client_string_keys` proves every key exists in every language"
+    )]
     pub fn re(&self, key: &str) -> &wraex_core::js_regex::Regex {
         self.client_strings.regex(key).unwrap_or_else(|| panic!("client string {key} is not a regex"))
     }
 
     /// `CLIENT_STRINGS[key]` as a list.
+    #[expect(
+        clippy::panic,
+        reason = "`every_language_has_the_english_client_string_keys` proves every key exists in every language"
+    )]
     pub fn list(&self, key: &str) -> &[String] {
         self.client_strings.list(key).unwrap_or_else(|| panic!("client string {key} is not a list"))
     }
 
-    pub fn items(&self) -> &ItemTable {
+    pub const fn items(&self) -> &ItemTable {
         &self.items
     }
 
-    pub fn stats(&self) -> &StatTable {
+    pub const fn stats(&self) -> &StatTable {
         &self.stats
     }
 
@@ -489,7 +503,8 @@ impl Data {
             }
             StatOrGroup::Stat(stat) => stat,
         };
-        let matcher = stat.matchers.iter().find(|m| m.is(match_str)).expect("checked above").clone();
+        // `stat_by_match_str_v2` already found this matcher.
+        let matcher = stat.matchers.iter().find(|m| m.is(match_str))?.clone();
         Some((stat, matcher))
     }
 
@@ -533,7 +548,7 @@ pub(crate) mod tests {
     use super::*;
     use std::sync::OnceLock;
 
-    pub(crate) fn en() -> &'static Data {
+    pub fn en() -> &'static Data {
         static EN: OnceLock<Data> = OnceLock::new();
         EN.get_or_init(|| Data::load(&reference_source(), "en").unwrap())
     }
@@ -573,7 +588,7 @@ pub(crate) mod tests {
             Some("chaos")
         );
         assert!(data.item_by_ref(Namespace::Item, "Not An Item").is_none());
-        assert!(!data.replica_unique_names().is_empty());
+        assert_ne!(data.replica_unique_names(), Vec::<String>::new());
         assert!(data.replica_unique_names().iter().all(|n| n.starts_with("Replica ")));
         let gems: Vec<_> = data.items_iter(r#""namespace":"GEM""#, &["Empower"]).collect();
         assert!(gems.iter().any(|g| g.ref_name == "Empower Support"));
@@ -599,11 +614,9 @@ pub(crate) mod tests {
     #[test]
     fn the_schema_covers_every_line() {
         let source = reference_source();
+        let checks: [(&str, Check); 2] = [("items", roundtrip::<BaseType>), ("stats", roundtrip::<StatOrGroup>)];
         for lang in LANGUAGES {
-            for (file, check) in [
-                ("items", roundtrip::<BaseType> as fn(&str) -> Result<(), String>),
-                ("stats", roundtrip::<StatOrGroup>),
-            ] {
+            for (file, check) in checks {
                 let path = format!("{lang}/{file}.ndjson");
                 for (n, line) in source.read_string(&path).unwrap().lines().enumerate() {
                     check(line).unwrap_or_else(|e| panic!("{path}:{}: {e}", n + 1));
@@ -634,6 +647,9 @@ pub(crate) mod tests {
             }
         }
     }
+
+    /// One `*.ndjson` line checked against its typed schema.
+    type Check = fn(&str) -> Result<(), String>;
 
     fn roundtrip<T: Serialize + for<'de> Deserialize<'de>>(line: &str) -> Result<(), String> {
         let original: serde_json::Value = serde_json::from_str(line).unwrap();

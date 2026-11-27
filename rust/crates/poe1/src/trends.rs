@@ -13,7 +13,7 @@ use wraex_core::js::number_to_string;
 use crate::filters::create_item_filters::SPECIAL_SUPPORT_GEM;
 use crate::parser::item::Item;
 use crate::parser::meta::{ARMOUR, ItemCategory, JEWELLERY, WEAPON};
-use crate::parser::modifiers::ModifierType;
+use crate::parser::modifiers::{ModifierType, StatCalculated};
 use crate::prices::DbQuery;
 
 /// `getDetailsId`'s answer: the namespace, the name and poe.ninja's variant.
@@ -141,143 +141,144 @@ fn variant(props: impl IntoIterator<Item = Option<String>>) -> Option<String> {
     if parts.is_empty() { None } else { Some(parts.join(", ")) }
 }
 
+/// `hasStat`: the item has a modifier with this ref.
+fn has_stat(item: &Item, stat: &str) -> bool {
+    item.stats_by_type.iter().any(|parsed| parsed.stat.stat_ref == stat)
+}
+
+/// The value the first source of a modifier contributes.
+fn contributed_value_of(parsed: &StatCalculated) -> Option<f64> {
+    parsed.sources.first()?.contributes.map(|contributes| contributes.value)
+}
+
+/// The value the first source of a modifier with this ref contributes.
+fn contributed_value(item: &Item, stat: &str) -> Option<f64> {
+    contributed_value_of(item.stats_by_type.iter().find(|parsed| parsed.stat.stat_ref == stat)?)
+}
+
+/// [`contributed_value`] for an explicit modifier only.
+fn explicit_contributed_value(item: &Item, stat: &str) -> Option<f64> {
+    contributed_value_of(
+        item.stats_by_type
+            .iter()
+            .find(|parsed| parsed.kind == ModifierType::Explicit && parsed.stat.stat_ref == stat)?,
+    )
+}
+
+/// `getUniqueVariant`'s `Vessel of Vinktar` branch.
+fn vessel_of_vinktar_variant(item: &Item) -> Option<&'static str> {
+    [
+        ("Adds # to # Lightning Damage to Attacks during Flask effect", "Added Attacks"),
+        ("Adds # to # Lightning Damage to Spells during Flask effect", "Added Spells"),
+        ("Damage Penetrates #% Lightning Resistance during Flask effect", "Penetration"),
+        ("#% of Physical Damage Converted to Lightning during Flask effect", "Conversion"),
+    ]
+    .into_iter()
+    .find_map(|(stat, variant)| has_stat(item, stat).then_some(variant))
+}
+
+/// `getUniqueVariant`'s `Atziri's Splendour` branch: every stat of a row is required.
+fn atziris_splendour_variant(item: &Item) -> Option<&'static str> {
+    [
+        (&["#% increased Armour, Evasion and Energy Shield"][..], "Armour/Evasion/ES"),
+        (&["#% increased Evasion and Energy Shield", "+# to maximum Energy Shield"][..], "Evasion/ES"),
+        (&["#% increased Evasion and Energy Shield", "+# to maximum Life"][..], "Evasion/ES/Life"),
+        (&["#% increased Armour and Energy Shield", "+# to maximum Energy Shield"][..], "Armour/ES"),
+        (&["#% increased Armour and Energy Shield", "+# to maximum Life"][..], "Armour/ES/Life"),
+        (&["#% increased Armour and Evasion", "+# to maximum Life"][..], "Armour/Evasion"),
+        (&["+# to maximum Energy Shield", "#% increased Energy Shield"][..], "ES"),
+        (&["#% increased Evasion Rating", "+# to maximum Life"][..], "Evasion"),
+        (&["#% increased Armour", "+# to maximum Life"][..], "Armour"),
+    ]
+    .into_iter()
+    .find_map(|(stats, variant)| stats.iter().all(|stat| has_stat(item, stat)).then_some(variant))
+}
+
+/// `getUniqueVariant`'s `Volkuur's Guidance` branch.
+fn volkuurs_guidance_variant(item: &Item) -> Option<&'static str> {
+    [
+        ("Adds # to # Cold Damage to Spells and Attacks", "Cold"),
+        ("Adds # to # Fire Damage to Spells and Attacks", "Fire"),
+        ("Adds # to # Lightning Damage to Spells and Attacks", "Lightning"),
+    ]
+    .into_iter()
+    .find_map(|(stat, variant)| has_stat(item, stat).then_some(variant))
+}
+
+/// `getUniqueVariant`'s `Yriel's Fostering` branch.
+fn yriels_fostering_variant(item: &Item) -> Option<&'static str> {
+    [
+        ("Projectiles from Attacks have #% chance to Maim on Hit while\nyou have a Bestial Minion", "Maim"),
+        ("Projectiles from Attacks have #% chance to Poison on Hit while\nyou have a Bestial Minion", "Poison"),
+        (
+            "Projectiles from Attacks have #% chance to inflict Bleeding on Hit while\nyou have a Bestial Minion",
+            "Bleeding",
+        ),
+    ]
+    .into_iter()
+    .find_map(|(stat, variant)| has_stat(item, stat).then_some(variant))
+}
+
+/// `getUniqueVariant`'s `Doryani's Invitation` branch.
+fn doryanis_invitation_variant(item: &Item) -> Option<&'static str> {
+    [
+        ("#% increased Global Physical Damage", "Physical"),
+        ("#% increased Fire Damage", "Fire"),
+        ("#% increased Cold Damage", "Cold"),
+        ("#% increased Lightning Damage", "Lightning"),
+    ]
+    .into_iter()
+    .find_map(|(stat, variant)| has_stat(item, stat).then_some(variant))
+}
+
+/// `getUniqueVariant`'s `Impresence` branch.
+fn impresence_variant(item: &Item) -> Option<&'static str> {
+    [
+        ("Adds # to # Cold Damage", "Cold"),
+        ("Adds # to # Chaos Damage", "Chaos"),
+        ("Adds # to # Fire Damage", "Fire"),
+        ("Adds # to # Lightning Damage", "Lightning"),
+        ("Adds # to # Physical Damage", "Physical"),
+    ]
+    .into_iter()
+    .find_map(|(stat, variant)| has_stat(item, stat).then_some(variant))
+}
+
+/// `getUniqueVariant`'s `The First Crest` branch.
+fn the_first_crest_variant(item: &Item) -> Option<&'static str> {
+    [
+        ("Aureus Coins are converted to Experience upon defeating the Herald of the Scourge", "Experience"),
+        ("Aureus Coins are converted to Relics upon defeating the Herald of the Scourge", "Relics"),
+        ("Aureus Coins are converted to Tainted Currency upon defeating the Herald of the Scourge", "Tainted Currency"),
+    ]
+    .into_iter()
+    .find_map(|(stat, variant)| has_stat(item, stat).then_some(variant))
+}
+
 /// `getUniqueVariant`: the roll that picks one poe.ninja entry for a unique with
 /// several versions.
 fn get_unique_variant(item: &Item) -> Option<&'static str> {
-    fn has_stat(item: &Item, stat: &str) -> bool {
-        item.stats_by_type.iter().any(|parsed| parsed.stat.stat_ref == stat)
-    }
     match item.info().ref_name.as_str() {
-        "Vessel of Vinktar" => {
-            if has_stat(item, "Adds # to # Lightning Damage to Attacks during Flask effect") {
-                Some("Added Attacks")
-            } else if has_stat(item, "Adds # to # Lightning Damage to Spells during Flask effect") {
-                Some("Added Spells")
-            } else if has_stat(item, "Damage Penetrates #% Lightning Resistance during Flask effect") {
-                Some("Penetration")
-            } else if has_stat(item, "#% of Physical Damage Converted to Lightning during Flask effect") {
-                Some("Conversion")
-            } else {
-                None
-            }
-        }
-        "Atziri's Splendour" => {
-            let has = |stat: &str| has_stat(item, stat);
-            if has("#% increased Armour, Evasion and Energy Shield") {
-                Some("Armour/Evasion/ES")
-            } else if has("#% increased Evasion and Energy Shield") && has("+# to maximum Energy Shield") {
-                Some("Evasion/ES")
-            } else if has("#% increased Evasion and Energy Shield") && has("+# to maximum Life") {
-                Some("Evasion/ES/Life")
-            } else if has("#% increased Armour and Energy Shield") && has("+# to maximum Energy Shield") {
-                Some("Armour/ES")
-            } else if has("#% increased Armour and Energy Shield") && has("+# to maximum Life") {
-                Some("Armour/ES/Life")
-            } else if has("#% increased Armour and Evasion") && has("+# to maximum Life") {
-                Some("Armour/Evasion")
-            } else if has("+# to maximum Energy Shield") && has("#% increased Energy Shield") {
-                Some("ES")
-            } else if has("#% increased Evasion Rating") && has("+# to maximum Life") {
-                Some("Evasion")
-            } else if has("#% increased Armour") && has("+# to maximum Life") {
-                Some("Armour")
-            } else {
-                None
-            }
-        }
+        "Vessel of Vinktar" => vessel_of_vinktar_variant(item),
+        "Atziri's Splendour" => atziris_splendour_variant(item),
         "Bubonic Trail" | "Lightpoacher" | "Shroud of the Lightless" | "Tombfist" => {
-            let sockets = item.stats_by_type.iter().find(|parsed| {
-                parsed.kind == ModifierType::Explicit && parsed.stat.stat_ref == "Has # Abyssal Sockets"
-            })?;
-            match sockets.sources.first()?.contributes?.value {
+            match explicit_contributed_value(item, "Has # Abyssal Sockets")? {
                 2.0 => Some("2 Jewels"),
                 1.0 => Some("1 Jewel"),
                 _ => None,
             }
         }
-        "Volkuur's Guidance" => {
-            if has_stat(item, "Adds # to # Cold Damage to Spells and Attacks") {
-                Some("Cold")
-            } else if has_stat(item, "Adds # to # Fire Damage to Spells and Attacks") {
-                Some("Fire")
-            } else if has_stat(item, "Adds # to # Lightning Damage to Spells and Attacks") {
-                Some("Lightning")
-            } else {
-                None
-            }
-        }
-        "Yriel's Fostering" => {
-            if has_stat(item, "Projectiles from Attacks have #% chance to Maim on Hit while\nyou have a Bestial Minion")
-            {
-                Some("Maim")
-            } else if has_stat(
-                item,
-                "Projectiles from Attacks have #% chance to Poison on Hit while\nyou have a Bestial Minion",
-            ) {
-                Some("Poison")
-            } else if has_stat(
-                item,
-                "Projectiles from Attacks have #% chance to inflict Bleeding on Hit while\nyou have a Bestial Minion",
-            ) {
-                Some("Bleeding")
-            } else {
-                None
-            }
-        }
-        "Doryani's Invitation" => {
-            if has_stat(item, "#% increased Global Physical Damage") {
-                Some("Physical")
-            } else if has_stat(item, "#% increased Fire Damage") {
-                Some("Fire")
-            } else if has_stat(item, "#% increased Cold Damage") {
-                Some("Cold")
-            } else if has_stat(item, "#% increased Lightning Damage") {
-                Some("Lightning")
-            } else {
-                None
-            }
-        }
-        "Impresence" => {
-            if has_stat(item, "Adds # to # Cold Damage") {
-                Some("Cold")
-            } else if has_stat(item, "Adds # to # Chaos Damage") {
-                Some("Chaos")
-            } else if has_stat(item, "Adds # to # Fire Damage") {
-                Some("Fire")
-            } else if has_stat(item, "Adds # to # Lightning Damage") {
-                Some("Lightning")
-            } else if has_stat(item, "Adds # to # Physical Damage") {
-                Some("Physical")
-            } else {
-                None
-            }
-        }
-        "Voices" => {
-            let passives = item
-                .stats_by_type
-                .iter()
-                .find(|parsed| parsed.stat.stat_ref == "Adds # Small Passive Skills which grant nothing")?;
-            match passives.sources.first()?.contributes?.value {
-                7.0 => Some("7 passives"),
-                5.0 => Some("5 passives"),
-                3.0 => Some("3 passives"),
-                _ => None,
-            }
-        }
-        "The First Crest" => {
-            if has_stat(item, "Aureus Coins are converted to Experience upon defeating the Herald of the Scourge") {
-                Some("Experience")
-            } else if has_stat(item, "Aureus Coins are converted to Relics upon defeating the Herald of the Scourge") {
-                Some("Relics")
-            } else if has_stat(
-                item,
-                "Aureus Coins are converted to Tainted Currency upon defeating the Herald of the Scourge",
-            ) {
-                Some("Tainted Currency")
-            } else {
-                None
-            }
-        }
+        "Volkuur's Guidance" => volkuurs_guidance_variant(item),
+        "Yriel's Fostering" => yriels_fostering_variant(item),
+        "Doryani's Invitation" => doryanis_invitation_variant(item),
+        "Impresence" => impresence_variant(item),
+        "Voices" => match contributed_value(item, "Adds # Small Passive Skills which grant nothing")? {
+            7.0 => Some("7 passives"),
+            5.0 => Some("5 passives"),
+            3.0 => Some("3 passives"),
+            _ => None,
+        },
+        "The First Crest" => the_first_crest_variant(item),
         _ => None,
     }
 }
@@ -311,24 +312,28 @@ pub fn delta_from_graph(graph: &[Option<f64>]) -> Option<TrendChange> {
 
     let mut forecast = Forecast::Const;
     if points.len() == 7 {
-        if points.iter().filter(|point| **point > 0.0).count() >= 4 || points[4..].iter().all(|point| *point > 0.0) {
+        // The last three points, the whole graph when it is shorter (it is not).
+        let last_three = points.get(4..).unwrap_or_default();
+        if points.iter().filter(|point| **point > 0.0).count() >= 4 || last_three.iter().all(|point| *point > 0.0) {
             forecast = Forecast::Up;
         } else if points.iter().filter(|point| **point < 0.0).count() >= 4
-            || points[4..].iter().all(|point| *point < 0.0)
+            || last_three.iter().all(|point| *point < 0.0)
         {
             forecast = Forecast::Down;
         }
     }
 
-    let mean = points.iter().sum::<f64>() / points.len() as f64;
+    let count = wraex_core::num::usize_to_f64(points.len());
+    let mean = points.iter().sum::<f64>() / count;
     let squares: f64 = points.iter().map(|point| (point - mean).powi(2)).sum();
-    let change = (squares / (points.len() as f64 - 1.0)).sqrt();
+    let change = (squares / (count - 1.0)).sqrt();
     // `changeVal || 1`: a flat graph still gets a box to draw in.
     let pad = if change == 0.0 { 1.0 } else { change };
     let min = points.iter().copied().fold(f64::INFINITY, f64::min);
     let max = points.iter().copied().fold(f64::NEG_INFINITY, f64::max);
-    // `Math.round(changeVal * 2)`: halves toward +∞.
-    let rounded = (change * 2.0 + 0.5).floor();
+    // `Math.round(changeVal * 2)`: halves toward +∞, with the product rounded first.
+    let doubled = change * 2.0;
+    let rounded = (doubled + 0.5).floor();
     Some(TrendChange {
         points,
         draw_min: min - pad,

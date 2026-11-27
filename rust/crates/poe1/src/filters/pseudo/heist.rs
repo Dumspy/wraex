@@ -5,7 +5,7 @@ use wraex_core::Rarity;
 use super::super::create_stat_filters::Ctx;
 use super::super::{FilterError, FilterTag, R, missing};
 use super::item_property::{MAX_SAFE_INTEGER, Prop, prop_to_filter, up_to};
-use super::utils::stat_to_not_filter;
+use super::utils::{NotFilterOptions, stat_to_not_filter};
 use crate::parser::meta::ItemCategory;
 use crate::parser::modifiers::ModifierType;
 
@@ -60,7 +60,12 @@ fn apply_blueprint_rules(ctx: &mut Ctx) -> R<()> {
 
     if !ctx.filters.iter().any(|f| f.tag == FilterTag::ENCHANT) {
         let stat = ctx.d.pseudo_stat_by_ref(ENCHANT_MODS).ok_or_else(|| missing(ENCHANT_MODS))?;
-        ctx.filters.push(stat_to_not_filter(&stat, ModifierType::Pseudo, false, false));
+        ctx.filters.push(stat_to_not_filter(NotFilterOptions {
+            stat: &stat,
+            kind: ModifierType::Pseudo,
+            negate_string: false,
+            disabled: false,
+        }));
     }
 
     let blueprint = item.heist_blueprint.as_ref().ok_or_else(|| missing("heistBlueprint"))?;

@@ -107,10 +107,13 @@ fn split_json_blob(blob: &str) -> Vec<Overview> {
     let mut database = Vec::new();
     let Some(mut start) = blob.find(NINJA_OVERVIEW) else { return database };
     loop {
-        let end = blob[start + 1..].find(NINJA_OVERVIEW).map(|i| i + start + 1);
-        let type_start = start + NINJA_OVERVIEW.len();
-        let kind = blob[type_start..].find('"').map_or(&blob[type_start..], |i| &blob[type_start..type_start + i]);
-        let lines = &blob[start..end.unwrap_or(blob.len())];
+        // `start` points at the `{` of an ASCII tag, so `start + 1` is a boundary.
+        let after_start = blob.get(start.saturating_add(1)..).unwrap_or_default();
+        let end = after_start.find(NINJA_OVERVIEW).map(|i| start.saturating_add(i).saturating_add(1));
+        let type_start = start.saturating_add(NINJA_OVERVIEW.len());
+        let after_type = blob.get(type_start..).unwrap_or_default();
+        let kind = after_type.find('"').map_or(after_type, |i| after_type.get(..i).unwrap_or_default());
+        let lines = blob.get(start..end.unwrap_or(blob.len())).unwrap_or_default();
         if let Some(&(ns, url, _)) = NAMESPACE_MAP.iter().find(|(_, _, t)| *t == kind) {
             database.push(Overview { ns, url, lines: lines.to_owned() });
         }
@@ -212,7 +215,7 @@ impl Prices {
     }
 
     /// `queuePricesFetch`: the user looked at a price; keep prices fresh.
-    pub fn mark_interest(&mut self, now: u64) {
+    pub const fn mark_interest(&mut self, now: u64) {
         self.last_interest = Some(now);
     }
 
@@ -229,7 +232,7 @@ impl Prices {
     }
 
     /// `initialLoading`: nothing to show yet.
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.database.is_empty()
     }
 
@@ -239,14 +242,16 @@ impl Prices {
         // an `undefined` variant is left out.
         let mut search = format!("{{\"name\":{}", wraex_core::js::json_string(query.name));
         if let Some(v) = query.variant {
-            search.push_str(&format!(",\"variant\":{}", wraex_core::js::json_string(v)));
+            search.push_str(",\"variant\":");
+            search.push_str(&wraex_core::js::json_string(v));
         }
         search.push_str(",\"chaos\":");
 
         for overview in self.database.iter().filter(|o| o.ns == query.ns) {
             let Some(start) = overview.lines.find(&search) else { continue };
-            let end = overview.lines[start..].find('}').map(|i| start + i)?;
-            let info: NinjaDenseInfo = serde_json::from_str(&overview.lines[start..=end]).ok()?;
+            let tail = overview.lines.get(start..)?;
+            let end = tail.find('}').map(|i| start.saturating_add(i))?;
+            let info: NinjaDenseInfo = serde_json::from_str(overview.lines.get(start..=end)?).ok()?;
             let league = league_to_url(self.league_id.as_deref().unwrap_or_default());
             let url =
                 format!("https://poe.ninja/poe1/economy/{league}/{}/{}", overview.url, dense_info_to_details_id(&info));

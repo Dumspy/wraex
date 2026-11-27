@@ -1,11 +1,12 @@
 //! `filters/pseudo/maps.ts`: map and chart properties, and Valdo's lethal mods.
 
 use wraex_core::Rarity;
+use wraex_core::num::usize_to_f64;
 
 use super::super::create_stat_filters::Ctx;
 use super::super::{FilterError, R};
 use super::item_property::{MAX_SAFE_INTEGER, NoSourcePseudo, Prop, no_source_pseudo_to_filter, prop_to_filter, up_to};
-use super::utils::{find_and_resolve_by_ref, stat_to_not_filter};
+use super::utils::{NotFilterOptions, find_and_resolve_by_ref, stat_to_not_filter};
 use crate::parser::meta::ItemCategory;
 use crate::parser::modifiers::ModifierType;
 
@@ -21,19 +22,29 @@ fn truthy(x: Option<f64>) -> Option<f64> {
     x.filter(|v| *v != 0.0 && !v.is_nan())
 }
 
+/// `areaProps`'s `disabled` option.
+#[derive(Debug, Clone, Copy, Default)]
+struct AreaPropsDisabled {
+    /// Atlas drops reuse this one.
+    item_quantity: bool,
+    item_rarity: bool,
+    pack_size: bool,
+}
+
 /// `areaProps`: which of quantity, rarity and pack size start disabled.
-fn area_props(item_quantity: bool, item_rarity: bool, pack_size: bool, ctx: &mut Ctx) {
+fn area_props(disabled: AreaPropsDisabled, ctx: &mut Ctx) {
     let item = ctx.item;
     let props = [
-        (item.area_item_quantity, "Item Quantity: +#%", "item.map_item_quantity", item_quantity),
+        (item.area_item_quantity, "Item Quantity: +#%", "item.map_item_quantity", disabled.item_quantity),
         // Reuses quantity's.
-        (item.area_atlas_drops, "Atlas Drops: +#%", "item.map_atlas_drops", item_quantity),
-        (item.area_item_rarity, "Item Rarity: +#%", "item.map_item_rarity", item_rarity),
-        (item.area_pack_size, "Monster Pack Size: +#%", "item.map_pack_size", pack_size),
+        (item.area_atlas_drops, "Atlas Drops: +#%", "item.map_atlas_drops", disabled.item_quantity),
+        (item.area_item_rarity, "Item Rarity: +#%", "item.map_item_rarity", disabled.item_rarity),
+        (item.area_pack_size, "Monster Pack Size: +#%", "item.map_pack_size", disabled.pack_size),
     ];
-    for (value, stat_ref, trade_id, disabled) in props {
+    for (value, stat_ref, trade_id, start_disabled) in props {
         let Some(value) = truthy(value) else { continue };
-        let prop = Prop { disabled: Some(disabled), ..Prop::new(stat_ref, trade_id, up_to(value, MAX_SAFE_INTEGER)) };
+        let prop =
+            Prop { disabled: Some(start_disabled), ..Prop::new(stat_ref, trade_id, up_to(value, MAX_SAFE_INTEGER)) };
         ctx.filters.push(prop_to_filter(prop, item, ctx.search_in_range));
     }
 }
@@ -64,7 +75,7 @@ pub fn map_props(bulk: bool, ctx: &mut Ctx) -> R<()> {
             .into_iter()
             .any(|v| truthy(v).is_some());
 
-        area_props(false, has_valuable_drops, false, ctx);
+        area_props(AreaPropsDisabled { item_rarity: has_valuable_drops, ..Default::default() }, ctx);
 
         let more = [
             (item.map_more_maps, MORE_MAPS, true),
@@ -85,7 +96,7 @@ pub fn map_props(bulk: bool, ctx: &mut Ctx) -> R<()> {
         .filter(|m| m.info.kind == ModifierType::Explicit || m.info.kind == ModifierType::Fractured)
         .count();
     if explicit_mods >= 8 {
-        push_pseudo(ctx, EXPLICIT_MODIFIERS, explicit_mods as f64, 9.0, false, 0.0)?;
+        push_pseudo(ctx, EXPLICIT_MODIFIERS, usize_to_f64(explicit_mods), 9.0, false, 0.0)?;
     }
     Ok(())
 }
@@ -97,7 +108,7 @@ pub fn chart_props(bulk: bool, ctx: &mut Ctx) {
         return;
     }
 
-    area_props(false, false, false, ctx);
+    area_props(AreaPropsDisabled::default(), ctx);
 
     if let Some(sulphur) = truthy(item.chart_sulphur) {
         let prop = Prop {
@@ -121,7 +132,12 @@ pub fn valdo_bad_mods(ctx: &mut Ctx) -> R<()> {
 
         let lethal_stat =
             find_and_resolve_by_ref(ctx.d, lethal_stat_ref, ModifierType::Explicit, ctx.item.category.as_ref(), None)?;
-        ctx.filters.push(stat_to_not_filter(&lethal_stat, ModifierType::Explicit, false, false));
+        ctx.filters.push(stat_to_not_filter(NotFilterOptions {
+            stat: &lethal_stat,
+            kind: ModifierType::Explicit,
+            negate_string: false,
+            disabled: false,
+        }));
     }
     Ok(())
 }

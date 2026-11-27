@@ -29,6 +29,16 @@ pub enum SearchMode {
     Required = 1,
 }
 
+impl SearchMode {
+    /// The value of the filter's `option`, which the trade site matches.
+    const fn as_value(self) -> f64 {
+        match self {
+            Self::Optional => 0.0,
+            Self::Required => 1.0,
+        }
+    }
+}
+
 fn mercenary(stat: &Stat) -> R<&crate::data::MercenaryStat> {
     stat.mercenary.as_ref().ok_or_else(|| missing("stat.mercenary"))
 }
@@ -44,6 +54,10 @@ fn is_last_of_family(stat: &Stat) -> bool {
 }
 
 /// `createMercenaryFilters`
+#[expect(
+    clippy::too_many_lines,
+    reason = "line-for-line port of upstream `createMercenaryFilters` (`pseudo/mercenary.ts`)"
+)]
 pub fn create_mercenary_filters(d: &Data, item: &Item) -> R<Vec<FilterOrGroup>> {
     let mut out = Vec::new();
 
@@ -102,10 +116,10 @@ pub fn create_mercenary_filters(d: &Data, item: &Item) -> R<Vec<FilterOrGroup>> 
 
         let six_link = supports.len() == 5 && !possible_supports.is_empty();
         if six_link {
-            let mut tier3_count = 0;
+            let mut tier3_count: u32 = 0;
             for support in &supports {
                 if mercenary(&support.stat)?.tier.is_some_and(|t| t >= 3) || is_last_of_family(&support.stat) {
-                    tier3_count += 1;
+                    tier3_count = tier3_count.saturating_add(1);
                 }
             }
             let prop = Prop {
@@ -162,7 +176,7 @@ pub fn create_mercenary_filters(d: &Data, item: &Item) -> R<Vec<FilterOrGroup>> 
                 sources: Vec::new(),
                 not: None,
                 roll: None,
-                option: Some(ValueFilter { value: f64::from(SearchMode::Required as u8) }),
+                option: Some(ValueFilter { value: SearchMode::Required.as_value() }),
                 hidden: None,
                 disabled: true,
             });

@@ -21,7 +21,8 @@ pub fn magic_basetype(d: &Data, name: &str) -> Result<Option<String>, Fail> {
     let mut found: Vec<String> = Vec::new();
     for start in 0..words.len() {
         for end in start..words.len() {
-            let candidate = words[start..=end].join(separator);
+            let Some(words) = words.get(start..=end) else { continue };
+            let candidate = words.join(separator);
             // `result && result[0].craftable` throws on an empty list (a hash collision).
             let craftable = match d.item_by_translated(Namespace::Item, &candidate) {
                 None => false,

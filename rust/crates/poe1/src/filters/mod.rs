@@ -39,6 +39,12 @@ pub(crate) fn missing(what: &str) -> FilterError {
     FilterError(format!("missing {what}"))
 }
 
+/// JavaScript's `===` on numbers: `NaN` equals nothing, `-0` equals `0`.
+#[expect(clippy::float_cmp, reason = "JS `===` on numbers")]
+pub(crate) fn js_equal(a: f64, b: f64) -> bool {
+    a == b
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct FilterPreset {
     pub id: String,
@@ -62,7 +68,7 @@ pub struct SearchFilter {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub category: Option<ItemCategory>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sub: Option<Box<SearchFilter>>,
+    pub sub: Option<Box<Self>>,
     /// Only on `sub` and `searchRelaxed`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disabled: Option<bool>,
@@ -128,14 +134,14 @@ pub struct ItemFilters {
     pub trade: TradeFilters,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct RarityFilter {
     /// `magic` or `nonunique`.
     pub value: &'static str,
     pub disabled: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct CorruptedFilter {
     pub value: bool,
     pub twice: bool,
@@ -143,23 +149,23 @@ pub struct CorruptedFilter {
     pub exact: Option<bool>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct ValueFilter<T> {
     pub value: T,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Disabled {
     pub disabled: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct HiddenFilter {
     pub disabled: bool,
     pub hidden: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct InfluenceFilter {
     pub value: ItemInfluence,
     pub disabled: bool,
@@ -174,36 +180,41 @@ pub enum MapBlighted {
 }
 
 impl Serialize for MapBlighted {
-    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self {
-            MapBlighted::Blighted => s.serialize_str("Blighted"),
-            MapBlighted::BlightRavaged => s.serialize_str("Blight-ravaged"),
-            MapBlighted::No => s.serialize_bool(false),
+            Self::Blighted => serializer.serialize_str("Blighted"),
+            Self::BlightRavaged => serializer.serialize_str("Blight-ravaged"),
+            Self::No => serializer.serialize_bool(false),
         }
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MapCompletionReward {
     pub name: String,
     pub name_trade: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UnidentifiedFilter {
     pub value: bool,
     pub disabled: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VeiledFilter {
     pub stat_refs: Vec<String>,
     pub disabled: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+/// `ItemFilters['trade']`, which the reference spells inline in `interfaces.ts`.
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "mirrors upstream `ItemFilters['trade']` (`interfaces.ts`) field for field"
+)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TradeFilters {
     pub offline: bool,
@@ -226,7 +237,7 @@ pub struct FilterNumeric {
 }
 
 impl FilterNumeric {
-    pub fn new(value: f64, disabled: bool) -> Self {
+    pub const fn new(value: f64, disabled: bool) -> Self {
         Self { value, max: None, disabled }
     }
 }
@@ -297,7 +308,7 @@ impl StatFilter {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MercenaryFilterInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -318,10 +329,10 @@ pub enum FilterSource {
 }
 
 impl Serialize for FilterSource {
-    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self {
-            FilterSource::Stat(source) => source.serialize(s),
-            FilterSource::Family(family) => {
+            Self::Stat(source) => source.serialize(serializer),
+            Self::Family(family) => {
                 #[derive(Serialize)]
                 struct FamilyStat<'a> {
                     stat: &'a Stat,
@@ -330,7 +341,7 @@ impl Serialize for FilterSource {
                 struct Modifier<'a> {
                     stats: Vec<FamilyStat<'a>>,
                 }
-                let mut map = s.serialize_map(Some(1))?;
+                let mut map = serializer.serialize_map(Some(1))?;
                 let stats = family.iter().map(|stat| FamilyStat { stat }).collect();
                 map.serialize_entry("modifier", &Modifier { stats })?;
                 map.end()
@@ -380,42 +391,42 @@ pub enum FilterTag {
 }
 
 impl FilterTag {
-    pub const PSEUDO: FilterTag = FilterTag::Type(ModifierType::Pseudo);
-    pub const EXPLICIT: FilterTag = FilterTag::Type(ModifierType::Explicit);
-    pub const IMPLICIT: FilterTag = FilterTag::Type(ModifierType::Implicit);
-    pub const ENCHANT: FilterTag = FilterTag::Type(ModifierType::Enchant);
-    pub const FRACTURED: FilterTag = FilterTag::Type(ModifierType::Fractured);
+    pub const PSEUDO: Self = Self::Type(ModifierType::Pseudo);
+    pub const EXPLICIT: Self = Self::Type(ModifierType::Explicit);
+    pub const IMPLICIT: Self = Self::Type(ModifierType::Implicit);
+    pub const ENCHANT: Self = Self::Type(ModifierType::Enchant);
+    pub const FRACTURED: Self = Self::Type(ModifierType::Fractured);
 
     /// The tag's value, as [`Serialize`] writes it and as `filters.tag_<tag>` spells its key.
-    pub fn as_str(self) -> &'static str {
+    pub const fn as_str(self) -> &'static str {
         match self {
-            FilterTag::Type(t) => t.as_str(),
-            FilterTag::Mechanic(m) => m.as_str(),
-            FilterTag::Variant => "variant",
-            FilterTag::Property => "property",
-            FilterTag::Brick => "brick",
-            FilterTag::MercenaryPrimary => "mercenary-primary",
-            FilterTag::MercenarySecondary => "mercenary-secondary",
-            FilterTag::MercenaryUtility => "mercenary-utility",
-            FilterTag::MercenarySupport => "mercenary-support",
-            FilterTag::FilterGroup => "filter-group",
+            Self::Type(t) => t.as_str(),
+            Self::Mechanic(m) => m.as_str(),
+            Self::Variant => "variant",
+            Self::Property => "property",
+            Self::Brick => "brick",
+            Self::MercenaryPrimary => "mercenary-primary",
+            Self::MercenarySecondary => "mercenary-secondary",
+            Self::MercenaryUtility => "mercenary-utility",
+            Self::MercenarySupport => "mercenary-support",
+            Self::FilterGroup => "filter-group",
         }
     }
 }
 
 impl Serialize for FilterTag {
-    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self {
-            FilterTag::Type(t) => t.serialize(s),
-            FilterTag::Mechanic(m) => m.serialize(s),
-            FilterTag::Variant => s.serialize_str("variant"),
-            FilterTag::Property => s.serialize_str("property"),
-            FilterTag::Brick => s.serialize_str("brick"),
-            FilterTag::MercenaryPrimary => s.serialize_str("mercenary-primary"),
-            FilterTag::MercenarySecondary => s.serialize_str("mercenary-secondary"),
-            FilterTag::MercenaryUtility => s.serialize_str("mercenary-utility"),
-            FilterTag::MercenarySupport => s.serialize_str("mercenary-support"),
-            FilterTag::FilterGroup => s.serialize_str("filter-group"),
+            Self::Type(t) => t.serialize(serializer),
+            Self::Mechanic(m) => m.serialize(serializer),
+            Self::Variant => serializer.serialize_str("variant"),
+            Self::Property => serializer.serialize_str("property"),
+            Self::Brick => serializer.serialize_str("brick"),
+            Self::MercenaryPrimary => serializer.serialize_str("mercenary-primary"),
+            Self::MercenarySecondary => serializer.serialize_str("mercenary-secondary"),
+            Self::MercenaryUtility => serializer.serialize_str("mercenary-utility"),
+            Self::MercenarySupport => serializer.serialize_str("mercenary-support"),
+            Self::FilterGroup => serializer.serialize_str("filter-group"),
         }
     }
 }
@@ -463,4 +474,15 @@ pub enum ItemHasEmptyModifier {
     Any = 0,
     Prefix = 1,
     Suffix = 2,
+}
+
+impl ItemHasEmptyModifier {
+    /// The value of the filter's `option`, which the trade site matches.
+    pub const fn as_value(self) -> f64 {
+        match self {
+            Self::Any => 0.0,
+            Self::Prefix => 1.0,
+            Self::Suffix => 2.0,
+        }
+    }
 }

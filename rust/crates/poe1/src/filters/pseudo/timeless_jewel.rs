@@ -18,7 +18,7 @@ pub fn filter_timeless_jewel_keystones(ctx: &mut Ctx) -> R<()> {
     else {
         return Ok(());
     };
-    let tree_seed = ctx.stats_by_type[seed_index].clone();
+    let Some(tree_seed) = ctx.stats_by_type.get(seed_index).cloned() else { return Ok(()) };
 
     let mut group =
         FilterGroup { group: GroupKind::One, expanded: true, meta: meta_count_one_filter(false), stats: Vec::new() };
@@ -26,20 +26,18 @@ pub fn filter_timeless_jewel_keystones(ctx: &mut Ctx) -> R<()> {
     let first_source = tree_seed.sources.first().ok_or_else(|| missing("sources[0]"))?;
     for family_stat_ref in tree_seed.stat.mod_family.as_deref().unwrap_or_default() {
         let is_seed = *family_stat_ref == tree_seed.stat.stat_ref;
-        let mut calc = tree_seed.clone();
-        if !is_seed {
+        let calc = if is_seed {
+            tree_seed.clone()
+        } else {
             let family_stat =
                 find_and_resolve_by_ref(ctx.d, family_stat_ref, tree_seed.kind, ctx.item.category.as_ref(), None)?;
+            let translation = family_stat.matchers.first().cloned().ok_or_else(|| missing("matchers[0]"))?;
             let modifier = ParsedModifier {
                 info: first_source.modifier.info.clone(),
-                stats: vec![ParsedStat {
-                    translation: family_stat.matchers[0].clone(),
-                    stat: family_stat,
-                    roll: first_source.stat.roll.clone(),
-                }],
+                stats: vec![ParsedStat { translation, stat: family_stat, roll: first_source.stat.roll.clone() }],
             };
-            calc = sum_stats_by_mod_type(&[modifier]).into_iter().next().ok_or_else(|| missing("family stat"))?;
-        }
+            sum_stats_by_mod_type(&[modifier]).into_iter().next().ok_or_else(|| missing("family stat"))?
+        };
         let mut filter = calculated_stat_to_filter(&calc, ctx.search_in_range, ctx.item)?;
         if !is_seed {
             filter.tag = FilterTag::PSEUDO;
