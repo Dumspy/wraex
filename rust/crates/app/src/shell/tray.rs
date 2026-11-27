@@ -6,8 +6,7 @@
 //! [`wraex_poe2::data::icon_path`]): `assets/<game>/icon.png` in a packaged install, the
 //! reference's `renderer/public/icon.png` in development.
 //!
-//! A missing or undecodable icon is not fatal: the tray shows a text-only menu instead
-//! (`Tray::new` wants pixels, so the shell then starts without a tray and says so).
+//! If the icon cannot be decoded, the shell logs the error and continues without a tray.
 
 use wraex_core::GameId;
 
@@ -22,9 +21,7 @@ pub fn icon(game: GameId) -> Result<(Vec<u8>, u32, u32), String> {
         _ => wraex_poe1::data::icon_path(),
     };
     let bytes = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-    let image = image::load_from_memory_with_format(&bytes, image::ImageFormat::Png)
-        .map_err(|e| format!("{}: {e}", path.display()))?;
-    let rgba = image.to_rgba8();
+    let rgba = rune::image::png_rgba8(&bytes).map_err(|e| format!("{}: {e}", path.display()))?;
     #[cfg(target_os = "macos")]
     let rgba = if rgba.width() != MACOS_ICON || rgba.height() != MACOS_ICON {
         image::imageops::resize(&rgba, MACOS_ICON, MACOS_ICON, image::imageops::FilterType::Lanczos3)
@@ -46,6 +43,16 @@ mod tests {
             let (rgba, width, height) = icon(game).unwrap_or_else(|e| panic!("{game:?}: {e}"));
             assert!(width > 0 && height > 0);
             assert_eq!(rgba.len(), (width * height * 4) as usize);
+            #[cfg(not(target_os = "macos"))]
+            {
+                use sha1::{Digest, Sha1};
+                let expected = match game {
+                    GameId::Poe1 => "4f16b67e59ba3618e98f86b61c338e0b2bfbdeeb",
+                    GameId::Poe2 => "47ac9013d89c7575a44648bd09f7e118b016c613",
+                };
+                assert_eq!((width, height), (78, 78));
+                assert_eq!(format!("{:x}", Sha1::digest(&rgba)), expected);
+            }
             #[cfg(target_os = "macos")]
             assert_eq!((width, height), (MACOS_ICON, MACOS_ICON), "AppTray.ts' 22 pt icon");
         }
