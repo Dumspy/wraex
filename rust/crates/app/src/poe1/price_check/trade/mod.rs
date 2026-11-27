@@ -21,6 +21,7 @@ use rune::{El, Latest, Waker};
 use wraex_core::relative_time::EpochMillis;
 use wraex_core::trade::BulkRequest;
 use wraex_core::trade::api::{Clock, SearchResult};
+use wraex_core::trade::rate_limit::{RateLimiter, RateLimits};
 use wraex_poe1::parser::item::Item;
 use wraex_poe1::results::{BulkSearch, PricingResult, bulk_searches, pricing_results};
 use wraex_poe1::trade::{Api, TradeRequest, api_to_satisfy_search};
@@ -159,6 +160,18 @@ impl Trade {
     /// The waker a landed answer uses to run `AppSpec::poll`.
     pub fn set_waker(&self, waker: Waker) {
         self.latest.set_waker(waker);
+    }
+
+    /// A `--snap` scene (`…-rate-limited`): fill the search limit as a burst of searches
+    /// just did, so the next search is refused with `Retry after 60 seconds` and the app's
+    /// real error path draws the error box's Retry/Browser buttons.
+    pub fn simulate_search_rate_limit(&mut self) {
+        let mut client = trade::lock(&self.client);
+        let now = client.clock.now();
+        let mut limits = RateLimits::initial();
+        limits.limiters = vec![RateLimiter::new(1, 60.0)];
+        limits.acquire(now);
+        client.limits.search = limits;
     }
 
     /// Takes a landed answer, if any: `poll` returns true when it applied one.
@@ -381,8 +394,10 @@ pub(super) fn error_box<S: 'static>(error: &str, project: Project<S>) -> El {
         .on_press(move |s: &mut S| project(s).start_search());
     let browser = crate::ui::button("trade-browser", &crate::poe1::i18n::t("Browser")).focusable(true).on_press_tx(
         move |s: &mut S, tx: &mut rune::Tx| {
-            if let Some(url) = project(s).trade_link() {
-                let _ = tx.open_url(&url);
+            if let Some(url) = project(s).trade_link()
+                && let Err(error) = tx.open_url(&url)
+            {
+                wraex_platform::log!("wraex: cannot open the trade link {url}: {error}");
             }
             project(s).reset_search();
         },

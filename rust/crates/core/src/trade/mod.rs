@@ -1,11 +1,13 @@
 //! Trade request pieces both references share: the bulk exchange request of
 //! `web/price-check/trade/pathofexile-bulk.ts` (the game picks the listing
 //! status), and `dot-prop`'s `setProperty`, which both use to build search
-//! filters. [`rate_limit`] tracks the trade site's rate limits and [`api`]
-//! sends requests within them.
+//! filters. [`rate_limit`] tracks the trade site's rate limits, [`api`]
+//! sends requests within them, and [`site_link`] builds the trade site's page
+//! links (`makeTradeLink`).
 
 pub mod api;
 pub mod rate_limit;
+pub mod site_link;
 
 use serde::Serialize;
 use serde_json::{Map, Value};

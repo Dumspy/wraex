@@ -214,6 +214,15 @@ impl App {
         self.price_check.start_search();
     }
 
+    /// [`App::load_and_search`] with the trade client's search limit full: the app's real
+    /// error path draws `Retry after 60 seconds` and the error box's Retry/Browser buttons
+    /// (`--scene adv-rare-ring-mirrored-catalyst-rate-limited`).
+    pub fn load_and_search_rate_limited(&mut self, slug: &str) {
+        self.load(slug);
+        self.price_check.trade.simulate_search_rate_limit();
+        self.price_check.start_search();
+    }
+
     /// `--scene settings-<game>-<page>` and the tests: replace the state with the settings
     /// window on `page`.
     pub fn settings_page(&mut self, game: GameId, page: Page) {
@@ -238,6 +247,17 @@ impl App {
     pub fn load_and_search_poe2(&mut self, slug: &str) {
         self.load_poe2(slug);
         if let Some(check) = &mut self.poe2 {
+            check.start_search();
+        }
+    }
+
+    /// [`App::load_and_search_poe2`] with the trade client's search limit full: the app's
+    /// real error path draws `Retry after 60 seconds` and the error box's Retry/Browser
+    /// buttons (`--scene poe2-ee2-rare-item-rate-limited`).
+    pub fn load_and_search_rate_limited_poe2(&mut self, slug: &str) {
+        self.load_poe2(slug);
+        if let Some(check) = &mut self.poe2 {
+            check.trade.simulate_search_rate_limit();
             check.start_search();
         }
     }
@@ -570,6 +590,11 @@ pub const SCENES: &[Scene] = &[
     ("currency-divine-orb", |app| app.load("currency-divine-orb")),
     // `tools/golden/screens/cases.mjs` marks these two `search: true`.
     ("adv-rare-ring-mirrored-catalyst", |app| app.load_and_search("adv-rare-ring-mirrored-catalyst")),
+    // A search the rate limiter refuses: the real error path's `Retry after 60 seconds` with
+    // the Retry/Browser buttons, whose Browser link is the search's `?q=` query.
+    ("adv-rare-ring-mirrored-catalyst-rate-limited", |app| {
+        app.load_and_search_rate_limited("adv-rare-ring-mirrored-catalyst")
+    }),
     ("adv-unique-timeless-jewel", |app| app.load("adv-unique-timeless-jewel")),
     ("real-map-rare-t16-max-res", |app| app.load_and_search("real-map-rare-t16-max-res")),
     ("error-not-an-item", |app| app.load("error-not-an-item")),
@@ -591,6 +616,8 @@ pub const SCENES: &[Scene] = &[
     ("poe2-currency-djinn-barya", |app| app.load_poe2("currency-djinn-barya")),
     // The harness clicks Search for these two, as it does for PoE1's rare and map.
     ("poe2-ee2-rare-item", |app| app.load_and_search_poe2("ee2-rare-item")),
+    // The PoE2 counterpart of the rate-limited scene above (`/trade2/search/poe2/...`).
+    ("poe2-ee2-rare-item-rate-limited", |app| app.load_and_search_rate_limited_poe2("ee2-rare-item")),
     ("poe2-ee2-unique-item", |app| app.load_poe2("ee2-unique-item")),
     ("poe2-ee2-rare-map", |app| app.load_and_search_poe2("ee2-rare-map")),
     ("poe2-error-not-an-item", |app| app.load_poe2("error-not-an-item")),
@@ -816,6 +843,18 @@ mod tests {
         // PoE2's window on its own corpus (`poe2-ee2-rare-item` →
         // `corpus/poe2/ee2-rare-item.txt`); everything else is PoE1's, as before.
         let size = scene_size(Some(slug));
+        // The rate-limited scenes: the same windows with the search limit full, so the
+        // error box is up instead of the listings.
+        if slug == "adv-rare-ring-mirrored-catalyst-rate-limited" {
+            let mut app = App::replay("adv-rare-ring-mirrored-catalyst");
+            app.load_and_search_rate_limited("adv-rare-ring-mirrored-catalyst");
+            return runtime_app(app, size);
+        }
+        if slug == "poe2-ee2-rare-item-rate-limited" {
+            let mut app = App::with_mode_poe2(&corpus_poe2("ee2-rare-item"), Mode::Replay);
+            app.load_and_search_rate_limited_poe2("ee2-rare-item");
+            return runtime_app(app, size);
+        }
         if let Some((game, kind)) = widgets::scene(slug) {
             return runtime_app(App::widgets_scene(game, kind), size);
         }
@@ -1020,6 +1059,29 @@ mod tests {
         assert_eq!(text_of(&runtime, "listing-0-date").as_deref(), Some("2 days ago"));
         assert_eq!(text_of(&runtime, "listing-19-price").as_deref(), Some("3 chaos"));
         assert!(runtime.find("listing-20-price").is_none(), "twenty rows, no more");
+    }
+
+    /// The rate-limited scenes: the client refuses the search (`Retry after 60 seconds`), so
+    /// `TradeListing.vue`/`TradeBulk.vue` draw their error box, and Browser opens the search's
+    /// query on the trade site — the link Rune used to refuse for its raw `{"query":…}`.
+    #[test]
+    fn the_rate_limited_scenes_offer_the_query_on_the_trade_site() {
+        for (slug, path) in [
+            ("adv-rare-ring-mirrored-catalyst-rate-limited", "/trade/search/Standard?q=%7B"),
+            ("poe2-ee2-rare-item-rate-limited", "/trade2/search/poe2/Standard?q=%7B"),
+        ] {
+            let mut runtime = runtime(slug);
+            let error = match runtime.state.game {
+                GameId::Poe2 => runtime.state.poe2.as_ref().and_then(|check| check.trade.error.clone()),
+                _ => runtime.state.price_check.trade.error.clone(),
+            };
+            assert_eq!(error.as_deref(), Some("Retry after 60 seconds"), "{slug}");
+            assert!(runtime.find("trade-error").is_some(), "{slug}: the error box");
+            click(&mut runtime, "trade-browser");
+            let urls = runtime.take_url_requests();
+            assert_eq!(urls.len(), 1, "{slug}: {urls:?}");
+            assert!(urls[0].contains(path), "{slug}: {path} not in {}", urls[0]);
+        }
     }
 
     /// `OverlayWindow.vue`'s background sits *under* the widgets: a press inside a card is that
