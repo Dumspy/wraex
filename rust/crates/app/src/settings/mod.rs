@@ -295,7 +295,7 @@ impl Settings {
     /// The live shell opens it from the tray and from a widget's edit button.
     pub fn open_live(game: GameId, mode: Mode) -> Self {
         let store = ConfigStore::new(config_path(game).unwrap_or_else(|| fallback_path(game)));
-        let loaded = load(game, store.load().as_deref());
+        let loaded = load_store(game, &store).unwrap_or_else(|| load(game, None));
         let mut settings = Self::new(game, Page::Hotkeys, loaded.config, store, mode);
         settings.save_temporary = loaded.save_temporary;
         settings
@@ -494,6 +494,16 @@ pub fn default_config(game: GameId) -> Value {
     match game {
         GameId::Poe2 => wraex_poe2::config::default_config(),
         _ => wraex_poe1::config::default_config(),
+    }
+}
+
+pub(crate) fn load_store(game: GameId, store: &ConfigStore) -> Option<Loaded> {
+    match store.load() {
+        Ok(contents) => contents.map(|text| load(game, Some(&text))),
+        Err(error) => {
+            wraex_platform::log!("could not read {}: {error}", store.path().display());
+            Some(Loaded { config: default_config(game), save_temporary: true })
+        }
     }
 }
 

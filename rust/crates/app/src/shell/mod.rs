@@ -900,8 +900,7 @@ impl Live {
     /// Re-read the config after the settings window closed (Save or Cancel) and apply what
     /// changed to the running app, as upstream's `updateConfig` does.
     fn reload_config(&mut self) {
-        let Some(contents) = self.startup.store.load() else { return };
-        let loaded = settings::load(self.game, Some(&contents));
+        let Some(loaded) = settings::load_store(self.game, &self.startup.store) else { return };
         if loaded.save_temporary {
             return self.warn("the config could not be read back after the settings window");
         }
