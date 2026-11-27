@@ -79,21 +79,9 @@ jobs:
       # `rune` and every vendor patch must share one rev: cargo does not inherit
       # patches, and a stale patch rev still builds when the vendored crate's
       # version did not change.
-      - name: Rune revs agree
+      - name: Rune pin
         working-directory: .
-        run: |
-          revs=$(grep -oE 'rev = "[0-9a-f]{40}"' rust/Cargo.toml | sort -u | wc -l)
-          if [ "$revs" -ne 1 ]; then
-            echo "rust/Cargo.toml has $revs different Rune revs"
-            exit 1
-          fi
-      - name: No unused patches
-        working-directory: .
-        run: |
-          if grep -q 'patch.unused' rust/Cargo.lock; then
-            echo "rust/Cargo.lock has unused patches: bump the patch revs with rune"
-            exit 1
-          fi
+        run: python3 tools/check-rune-pin.py
       # No separate lockfile check: `--locked` on the clippy and nextest runs below
       # already fails when Cargo.lock is stale.
 

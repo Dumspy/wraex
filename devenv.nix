@@ -27,16 +27,7 @@ let
   # `rune` and every vendor patch must move together; a stale patch rev can
   # still compile when the vendored crate's version did not change.
   runePin = ''
-    cd ${root}
-    revs=$(grep -oE 'rev = "[0-9a-f]{40}"' rust/Cargo.toml | sort -u | wc -l)
-    if [ "$revs" -ne 1 ]; then
-      echo "rust/Cargo.toml has $revs different Rune revs (rune + [patch.crates-io])"
-      exit 1
-    fi
-    if grep -q 'patch.unused' rust/Cargo.lock; then
-      echo "rust/Cargo.lock has unused patches: bump the patch revs with rune"
-      exit 1
-    fi
+    ${pkgs.python3}/bin/python3 ${root}/tools/check-rune-pin.py
   '';
   runePinCheck = pkgs.writeShellScript "rune-pin" runePin;
   # `act` needs Docker, and some actions expect a GITHUB_TOKEN. The `gh` one is
