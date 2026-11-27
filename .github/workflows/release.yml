@@ -100,10 +100,10 @@ jobs:
           path: ~/.cache/cargo-xwin
           key: xwin-${{ runner.os }}-${{ env.CARGO_XWIN_VERSION }}
 
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust
-          key: ${{ matrix.target }}
+      # No Rust cache here on purpose: releases are rare and `--release`, so a saved
+      # cache would almost never be restored, while its ~700 MB per target per
+      # lockfile pushed CI's dev cache out of the repo's 10 GB limit. A release
+      # build is compiled cold.
 
       - name: Version
         id: version

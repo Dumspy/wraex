@@ -76,6 +76,9 @@ Add fields only with the module that produces them; do not guess at the shape.
 ## Checks the agent can run itself
 
 - `cargo fmt` / `cargo clippy -D warnings` / `cargo test`.
+- devenv installs git hooks: fmt on commit, the Rune pin check and clippy on push,
+  so run `cargo fmt --all` in `rust/` before committing (hooks can be skipped with
+  `--no-verify`, which is why CI still repeats the cheap checks).
 - PR CI skips the slow game-data and render tests and the headless smoke (they run
   on push to development and main), so run the full suite locally before a PR:
   `cargo test --workspace`, which `devenv tasks run check:all` already runs.
@@ -84,11 +87,11 @@ Add fields only with the module that produces them; do not guess at the shape.
   `devenv tasks run check:fixtures` (regenerates, fails on any change in `fixtures/`).
   Never edit a fixture by hand; add corpus cases instead.
 - UI: render headless with `--snap` and inspect the PNG and element tree (phase 5).
-- Workflows: `devenv tasks run ci:local` / `ci:release:local` run ci.yml / release.yml
-  with `act` (needs Docker; `.actrc` runs ubuntu-latest as emulated amd64 on Apple
-  Silicon, so it is slow but validates the workflow end to end). Cache saves fail
-  there (`tar` cannot stat under Rosetta), so local runs are always cold; time the
-  workflows on GitHub, not locally.
+- Workflows: `devenv tasks run ci:local` / `ci:fixtures:local` / `ci:release:local`
+  run ci.yml / fixtures.yml / release.yml with `act` (needs Docker; `.actrc` runs
+  ubuntu-latest as emulated amd64 on Apple Silicon, so it is slow but validates the
+  workflow end to end). Cache saves fail there (`tar` cannot stat under Rosetta), so
+  local runs are always cold; time the workflows on GitHub, not locally.
 
 ## Screenshots and video
 
