@@ -14,7 +14,7 @@ use indexmap::IndexMap;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
-use super::rate_limit::{Millis, RateLimits, RetryAfter, prevent_queue_creation};
+use super::rate_limit::{Millis, RateLimits, RetryAfter, check_restrictions, prevent_queue_creation};
 
 /// The User-Agent the app identifies itself with. Upstream sends Electron's
 /// `app.userAgentFallback`, which names the app and its version; this does the
@@ -128,7 +128,7 @@ pub trait Clock {
 /// What a trade request can fail with.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TradeError {
-    /// `preventQueueCreation`: try again later.
+    /// `preventQueueCreation`: try again later, or a server penalty is running.
     RetryAfter(RetryAfter),
     /// The site's `{ error: { code, message } }`.
     Api { code: i64, message: String },
@@ -245,7 +245,8 @@ impl Cache {
     }
 }
 
-/// The trade API client: one per game and site.
+/// The trade API client: one per game and site. It never sends while the
+/// server's rate-limit penalty still runs.
 #[derive(Debug)]
 pub struct TradeClient<T, C> {
     pub transport: T,
@@ -281,6 +282,11 @@ impl<T: Transport, C: Clock> TradeClient<T, C> {
         kind: fn(&mut Limits) -> &mut RateLimits,
         request: &HttpRequest,
     ) -> Result<HttpResponse, TradeError> {
+        // Sending into a running penalty only makes it longer.
+        if let Some(retry_after) = kind(&mut self.limits).restricted(self.clock.now()) {
+            return Err(TradeError::RetryAfter(retry_after));
+        }
+
         // `RateLimiter.waitMulti`
         loop {
             let delay = kind(&mut self.limits).delay(self.clock.now());
@@ -294,6 +300,11 @@ impl<T: Transport, C: Clock> TradeClient<T, C> {
         let response = self.transport.send(request).map_err(TradeError::Transport)?;
         let now = self.clock.now();
         kind(&mut self.limits).adjust(|name| response.header(name), self.latency_seconds, now);
+        kind(&mut self.limits).penalize(|name| response.header(name), response.status, now);
+        if response.status == 429 {
+            let retry_after = kind(&mut self.limits).restricted(now).expect("a 429 sets a penalty");
+            return Err(TradeError::RetryAfter(retry_after));
+        }
         Ok(response)
     }
 
@@ -309,6 +320,7 @@ impl<T: Transport, C: Clock> TradeClient<T, C> {
         }
 
         let now = self.clock.now();
+        check_restrictions(&[&self.limits.search, &self.limits.fetch], now).map_err(TradeError::RetryAfter)?;
         let Limits { search, fetch, .. } = &mut self.limits;
         prevent_queue_creation(&mut [(1, search), (1, fetch)], now).map_err(TradeError::RetryAfter)?;
 
@@ -359,6 +371,7 @@ impl<T: Transport, C: Clock> TradeClient<T, C> {
         }
 
         let now = self.clock.now();
+        check_restrictions(&[&self.limits.exchange], now).map_err(TradeError::RetryAfter)?;
         prevent_queue_creation(&mut [(1, &mut self.limits.exchange)], now).map_err(TradeError::RetryAfter)?;
 
         let request = json_post(self.api_url(&format!("exchange/{}", encode_path(league))), body);
@@ -389,11 +402,13 @@ mod tests {
         }
     }
 
-    /// Answers every request with `body` and the given rate-limit headers.
+    /// Answers every request with `body`, the given status and rate-limit headers.
     #[derive(Debug, Default)]
     struct FakeSite {
         sent: RefCell<Vec<HttpRequest>>,
         body: String,
+        /// 0 means 200.
+        status: u16,
         headers: Vec<(&'static str, &'static str)>,
     }
 
@@ -401,7 +416,7 @@ mod tests {
         fn send(&self, request: &HttpRequest) -> Result<HttpResponse, String> {
             self.sent.borrow_mut().push(request.clone());
             Ok(HttpResponse {
-                status: 200,
+                status: if self.status == 0 { 200 } else { self.status },
                 headers: self.headers.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect(),
                 body: self.body.clone(),
             })
@@ -411,6 +426,7 @@ mod tests {
     fn site(body: serde_json::Value) -> FakeSite {
         FakeSite {
             body: body.to_string(),
+            status: 200,
             headers: vec![
                 ("x-rate-limit-rules", "Ip"),
                 ("x-rate-limit-ip", "5:10:60,15:60:300"),
@@ -506,6 +522,67 @@ mod tests {
         let mut client = TradeClient::new(&site, &clock, "www.pathofexile.com", TradeSite::Trade, 2.0);
         let result: ExchangeResult<u32> = client.exchange(&json!({}), "Standard").unwrap();
         assert_eq!(result.result.keys().collect::<Vec<_>>(), ["zz", "aa"]);
+    }
+
+    #[test]
+    fn a_429_restricts_search_until_retry_after_ends() {
+        let mut site = site(json!({ "id": "abc", "result": [], "total": 0 }));
+        site.status = 429;
+        site.headers = vec![
+            ("x-rate-limit-rules", "Ip"),
+            ("x-rate-limit-ip", "5:10:60"),
+            ("x-rate-limit-ip-state", "1:10:0"),
+            ("retry-after", "30"),
+        ];
+        let clock = FakeClock::default();
+        let mut client = TradeClient::new(&site, &clock, "www.pathofexile.com", TradeSite::Trade, 0.0);
+
+        let err = client.search(&json!(1), "Standard").unwrap_err();
+        assert_eq!(err, TradeError::RetryAfter(RetryAfter { millis: 30_000 }));
+        assert_eq!(site.sent.borrow().len(), 1);
+
+        // Still restricted: nothing goes out, whatever the limits say.
+        (&clock).sleep(10_000);
+        let err = client.search(&json!(2), "Standard").unwrap_err();
+        assert_eq!(err, TradeError::RetryAfter(RetryAfter { millis: 20_000 }));
+        assert_eq!(site.sent.borrow().len(), 1);
+
+        // Once it ends the search is sent again (and 429s again here).
+        (&clock).sleep(20_000);
+        let err = client.search(&json!(3), "Standard").unwrap_err();
+        assert_eq!(err, TradeError::RetryAfter(RetryAfter { millis: 30_000 }));
+        assert_eq!(site.sent.borrow().len(), 2);
+    }
+
+    #[test]
+    fn a_state_penalty_restricts_the_next_fetch() {
+        let mut site = site(json!({ "result": [{ "id": "1" }] }));
+        site.headers =
+            vec![("x-rate-limit-rules", "Ip"), ("x-rate-limit-ip", "5:10:60"), ("x-rate-limit-ip-state", "1:10:20")];
+        let clock = FakeClock::default();
+        let mut client = TradeClient::new(&site, &clock, "www.pathofexile.com", TradeSite::Trade, 0.0);
+
+        client.fetch::<serde_json::Value>("q", &["1".to_owned()]).unwrap();
+        assert_eq!(site.sent.borrow().len(), 1);
+
+        (&clock).sleep(10_000);
+        let err = client.fetch::<serde_json::Value>("q", &["2".to_owned()]).unwrap_err();
+        assert_eq!(err, TradeError::RetryAfter(RetryAfter { millis: 10_000 }));
+        assert_eq!(site.sent.borrow().len(), 1);
+    }
+
+    #[test]
+    fn a_restricted_fetch_limit_blocks_search() {
+        let mut site = site(json!({ "result": [] }));
+        site.headers =
+            vec![("x-rate-limit-rules", "Ip"), ("x-rate-limit-ip", "5:10:60"), ("x-rate-limit-ip-state", "1:10:20")];
+        let clock = FakeClock::default();
+        let mut client = TradeClient::new(&site, &clock, "www.pathofexile.com", TradeSite::Trade, 0.0);
+
+        client.fetch::<serde_json::Value>("q", &["1".to_owned()]).unwrap();
+        let err = client.search(&json!(1), "Standard").unwrap_err();
+        assert_eq!(err, TradeError::RetryAfter(RetryAfter { millis: 20_000 }));
+        assert_eq!(site.sent.borrow().len(), 1, "no request while the fetch limit is restricted");
     }
 
     #[test]

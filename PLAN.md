@@ -260,7 +260,9 @@ Agent loop per step: port module → `golden check` → fix diffs → repeat.
   **Client done** (2026-11-23): `core::trade::rate_limit` ports `RateLimiter.ts`,
   `adjustRateLimits` and `preventQueueCreation` as clock-free state;
   `core::trade::api::TradeClient` sends search, fetch and exchange requests
-  within those limits and caches results for 5 minutes, over a `Transport`
+  within those limits, stops sending while the server reports a penalty
+  (`Retry-After` or the third field of `X-Rate-Limit-*-State`; not in upstream,
+  decided 2026-11-27) and caches results for 5 minutes, over a `Transport`
   (`wraex_platform::http`, blocking `ureq`, upstream's proxy host allowlist,
   User-Agent `wraex/<version> (+repo URL)`). Leagues (`core::leagues`, both
   games), PoE1 result rows and bulk groups (`poe1::results`, with Luxon's

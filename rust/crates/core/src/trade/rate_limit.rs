@@ -7,6 +7,11 @@
 //! the behaviour is testable without a clock. [`RateLimits::delay`] is how long
 //! to wait before a request, [`RateLimits::acquire`] records one, and
 //! [`RateLimits::adjust`] syncs with the server's `X-Rate-Limit-*` headers.
+//!
+//! Penalties are not in upstream. GGG's state entries are
+//! `hits:window_seconds:restricted_seconds`, and sending while the last one is
+//! non-zero lengthens the penalty, so [`RateLimits::penalize`] records it and
+//! [`check_restrictions`] keeps the client from sending until it ends.
 
 /// Milliseconds on some monotonic clock.
 pub type Millis = u64;
@@ -74,6 +79,8 @@ impl RateLimiter {
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct RateLimits {
     pub limiters: Vec<RateLimiter>,
+    /// When a penalty from the server ends, 0 when there is none.
+    restricted_until: Millis,
 }
 
 /// A limit from the server's headers.
@@ -87,8 +94,12 @@ struct ServerLimit {
 /// `preventQueueCreation` refuses to queue requests this long or longer.
 pub const MAX_QUEUE_MILLIS: Millis = 1500;
 
+/// The penalty assumed for a 429 that carries no penalty information.
+pub const UNKNOWN_PENALTY_SECONDS: u64 = 60;
+
 /// A request that would have to wait too long; upstream throws
-/// `Retry after N seconds`.
+/// `Retry after N seconds`. Also returned while a penalty from the server is
+/// running (`Retry-After`, or a non-zero `X-Rate-Limit-*-State`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RetryAfter {
     pub millis: Millis,
@@ -106,7 +117,7 @@ impl std::error::Error for RetryAfter {}
 impl RateLimits {
     /// One limiter, as the app starts (`new RateLimiter(1, 5)` per kind).
     pub fn initial() -> Self {
-        Self { limiters: vec![RateLimiter::new(1, 5.0)] }
+        Self { limiters: vec![RateLimiter::new(1, 5.0)], ..Default::default() }
     }
 
     /// `RateLimiter.waitMulti`: how long to wait until every limiter has room.
@@ -184,6 +195,26 @@ impl RateLimits {
         }
     }
 
+    /// Records the server's penalty from a response: a non-zero
+    /// `X-Rate-Limit-*-State` third field or `Retry-After`, and
+    /// [`UNKNOWN_PENALTY_SECONDS`] for a 429 without either. Never shortens a
+    /// penalty that is already running.
+    pub fn penalize<'a>(&mut self, header: impl Fn(&str) -> Option<&'a str>, status: u16, now: Millis) {
+        let mut seconds = penalty_seconds(header);
+        if status == 429 && seconds == 0 {
+            seconds = UNKNOWN_PENALTY_SECONDS;
+        }
+        if seconds > 0 {
+            let until = now.saturating_add(seconds.saturating_mul(1000));
+            self.restricted_until = self.restricted_until.max(until);
+        }
+    }
+
+    /// How long the current penalty still runs, `None` once it has ended.
+    pub fn restricted(&self, now: Millis) -> Option<RetryAfter> {
+        (now < self.restricted_until).then(|| RetryAfter { millis: self.restricted_until - now })
+    }
+
     /// `RateLimiter.estimateTime`: how long `count` requests take from `now`,
     /// or from an empty state with `ignore_state`.
     pub fn estimate_time(&mut self, count: u32, ignore_state: bool, now: Millis) -> Millis {
@@ -248,6 +279,30 @@ pub fn prevent_queue_creation(targets: &mut [(u32, &mut RateLimits)], now: Milli
     if estimated_millis >= MAX_QUEUE_MILLIS { Err(RetryAfter { millis: estimated_millis }) } else { Ok(()) }
 }
 
+/// The longest penalty still running among `targets`, or `Ok` when none is.
+pub fn check_restrictions(targets: &[&RateLimits], now: Millis) -> Result<(), RetryAfter> {
+    targets.iter().filter_map(|limits| limits.restricted(now)).max_by_key(|r| r.millis).map_or(Ok(()), Err)
+}
+
+/// The penalty the server asks for, in seconds: the largest of `Retry-After`
+/// (whole seconds; an HTTP date is ignored) and the third field of every
+/// `X-Rate-Limit-<rule>-State` entry, 0 when nothing is restricted.
+pub fn penalty_seconds<'a>(header: impl Fn(&str) -> Option<&'a str>) -> u64 {
+    let number = |s: &str| s.trim().parse::<u64>().unwrap_or(0);
+    let mut seconds = header("retry-after").map(number).unwrap_or(0);
+    let Some(rules) = header("x-rate-limit-rules") else { return seconds };
+    for rule in rules.split(',') {
+        let name = format!("x-rate-limit-{}-state", rule.trim()).to_ascii_lowercase();
+        let Some(state) = header(&name) else { continue };
+        for entry in state.split(',') {
+            if let Some(restricted) = entry.split(':').nth(2) {
+                seconds = seconds.max(number(restricted));
+            }
+        }
+    }
+    seconds
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -302,7 +357,7 @@ mod tests {
 
     #[test]
     fn estimates_follow_the_simulation() {
-        let mut limits = RateLimits { limiters: vec![RateLimiter::new(2, 10.0)] };
+        let mut limits = RateLimits { limiters: vec![RateLimiter::new(2, 10.0)], ..Default::default() };
         assert_eq!(limits.estimate_time(2, false, 0), 0);
         assert_eq!(limits.estimate_time(3, false, 0), 10_000);
         limits.acquire(0);
@@ -324,5 +379,60 @@ mod tests {
         // Two requests on a one-per-window limit can never avoid a queue.
         let mut clean = RateLimits::initial();
         assert!(prevent_queue_creation(&mut [(2, &mut clean)], 0).is_ok());
+    }
+
+    #[test]
+    fn penalties_are_the_largest_of_retry_after_and_every_state() {
+        let h = [
+            ("x-rate-limit-rules", "Ip, Account"),
+            ("x-rate-limit-ip-state", "3:10:0,5:60:120"),
+            ("x-rate-limit-account-state", "1:5:30"),
+        ];
+        assert_eq!(penalty_seconds(headers(&h)), 120);
+
+        // Retry-After wins when it is longer, and an HTTP date is ignored.
+        let h = [("x-rate-limit-rules", "Ip"), ("x-rate-limit-ip-state", "1:10:20"), ("retry-after", "90")];
+        assert_eq!(penalty_seconds(headers(&h)), 90);
+        let h = [("retry-after", "Wed, 21 Oct 2015 07:28:00 GMT")];
+        assert_eq!(penalty_seconds(headers(&h)), 0);
+
+        assert_eq!(penalty_seconds(headers(&[])), 0);
+        // Garbled fields count as 0.
+        let h = [("x-rate-limit-rules", "Ip"), ("x-rate-limit-ip-state", "1:10:,x")];
+        assert_eq!(penalty_seconds(headers(&h)), 0);
+    }
+
+    #[test]
+    fn penalize_restricts_and_never_shortens() {
+        let mut limits = RateLimits::initial();
+        limits.penalize(headers(&[("x-rate-limit-rules", "Ip"), ("x-rate-limit-ip-state", "1:10:0")]), 200, 0);
+        assert_eq!(limits.restricted(0), None);
+
+        // A 429 without any penalty information is assumed to be a minute.
+        limits.penalize(headers(&[]), 429, 0);
+        assert_eq!(limits.restricted(0), Some(RetryAfter { millis: 60_000 }));
+        assert_eq!(limits.restricted(1000).map(|r| r.to_string()).as_deref(), Some("Retry after 59 seconds"));
+
+        // A later, smaller penalty does not shorten the running one.
+        limits.penalize(headers(&[("retry-after", "5")]), 200, 1000);
+        assert_eq!(limits.restricted(1000), Some(RetryAfter { millis: 59_000 }));
+
+        // Over exactly when it ends.
+        assert_eq!(limits.restricted(59_999), Some(RetryAfter { millis: 1 }));
+        assert_eq!(limits.restricted(60_000), None);
+    }
+
+    #[test]
+    fn restrictions_pick_the_longest() {
+        let mut a = RateLimits::initial();
+        let mut b = RateLimits::initial();
+        let free = RateLimits::initial();
+        assert!(check_restrictions(&[&a, &b, &free], 0).is_ok());
+
+        a.penalize(headers(&[("retry-after", "10")]), 200, 0);
+        b.penalize(headers(&[("retry-after", "30")]), 200, 0);
+        assert_eq!(check_restrictions(&[&a, &b], 0), Err(RetryAfter { millis: 30_000 }));
+        assert_eq!(check_restrictions(&[&a], 5000), Err(RetryAfter { millis: 5000 }));
+        assert!(check_restrictions(&[&a], 10_000).is_ok());
     }
 }
