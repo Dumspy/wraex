@@ -103,6 +103,12 @@ impl std::fmt::Display for RetryAfter {
 
 impl std::error::Error for RetryAfter {}
 
+fn triple(value: &str) -> Option<(u32, u32, u32)> {
+    let mut fields = value.trim().split(':');
+    let triple = (fields.next()?.parse().ok()?, fields.next()?.parse().ok()?, fields.next()?.parse().ok()?);
+    fields.next().is_none().then_some(triple)
+}
+
 impl RateLimits {
     /// One limiter, as the app starts (`new RateLimiter(1, 5)` per kind).
     pub fn initial() -> Self {
@@ -128,30 +134,26 @@ impl RateLimits {
     /// widget's `apiLatencySeconds`, added to every window (`DESYNC_FIX`).
     pub fn adjust<'a>(&mut self, header: impl Fn(&str) -> Option<&'a str>, latency_seconds: f64, now: Millis) {
         let Some(rules) = header("x-rate-limit-rules") else { return };
-        let rules: Vec<&str> = rules.split(',').collect();
-        let name = |r: &str, suffix: &str| format!("x-rate-limit-{r}{suffix}").to_ascii_lowercase();
-        let limit_str: Vec<&str> = rules.iter().map(|r| header(&name(r, "")).unwrap_or("")).collect();
-        let state_str: Vec<&str> = rules.iter().map(|r| header(&name(r, "-state")).unwrap_or("")).collect();
-        self.adjust_from(&limit_str.join(","), &state_str.join(","), latency_seconds, now);
-    }
-
-    /// `_adjustRateLimits`: `limit_str` and `state_str` are `max:window:...`
-    /// triples, comma-separated, one per server limit.
-    fn adjust_from(&mut self, limit_str: &str, state_str: &str, latency_seconds: f64, now: Millis) {
-        let number = |s: Option<&str>| s.map_or(f64::NAN, crate::js::number);
-        let states: Vec<f64> = state_str.split(',').map(|r| number(r.split(':').next())).collect();
-        let server: Vec<ServerLimit> = limit_str
-            .split(',')
-            .enumerate()
-            .map(|(i, rule)| {
-                let mut parts = rule.split(':');
-                let max = number(parts.next());
-                let window = number(parts.next()) + latency_seconds;
-                let state = states.get(i).copied().unwrap_or(f64::NAN);
-                // Counts beyond u32 or NaN don't occur in GGG's headers.
-                ServerLimit { max: max.max(0.0) as u32, window, state: state.max(0.0) as u32 }
-            })
-            .collect();
+        let mut server = Vec::new();
+        for rule in rules.split(',').map(str::trim) {
+            if rule.is_empty() {
+                return;
+            }
+            let name = format!("x-rate-limit-{rule}").to_ascii_lowercase();
+            let (Some(limits), Some(states)) = (header(&name), header(&format!("{name}-state"))) else { return };
+            let mut states = states.split(',');
+            for limit in limits.split(',') {
+                let Some((max, window, _)) = triple(limit) else { return };
+                let Some((state, state_window, _)) = states.next().and_then(triple) else { return };
+                if max == 0 || window == 0 || state_window != window {
+                    return;
+                }
+                server.push(ServerLimit { max, window: f64::from(window) + latency_seconds, state });
+            }
+            if states.next().is_some() {
+                return;
+            }
+        }
 
         // Destroy the limits the server no longer has.
         self.limiters.retain(|l| server.iter().any(|s| l.is_equal_limit(s.max, s.window)));
@@ -271,7 +273,7 @@ mod tests {
     fn headers_replace_add_and_burst_limits() {
         let mut limits = RateLimits::initial();
         let h = [
-            ("x-rate-limit-rules", "Ip,Account"),
+            ("x-rate-limit-rules", "Ip, Account"),
             ("x-rate-limit-ip", "8:10:60,15:60:120"),
             ("x-rate-limit-ip-state", "3:10:0,5:60:0"),
             ("x-rate-limit-account", "3:5:60"),
@@ -291,6 +293,30 @@ mod tests {
         assert_eq!(limits.limiters.len(), 1);
         assert_eq!(limits.limiters[0].used(100), 3);
         assert_eq!(limits.delay(100), 7000 - 100);
+    }
+
+    #[test]
+    fn incomplete_headers_keep_the_learned_policy_and_pending_requests() {
+        let mut limits = RateLimits::initial();
+        let mut h = [("x-rate-limit-rules", "Ip"), ("x-rate-limit-ip", "1:10:60"), ("x-rate-limit-ip-state", "1:10:0")];
+        limits.adjust(headers(&h), 0.0, 0);
+        let learned = limits.clone();
+        for (rules, definition, state) in [
+            ("Ip, Account", "2:3:4", "1:3:0"),
+            ("Ip", "0:10:60", "0:10:0"),
+            ("Ip", "1:10:60,3:60:90", "1:10:0"),
+            ("Ip", "1:10:60", "1:20:0"),
+        ] {
+            h[0].1 = rules;
+            h[1].1 = definition;
+            h[2].1 = state;
+            limits.adjust(headers(&h), 0.0, 100);
+            assert_eq!(limits, learned);
+            assert_eq!(limits.delay(100), 9900);
+        }
+        assert_eq!(limits.delay(10_000), 0);
+        limits.acquire(10_000);
+        assert_eq!(limits.delay(10_001), 9999);
     }
 
     #[test]
