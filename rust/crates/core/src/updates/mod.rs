@@ -1,10 +1,16 @@
-//! The update check: upstream's `AppUpdater.ts` runs electron-updater, which
-//! downloads and installs the new version. Wraex is notify-only for now: it asks
-//! GitHub for this repository's latest release and reports whether it is newer
-//! (self-update is Dumspy/wraex#3).
+//! The update check: upstream's `AppUpdater.ts` runs electron-updater, which checks
+//! for, downloads and installs the new version. Wraex splits that job in three pieces
+//! behind the [`source::ReleaseSource`] trait: [`check_source`] asks whether a newer
+//! release exists, [`download`] fetches its setup and verifies the release's SHA-256,
+//! and [`install`] runs the setup on quit with a rollback (Dumspy/wraex#3).
 //!
-//! [`UpdateInfo`] mirrors the `UpdateInfo` union of `ipc/types.ts`; every
-//! [`check`] is one request through the app's [`Transport`].
+//! [`UpdateInfo`] mirrors the `UpdateInfo` union of `ipc/types.ts`; [`check`] is the
+//! notify-only path the settings page still uses, one request through the app's
+//! [`Transport`].
+
+pub mod download;
+pub mod install;
+pub mod source;
 
 use std::cmp::Ordering;
 
@@ -13,8 +19,18 @@ use serde::{Deserialize, Serialize};
 use crate::trade::api::{HttpRequest, Method, Transport};
 use crate::trade::rate_limit::Millis;
 
+use self::source::{Release, ReleaseSource};
+
 /// The update API's host. Not part of [`crate::trade::api::ALLOWED_HOSTS`].
 pub const UPDATE_HOST: &str = "api.github.com";
+
+/// The hosts a release asset download may start at. A `browser_download_url` is on
+/// `github.com`, which redirects to `release-assets.githubusercontent.com` or
+/// `objects.githubusercontent.com`; the redirect target is not checked, the SHA-256 is:
+/// a download must match the digest the release API announced. That catches a corrupt or
+/// swapped file, not a compromised release (the digest comes from the same API, and the
+/// setups are unsigned).
+pub const DOWNLOAD_HOSTS: &[&str] = &["github.com"];
 
 /// How often upstream checks (`setInterval`, 16 hours).
 pub const CHECK_INTERVAL_MS: u64 = 16 * 60 * 60 * 1000;
@@ -38,7 +54,7 @@ pub enum UpdateInfo {
         version: String,
         no_download_reason: Option<NoDownloadReason>,
     },
-    /// Kept for shape parity with upstream; Wraex never downloads.
+    /// The setup is downloaded and verified, and installs on quit (`updates::download`).
     #[serde(rename_all = "camelCase")]
     UpdateDownloaded {
         version: String,
@@ -64,14 +80,18 @@ pub fn latest_release_request() -> HttpRequest {
     }
 }
 
-/// Why Wraex cannot download: always [`NoDownloadReason::NotSupported`], or
-/// [`NoDownloadReason::DisabledByFlag`] after `--no-updates`.
-pub fn no_download_reason(args: &[String]) -> Option<NoDownloadReason> {
-    Some(if args.iter().any(|arg| arg == "--no-updates") {
-        NoDownloadReason::DisabledByFlag
+/// Why Wraex cannot download an update itself, if it cannot. `installed` is whether the app
+/// runs from an install directory: a portable copy (and any macOS build) cannot be replaced in
+/// place, which upstream reports before the flag, so `--no-updates` only matters to an
+/// installed app. Otherwise the answer is `None`: the download is Wraex's own job.
+pub fn no_download_reason(args: &[String], installed: bool) -> Option<NoDownloadReason> {
+    if !installed {
+        Some(NoDownloadReason::NotSupported)
+    } else if args.iter().any(|arg| arg == "--no-updates") {
+        Some(NoDownloadReason::DisabledByFlag)
     } else {
-        NoDownloadReason::NotSupported
-    })
+        None
+    }
 }
 
 /// `MAJOR.MINOR.PATCH`, then an optional `-prerelease`.
@@ -118,6 +138,17 @@ fn is_newer(latest: &str, current: &str) -> Option<bool> {
     })
 }
 
+/// [`UpdateInfo`] for a published `version` against the running `current`. A version
+/// neither side can read is an error, like a failed request. [`parse_latest_release`]
+/// and [`check_source`] share it, so both decide "newer" the same way.
+fn assess(version: &str, current: &str, no_download_reason: Option<NoDownloadReason>, now: Millis) -> UpdateInfo {
+    match is_newer(version, current) {
+        Some(true) => UpdateInfo::UpdateAvailable { version: version.to_owned(), no_download_reason },
+        Some(false) => UpdateInfo::UpdateNotAvailable { checked_at: now },
+        None => UpdateInfo::Error { checked_at: now },
+    }
+}
+
 /// Turns a `/releases/latest` response into [`UpdateInfo`]. `current` is the
 /// running version; a missing release (404) means there is nothing to offer.
 pub fn parse_latest_release(
@@ -127,23 +158,18 @@ pub fn parse_latest_release(
     no_download_reason: Option<NoDownloadReason>,
     now: Millis,
 ) -> UpdateInfo {
+    // The notify-only check reads the tag alone: an asset list it cannot parse must not
+    // turn a newer release into an error here. [`source::GitHubReleases`] reads the rest.
     #[derive(Deserialize)]
-    struct Release {
+    struct LatestTag {
         tag_name: String,
     }
 
     match status {
-        200 => {
-            let Ok(release) = serde_json::from_str::<Release>(body) else {
-                return UpdateInfo::Error { checked_at: now };
-            };
-            let tag = release.tag_name.strip_prefix('v').unwrap_or(&release.tag_name);
-            match is_newer(tag, current) {
-                Some(true) => UpdateInfo::UpdateAvailable { version: tag.to_owned(), no_download_reason },
-                Some(false) => UpdateInfo::UpdateNotAvailable { checked_at: now },
-                None => UpdateInfo::Error { checked_at: now },
-            }
-        }
+        200 => match serde_json::from_str::<LatestTag>(body) {
+            Ok(release) => assess(source::version_from_tag(&release.tag_name), current, no_download_reason, now),
+            Err(_) => UpdateInfo::Error { checked_at: now },
+        },
         404 => UpdateInfo::UpdateNotAvailable { checked_at: now },
         _ => UpdateInfo::Error { checked_at: now },
     }
@@ -157,6 +183,27 @@ pub fn check(transport: &impl Transport, now: Millis, no_download_reason: Option
             parse_latest_release(response.status, &response.body, env!("CARGO_PKG_VERSION"), no_download_reason, now)
         }
         Err(_) => UpdateInfo::Error { checked_at: now },
+    }
+}
+
+/// Checks through a [`ReleaseSource`] instead of a bare [`Transport`], and hands the
+/// [`Release`] back when it is newer: its assets are what [`download`] fetches. A source
+/// that cannot answer is an [`UpdateInfo::Error`], like a failed request; a version
+/// semver cannot read is one too, and no release is offered then.
+pub fn check_source(
+    source: &impl ReleaseSource,
+    current: &str,
+    no_download_reason: Option<NoDownloadReason>,
+    now: Millis,
+) -> (UpdateInfo, Option<Release>) {
+    match source.latest() {
+        Ok(Some(release)) => {
+            let info = assess(&release.version, current, no_download_reason, now);
+            let offer = matches!(&info, UpdateInfo::UpdateAvailable { .. }).then_some(release);
+            (info, offer)
+        }
+        Ok(None) => (UpdateInfo::UpdateNotAvailable { checked_at: now }, None),
+        Err(_) => (UpdateInfo::Error { checked_at: now }, None),
     }
 }
 
@@ -297,9 +344,73 @@ mod tests {
     }
 
     #[test]
-    fn no_download_reason_follows_the_flag() {
+    fn no_download_reason_follows_the_install_and_the_flag() {
         let args = |args: &[&str]| args.iter().map(|arg| arg.to_string()).collect::<Vec<_>>();
-        assert_eq!(no_download_reason(&args(&[])), Some(NoDownloadReason::NotSupported));
-        assert_eq!(no_download_reason(&args(&["wraex", "--no-updates"])), Some(NoDownloadReason::DisabledByFlag));
+        // A portable copy (or macOS) cannot be replaced in place, whatever the flags say.
+        assert_eq!(no_download_reason(&args(&[]), false), Some(NoDownloadReason::NotSupported));
+        assert_eq!(no_download_reason(&args(&["wraex", "--no-updates"]), false), Some(NoDownloadReason::NotSupported));
+        // An installed app downloads unless the flag turns it off.
+        assert_eq!(no_download_reason(&args(&["wraex"]), true), None);
+        assert_eq!(no_download_reason(&args(&["wraex", "--no-updates"]), true), Some(NoDownloadReason::DisabledByFlag));
+    }
+
+    /// A [`ReleaseSource`] that answers with whatever the test configured.
+    struct FakeSource(Result<Option<Release>, String>);
+
+    impl ReleaseSource for FakeSource {
+        fn latest(&self) -> Result<Option<Release>, String> {
+            self.0.clone()
+        }
+
+        fn download(&self, _: &source::Asset, _: &mut dyn std::io::Write) -> Result<u64, String> {
+            unreachable!("a check never downloads")
+        }
+    }
+
+    fn checked(result: Result<Option<Release>, String>, current: &str) -> (UpdateInfo, Option<Release>) {
+        check_source(&FakeSource(result), current, Some(NoDownloadReason::NotSupported), 42)
+    }
+
+    fn setup(name: &str) -> source::Asset {
+        source::Asset { name: name.into(), url: "https://github.com/x".into(), size: 1, sha256: None }
+    }
+
+    #[test]
+    fn a_newer_release_is_offered_with_its_assets() {
+        let release =
+            Release { version: "0.2.0".into(), assets: vec![setup("wraex-0.2.0-x86_64-pc-windows-msvc-setup.exe")] };
+        let (info, offer) = checked(Ok(Some(release.clone())), "0.1.0");
+        assert_eq!(
+            info,
+            UpdateInfo::UpdateAvailable {
+                version: "0.2.0".into(),
+                no_download_reason: Some(NoDownloadReason::NotSupported)
+            }
+        );
+        assert_eq!(offer, Some(release), "the download needs the assets");
+    }
+
+    #[test]
+    fn equal_older_and_missing_releases_offer_nothing() {
+        let older = Release { version: "0.1.0".into(), assets: Vec::new() };
+        let (info, offer) = checked(Ok(Some(older)), "0.1.0");
+        assert_eq!(info, UpdateInfo::UpdateNotAvailable { checked_at: 42 });
+        assert_eq!(offer, None);
+
+        let (info, offer) = checked(Ok(None), "0.1.0");
+        assert_eq!(info, UpdateInfo::UpdateNotAvailable { checked_at: 42 });
+        assert_eq!(offer, None);
+    }
+
+    #[test]
+    fn a_failed_source_or_an_unreadable_version_is_an_error() {
+        let (info, offer) = checked(Err("offline".into()), "0.1.0");
+        assert_eq!(info, UpdateInfo::Error { checked_at: 42 });
+        assert_eq!(offer, None);
+
+        let nightly = Release { version: "nightly".into(), assets: vec![setup("setup.exe")] };
+        let (info, offer) = checked(Ok(Some(nightly)), "0.1.0");
+        assert_eq!(info, UpdateInfo::Error { checked_at: 42 });
+        assert_eq!(offer, None, "nothing is downloaded for a version Wraex cannot compare");
     }
 }

@@ -1,9 +1,10 @@
 //! The [`Transport`] the app sends requests with: `main/src/proxy.ts` without
 //! the proxy. Every request carries [`USER_AGENT`]; hosts are the trade proxy's
 //! [`ALLOWED_HOSTS`] plus the update check's [`UPDATE_HOST`], the item art's
-//! [`CDN_HOST`] and the map screenshots' [`SCREENSHOT_HOST`]. Non-2xx answers come
-//! back as responses (the trade site's errors are JSON bodies), and the body is
-//! decoded (gzip) like `net.request` does.
+//! [`CDN_HOST`] and the map screenshots' [`SCREENSHOT_HOST`]. A release setup is
+//! downloaded by [`Fetch::fetch`] from [`DOWNLOAD_HOSTS`] (plus [`UPDATE_HOST`]).
+//! Non-2xx answers come back as responses (the trade site's errors are JSON bodies),
+//! and the body is decoded (gzip) like `net.request` does.
 //!
 //! Cookies behave like Electron's persistent default session, which upstream's
 //! `net.request({ useSessionCookies: true })` uses: one jar for every request,
@@ -15,7 +16,9 @@
 //! headless replay runs) keeps the jar in memory.
 //!
 //! Item art is binary, so it goes through [`HttpTransport::get_bytes`] rather than
-//! [`Transport::send`], whose body is the decoded text the trade answers are.
+//! [`Transport::send`], whose body is the decoded text the trade answers are. A
+//! release's setup is larger still and must not sit in memory, so it is streamed
+//! through [`Fetch::fetch`].
 
 use std::io::{BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
@@ -27,7 +30,8 @@ use ureq::Agent;
 use url::Url;
 use wraex_core::images::{CDN_HOST, SCREENSHOT_HOST};
 use wraex_core::trade::api::{ALLOWED_HOSTS, HttpRequest, HttpResponse, Method, Transport, USER_AGENT};
-use wraex_core::updates::UPDATE_HOST;
+use wraex_core::updates::source::Fetch;
+use wraex_core::updates::{DOWNLOAD_HOSTS, UPDATE_HOST};
 
 /// One session's cookies, as a browser keeps them: RFC 6265 matching over
 /// [`CookieStore`], and optionally a JSON file the expiring ones are saved to.
@@ -138,6 +142,11 @@ pub struct HttpTransport {
     agent: Agent,
     cookies: Arc<CookieJar>,
 }
+
+/// Downloading a setup is a few tens of MB, which the agent's 30 s global timeout would
+/// cut off on a slow line; the download overrides it per request instead of raising the
+/// timeout for the trade requests too.
+const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(600);
 
 impl Default for HttpTransport {
     /// No cookie file: the jar lives as long as the transport. Tests and the headless
@@ -274,6 +283,33 @@ impl Transport for HttpTransport {
     }
 }
 
+/// Streams a release asset to `sink`. The host allowlist is the download's own
+/// ([`DOWNLOAD_HOSTS`], plus [`UPDATE_HOST`]) because `github.com` is not a trade host;
+/// the redirect GitHub answers with goes to `release-assets.githubusercontent.com` or
+/// `objects.githubusercontent.com`, which ureq follows, and the SHA-256 check in
+/// `wraex_core::updates::download` is what makes that safe.
+impl Fetch for HttpTransport {
+    fn fetch(&self, url: &str, sink: &mut dyn Write) -> Result<u64, String> {
+        let host = host(url).ok_or_else(|| format!("not an https URL: {url}"))?;
+        if !DOWNLOAD_HOSTS.contains(&host) && host != UPDATE_HOST {
+            return Err(format!("host not allowed: {host}"));
+        }
+        let mut request = self.agent.get(url).config().timeout_global(Some(DOWNLOAD_TIMEOUT)).build();
+        request = request.header("accept", "application/octet-stream");
+        if let Some(cookies) = self.cookie_header(url, &[]) {
+            request = request.header("cookie", cookies);
+        }
+        let mut response = request.call().map_err(|error| error.to_string())?;
+        self.remember_cookies(url, set_cookies(response.headers()));
+        if !response.status().is_success() {
+            return Err(format!("{} from {url}", response.status()));
+        }
+        // `as_reader` streams; `read_to_vec` would stop at ureq's 10 MB body limit.
+        let mut body = response.body_mut().as_reader();
+        std::io::copy(&mut body, sink).map_err(|error| error.to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -305,6 +341,25 @@ mod tests {
             HttpTransport::default().get_bytes("https://example.com/x.png").unwrap_err(),
             "host not allowed: example.com"
         );
+    }
+
+    /// A release download starts only at a release host, and the refusal comes before any
+    /// network call (this test has none). GitHub redirects to its asset hosts; that hop is
+    /// checked by the SHA-256, not by this allowlist.
+    #[test]
+    fn a_download_starts_only_at_a_release_host() {
+        assert!(DOWNLOAD_HOSTS.contains(&"github.com"));
+        assert!(!allowed("github.com"), "the trade transport still does not send there");
+
+        let mut sink = Vec::new();
+        let error = HttpTransport::default()
+            .fetch("https://release-assets.githubusercontent.com/x/wraex-setup.exe", &mut sink)
+            .unwrap_err();
+        assert_eq!(error, "host not allowed: release-assets.githubusercontent.com");
+        assert!(sink.is_empty(), "nothing was written");
+
+        let error = HttpTransport::default().fetch("https://example.com/setup.exe", &mut sink).unwrap_err();
+        assert_eq!(error, "host not allowed: example.com");
     }
 
     /// Cloudflare's challenge cookie carries `Partitioned`, which upstream strips before

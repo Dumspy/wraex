@@ -290,9 +290,15 @@ Agent loop per step: port module → `golden check` → fix diffs → repeat.
   `initConfig` and `getConfigForHost`, matched against `fixtures/config/poe1/`.
   **PoE2 done** (`poe2::config`); steps 3 to 16 are shared in
   `core::config_upgrade`.
-- Tray icon, auto-updater, logging. **Tray and update check done**
-  (`platform::tray`, `core::updates`): the update check only notifies; full
-  self-update is #3. Logging and wiring both into the app come with phase 5.
+- Tray icon, auto-updater, logging. **Tray and self-updater done**
+  (`platform::tray`, `core::updates`): the check and the download sit behind
+  `updates::source::ReleaseSource` (GitHub today), the setup is verified by its
+  SHA-256 twice, and `core::updates::install` replaces the running app from a helper
+  copy on quit, with a backup and a rollback. It only acts when the app runs from an
+  NSIS install; a portable copy reports the update. While the repository is private
+  GitHub answers `releases/latest` with 404, which the check reads as "no update", so
+  the self-updater stays inactive until releases are public. Logging and wiring both
+  into the app come with phase 5.
 - Later / optional: OCR (`main/src/vision`, Heist gem finder).
 
 ## Phase 5: UI in Rune (≈ 4–8 weeks)
@@ -335,7 +341,8 @@ Visual similarity, not pixel identity.
   optional desktop shortcut, and an HKCU Add/Remove Programs entry. Uninstalling
   keeps `%APPDATA%\Wraex` (settings, log), and a setup started with `/S` installs
   over the previous version in the directory its uninstall entry records, which is
-  where the self-updater (#3) hooks in. The zip remains the portable build.
+  what the self-updater (`core::updates::install`) runs from a helper copy after the
+  app quits. The zip remains the portable build.
   Still open: code signing, and a macOS bundle (the packager writes a portable
   directory for now).
 - Per upstream or EE2 release: bump the `ref/` submodule → `golden regen` → diff

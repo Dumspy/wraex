@@ -248,6 +248,15 @@ pub struct Settings {
     pub update: UpdateInfo,
     /// The update check running off the UI thread; its answer lands in [`Settings::poll`].
     check: Check,
+    /// The About page's "Check now" in a live window: the shell's worker does the check, and
+    /// [`crate::shell::Live::poll`] takes this once.
+    pub check_requested: bool,
+    /// The About page's "Install now": the shell hands the downloaded update to the helper and
+    /// quits ([`crate::shell::Live::poll`] takes this once). A scene only sets it.
+    pub install_requested: bool,
+    /// The sidebar's "Quit" in a live window: the shell quits through its own path, which
+    /// installs a downloaded update first ([`crate::shell::Live::poll`] takes this once).
+    pub quit_requested: bool,
     /// `settings-maps`' area mods, read from the game data the first time the page shows.
     pub area_mods: Option<Vec<pages::maps::AreaMod>>,
     /// `settings-maps`' search text and Only-selected toggle (view state, not config).
@@ -274,6 +283,9 @@ impl Settings {
             mode,
             update: UpdateInfo::Initial,
             check: Check(Latest::default()),
+            check_requested: false,
+            install_requested: false,
+            quit_requested: false,
             area_mods: None,
             maps_search: String::new(),
             maps_only_selected: false,
@@ -313,13 +325,20 @@ impl Settings {
         true
     }
 
-    /// `checkForUpdates`: [`UpdateInfo::CheckingForUpdate`] shows at once, and the one request
-    /// runs on a worker (the answer lands in [`Settings::poll`]).
+    /// `checkForUpdates`: [`UpdateInfo::CheckingForUpdate`] shows at once. A scene's window runs
+    /// the one request on its own worker (the answer lands in [`Settings::poll`]); a live window
+    /// asks the shell's update worker instead, whose answer arrives through the same `update`
+    /// state (`show_update`).
     pub fn begin_update_check(&mut self) {
         self.update = UpdateInfo::CheckingForUpdate;
-        let now = crate::trade::now(self.mode);
-        let mode = self.mode;
-        self.check.0.request((), move |()| update_check(mode, now));
+        match self.mode {
+            Mode::Live => self.check_requested = true,
+            Mode::Replay => {
+                let now = crate::trade::now(self.mode);
+                let mode = self.mode;
+                self.check.0.request((), move |()| update_check(mode, now));
+            }
+        }
     }
 
     /// `saveConfig()`: the working copy becomes the config, written as compact JSON.

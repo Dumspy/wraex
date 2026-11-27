@@ -29,6 +29,7 @@ pub mod widgets;
 
 use rune::{AppSpec, Cx, El, Waker};
 use wraex_core::GameId;
+use wraex_core::updates::UpdateInfo;
 
 use crate::poe1::price_check::{PriceCheck, WIDTH};
 use crate::settings::{Page, Settings};
@@ -223,6 +224,15 @@ impl App {
         // waker its update check answers on.
         if let Some(waker) = waker {
             self.set_waker(waker);
+        }
+    }
+
+    /// `settings-poe1-about-ready`: the settings window on `page` with `version` already
+    /// downloaded and verified, so the About page draws its "Install now" state.
+    pub fn settings_update_ready(&mut self, game: GameId, page: Page, version: &str) {
+        self.settings_page(game, page);
+        if let Some(settings) = &mut self.settings {
+            settings.update = UpdateInfo::UpdateDownloaded { version: version.to_owned() };
         }
     }
 
@@ -561,6 +571,9 @@ fn card(app: &App, cx: &mut Cx<App>) -> El {
 /// A named state for `--scene` (`AppSpec::scenes`).
 pub type Scene = (&'static str, fn(&mut App));
 
+/// The version the "update ready" About scene shows as downloaded.
+pub const READY_VERSION: &str = "0.2.0";
+
 /// The PoE1 corpus cases the reference screenshots render
 /// (`tools/golden/screens/cases.mjs`), plus a text that isn't an item and three cases that
 /// exercise the other kinds of filter row: a magic flask (explicit stats), a cluster jewel
@@ -644,6 +657,11 @@ pub const SCENES: &[Scene] = &[
     ("settings-poe1-item-check", |app| app.settings_page(GameId::Poe1, Page::ItemCheck)),
     ("settings-poe1-debug", |app| app.settings_page(GameId::Poe1, Page::Debug)),
     ("settings-poe1-about", |app| app.settings_page(GameId::Poe1, Page::About)),
+    // The About page once a newer release is downloaded and verified: the "Install now"
+    // button asks the shell to restart into it (`settings-poe1-about` plus that state).
+    ("settings-poe1-about-ready", |app| {
+        app.settings_update_ready(GameId::Poe1, Page::About, READY_VERSION);
+    }),
     ("settings-poe2-hotkeys", |app| app.settings_page(GameId::Poe2, Page::Hotkeys)),
     ("settings-poe2-chat", |app| app.settings_page(GameId::Poe2, Page::Chat)),
     ("settings-poe2-general", |app| app.settings_page(GameId::Poe2, Page::General)),
@@ -671,9 +689,11 @@ pub fn corpus_poe2(slug: &str) -> String {
 
 const CORPUS_POE2: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../tools/golden/corpus/poe2");
 
-/// A `settings-poe1-maps` style scene slug: the game and the page.
+/// A `settings-poe1-maps` style scene slug: the game and the page. `-ready` marks the About
+/// page's downloaded-update state (`settings-poe1-about-ready`), which is the same window.
 pub fn settings_scene(slug: &str) -> Option<(GameId, Page)> {
     let rest = slug.strip_prefix("settings-")?;
+    let rest = rest.strip_suffix("-ready").unwrap_or(rest);
     let (game, page) = rest.split_once('-')?;
     let game = match game {
         "poe1" => GameId::Poe1,
@@ -699,11 +719,50 @@ pub fn scene_size(scene: Option<&str>) -> (f32, f32) {
 
 /// Runs the app: a window, or a headless render with Rune's `--snap`/`--scene`/`--tree`.
 pub fn main() {
+    // The self-updater's two modes run before Rune parses anything, and touch no config,
+    // log, window or network (issue #3). `--self-test` is the smoke test of a freshly
+    // installed executable; `--install-update` is the helper copy that replaces the running
+    // app once it has quit.
+    let argv: Vec<String> = std::env::args().skip(1).collect();
+    if argv.iter().any(|arg| arg == "--self-test") {
+        let assets = wraex_core::assets::Assets::get();
+        match assets.path("poe1/icon.png") {
+            Some(icon) if icon.is_file() => {
+                println!("wraex {}: ok", env!("CARGO_PKG_VERSION"));
+                std::process::exit(0);
+            }
+            Some(icon) => {
+                eprintln!("wraex {}: missing {}", env!("CARGO_PKG_VERSION"), icon.display());
+                std::process::exit(1);
+            }
+            None => {
+                eprintln!("wraex {}: no assets directory", env!("CARGO_PKG_VERSION"));
+                std::process::exit(1);
+            }
+        }
+    }
+    if argv.iter().any(|arg| arg == "--install-update") {
+        let code = match wraex_core::updates::install::parse_helper_args(&argv) {
+            Some(plan) => match wraex_platform::updater::run_helper(&plan) {
+                wraex_core::updates::install::Outcome::Installed => 0,
+                wraex_core::updates::install::Outcome::RolledBack { reason } => {
+                    eprintln!("wraex: update rolled back: {reason}");
+                    1
+                }
+                wraex_core::updates::install::Outcome::NotStarted { reason } => {
+                    eprintln!("wraex: update not started: {reason}");
+                    1
+                }
+            },
+            // A helper invoked without a complete plan is a bug, not an install.
+            None => 2,
+        };
+        std::process::exit(code);
+    }
     // Read `--game` and `--scene` before the window exists: the game picks the config and the
     // data, and a settings scene is a window of its own size. Rune parses the same flags again
     // when it builds the window.
     let args = rune::tooling::Args::parse();
-    let argv: Vec<String> = std::env::args().skip(1).collect();
     let game = shell::game_from_args(&argv);
     let live = !rune::is_headless() && args.scene.is_none();
     // Rune's Win32 windows present only the rectangles a frame changed (`Present1` dirty
@@ -820,7 +879,14 @@ mod tests {
             return runtime_app(App::widgets_scene(game, kind), size);
         }
         if let Some((game, page)) = settings_scene(slug) {
-            return runtime_app(App::settings_scene(game, page), size);
+            let mut app = App::settings_scene(game, page);
+            if slug.ends_with("-ready") {
+                // The `-ready` variant: the same page with a verified download behind it.
+                if let Some(settings) = &mut app.settings {
+                    settings.update = UpdateInfo::UpdateDownloaded { version: READY_VERSION.to_owned() };
+                }
+            }
+            return runtime_app(app, size);
         }
         if let Some(case) = slug.strip_prefix("poe2-map-check-").or_else(|| slug.strip_prefix("poe2-item-check-")) {
             return runtime_app(App::item_check_scene(GameId::Poe2, case), size);
@@ -926,6 +992,7 @@ mod tests {
         assert_eq!(settings::HEIGHT, 608.0, "`max-height: 38rem`");
         assert_eq!(scene_size(Some("settings-poe1-hotkeys")), (settings::WIDTH, settings::HEIGHT));
         assert_eq!(scene_size(Some("settings-poe2-about")), (settings::WIDTH, settings::HEIGHT));
+        assert_eq!(scene_size(Some("settings-poe1-about-ready")), (settings::WIDTH, settings::HEIGHT));
         assert_eq!(scene_size(Some("currency-divine-orb")), (WIDTH, HEIGHT));
         assert_eq!(scene_size(None), (WIDTH, HEIGHT));
 
@@ -936,6 +1003,24 @@ mod tests {
         let window = element(&elements, "settings-window").expect("the settings window");
         assert_eq!([window.rect[0], window.rect[1]], [0.0, 0.0]);
         assert_eq!([window.rect[2], window.rect[3]], [settings::WIDTH, settings::HEIGHT]);
+    }
+
+    /// `settings-poe1-about-ready`: the About page draws the downloaded state, and its
+    /// "Install now" only records the request — a scene has no shell to install it.
+    #[test]
+    fn the_about_page_offers_a_ready_update() {
+        let mut runtime = runtime("settings-poe1-about-ready");
+        assert_eq!(text_of(&runtime, "about-update-name").as_deref(), Some("Update available: 0.2.0"));
+        assert_eq!(
+            text_of(&runtime, "about-update-state").as_deref(),
+            Some("It will be installed automatically on exit")
+        );
+        assert_eq!(text_of(&runtime, "about-install-label").as_deref(), Some("Install now"));
+
+        click(&mut runtime, "about-update-action");
+        let settings = runtime.state.settings.as_ref().expect("the settings window");
+        assert!(settings.install_requested, "the button asks the shell to install");
+        assert!(settings.open, "a scene cannot quit");
     }
 
     /// A stackable currency: it searches straight away (`filters.preset_bulk`), so the

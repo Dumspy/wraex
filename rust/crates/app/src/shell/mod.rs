@@ -79,7 +79,9 @@ use wraex_core::GameId;
 use wraex_core::game_files::{self, Os, UserDirs};
 use wraex_core::leagues::{LeagueSource, Leagues};
 use wraex_core::trade::api::Clock;
-use wraex_core::updates::{NoDownloadReason, UpdateInfo};
+use wraex_core::updates::UpdateInfo;
+use wraex_core::updates::download::Downloaded;
+use wraex_core::updates::install::Plan;
 use wraex_platform::clipboard::{Clipboard, is_poe_item};
 use wraex_platform::overlay::{OverlayController, OverlayEvent, OverlayHandle, TrackArea};
 use wraex_platform::shortcuts::{
@@ -1072,6 +1074,24 @@ impl Live {
         }
     }
 
+    /// One place for a new [`UpdateInfo`]: the shell's copy for the settings window, and the
+    /// tray's "Update ready" entry once a download is verified. Both the worker's
+    /// `App::apply_update` and [`Live::poll`] go through it, so the two cannot drift.
+    fn apply_update(&mut self, info: UpdateInfo) {
+        let ready = match &info {
+            UpdateInfo::UpdateDownloaded { version } => Some(version.clone()),
+            _ => None,
+        };
+        let failure = match (&mut self.tray, ready) {
+            (Some(tray), Some(version)) => tray.set_update_ready(Some(version)).err(),
+            _ => None,
+        };
+        if let Some(error) = failure {
+            self.warn(format!("rebuilding the tray menu failed: {error}"));
+        }
+        self.update = info;
+    }
+
     /// One [`dispatch::Request`]: the OS effect, or the window to open.
     fn apply(&mut self, app: &mut App, request: dispatch::Request) {
         match request {
@@ -1093,7 +1113,8 @@ impl Live {
                     self.warn(format!("opening {} failed: {error}", folder.display()));
                 }
             }
-            dispatch::Request::Quit => self.handle.quit(),
+            dispatch::Request::Quit => self.quit(),
+            dispatch::Request::InstallUpdate => self.install_update(),
             dispatch::Request::Settings => app.open_settings(self),
             dispatch::Request::StashSearch(text) => self.stash_search(&text),
             dispatch::Request::PriceCheck(text) => app.open_price_check(self, &text),
@@ -1102,6 +1123,42 @@ impl Live {
             dispatch::Request::ShowWidget(wm_id) => app.open_widget(self, wm_id),
             dispatch::Request::Unsupported(what) => self.warn(format!("not wired yet: {what}")),
         }
+    }
+
+    /// `autoUpdater.quitAndInstall(false)`: the verified setup replaces the app and the app
+    /// comes back. Without a download or an install directory there is nothing to install; a
+    /// helper that will not start leaves the app running rather than quitting into a broken
+    /// update.
+    fn install_update(&mut self) {
+        let Some(downloaded) = self.updates.ready() else {
+            return self.warn("no update has been downloaded yet");
+        };
+        let Some(install_dir) = install_dir() else {
+            return self.warn("this copy does not run from an install directory: download the update instead");
+        };
+        let plan = install_plan(&downloaded, install_dir, true);
+        match wraex_platform::updater::start_helper(&plan) {
+            Ok(()) => {
+                self.updates.take_ready();
+                self.handle.quit();
+            }
+            Err(error) => self.warn(format!("starting the updater failed: {error}")),
+        }
+    }
+
+    /// `app.quit()`, with electron-updater's `autoInstallOnAppQuit`: a verified download is
+    /// installed on the way out, without a relaunch. A failure only warns; the quit happens.
+    fn quit(&mut self) {
+        if let (Some(downloaded), Some(install_dir)) = (self.updates.ready(), install_dir()) {
+            let plan = install_plan(&downloaded, install_dir, false);
+            match wraex_platform::updater::start_helper(&plan) {
+                Ok(()) => {
+                    self.updates.take_ready();
+                }
+                Err(error) => self.warn(format!("quitting without the update: {error}")),
+            }
+        }
+        self.handle.quit();
     }
 
     /// `CLIENT->MAIN::user-action` with `action: 'stash-search'`: the shortcut module's
@@ -1357,11 +1414,31 @@ impl Live {
         }
 
         if let Some(info) = self.updates.take() {
-            // The shell's own copy, and the About page's: `App::apply_update` would read
-            // `App::live`, which the shell has taken out while it runs.
-            self.update = info.clone();
+            // The shell's own copy and the tray's, and the About page's: `App::apply_update`
+            // would read `App::live`, which the shell has taken out while it runs.
+            self.apply_update(info.clone());
             app.show_update(info);
             changed = true;
+        }
+
+        // The About page's buttons: "Check now" wakes the worker (its answer lands through
+        // the branch above), and "Install now" is the tray's request, run the same way.
+        // The sidebar's "Quit" goes the tray's way, so a downloaded update installs on exit.
+        let (install_requested, quit_requested) = match &mut app.settings {
+            Some(settings) => {
+                if std::mem::take(&mut settings.check_requested) {
+                    self.updates.check_now();
+                }
+                (std::mem::take(&mut settings.install_requested), std::mem::take(&mut settings.quit_requested))
+            }
+            None => (false, false),
+        };
+        if install_requested {
+            changed = true;
+            self.apply(app, dispatch::Request::InstallUpdate);
+        } else if quit_requested {
+            changed = true;
+            self.apply(app, dispatch::Request::Quit);
         }
 
         if let Some(prices) = &mut self.prices
@@ -2007,11 +2084,12 @@ impl App {
         live.activate_on_show = standalone;
     }
 
-    /// The update worker's answer: the shell's copy for the next settings window, and the About
-    /// page's. Called from the worker's `AppHandle::update`, outside `Live::poll`.
+    /// The update worker's answer: the shell's copy (and the tray's entry) for the next
+    /// settings window, and the About page's. Called from the worker's `AppHandle::update`,
+    /// outside `Live::poll`.
     fn apply_update(&mut self, info: UpdateInfo) {
         if let Some(live) = self.shell_mut() {
-            live.update = info.clone();
+            live.apply_update(info.clone());
         }
         self.show_update(info);
     }
@@ -2118,6 +2196,25 @@ pub(crate) fn window_size(game: GameId, shown: &Shown) -> Option<(f32, f32)> {
         Shown::ItemCheck | Shown::PriceCheck | Shown::Poe2 => Some((crate::poe1::price_check::WIDTH, HEIGHT)),
         Shown::Widget(name) => widgets::Kind::from_wm_type(name).map(|kind| widgets::scene_size(game, kind)),
     }
+}
+
+/// The plan the helper runs: the verified download, where the app is installed, and whether
+/// the app should come back afterwards. Pure, so the hand-off can be tested without spawning.
+pub(crate) fn install_plan(downloaded: &Downloaded, install_dir: PathBuf, relaunch: bool) -> Plan {
+    Plan {
+        setup: downloaded.path.clone(),
+        install_dir,
+        version: downloaded.version.clone(),
+        sha256: downloaded.sha256.clone(),
+        relaunch,
+    }
+}
+
+/// The directory the running app was installed into, if it is an NSIS install: the portable
+/// zip has no `Uninstall.exe`, so it only reports updates.
+fn install_dir() -> Option<PathBuf> {
+    let exe = std::env::current_exe().ok()?;
+    wraex_platform::updater::installed_dir(&exe)
 }
 
 /// Opens `target` with the OS: Electron's `shell.openExternal`/`openPath`.
@@ -2462,15 +2559,22 @@ fn spawn_startup_work(handle: AppHandle<App>, game: GameId, configured: Option<S
         .expect("start the startup worker");
 }
 
-/// The update worker: one check at launch, then one per [`updates::CHECK_INTERVAL_MS`].
+/// The update worker: one check at launch, then one per [`updates::CHECK_INTERVAL_MS`] or when
+/// the About page asks. An installed Windows build downloads the setup as it checks; a
+/// portable copy (or a macOS one) only reports it.
 fn spawn_update_check(handle: AppHandle<App>) {
+    let installed = cfg!(windows)
+        && std::env::current_exe().ok().and_then(|exe| wraex_platform::updater::installed_dir(&exe)).is_some();
+    let argv: Vec<String> = std::env::args().skip(1).collect();
+    let no_download = wraex_core::updates::no_download_reason(&argv, installed);
     let notify = handle.clone();
     let worker = updates::Updates::spawn(
         move |info| {
             let notify = notify.clone();
             notify.update(move |app, _tx| app.apply_update(info));
         },
-        Some(NoDownloadReason::NotSupported),
+        no_download,
+        wraex_platform::updater::updates_dir(),
     );
     handle.update(move |app, _tx| {
         if let Some(live) = app.shell_mut() {

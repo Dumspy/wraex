@@ -6,6 +6,7 @@ use rune::{Color, Cx, El, KeyEvent, col, el, row, text};
 use crate::settings::hotkey;
 use crate::settings::{Page, Project, Settings, t};
 use crate::theme::{self, text as type_};
+use crate::trade::Mode;
 use crate::ui;
 
 /// The settings window: `#settings-window`, its menu and the page under it.
@@ -108,7 +109,8 @@ fn menu<S: 'static>(settings: &Settings, project: Project<S>) -> El {
         }
     }
 
-    // `App.quit`: the tray's Quit action.
+    // `App.quit`: the tray's Quit action. A live window hands it to the shell, which installs a
+    // downloaded update on the way out (`Settings::quit_requested`); a scene quits at once.
     column = column.child(
         row()
             .key("settings-quit")
@@ -122,7 +124,13 @@ fn menu<S: 'static>(settings: &Settings, project: Project<S>) -> El {
             .focusable(true)
             .role("button")
             .label(t(settings.game, "app.quit"))
-            .on_press_tx(|_s: &mut S, tx: &mut rune::Tx| tx.quit())
+            .on_press_tx(move |s: &mut S, tx: &mut rune::Tx| {
+                let settings = project(s);
+                match settings.mode {
+                    Mode::Live => settings.quit_requested = true,
+                    Mode::Replay => tx.quit(),
+                }
+            })
             .child(
                 text(t(settings.game, "app.quit")).key("settings-quit-label").font(type_::SM).color(theme::gray(600)),
             ),

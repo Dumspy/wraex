@@ -5,6 +5,10 @@
 //! [`TrayAction`]; showing the settings hint and opening the config folder is the
 //! app's job, so this module knows nothing about dialogs or paths.
 //!
+//! The "Update ready" entry is Wraex's own: upstream only shows that state on the settings
+//! window's About page, while the port also offers the restart from the tray, which is where
+//! a tray-only app is quit from.
+//!
 //! On macOS the tray must be created on the main thread with an event loop
 //! already running. On Linux `tray-icon`'s default backend needs GTK 3 and
 //! `libayatana-appindicator3` at runtime.
@@ -23,17 +27,22 @@ pub enum TrayAction {
     /// `AppTray.ts`: the "Settings/League" message box.
     ShowSettingsHint,
     OpenConfigFolder,
+    /// The verified update is waiting: restart into it (`autoUpdater.quitAndInstall(false)`).
+    /// Wraex's own entry (upstream shows the state only on the About page).
+    InstallUpdate,
     Quit,
 }
 
 impl TrayAction {
-    pub const ALL: [TrayAction; 3] = [TrayAction::ShowSettingsHint, TrayAction::OpenConfigFolder, TrayAction::Quit];
+    pub const ALL: [TrayAction; 4] =
+        [TrayAction::ShowSettingsHint, TrayAction::OpenConfigFolder, TrayAction::InstallUpdate, TrayAction::Quit];
 
     /// Stable id for the native menu item; it survives a menu rebuild.
     pub const fn menu_id(self) -> &'static str {
         match self {
             TrayAction::ShowSettingsHint => "settings-league",
             TrayAction::OpenConfigFolder => "open-config-folder",
+            TrayAction::InstallUpdate => "install-update",
             TrayAction::Quit => "quit",
         }
     }
@@ -45,20 +54,31 @@ impl TrayAction {
 }
 
 /// One entry of the context menu.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MenuEntry {
-    Item { label: &'static str, action: TrayAction },
+    Item { label: String, action: TrayAction },
     Separator,
 }
 
-/// The menu, `AppTray.ts`'s template order minus "Open in Browser".
-pub fn menu_items() -> Vec<MenuEntry> {
-    vec![
-        MenuEntry::Item { label: "Settings/League", action: TrayAction::ShowSettingsHint },
+/// The menu, `AppTray.ts`'s template order minus "Open in Browser". With a downloaded update
+/// the first entry says so and installs it on a restart; upstream shows that state only on the
+/// About page, so this entry is Wraex's own.
+pub fn menu_items(update_ready: Option<&str>) -> Vec<MenuEntry> {
+    let mut items = Vec::new();
+    if let Some(version) = update_ready {
+        items.push(MenuEntry::Item {
+            label: format!("Update ready (v{version}): restart to install"),
+            action: TrayAction::InstallUpdate,
+        });
+        items.push(MenuEntry::Separator);
+    }
+    items.extend([
+        MenuEntry::Item { label: "Settings/League".to_owned(), action: TrayAction::ShowSettingsHint },
         MenuEntry::Separator,
-        MenuEntry::Item { label: "Open config folder", action: TrayAction::OpenConfigFolder },
-        MenuEntry::Item { label: "Quit", action: TrayAction::Quit },
-    ]
+        MenuEntry::Item { label: "Open config folder".to_owned(), action: TrayAction::OpenConfigFolder },
+        MenuEntry::Item { label: "Quit".to_owned(), action: TrayAction::Quit },
+    ]);
+    items
 }
 
 /// `<product> v<version>`, upstream's wording with Wraex as the product.
@@ -83,6 +103,8 @@ pub fn settings_hint(game: GameId, overlay_key: &str) -> String {
 pub struct Tray {
     tray: TrayIcon,
     overlay_key: String,
+    /// The version in the "Update ready" entry, once a download is verified.
+    update_ready: Option<String>,
     /// Dropping a menu item removes it from the native menu, so the builders'
     /// output has to outlive [`Self::tray`].
     items: Vec<Box<dyn IsMenuItem>>,
@@ -90,7 +112,10 @@ pub struct Tray {
 
 impl std::fmt::Debug for Tray {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Tray").field("overlay_key", &self.overlay_key).finish_non_exhaustive()
+        f.debug_struct("Tray")
+            .field("overlay_key", &self.overlay_key)
+            .field("update_ready", &self.update_ready)
+            .finish_non_exhaustive()
     }
 }
 
@@ -99,14 +124,14 @@ impl Tray {
     /// pixels; macOS wants a small icon (22x22, `AppTray.ts:22`).
     pub fn new(version: &str, overlay_key: &str, icon_rgba: Vec<u8>, width: u32, height: u32) -> Result<Tray, String> {
         let icon = Icon::from_rgba(icon_rgba, width, height).map_err(|e| format!("tray icon: {e}"))?;
-        let (menu, items) = native_menu()?;
+        let (menu, items) = native_menu(None)?;
         let tray = TrayIconBuilder::new()
             .with_tooltip(tooltip(version))
             .with_icon(icon)
             .with_menu(Box::new(menu))
             .build()
             .map_err(|e| format!("tray: {e}"))?;
-        Ok(Tray { tray, overlay_key: overlay_key.to_owned(), items })
+        Ok(Tray { tray, overlay_key: overlay_key.to_owned(), update_ready: None, items })
     }
 
     /// The key the settings hint quotes.
@@ -119,7 +144,19 @@ impl Tray {
     /// menu is replaced the same way so the two stay in step.
     pub fn set_overlay_key(&mut self, key: impl Into<String>) -> Result<(), String> {
         self.overlay_key = key.into();
-        let (menu, items) = native_menu()?;
+        self.rebuild_menu()
+    }
+
+    /// A verified download changes the first entry (see [`menu_items`]); `None` removes it
+    /// again, which a shell that starts over needs.
+    pub fn set_update_ready(&mut self, version: Option<String>) -> Result<(), String> {
+        self.update_ready = version;
+        self.rebuild_menu()
+    }
+
+    /// Replaces the native menu after a label changed, keeping the entries' build-out alive.
+    fn rebuild_menu(&mut self) -> Result<(), String> {
+        let (menu, items) = native_menu(self.update_ready.as_deref())?;
         self.tray.set_menu(Some(Box::new(menu)));
         self.items = items;
         Ok(())
@@ -149,8 +186,8 @@ pub fn set_menu_handler(f: impl Fn(TrayAction) + Send + Sync + 'static) {
 }
 
 /// The native menu, and the items backing it.
-fn native_menu() -> Result<(Menu, Vec<Box<dyn IsMenuItem>>), String> {
-    let items: Vec<Box<dyn IsMenuItem>> = menu_items()
+fn native_menu(update_ready: Option<&str>) -> Result<(Menu, Vec<Box<dyn IsMenuItem>>), String> {
+    let items: Vec<Box<dyn IsMenuItem>> = menu_items(update_ready)
         .into_iter()
         .map(|entry| match entry {
             MenuEntry::Item { label, action } => {
@@ -176,12 +213,31 @@ mod tests {
     #[test]
     fn menu_is_upstreams_without_open_in_browser() {
         assert_eq!(
-            menu_items(),
+            menu_items(None),
             vec![
-                MenuEntry::Item { label: "Settings/League", action: TrayAction::ShowSettingsHint },
+                MenuEntry::Item { label: "Settings/League".to_owned(), action: TrayAction::ShowSettingsHint },
                 MenuEntry::Separator,
-                MenuEntry::Item { label: "Open config folder", action: TrayAction::OpenConfigFolder },
-                MenuEntry::Item { label: "Quit", action: TrayAction::Quit },
+                MenuEntry::Item { label: "Open config folder".to_owned(), action: TrayAction::OpenConfigFolder },
+                MenuEntry::Item { label: "Quit".to_owned(), action: TrayAction::Quit },
+            ]
+        );
+    }
+
+    /// A verified download adds Wraex's own "Update ready" entry above upstream's.
+    #[test]
+    fn menu_shows_a_ready_update_first() {
+        assert_eq!(
+            menu_items(Some("0.2.0")),
+            vec![
+                MenuEntry::Item {
+                    label: "Update ready (v0.2.0): restart to install".to_owned(),
+                    action: TrayAction::InstallUpdate,
+                },
+                MenuEntry::Separator,
+                MenuEntry::Item { label: "Settings/League".to_owned(), action: TrayAction::ShowSettingsHint },
+                MenuEntry::Separator,
+                MenuEntry::Item { label: "Open config folder".to_owned(), action: TrayAction::OpenConfigFolder },
+                MenuEntry::Item { label: "Quit".to_owned(), action: TrayAction::Quit },
             ]
         );
     }

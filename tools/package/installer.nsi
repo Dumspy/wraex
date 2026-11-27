@@ -24,7 +24,8 @@
 ; * uninstalling removes the program files but not the user's settings and log in
 ;   `%APPDATA%\Wraex` (config.json, wraex.log), so a reinstall keeps them.
 ;
-; Upgrades and the future self-updater (issue #3) rely on three things:
+; Upgrades and the self-updater (`wraex_core::updates::install`, which runs this setup
+; with `/S` from a helper copy after the app has quit) rely on three things:
 ;
 ; * `InstallDirRegKey` below: a newer setup run with `/S` reinstalls over the previous
 ;   directory without any UI, because the installer starts from the `InstallLocation`

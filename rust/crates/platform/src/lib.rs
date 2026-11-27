@@ -18,7 +18,8 @@
 //! exists (the `windows` crate, `cfg(windows)` only); macOS, X11 and Wayland have no window
 //! hook yet, so [`window::Watcher::start`] reports
 //! [`window::WatchError::Unsupported`] there and the app keeps its ordinary windows.
-//! [`http`] sends the trade API's requests and [`tray`] owns the system tray icon.
+//! [`http`] sends the trade API's requests, [`tray`] owns the system tray icon and
+//! [`updater`] installs a downloaded setup after the app has quit.
 
 pub mod clipboard;
 pub mod http;
@@ -27,6 +28,7 @@ pub mod overlay;
 pub mod shortcuts;
 pub mod time;
 pub mod tray;
+pub mod updater;
 pub mod window;
 
 #[cfg(test)]

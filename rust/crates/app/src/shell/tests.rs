@@ -1404,6 +1404,27 @@ fn clicking_a_lower_widget_raises_it_and_saves_the_order() {
     assert_eq!(card_ids(&restarted), vec![Some(menu), Some(strip)], "the order survived the restart");
 }
 
+/// The install hand-off is pure: the helper's plan names the verified download, the directory
+/// the app runs from, and whether the app comes back (restart: yes, quit: no).
+#[test]
+fn the_install_plan_names_the_download_and_the_install_directory() {
+    let downloaded = Downloaded {
+        version: "0.2.0".to_owned(),
+        path: PathBuf::from("/updates/wraex-0.2.0-x86_64-pc-windows-msvc-setup.exe"),
+        sha256: "ab".repeat(32),
+    };
+    let plan = install_plan(&downloaded, PathBuf::from("/Programs/Wraex"), true);
+    assert_eq!(plan.setup, downloaded.path);
+    assert_eq!(plan.version, "0.2.0");
+    assert_eq!(plan.sha256, "ab".repeat(32));
+    assert_eq!(plan.install_dir, PathBuf::from("/Programs/Wraex"));
+    assert!(plan.relaunch, "the About page's Install now restarts the app");
+
+    let quit = install_plan(&downloaded, PathBuf::from("/Programs/Wraex"), false);
+    assert!(!quit.relaunch, "a Quit installs on the way out without a relaunch");
+    assert_eq!(quit.setup, downloaded.path);
+}
+
 /// The guard: while `App::with_live` runs, `App::live` is empty, so an `App` method answering
 /// from it would answer as a scene does. Asking anyway is a test failure, not a silent
 /// fallback — that is how the class stayed hidden through three Windows runs.
