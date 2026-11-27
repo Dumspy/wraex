@@ -174,12 +174,7 @@ impl Leagues {
     fn fetch(transport: &dyn Transport, source: LeagueSource, host: &str) -> Result<Vec<League>, String> {
         let response: HttpResponse = transport.send(&source.request(host))?;
         if !(200..300).contains(&response.status) {
-            // `JSON.stringify(Object.fromEntries(response.headers))`
-            let mut headers: Vec<(&String, &String)> = response.headers.iter().collect();
-            headers.sort();
-            let map: serde_json::Map<String, serde_json::Value> =
-                headers.into_iter().map(|(k, v)| (k.clone(), serde_json::Value::String(v.clone()))).collect();
-            return Err(serde_json::Value::Object(map).to_string());
+            return Err(format!("League request returned HTTP {}", response.status));
         }
         source.parse(&response.body)
     }
@@ -253,9 +248,9 @@ mod tests {
     fn failures_are_kept_as_errors() {
         let mut leagues = Leagues::default();
         let mut response = HttpResponse { status: 503, ..Default::default() };
-        response.headers.insert("retry-after".into(), "60".into());
+        response.headers.insert("set-cookie".into(), "session=dummy".into());
         assert_eq!(leagues.load(&Fixed(response), LeagueSource::Poe1, "x", None), None);
-        assert_eq!(leagues.error.as_deref(), Some(r#"{"retry-after":"60"}"#));
+        assert_eq!(leagues.error.as_deref(), Some("League request returned HTTP 503"));
         assert!(leagues.load(&ok("[]"), LeagueSource::Poe1, "x", None).is_none());
         assert!(leagues.error.is_some());
     }
