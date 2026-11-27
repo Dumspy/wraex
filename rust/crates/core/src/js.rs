@@ -128,7 +128,7 @@ pub fn number(s: &str) -> f64 {
     if rest == "Infinity" {
         return sign * f64::INFINITY;
     }
-    if decimal_prefix(rest) != rest.len() {
+    if rest.is_empty() || decimal_prefix(rest) != rest.len() {
         return f64::NAN;
     }
     sign * rest.parse::<f64>().expect("validated decimal literal")
@@ -331,6 +331,8 @@ mod tests {
             ("NaN", f64::NAN),
             (".", f64::NAN),
             ("-0x1", f64::NAN),
+            ("+", f64::NAN),
+            ("-", f64::NAN),
         ] {
             assert!(same(number(input), expected), "Number({input:?}) = {}", number(input));
         }

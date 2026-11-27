@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Belts%0ARarity%3A%20Normal%0ALeather%20Belt%0A--------%0AItem%20Level%3A%20-%0A",
+  "poedb": "https://poedb.tw/us/Leather_Belt",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Leather Belt\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Leather Belt"
+}

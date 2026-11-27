@@ -1,0 +1,34 @@
+{
+  "category": "Belt",
+  "influences": [],
+  "info": {
+    "craftable": {
+      "category": "Belt"
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvQmVsdDMiLCJ3IjoyLCJoIjoxLCJzY2FsZSI6MX1d/93af17affd/Belt3.png",
+    "name": "Leather Belt",
+    "namespace": "ITEM",
+    "refName": "Leather Belt",
+    "w": 2
+  },
+  "infoVariants": [
+    {
+      "craftable": {
+        "category": "Belt"
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQmVsdHMvQmVsdDMiLCJ3IjoyLCJoIjoxLCJzY2FsZSI6MX1d/93af17affd/Belt3.png",
+      "name": "Leather Belt",
+      "namespace": "ITEM",
+      "refName": "Leather Belt",
+      "w": 2
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": null,
+  "name": "Leather Belt",
+  "newMods": [],
+  "rarity": "Normal",
+  "rawText": "Item Class: Belts\nRarity: Normal\nLeather Belt\n--------\nItem Level: -\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}
