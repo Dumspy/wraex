@@ -31,7 +31,10 @@
 //!   global mouse moves, buttons and wheel notches ([`MouseEvent`], `uiohook-napi`'s
 //!   half that follows the price check and scrolls the stash tabs); and a
 //!   `WH_KEYBOARD_LL` hook for every key's down and up ([`KeyEvent`]), which is the
-//!   Alt peek and the key log `uiohook-napi` provides. Both hooks only observe.
+//!   Alt peek and the key log `uiohook-napi` provides. Both hooks only observe, with one
+//!   exception: while the app arms [`Watcher::set_capture_typing`] for the quick-math bar
+//!   (issue #6) the keyboard hook swallows the keys typed into it (and their key-ups) and hands
+//!   them to the app as [`KeyEvent::Captured`], for [`retype`] to type into the overlay.
 //!   This is behaviour ported from that package's README and Win32 backend, not its code.
 //! - **macOS / X11 / Wayland** have no backend yet, so [`Watcher::start`] reports
 //!   [`WatchError::Unsupported`] and the shell keeps its ordinary windows. Follow-ups:
@@ -54,9 +57,9 @@ mod unsupported;
 mod win32;
 
 #[cfg(not(windows))]
-pub use unsupported::{Watcher, configure_overlay, dpi_scale, focus_window, place_overlay};
+pub use unsupported::{Watcher, configure_overlay, dpi_scale, focus_window, place_overlay, retype};
 #[cfg(windows)]
-pub use win32::{Watcher, configure_overlay, dpi_scale, focus_window, place_overlay};
+pub use win32::{Watcher, configure_overlay, dpi_scale, focus_window, place_overlay, retype};
 
 use crate::shortcuts::InputEvent;
 
@@ -111,7 +114,10 @@ pub enum MouseEvent {
 ///
 /// Every key is reported, not only the modifiers: `OverlayVisibility`'s Alt peek hides the
 /// widgets on an Alt-only keydown and brings them back on any other key, and `Shortcuts`'
-/// `logKeys` logs them all. Only observed: the hook never blocks, swallows or injects a key.
+/// `logKeys` logs them all. The hook never blocks or injects a key. It swallows keys in one
+/// case only: while the app armed Wraex's typing capture for the quick-math bar
+/// ([`Watcher::set_capture_typing`]), the keys that type into it are held back from the game
+/// and reported as [`KeyEvent::Captured`] instead — and their key-ups are not reported at all.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum KeyEvent {
     /// `uIOhook`'s `keydown`, with the modifiers held at the time.
@@ -119,6 +125,24 @@ pub enum KeyEvent {
     /// `uIOhook`'s `keyup`. The modifier the released key names is already cleared, which is
     /// what `OverlayVisibility`'s `if (!e.altKey)` relies on.
     Up(InputEvent),
+    /// A key *down* the typing capture swallowed: the game never saw it, and the app types it
+    /// into the overlay once it has the focus ([`retype`]). Its key-up is swallowed silently.
+    Captured(CapturedKey),
+}
+
+/// A key the typing capture swallowed (see [`Watcher::set_capture_typing`]): enough to type it
+/// again.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CapturedKey {
+    /// `KBDLLHOOKSTRUCT.vkCode`.
+    pub vk: u32,
+    /// `KBDLLHOOKSTRUCT.scanCode`.
+    pub scan: u32,
+    /// `LLKHF_EXTENDED` (numpad Divide, ...).
+    pub extended: bool,
+    /// Upstream's name for the key (`wraex_core::keys::vk_to_key`), for the log and for telling
+    /// Escape apart.
+    pub key: Option<&'static str>,
 }
 
 /// Which modifiers the keyboard hook has seen held, in `uiohook`'s `ctrlKey`/`shiftKey`/
@@ -175,6 +199,41 @@ impl ModifierState {
     pub(crate) fn input(&self, key: Option<&'static str>) -> InputEvent {
         InputEvent { key, ctrl: self.ctrl, shift: self.shift, alt: self.alt }
     }
+}
+
+/// Whether the armed typing capture takes this key: what a calculator is typed with, on any
+/// layout.
+///
+/// Wraex's own, for the quick-math bar (issue #6): the bar floats over the game without taking
+/// its focus, so the characters typed into it must never reach the game. Everything a sum is
+/// written with is taken — digits (top row and numpad), the operators, `+ - * / . ( )`, Space,
+/// Backspace, Escape (to close the bar) and the `k`/`m` suffixes — plus the OEM punctuation
+/// keys those operators sit on when a layout moves them; the numpad is layout-independent.
+/// Everything else stays with the game: the other letters, Enter, Tab, the arrows, the F-keys,
+/// the modifiers and Delete.
+///
+/// `ctrl` or `alt` held means no: they are shortcuts (and AltGr is Ctrl+Alt on Windows, so a
+/// character typed with it must not be swallowed either).
+#[cfg(any(windows, test))]
+pub(crate) fn is_capture_key(vk: u32, ctrl: bool, alt: bool) -> bool {
+    if ctrl || alt {
+        return false;
+    }
+    matches!(
+        vk,
+        // VK_BACK, VK_ESCAPE, VK_SPACE
+        0x08 | 0x1B | 0x20
+        // The top row's digits, VK_0 to VK_9.
+        | 0x30..=0x39
+        // K and M: the `k`/`m` suffixes of a price ("1.5k").
+        | 0x4B | 0x4D
+        // The numpad's digits, `*`, `+`, `-`, `.` and `/` (VK_NUMPAD0..9, VK_MULTIPLY,
+        // VK_ADD, VK_SUBTRACT, VK_DECIMAL, VK_DIVIDE; VK_SEPARATOR 0x6C is left out).
+        | 0x60..=0x6B | 0x6D..=0x6F
+        // The OEM keys that carry `+ - * / . ( )` on a non-US layout (VK_OEM_1..VK_OEM_3,
+        // VK_OEM_4..VK_OEM_8) and the ISO extra key (VK_OEM_102).
+        | 0xBA..=0xC0 | 0xDB..=0xDF | 0xE2
+    )
 }
 
 /// What the OS layer reports about the game window: the half of
@@ -371,6 +430,11 @@ impl std::error::Error for WatchError {}
 /// - [`Watcher::drain_keys`] takes the [`KeyEvent`]s the global low-level keyboard hook queued
 ///   (`uiohook`'s `keydown`/`keyup`): the Alt peek and the key log. Keys the app synthesizes
 ///   itself are flagged injected and are not reported, so they cannot toggle the peek.
+/// - [`Watcher::set_capture_typing`] arms Wraex's typing capture for the quick-math bar (issue
+///   #6): while it is armed, the hook swallows the keys a calculator is typed with
+///   (`is_capture_key`) so the game never receives them, and queues them as
+///   [`KeyEvent::Captured`]; [`retype`] types them into the overlay once it has the focus.
+///   Wraex's own — neither reference has a bar that types into the game's foreground.
 /// - [`Watcher::hwnd`] is the tracked window's native handle, for [`focus_window`] and the
 ///   other calls that take one.
 ///
@@ -540,5 +604,52 @@ mod tests {
         assert!(!keys.ctrl());
         keys.set(0xA1, false); // VK_RSHIFT up
         assert_eq!(keys.input(None), InputEvent { key: None, ctrl: false, shift: false, alt: false });
+    }
+
+    /// Every vk the typing capture takes: what `1+2*(3.5-4)/5` and "1.5k" are typed with,
+    /// plus Escape (closes the bar) and Backspace.
+    const CAPTURED_VKS: [u32; 43] = [
+        0x08, 0x1B, 0x20, // Backspace, Escape, Space
+        0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, // the top row, VK_0..VK_9
+        0x4B, 0x4D, // K, M: the k/m suffixes
+        0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, // the numpad, VK_NUMPAD0..9
+        0x6A, 0x6B, 0x6D, 0x6E, 0x6F, // numpad * + - . /
+        0xBA, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF, 0xC0, // OEM_1..OEM_3, where `+ - * / . ( )` move
+        0xDB, 0xDC, 0xDD, 0xDE, 0xDF, // OEM_4..OEM_8
+        0xE2, // OEM_102, the ISO extra key
+    ];
+
+    /// The typing capture takes exactly the keys a calculator needs, and nothing the game
+    /// would want (Wraex's own, for the quick-math bar, issue #6).
+    #[test]
+    fn the_capture_key_takes_what_types_a_sum() {
+        for vk in CAPTURED_VKS {
+            assert!(is_capture_key(vk, false, false), "vk {vk:#x} types into the bar");
+        }
+        for vk in [
+            0x09, // Tab
+            0x0D, // Enter
+            0x10, 0x11, 0x12, // Shift, Ctrl, Alt
+            0x14, // CapsLock
+            0x25, 0x26, 0x27, 0x28, // the arrows
+            0x2E, // Delete
+            0x41, 0x44, 0x51, 0x5A, // A, D, Q, Z: keys the game uses
+            0x6C, // the numpad's separator: no sum needs it
+            0x70, 0x77, // F1, F8
+            0x5B, // the left Windows key
+        ] {
+            assert!(!is_capture_key(vk, false, false), "vk {vk:#x} stays with the game");
+        }
+    }
+
+    /// A held Ctrl or Alt is a shortcut, not a character: nothing is captured then (AltGr is
+    /// Ctrl+Alt on Windows).
+    #[test]
+    fn a_held_ctrl_or_alt_keeps_every_key() {
+        for vk in CAPTURED_VKS {
+            assert!(!is_capture_key(vk, true, false), "Ctrl+{vk:#x} is a shortcut");
+            assert!(!is_capture_key(vk, false, true), "Alt+{vk:#x} is a shortcut");
+            assert!(!is_capture_key(vk, true, true), "AltGr+{vk:#x} types a character");
+        }
     }
 }

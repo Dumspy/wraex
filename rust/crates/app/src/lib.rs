@@ -19,6 +19,7 @@
 pub mod client_log;
 pub mod poe1;
 pub mod poe2;
+pub mod quick_math;
 pub mod replay;
 pub mod settings;
 pub mod shell;
@@ -68,6 +69,9 @@ pub struct App {
     /// config shows at once, each at its own anchor (`OverlayWindow.vue`'s `visibilityState`);
     /// without a game window to sit over, the window is the one widget that was opened.
     pub widgets: Option<widgets::Overlay>,
+    /// The quick-math bar (issue #6): the expression field, its history and the value Enter
+    /// copies. Closed until its hotkey opens it (or a scene does).
+    pub quick_math: quick_math::QuickMath,
     /// Where trade requests go: HTTPS in a window, recorded answers headless.
     mode: Mode,
     /// The waker `AppSpec::poll` gave the app, handed to whichever window is built later.
@@ -89,6 +93,7 @@ impl std::fmt::Debug for App {
             .field("item_check_poe2", &self.item_check_poe2)
             .field("client_log", &self.client_log)
             .field("widgets", &self.widgets)
+            .field("quick_math", &self.quick_math)
             .field("mode", &self.mode)
             .field("live", &self.live)
             .finish()
@@ -156,6 +161,7 @@ impl App {
             item_check_poe2: None,
             client_log: None,
             widgets: None,
+            quick_math: quick_math::QuickMath::default(),
             mode,
             waker: None,
             live: None,
@@ -175,6 +181,7 @@ impl App {
             item_check_poe2: None,
             client_log: None,
             widgets: None,
+            quick_math: quick_math::QuickMath::default(),
             mode,
             waker: None,
             live: None,
@@ -452,6 +459,11 @@ fn project_widgets(app: &mut App) -> &mut widgets::Overlay {
     app.widgets.as_mut().expect("a widget scene built the window")
 }
 
+/// `App` → the quick-math bar, for its handlers.
+fn project_quick_math(app: &mut App) -> &mut quick_math::QuickMath {
+    &mut app.quick_math
+}
+
 /// `App` → the PoE1 item check, for its handlers.
 fn project_item_check(app: &mut App) -> &mut poe1::item_check::ItemCheck {
     app.item_check.as_mut().expect("an item-check scene built the window")
@@ -508,6 +520,8 @@ fn card_at(app: &App, cx: &mut Cx<App>, card: &shell::Card) -> El {
             Some(check) => poe2::price_check::view::view(check, cx, project_poe2),
             None => rune::el(),
         },
+        // Wraex's own bar: drawn last, over whatever else the overlay shows.
+        shell::Shown::QuickMath => quick_math::view(&app.quick_math, project_quick_math),
         // The card `wm_id` names: several widgets share a type (two stash searches).
         shell::Shown::Widget(_) => match (&app.widgets, card.wm_id) {
             (Some(overlay), Some(wm_id)) => widgets::view_card(overlay, wm_id, cx, project_widgets),
@@ -519,6 +533,11 @@ fn card_at(app: &App, cx: &mut Cx<App>, card: &shell::Card) -> El {
 
 /// The widget the window shows, at its own size.
 fn card(app: &App, cx: &mut Cx<App>) -> El {
+    // The quick-math bar is the most recently summoned thing: it covers whatever was open
+    // before it, as a Spotlight panel does.
+    if app.quick_math.open {
+        return quick_math::view(&app.quick_math, project_quick_math);
+    }
     // `OverlayWindow.vue`'s `visibilityState` order: an exclusive widget wins — the settings
     // window and the item check first, then the price check — and the overlay's own widgets
     // follow it.
@@ -635,6 +654,18 @@ pub const SCENES: &[Scene] = &[
     // EE2's experience tracker: the first client-log-driven widget, fed the scene's fixed
     // level 72 / area 80 state ([`widgets::xp_tracker::scene_state`]).
     ("poe2-widget-xp-tracker", |app| app.show_widget(GameId::Poe2, widgets::Kind::XpTracker)),
+    // The quick-math bar (issue #6): a spot for trade maths, with the issue's own example,
+    // an empty bar and a division by zero. The live shell opens it at the cursor with
+    // `quickMathKey` and copies the entered value; these scenes draw it alone.
+    ("quick-math", |app| {
+        app.quick_math.open();
+        app.quick_math.set_input("1.5k / 3 + (20 - 2.5) * 4");
+    }),
+    ("quick-math-empty", |app| app.quick_math.open()),
+    ("quick-math-error", |app| {
+        app.quick_math.open();
+        app.quick_math.set_input("5 / 0");
+    }),
     // The settings window, one scene per menu page, for both games.
     ("settings-poe1-hotkeys", |app| app.settings_page(GameId::Poe1, Page::Hotkeys)),
     ("settings-poe1-chat", |app| app.settings_page(GameId::Poe1, Page::Chat)),
@@ -685,9 +716,12 @@ pub fn settings_scene(slug: &str) -> Option<(GameId, Page)> {
 
 /// The window size a `--scene` renders at. A settings scene is the settings window: upstream's
 /// `.window` is at most 50 rem wide and 38 rem tall (`settings::WIDTH`/`HEIGHT`), so it renders
-/// at that size and needs no `--size`. A price check keeps the price-check window's size, and
-/// an explicit `--size` still wins.
+/// at that size and needs no `--size`. A quick-math scene is the bar's own card. A price check
+/// keeps the price-check window's size, and an explicit `--size` still wins.
 pub fn scene_size(scene: Option<&str>) -> (f32, f32) {
+    if scene.is_some_and(is_quick_math_scene) {
+        return (quick_math::WIDTH, quick_math::HEIGHT);
+    }
     if let Some((game, kind)) = scene.and_then(widgets::scene) {
         return widgets::scene_size(game, kind);
     }
@@ -695,6 +729,11 @@ pub fn scene_size(scene: Option<&str>) -> (f32, f32) {
         Some(_) => (settings::WIDTH, settings::HEIGHT),
         None => (WIDTH, HEIGHT),
     }
+}
+
+/// Whether `slug` names the quick-math bar or one of its states.
+fn is_quick_math_scene(slug: &str) -> bool {
+    slug == quick_math::WM_TYPE || slug.starts_with("quick-math-")
 }
 
 /// Runs the app: a window, or a headless render with Rune's `--snap`/`--scene`/`--tree`.
@@ -816,6 +855,12 @@ mod tests {
         // PoE2's window on its own corpus (`poe2-ee2-rare-item` →
         // `corpus/poe2/ee2-rare-item.txt`); everything else is PoE1's, as before.
         let size = scene_size(Some(slug));
+        if is_quick_math_scene(slug) {
+            let mut app = App::replay(SCENES[0].0);
+            let (_, setup) = SCENES.iter().find(|(name, _)| *name == slug).expect("a quick-math scene");
+            setup(&mut app);
+            return runtime_app(app, size);
+        }
         if let Some((game, kind)) = widgets::scene(slug) {
             return runtime_app(App::widgets_scene(game, kind), size);
         }
@@ -906,6 +951,9 @@ mod tests {
             } else if is_item_check_scene(slug) {
                 // `WidgetItemCheck.vue` is an overlay card: upstream's overlay draws no title bar
                 // over it either (its hover actions panel is not ported).
+                assert!(runtime.find("titlebar").is_none(), "{slug}: no title bar");
+            } else if is_quick_math_scene(slug) {
+                // The bar is a card of its own, like an overlay widget, with no title bar.
                 assert!(runtime.find("titlebar").is_none(), "{slug}: no title bar");
             } else if widgets::scene(slug).is_some() {
                 // An overlay widget is a card on the game's panel, with no title bar of its own.
@@ -2107,5 +2155,102 @@ mod tests {
         assert_eq!(text_of(&gem, "item-check-name-text").as_deref(), Some("Uncut Skill Gem (Level 19)"));
         assert!(gem.find("item-check-coe").is_some());
         assert!(gem.find("item-check-dps").is_none());
+    }
+
+    // ---- The quick-math bar (issue #6) ---------------------------------------------------
+
+    /// The scene lays the bar out as the window: the issue's expression evaluates to 570, the
+    /// card fills the render and nothing is clipped.
+    #[test]
+    fn the_quick_math_scene_shows_its_grouped_result() {
+        assert_eq!(scene_size(Some("quick-math")), (quick_math::WIDTH, quick_math::HEIGHT));
+        let runtime = runtime("quick-math");
+        assert_eq!(text_of(&runtime, "quick-math-result").as_deref(), Some("= 570"));
+        let elements = runtime.elements();
+        let card = element(&elements, quick_math::WM_TYPE).expect("the bar");
+        assert_eq!(card.rect, [0.0, 0.0, quick_math::WIDTH, quick_math::HEIGHT], "the scene's window is the card");
+        let input = element(&elements, "quick-math-input").expect("the expression field");
+        assert_eq!(input.text.as_deref(), Some("1.5k / 3 + (20 - 2.5) * 4"));
+    }
+
+    /// A bad expression shows the evaluator's own message, in the error colour.
+    #[test]
+    fn the_quick_math_scene_shows_a_division_by_zero() {
+        let runtime = runtime("quick-math-error");
+        assert_eq!(text_of(&runtime, "quick-math-result").as_deref(), Some("division by zero"));
+    }
+
+    /// Typing re-evaluates: the view reads the field, so the result follows it live.
+    #[test]
+    fn the_quick_math_bar_updates_its_result_live() {
+        let mut runtime = runtime("quick-math");
+        replace_input(&mut runtime, "quick-math-input", "2k*3");
+        assert_eq!(runtime.state.quick_math.text(), "2k*3");
+        assert_eq!(text_of(&runtime, "quick-math-result").as_deref(), Some("= 6,000"));
+    }
+
+    /// An empty bar shows what Enter and Escape do rather than an error.
+    #[test]
+    fn the_empty_quick_math_bar_shows_its_hint() {
+        let runtime = runtime("quick-math-empty");
+        assert_eq!(text_of(&runtime, "quick-math-result").as_deref(), Some("Enter copies \u{b7} Esc closes"));
+        assert_eq!(text_of(&runtime, "quick-math-input").as_deref(), Some(""));
+    }
+
+    /// A freshly opened bar takes typed keys without a click: [`quick_math::QuickMath::open`]
+    /// focuses the field through its model. The hotkey path relies on it: the first key the
+    /// Windows hook holds back is typed into this field once the overlay has the focus.
+    #[test]
+    fn a_freshly_opened_quick_math_bar_takes_typed_keys_without_a_click() {
+        // The bar is summoned over an already-drawn window, as the hotkey does: it was not on
+        // screen before this frame.
+        let mut runtime = runtime(SCENES[0].0);
+        runtime.state.quick_math.open();
+        runtime.invalidate();
+        runtime.frame(1.0 / 60.0);
+        assert_eq!(text_of(&runtime, "quick-math-input").as_deref(), Some(""));
+        for character in ["2", "*", "3"] {
+            runtime.key(rune::KeyEvent { key: rune::Key::Text(character.into()), mods: rune::Mods::default() });
+            runtime.frame(1.0 / 60.0);
+        }
+        assert_eq!(runtime.state.quick_math.text(), "2*3", "the field took the keys without a click");
+        assert_eq!(text_of(&runtime, "quick-math-result").as_deref(), Some("= 6"));
+    }
+
+    /// Enter submits the typed expression: the bar closes and the shell is handed the plain
+    /// value. ArrowUp and ArrowDown walk the history around the draft.
+    #[test]
+    fn enter_copies_the_quick_math_value_and_arrow_up_restores_it() {
+        let mut runtime = runtime("quick-math");
+        replace_input(&mut runtime, "quick-math-input", "2k*3");
+        runtime.key(rune::KeyEvent { key: rune::Key::Enter, mods: rune::Mods::default() });
+        runtime.frame(1.0 / 60.0);
+        assert!(!runtime.state.quick_math.open, "Enter closes the bar");
+        assert_eq!(runtime.state.quick_math.take_copied().as_deref(), Some("6000"));
+
+        // Reopen: the history kept the expression. ArrowUp brings it back, ArrowDown returns to
+        // the empty draft.
+        runtime.state.quick_math.open();
+        runtime.invalidate();
+        runtime.frame(1.0 / 60.0);
+        click(&mut runtime, "quick-math-input");
+        runtime.key(rune::KeyEvent { key: rune::Key::Up, mods: rune::Mods::default() });
+        runtime.frame(1.0 / 60.0);
+        assert_eq!(runtime.state.quick_math.text(), "2k*3");
+        assert_eq!(text_of(&runtime, "quick-math-result").as_deref(), Some("= 6,000"));
+        runtime.key(rune::KeyEvent { key: rune::Key::Down, mods: rune::Mods::default() });
+        runtime.frame(1.0 / 60.0);
+        assert_eq!(runtime.state.quick_math.text(), "");
+    }
+
+    /// Escape dismisses the bar without touching the history.
+    #[test]
+    fn escape_closes_the_quick_math_bar() {
+        let mut runtime = runtime("quick-math");
+        click(&mut runtime, "quick-math-input");
+        runtime.key(rune::KeyEvent { key: rune::Key::Escape, mods: rune::Mods::default() });
+        runtime.frame(1.0 / 60.0);
+        assert!(!runtime.state.quick_math.open);
+        assert!(runtime.find("quick-math-result").is_none());
     }
 }

@@ -21,7 +21,11 @@
 //!   `CallNextHookEx`, so the game never waits on it.
 //! - A `WH_KEYBOARD_LL` low-level keyboard hook on the same thread: every key's down and up with
 //!   the modifiers held, which is `OverlayVisibility`'s Alt peek and `Shortcuts`' key log. Keys
-//!   Wraex synthesizes are flagged injected and skipped. Observe-only, like the mouse hook.
+//!   Wraex synthesizes are flagged injected and skipped. Observe-only, like the mouse hook, with
+//!   one exception: Wraex's typing capture for the quick-math bar (issue #6). While the app arms
+//!   it and the overlay does not have the focus, the hook swallows the keys that type into the
+//!   bar — so the game never sees them — reports them as [`KeyEvent::Captured`], and
+//!   [`retype`] types them into the overlay once it has the focus. No reference has this.
 //!
 //! The reported rectangle is the *client* area (`GetClientRect` + `ClientToScreen`), which is
 //! the whole window in borderless-windowed and fullscreen and the content below the title bar
@@ -44,24 +48,27 @@ use windows::Win32::Graphics::Gdi::ClientToScreen;
 use windows::Win32::System::Threading::{AttachThreadInput, GetCurrentThreadId};
 use windows::Win32::UI::Accessibility::{HWINEVENTHOOK, SetWinEventHook, UnhookWinEvent};
 use windows::Win32::UI::HiDpi::GetDpiForWindow;
-use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VIRTUAL_KEY, VK_CONTROL, VK_MENU, VK_SHIFT};
+use windows::Win32::UI::Input::KeyboardAndMouse::{
+    GetAsyncKeyState, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBD_EVENT_FLAGS, KEYBDINPUT, KEYEVENTF_EXTENDEDKEY,
+    KEYEVENTF_KEYUP, SendInput, VIRTUAL_KEY, VK_CONTROL, VK_MENU, VK_SHIFT,
+};
 use windows::Win32::UI::WindowsAndMessaging::{
     CHILDID_SELF, CallNextHookEx, DispatchMessageW, EVENT_OBJECT_DESTROY, EVENT_OBJECT_LOCATIONCHANGE,
     EVENT_OBJECT_NAMECHANGE, EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_MINIMIZEEND, GA_ROOT, GUITHREADINFO, GWL_EXSTYLE,
     GetAncestor, GetClassNameW, GetClientRect, GetForegroundWindow, GetGUIThreadInfo, GetMessageW, GetWindowLongPtrW,
     GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId, HHOOK, IsHungAppWindow, IsIconic, IsWindowVisible,
-    KBDLLHOOKSTRUCT, KillTimer, LLKHF_INJECTED, MSG, MSLLHOOKSTRUCT, OBJID_WINDOW, PM_NOREMOVE, PeekMessageW,
-    PostMessageW, PostThreadMessageW, RegisterWindowMessageW, SW_HIDE, SW_SHOWNOACTIVATE, SWP_FRAMECHANGED,
-    SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SetForegroundWindow, SetTimer, SetWindowLongPtrW,
-    SetWindowPos, SetWindowsHookExW, ShowWindow, TranslateMessage, UnhookWindowsHookEx, WH_KEYBOARD_LL, WH_MOUSE_LL,
-    WINEVENT_OUTOFCONTEXT, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_MBUTTONDOWN, WM_MOUSEMOVE, WM_MOUSEWHEEL, WM_QUIT,
-    WM_RBUTTONDOWN, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_XBUTTONDOWN, WS_EX_TOOLWINDOW,
+    KBDLLHOOKSTRUCT, KillTimer, LLKHF_EXTENDED, LLKHF_INJECTED, MSG, MSLLHOOKSTRUCT, OBJID_WINDOW, PM_NOREMOVE,
+    PeekMessageW, PostMessageW, PostThreadMessageW, RegisterWindowMessageW, SW_HIDE, SW_SHOWNOACTIVATE,
+    SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SetForegroundWindow, SetTimer,
+    SetWindowLongPtrW, SetWindowPos, SetWindowsHookExW, ShowWindow, TranslateMessage, UnhookWindowsHookEx,
+    WH_KEYBOARD_LL, WH_MOUSE_LL, WINEVENT_OUTOFCONTEXT, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_MBUTTONDOWN,
+    WM_MOUSEMOVE, WM_MOUSEWHEEL, WM_QUIT, WM_RBUTTONDOWN, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_XBUTTONDOWN, WS_EX_TOOLWINDOW,
 };
 use windows::core::w;
 
 use super::{
-    Bounds, GameWindowEvents, KeyEvent, ModifierState, MouseEvent, Point, WakeFn, WatchError, WindowTarget,
-    matches_target,
+    Bounds, CapturedKey, GameWindowEvents, KeyEvent, ModifierState, MouseEvent, Point, WakeFn, WatchError,
+    WindowTarget, is_capture_key, matches_target,
 };
 
 /// The reference's foreground timer: 12 times a second, which is what catches foreground
@@ -80,6 +87,14 @@ struct Hook {
     modifiers: ModifierState,
     /// What the wheel's last ticks left short of a whole notch ([`super::wheel_rotation`]).
     wheel_leftover: i16,
+    /// Wraex's typing capture for the quick-math bar (issue #6) is armed: the keyboard hook
+    /// swallows the keys a calculator is typed with instead of letting the game see them.
+    /// Shared with [`Watcher::set_capture_typing`], like `mouse_moves`.
+    capture_typing: Arc<AtomicBool>,
+    /// The vks whose *down* the capture swallowed, so their key-up is swallowed too even when
+    /// the capture was disarmed in between (a key held across the hand-over). A fixed table
+    /// rather than a set: the hook proc must not allocate.
+    swallowed: [bool; 256],
     /// Move events are the bulk of the hook's traffic and are only wanted while a widget's
     /// area is tracked (upstream adds its `mousemove` listener for exactly that time); the
     /// flag keeps the hook from waking the app on every desktop mouse move.
@@ -388,15 +403,25 @@ unsafe extern "system" fn mouse_proc(code: i32, wparam: WPARAM, lparam: LPARAM) 
 /// `OverlayVisibility.ts` (the Alt peek) and `Shortcuts.ts` (the key log) listen to: every key's
 /// down and up on the desktop, with the modifiers the hook has seen.
 ///
-/// It only observes. The callback queues one small event and hands the message on with
+/// It observes. The callback queues one small event and hands the message on with
 /// [`CallNextHookEx`], so typing in the game is never delayed or blocked. Keys Wraex synthesizes
-/// itself (`SendInput` for the game's copy key) arrive flagged `LLKHF_INJECTED` and are
-/// ignored: they must not toggle the peek or report a modifier the user is not holding.
+/// itself (`SendInput` for the game's copy key, [`retype`] for the quick-math bar) arrive
+/// flagged `LLKHF_INJECTED` and are ignored: they must not toggle the peek or report a modifier
+/// the user is not holding.
+///
+/// The one exception is Wraex's typing capture (issue #6): while the app armed it
+/// ([`Watcher::set_capture_typing`]) and the key is one the quick-math bar is typed with, the
+/// key's down is queued as [`KeyEvent::Captured`] and consumed instead of handed on — returning
+/// non-zero without calling [`CallNextHookEx`] is how a low-level hook swallows a key — and its
+/// up is consumed the same way, silently (the bar only needs the character). Every other key,
+/// and every injected key, is untouched.
 unsafe extern "system" fn keyboard_proc(
     code: i32,
     wparam: WPARAM,
     lparam: LPARAM,
 ) -> windows::Win32::Foundation::LRESULT {
+    // Set by the closure below: this key was consumed, so it must not reach the next hook.
+    let mut swallow = false;
     if code >= 0 {
         let message = wparam.0 as u32;
         let down = message == WM_KEYDOWN || message == WM_SYSKEYDOWN;
@@ -409,11 +434,43 @@ unsafe extern "system" fn keyboard_proc(
                     // The released key's modifier is cleared before the event is built, which
                     // is the state `OverlayVisibility`'s keyup handler reads (`!e.altKey`).
                     hook.modifiers.set(info.vkCode, down);
-                    let event = hook.modifiers.input(wraex_core::keys::vk_to_key(info.vkCode));
-                    hook.emit_key(if down { KeyEvent::Down(event) } else { KeyEvent::Up(event) });
+                    let key = wraex_core::keys::vk_to_key(info.vkCode);
+                    // vk codes are bytes; the table is indexed by one, but be defensive.
+                    let index = info.vkCode as usize;
+                    let tracked = index < hook.swallowed.len();
+                    if down
+                        && hook.capture_typing.load(Ordering::Relaxed)
+                        && is_capture_key(info.vkCode, hook.modifiers.ctrl(), hook.modifiers.alt())
+                    {
+                        if tracked {
+                            hook.swallowed[index] = true;
+                        }
+                        hook.emit_key(KeyEvent::Captured(CapturedKey {
+                            vk: info.vkCode,
+                            scan: info.scanCode,
+                            extended: info.flags.contains(LLKHF_EXTENDED),
+                            key,
+                        }));
+                        swallow = true;
+                    } else if !down && tracked && hook.swallowed[index] {
+                        // The game never saw the down, so it must not see the up either; and
+                        // no event: the bar has the character already.
+                        hook.swallowed[index] = false;
+                        swallow = true;
+                    } else {
+                        hook.emit_key(if down {
+                            KeyEvent::Down(hook.modifiers.input(key))
+                        } else {
+                            KeyEvent::Up(hook.modifiers.input(key))
+                        });
+                    }
                 });
             }
         }
+    }
+    if swallow {
+        // A low-level hook swallows a key by returning non-zero *instead of* handing it on.
+        return windows::Win32::Foundation::LRESULT(1);
     }
     // SAFETY: the hook contract: everything not consumed goes to the next hook in the chain.
     unsafe { CallNextHookEx(None, code, wparam, lparam) }
@@ -545,6 +602,7 @@ fn hook_thread(
     target: WindowTarget,
     channels: HookChannels,
     mouse_moves: Arc<AtomicBool>,
+    capture_typing: Arc<AtomicBool>,
     wake: WakeFn,
     game: Arc<Mutex<Option<isize>>>,
     startup: Sender<Startup>,
@@ -562,6 +620,8 @@ fn hook_thread(
                 keys,
                 modifiers: system_modifiers(),
                 wheel_leftover: 0,
+                capture_typing,
+                swallowed: [false; 256],
                 mouse_moves,
                 wake,
                 game,
@@ -656,6 +716,8 @@ pub struct Watcher {
     mouse: Receiver<MouseEvent>,
     keys: Receiver<KeyEvent>,
     mouse_moves: Arc<AtomicBool>,
+    /// Wraex's typing capture's arm flag, shared with the hook thread (issue #6).
+    capture_typing: Arc<AtomicBool>,
     game: Arc<Mutex<Option<isize>>>,
     target: WindowTarget,
     thread: Option<JoinHandle<()>>,
@@ -675,11 +737,13 @@ impl Watcher {
         let (mouse, mouse_receiver) = mpsc::channel();
         let (keys, key_receiver) = mpsc::channel();
         let mouse_moves: Arc<AtomicBool> = Arc::default();
+        let capture_typing: Arc<AtomicBool> = Arc::default();
         let game: Arc<Mutex<Option<isize>>> = Arc::default();
         let (startup, started) = mpsc::channel();
         let thread_game = game.clone();
         let thread_target = target.clone();
         let thread_mouse_moves = mouse_moves.clone();
+        let thread_capture_typing = capture_typing.clone();
         let thread = std::thread::Builder::new()
             .name("wraex-window-hook".to_owned())
             .spawn(move || {
@@ -687,6 +751,7 @@ impl Watcher {
                     thread_target,
                     HookChannels { events, mouse, keys },
                     thread_mouse_moves,
+                    thread_capture_typing,
                     wake,
                     thread_game,
                     startup,
@@ -699,6 +764,7 @@ impl Watcher {
                 mouse: mouse_receiver,
                 keys: key_receiver,
                 mouse_moves,
+                capture_typing,
                 game,
                 target,
                 thread: Some(thread),
@@ -732,6 +798,20 @@ impl Watcher {
     /// when upstream adds its `mousemove` listener.
     pub fn set_mouse_moves(&self, enabled: bool) {
         self.mouse_moves.store(enabled, Ordering::Relaxed);
+    }
+
+    /// Arms or disarms Wraex's typing capture, the quick-math bar's half of the keyboard hook
+    /// (issue #6, Wraex's own: no reference has a bar over the game that keeps the game's
+    /// focus).
+    ///
+    /// While armed, the hook swallows the keys a calculator is typed with
+    /// (`is_capture_key` in the parent module) — so the game never receives them — and queues
+    /// them as [`KeyEvent::Captured`]; the app types them into the overlay with [`retype`]
+    /// once it has the focus. The app arms it only then, because until the overlay has the
+    /// focus its window cannot receive the keys itself. Disarming it leaves the game's keys
+    /// untouched again.
+    pub fn set_capture_typing(&self, armed: bool) {
+        self.capture_typing.store(armed, Ordering::Relaxed);
     }
 
     /// The tracked window's handle, once one was found (and until it is destroyed).
@@ -843,4 +923,52 @@ pub fn dpi_scale(hwnd: isize) -> f64 {
     // SAFETY: a plain Win32 query; `0` means the window has no DPI (not shown yet).
     let dpi = unsafe { GetDpiForWindow(HWND(hwnd as *mut _)) };
     if dpi == 0 { 1.0 } else { f64::from(dpi) / 96.0 }
+}
+
+/// Type `keys` into the focused window, in order, as one `SendInput` call: the second half of
+/// Wraex's typing capture ([`Watcher::set_capture_typing`], issue #6).
+///
+/// The hook swallowed these keys so the game never saw them; once the overlay has the focus,
+/// the app calls this to put them into the quick-math bar's input. Each key gets a down and an
+/// up with the scan code and the extended flag the hook reported, so numpad keys and layout
+/// handling come out as they went in. `SendInput` keys carry `LLKHF_INJECTED`, which is what
+/// keeps the hook from capturing them a second time.
+pub fn retype(keys: &[CapturedKey]) {
+    if keys.is_empty() {
+        return;
+    }
+    let input = |key: &CapturedKey, up: bool| {
+        let mut flags = KEYBD_EVENT_FLAGS::default();
+        if key.extended {
+            flags |= KEYEVENTF_EXTENDEDKEY;
+        }
+        if up {
+            flags |= KEYEVENTF_KEYUP;
+        }
+        INPUT {
+            r#type: INPUT_KEYBOARD,
+            Anonymous: INPUT_0 {
+                ki: KEYBDINPUT {
+                    wVk: VIRTUAL_KEY(key.vk as u16),
+                    wScan: key.scan as u16,
+                    dwFlags: flags,
+                    time: 0,
+                    dwExtraInfo: 0,
+                },
+            },
+        }
+    };
+    let mut inputs = Vec::with_capacity(keys.len() * 2);
+    for key in keys {
+        inputs.push(input(key, false));
+        inputs.push(input(key, true));
+    }
+    // SAFETY: `inputs` is a live slice of `INPUT`s, each `size_of::<INPUT>()` bytes, which is
+    // the size the call is told; `SendInput` copies them and does not keep the pointer.
+    let sent = unsafe { SendInput(&inputs, std::mem::size_of::<INPUT>() as i32) };
+    if sent as usize != inputs.len() {
+        // A locked desktop or another hook refusing them; without this line the bar would
+        // simply look like it lost the keys.
+        crate::log!("wraex: the quick-math bar's keys could not be re-typed ({sent} of {})", inputs.len());
+    }
 }

@@ -13,7 +13,10 @@
 //!    on the UI thread once Rune's event loop runs.
 //! 4. **Hotkeys**: the config's shortcuts in Rune's global-shortcut API, each press run
 //!    through [`wraex_platform::shortcuts::Shortcuts::press`] with the OS [`keys`] and
-//!    [`clipboard`]. A `copy-item` press opens a window next to the cursor.
+//!    [`clipboard`]. A `copy-item` press opens a window next to the cursor. Wraex's own
+//!    quick-math bar ([`crate::quick_math`]) is one of them (`quickMathKey`); it opens inactive
+//!    like a widget, and on Windows the keyboard hook holds back the keys typed into it until
+//!    the overlay takes the focus, then types them again.
 //! 5. **Update check** ([`updates`]): at launch and every 16 hours, shown on the settings
 //!    window's About page.
 //! 6. **Actions** ([`dispatch`]): the widgets record what their buttons ask for; the shell
@@ -86,7 +89,7 @@ use wraex_platform::shortcuts::{
     Action, HostConfig, ItemText, PressContext, Registration, ShortcutAction, ShortcutEvent, Shortcuts, WheelEvent,
 };
 use wraex_platform::tray::{Tray, TrayAction};
-use wraex_platform::window::{self, Bounds, GameWindow, KeyEvent, MouseEvent, Point};
+use wraex_platform::window::{self, Bounds, CapturedKey, GameWindow, KeyEvent, MouseEvent, Point};
 
 #[cfg(target_os = "windows")]
 use wraex_platform::window::WindowTarget;
@@ -126,6 +129,8 @@ pub enum Shown {
     ItemCheck,
     PriceCheck,
     Poe2,
+    /// Wraex's own quick-math bar (issue #6), drawn over whatever else the overlay shows.
+    QuickMath,
     Widget(String),
 }
 
@@ -197,6 +202,7 @@ fn card_slug(shown: &Shown) -> &'static str {
         Shown::ItemCheck => "item-check",
         Shown::PriceCheck => "price-check",
         Shown::Poe2 => "poe2-price-check",
+        Shown::QuickMath => crate::quick_math::WM_TYPE,
         Shown::Widget(_) => "widget",
     }
 }
@@ -262,7 +268,7 @@ fn placed_card(card: &Card, body: El) -> El {
 /// blur rule), while the settings window does not — the tray can open it with no game to sit
 /// over, and it closes on the focus change itself (`App::hide_widgets_on_blur`).
 fn is_overlay(shown: &Shown) -> bool {
-    matches!(shown, Shown::PriceCheck | Shown::Poe2 | Shown::ItemCheck | Shown::Widget(_))
+    matches!(shown, Shown::PriceCheck | Shown::Poe2 | Shown::ItemCheck | Shown::QuickMath | Shown::Widget(_))
 }
 
 /// `OverlayVisibility`: a lone Alt hides the widget the overlay draws, not the window itself
@@ -409,10 +415,30 @@ fn apply_overlay_event_in(event: &OverlayEvent, app: &mut App, settings_armed: b
     }
 }
 
+/// Whether the quick-math bar wants the keyboard hook's typing capture: the bar is open, the
+/// hook exists, the overlay window does not have the focus yet, and the keys would otherwise go
+/// to the game — it is in front, or the overlay has asked for the focus (`interactable`) and
+/// the hand-over is under way. It is the window's focus (`AppSpec::on_focus`), not the
+/// controller's `isInteractable`, that ends the capture: the controller flips the moment it
+/// asks, and a key typed before the focus lands would otherwise reach the game. With another
+/// application in front the capture is off, so its keys are never taken. Pure, so the
+/// Live-only decision is testable without a hook.
+fn capture_wanted(
+    bar_open: bool,
+    has_watcher: bool,
+    overlay_focused: bool,
+    game_active: bool,
+    interactable: bool,
+) -> bool {
+    bar_open && has_watcher && !overlay_focused && (game_active || interactable)
+}
+
 /// One keyboard event from the global hook, as upstream's `uiohook` listeners read it:
 /// `OverlayVisibility` (an Alt-only keydown hides the widgets after a delay, any other key or
-/// the Alt release brings them back) and `Shortcuts`' `logKeys`. The hook only observes, so
-/// nothing here swallows, repeats or synthesizes a key.
+/// the Alt release brings them back) and `Shortcuts`' `logKeys`. The hook only observes the
+/// keys reported here, so nothing here swallows, repeats or synthesizes a key; the one
+/// exception, the quick-math bar's typing capture, is sorted out in [`Live::poll_keyboard`]
+/// before this function sees the event.
 fn apply_key_event(overlay: &mut OverlayController, shortcuts: &Shortcuts, event: KeyEvent, clock: &dyn Clock) {
     match event {
         KeyEvent::Down(event) => {
@@ -427,6 +453,8 @@ fn apply_key_event(overlay: &mut OverlayController, shortcuts: &Shortcuts, event
                 wraex_platform::log!("{line}");
             }
         }
+        // Captured keys never reach here: `Live::poll_keyboard` hands them to the bar.
+        KeyEvent::Captured(_) => {}
     }
 }
 
@@ -470,6 +498,20 @@ pub struct Live {
     /// (`Live::sync_window`). Only for a window that is the widget itself (no game to be over)
     /// and for the settings window; a hotkey-opened widget over the game stays inactive.
     activate_on_show: bool,
+    /// The cursor that opened the quick-math bar, for its card inside the overlay. The bar has
+    /// its own placement: it is drawn beside whatever check was already up, and its press must
+    /// not take the price check's placement over.
+    quick_math_at: Option<Point>,
+    /// Captured keys the hook reported this frame, drained by [`Live::poll_keyboard`] for
+    /// [`Live::hand_over_quick_math`].
+    captured: Vec<CapturedKey>,
+    /// Captured keys waiting for the overlay window to take the focus; then typed into the bar
+    /// with [`wraex_platform::window::retype`].
+    pending_retype: Vec<CapturedKey>,
+    /// Whether the hook's typing capture is armed, so a change is told to it only once.
+    capture_armed: bool,
+    /// The bar was open at the last poll: going closed is what gives the game its keyboard back.
+    quick_math_was_open: bool,
     /// Whether the overlay window itself has the focus (`AppSpec::on_focus`): the library's
     /// blur rule hides the overlay when neither it nor the game is in front.
     pub overlay_focused: bool,
@@ -593,6 +635,11 @@ impl Live {
             placed: None,
             pending_track: None,
             activate_on_show: false,
+            quick_math_at: None,
+            captured: Vec::new(),
+            pending_retype: Vec::new(),
+            capture_armed: false,
+            quick_math_was_open: false,
             overlay_focused: false,
             tray_actions: Arc::new(Mutex::new(Vec::new())),
             registered: Vec::new(),
@@ -776,6 +823,9 @@ impl Live {
     /// key log. The peek's hide is a timer (`OverlayVisibility`'s `setTimeout`), so the deadline
     /// is polled here too, on frames without a key. Only a change of the peek redraws: a key that
     /// starts or cancels a pending hide leaves the widget on screen, and the log is stderr.
+    ///
+    /// Keys the quick-math bar's typing capture swallowed are kept for [`Live::poll`] instead:
+    /// the bar decides whether they close it or wait for the overlay's focus.
     fn poll_keyboard(&mut self) -> bool {
         let events = match self.watcher.as_mut() {
             Some(watcher) => watcher.drain_keys(),
@@ -783,10 +833,95 @@ impl Live {
         };
         let visible = self.overlay.is_visible();
         for event in events {
-            apply_key_event(&mut self.overlay, &self.shortcuts, event, &LiveClock);
+            match event {
+                KeyEvent::Captured(key) => self.captured.push(key),
+                event => apply_key_event(&mut self.overlay, &self.shortcuts, event, &LiveClock),
+            }
         }
         self.overlay.poll(&LiveClock);
         visible != self.overlay.is_visible()
+    }
+
+    /// Take the keyboard for the quick-math bar, one captured key at a time: the first key that
+    /// is not Escape makes the overlay take the focus (the game had it while the bar was shown
+    /// inactive), and once `AppSpec::on_focus` reports the overlay focused, the keys are typed
+    /// again into its field. Escape closes the bar instead, so the game keeps its keyboard.
+    ///
+    /// The hook armed the capture because the overlay was click-through; the keys therefore
+    /// never reached the game. Typing them again with [`retype`] is what puts the first
+    /// keystroke in the bar without a click.
+    fn hand_over_quick_math(&mut self, app: &mut App) {
+        for key in std::mem::take(&mut self.captured) {
+            if key.key == Some("Escape") {
+                app.quick_math.close();
+                self.pending_retype.clear();
+                continue;
+            }
+            if !app.quick_math.open {
+                continue;
+            }
+            self.pending_retype.push(key);
+            if !self.overlay.is_interactable() {
+                let mut panel = OverlayPanel::new(self.panel.clone());
+                self.overlay.assert_overlay_active(&mut self.window, &mut panel);
+                self.sync_registration();
+            }
+        }
+        self.flush_retype();
+    }
+
+    /// Type the held-back keys into the bar once the overlay window has the focus. Called from
+    /// the poll and from `AppSpec::on_focus`, whichever sees the focus first.
+    fn flush_retype(&mut self) {
+        if self.overlay_focused && !self.pending_retype.is_empty() {
+            let pending = std::mem::take(&mut self.pending_retype);
+            self.arm_capture(false);
+            wraex_platform::log!("wraex: quick-math bar takes the focus ({} keys)", pending.len());
+            window::retype(&pending);
+        }
+    }
+
+    /// Tell the hook whether to keep holding back the keys that type into the bar. Only a change
+    /// is sent, so an idle poll wakes nothing.
+    fn arm_capture(&mut self, armed: bool) {
+        if self.capture_armed == armed {
+            return;
+        }
+        if let Some(watcher) = &self.watcher {
+            watcher.set_capture_typing(armed);
+        }
+        self.capture_armed = armed;
+    }
+
+    /// The bar's open/close bookkeeping each poll: arm the typing capture exactly while the bar
+    /// is open and the overlay is not taking the keyboard, and when the bar goes closed give the
+    /// game its focus back (Enter, Escape in the field, the hotkey again). The settings window is
+    /// an ordinary window and keeps the focus while it is what is shown, as it does for the
+    /// overlay's own Escape.
+    fn sync_quick_math(&mut self, app: &App) -> bool {
+        let open = app.quick_math.open;
+        let interactable = self.overlay.is_interactable();
+        let mut changed = false;
+        if self.quick_math_was_open && !open {
+            self.pending_retype.clear();
+            self.arm_capture(false);
+            if interactable && app.shown_in(interactable) != Shown::Settings {
+                let mut panel = OverlayPanel::new(self.panel.clone());
+                self.overlay.assert_game_active(&mut self.window, &mut panel);
+                self.sync_registration();
+            }
+            changed = true;
+        }
+        let wanted = capture_wanted(
+            open,
+            self.watcher.is_some(),
+            self.overlay_focused,
+            self.window.is_active(),
+            self.overlay.is_interactable(),
+        );
+        self.arm_capture(wanted);
+        self.quick_math_was_open = open;
+        changed
     }
 
     /// `Shortcuts::on_game_active`: upstream's `active-change` listener. Registers the
@@ -1048,9 +1183,12 @@ impl Live {
     fn after_press(&mut self, app: &App, entry: &ShortcutAction, cursor: Point) {
         // The overlay key only flips the overlay on or off; what it reveals sits at its own
         // anchor (`Widget.vue` draws the menu at 5 %/5 %), so it does not claim a placement. A
-        // widget a hotkey opens goes at the cursor.
-        self.placement = match entry.action {
+        // widget a hotkey opens goes at the cursor. The quick-math bar keeps the placement too:
+        // it is drawn beside a price check that is already on screen, at its own cursor
+        // (`Live::quick_math_at`), and must not move that check.
+        self.placement = match &entry.action {
             Action::ToggleOverlay => None,
+            Action::TriggerEvent { target } if target == crate::quick_math::WM_TYPE => self.placement,
             _ => Some(Placement::Cursor(cursor)),
         };
         self.activate_on_show = self.game_bounds().is_none();
@@ -1098,6 +1236,7 @@ impl Live {
             dispatch::Request::StashSearch(text) => self.stash_search(&text),
             dispatch::Request::PriceCheck(text) => app.open_price_check(self, &text),
             dispatch::Request::ItemCheck { text, action } => app.open_item_check(self, &text, action),
+            dispatch::Request::QuickMath => app.toggle_quick_math(self),
             dispatch::Request::WidgetAction(target) => app.widget_action(self, &target),
             dispatch::Request::ShowWidget(wm_id) => app.open_widget(self, wm_id),
             dispatch::Request::Unsupported(what) => self.warn(format!("not wired yet: {what}")),
@@ -1312,7 +1451,7 @@ impl Live {
     /// The cards the overlay draws over the game, in paint order: [`crate::view`] paints them,
     /// and [`Live::sync_window`] reads the price check's card for the tracker.
     pub(crate) fn cards(&self, app: &App, bounds: Bounds) -> Vec<Card> {
-        app.cards_for(self.overlay.is_interactable(), bounds, self.panel.scale(), self.placement)
+        app.cards_for(self.overlay.is_interactable(), bounds, self.panel.scale(), self.placement, self.quick_math_at)
     }
 
     /// The game's client area while the OS layer follows the window, in physical pixels.
@@ -1344,6 +1483,16 @@ impl Live {
         let mut changed = self.poll_game_window();
         changed |= self.poll_mouse();
         changed |= self.poll_keyboard();
+        // The quick-math bar's typing capture: Escape closes it, any other key hands the
+        // keyboard to the overlay, and the keys are typed into the field once it has the focus.
+        self.hand_over_quick_math(app);
+        // Enter hands the plain value over; it goes to the clipboard as it is (no
+        // `restoreClipboard`: the user asked to paste it next).
+        if let Some(text) = app.quick_math.take_copied() {
+            self.clipboard.write_text(&text);
+            wraex_platform::log!("wraex: quick-math copied {text}");
+            changed = true;
+        }
         if let Some(state) = self.client_log.as_ref().and_then(crate::client_log::Log::take) {
             app.apply_client_log(state);
             changed = true;
@@ -1399,6 +1548,11 @@ impl Live {
         self.settings_was_open = settings_open;
 
         self.drain_overlay_events(app);
+        // The bar's open/closed transition moves the focus between the game and the overlay,
+        // and arms or disarms the hook's typing capture.
+        if self.sync_quick_math(app) {
+            changed = true;
+        }
         self.sync_window(app, tx);
         changed
     }
@@ -1422,6 +1576,7 @@ impl App {
             item_check_poe2: None,
             client_log: None,
             widgets: None,
+            quick_math: crate::quick_math::QuickMath::default(),
             mode: Mode::Live,
             waker: None,
             live: Some(live),
@@ -1489,22 +1644,28 @@ impl App {
         if let Some(shown) = self.exclusive_check() {
             return shown;
         }
-        let Some(overlay) = &self.widgets else { return Shown::None };
-        if let Some(widget) = self.exclusive_widget(active) {
-            return Shown::Widget(widget.wm_type.clone());
+        if let Some(overlay) = &self.widgets {
+            if let Some(widget) = self.exclusive_widget(active) {
+                return Shown::Widget(widget.wm_type.clone());
+            }
+            if let Some(widget) = overlay.shown_widget()
+                && drawn_widget(widget, active)
+            {
+                return Shown::Widget(widget.wm_type.clone());
+            }
+            // `WidgetMenu.vue`'s instance is `wmWants: 'show'` and always exists, and
+            // `visibilityState` draws every `show` widget while the overlay is active: activating
+            // the overlay with the overlay key therefore shows at least the menu.
+            if let Some(widget) = self.visible_widgets(active).first() {
+                return Shown::Widget(widget.wm_type.clone());
+            }
         }
-        if let Some(widget) = overlay.shown_widget()
-            && drawn_widget(widget, active)
-        {
-            return Shown::Widget(widget.wm_type.clone());
+        // The quick-math bar is drawn over whatever else the overlay shows, so when nothing else
+        // is, it is what keeps the window on screen.
+        if self.quick_math.open {
+            return Shown::QuickMath;
         }
-        // `WidgetMenu.vue`'s instance is `wmWants: 'show'` and always exists, and
-        // `visibilityState` draws every `show` widget while the overlay is active: activating
-        // the overlay with the overlay key therefore shows at least the menu.
-        match self.visible_widgets(active).first() {
-            Some(widget) => Shown::Widget(widget.wm_type.clone()),
-            None => Shown::None,
-        }
+        Shown::None
     }
 
     /// The app's exclusive windows, in `visibilityState`'s order: the settings window, then the
@@ -1563,7 +1724,39 @@ impl App {
     /// anchor, in `wmZorder`'s order (`auto`, i.e. no number, first in the config's order, then
     /// the numbered ones as CSS paints their `z-index`). The price check, the item check and the
     /// settings fill or sit where their press put them, not at an anchor.
-    fn cards_for(&self, overlay_active: bool, bounds: Bounds, scale: f64, placement: Option<Placement>) -> Vec<Card> {
+    fn cards_for(
+        &self,
+        overlay_active: bool,
+        bounds: Bounds,
+        scale: f64,
+        placement: Option<Placement>,
+        quick_math_at: Option<Point>,
+    ) -> Vec<Card> {
+        let mut cards = self.overlay_cards_without_quick_math(overlay_active, bounds, scale, placement);
+        // The bar is drawn in addition to whatever else is up — a trader does maths beside an
+        // open price check — as the last card, so it sits on top.
+        if self.quick_math.open {
+            let size = (crate::quick_math::WIDTH, crate::quick_math::HEIGHT);
+            cards.push(Card {
+                shown: Shown::QuickMath,
+                wm_id: None,
+                offset: widget_offset(quick_math_at.map(Placement::Cursor), size, bounds, scale),
+                width: Some(size.0),
+                height: Some(size.1),
+            });
+        }
+        cards
+    }
+
+    /// [`App::cards_for`] without the quick-math bar: the exclusive window or widget, or every
+    /// visible widget at its own anchor.
+    fn overlay_cards_without_quick_math(
+        &self,
+        overlay_active: bool,
+        bounds: Bounds,
+        scale: f64,
+        placement: Option<Placement>,
+    ) -> Vec<Card> {
         // The settings window's root is `position: absolute; inset: 0` (its `.window` is the
         // 50 × 38 rem box inside it), so as a widget it covers the whole overlay.
         if let Some(shown @ Shown::Settings) = self.exclusive_check() {
@@ -1648,6 +1841,7 @@ impl App {
         if let Some(check) = &mut self.item_check_poe2 {
             check.open = false;
         }
+        self.quick_math.close();
         // The menu is not hideable upstream (`WidgetMenu.vue`'s `hideable="false"`), and it is
         // what the overlay draws while it is active: closing the window leaves it show.
         if let Some(overlay) = &mut self.widgets {
@@ -1705,6 +1899,9 @@ impl App {
     pub fn hide_widgets_on_blur_in(&mut self, settings_armed: bool) {
         wraex_platform::log!("wraex: the overlay lost the focus: closing hide-on-blur widgets");
         self.close_exclusive_widget();
+        // The bar behaves as a `hide-on-blur` widget: clicked away, alt-tabbed or Escape'd
+        // through the overlay, it goes with the rest.
+        self.quick_math.close();
         if let Some(check) = &mut self.item_check {
             check.open = false;
         }
@@ -1766,6 +1963,8 @@ impl App {
             live.panel.focus_settled();
             // The settings window's blur rule waits for this: see `Live::settings_armed`.
             live.settings_armed |= focused;
+            // The quick-math bar's held-back keys go in as soon as the focus lands.
+            live.flush_retype();
         }
     }
 
@@ -1983,6 +2182,26 @@ impl App {
         live.activate_on_show = standalone;
     }
 
+    /// The quick-math hotkey (`TriggerEvent` for [`crate::quick_math::WM_TYPE`]): open the bar
+    /// at the cursor, or close it again. Over the game the overlay stays inactive — the game
+    /// keeps the keyboard until the first key is typed (the typing capture hands it over) —
+    /// while without a game window the window *is* the bar and takes the keyboard, as
+    /// [`App::open_widget`] does.
+    fn toggle_quick_math(&mut self, live: &mut Live) {
+        self.quick_math.toggle();
+        if !self.quick_math.open {
+            return;
+        }
+        let cursor = cursor_point();
+        live.quick_math_at = Some(cursor);
+        let standalone = live.game_bounds().is_none();
+        if standalone {
+            // The window is the bar: it opens at the cursor, like any other widget's own window.
+            live.placement = Some(Placement::Cursor(cursor));
+        }
+        live.activate_on_show = standalone;
+    }
+
     /// `wm.show(wmId)` from the widget menu: the config already says `show`, so the shell
     /// draws (and raises) that widget. The settings widget is `wmZorder: 'exclusive'` upstream
     /// and drawn in a window of its own here, so it opens the settings window instead.
@@ -2066,23 +2285,37 @@ impl App {
 
 /// `HostConfig` from the game's config, or a fresh install's defaults when the config cannot
 /// be translated (upstream quits in that case; a widget app should still start).
+///
+/// Wraex's own hotkeys are appended after the game's, in both paths, so upstream's filtering
+/// (reserved keys, duplicates) applies to them like any other: the quick-math bar's
+/// `quickMathKey` becomes a `trigger-event` for [`crate::quick_math::WM_TYPE`], and a missing,
+/// `null` or empty key adds nothing.
 fn host_config(game: GameId, config: &serde_json::Value) -> HostConfig {
     let translated = match game {
         GameId::Poe2 => wraex_poe2::config::host_config(config),
         _ => wraex_poe1::config::host_config(config),
     };
-    translated.ok().and_then(|value| serde_json::from_value(value).ok()).unwrap_or_else(|| {
-        serde_json::from_value(json!({
-            "shortcuts": [],
-            "restoreClipboard": true,
-            "stashScroll": true,
-            "logKeys": false,
-            "overlayKey": "Shift + Space",
-            "windowTitle": "",
-            "language": "en"
-        }))
-        .expect("the fallback host config")
-    })
+    let mut host: HostConfig =
+        translated.ok().and_then(|value| serde_json::from_value(value).ok()).unwrap_or_else(|| {
+            serde_json::from_value(json!({
+                "shortcuts": [],
+                "restoreClipboard": true,
+                "stashScroll": true,
+                "logKeys": false,
+                "overlayKey": "Shift + Space",
+                "windowTitle": "",
+                "language": "en"
+            }))
+            .expect("the fallback host config")
+        });
+    if let Some(shortcut) = crate::quick_math::configured_key(config) {
+        host.shortcuts.push(ShortcutAction {
+            shortcut,
+            keep_mod_keys: true,
+            action: Action::TriggerEvent { target: crate::quick_math::WM_TYPE.to_owned() },
+        });
+    }
+    host
 }
 
 /// `GameConfig.showModsKey`: the game's "show advanced item descriptions" key from its own
@@ -2116,6 +2349,7 @@ pub(crate) fn window_size(game: GameId, shown: &Shown) -> Option<(f32, f32)> {
         Shown::None => None,
         Shown::Settings => Some((crate::settings::WIDTH, crate::settings::HEIGHT)),
         Shown::ItemCheck | Shown::PriceCheck | Shown::Poe2 => Some((crate::poe1::price_check::WIDTH, HEIGHT)),
+        Shown::QuickMath => Some((crate::quick_math::WIDTH, crate::quick_math::HEIGHT)),
         Shown::Widget(name) => widgets::Kind::from_wm_type(name).map(|kind| widgets::scene_size(game, kind)),
     }
 }

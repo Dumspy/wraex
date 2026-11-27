@@ -489,12 +489,15 @@ fn update_check(mode: Mode, now: u64) -> UpdateInfo {
     }
 }
 
-/// `defaultConfig()`, per game.
+/// `defaultConfig()`, per game. Wraex's own keys, like the quick-math hotkey, are added on top
+/// of the game's defaults; the game's own file is never changed by this.
 pub fn default_config(game: GameId) -> Value {
-    match game {
+    let mut config = match game {
         GameId::Poe2 => wraex_poe2::config::default_config(),
         _ => wraex_poe1::config::default_config(),
-    }
+    };
+    crate::quick_math::fill_defaults(&mut config);
+    config
 }
 
 /// `initConfig()`'s reading of a file: the config and whether an unreadable file made it a
@@ -505,16 +508,20 @@ pub struct Loaded {
     pub save_temporary: bool,
 }
 
-/// `initConfig()`'s reading of a file, per game.
+/// `initConfig()`'s reading of a file, per game. A file without Wraex's own keys (an imported
+/// upstream one, or a config saved before the bar existed) gets their defaults here, so the
+/// settings window can show and save them.
 pub fn load(game: GameId, contents: Option<&str>) -> Loaded {
     // A broken upgrade keeps the defaults rather than panicking in the UI; the reference quits.
-    let loaded = match game {
+    let mut loaded = match game {
         GameId::Poe2 => wraex_poe2::config::load(contents)
             .map(|loaded| Loaded { config: loaded.config, save_temporary: loaded.save_temporary }),
         _ => wraex_poe1::config::load(contents)
             .map(|loaded| Loaded { config: loaded.config, save_temporary: loaded.save_temporary }),
-    };
-    loaded.unwrap_or_else(|_| Loaded { config: default_config(game), save_temporary: true })
+    }
+    .unwrap_or_else(|_| Loaded { config: default_config(game), save_temporary: true });
+    crate::quick_math::fill_defaults(&mut loaded.config);
+    loaded
 }
 
 /// Where Wraex keeps its settings: Electron's `appData` under `Wraex/<the game's folder>`,
