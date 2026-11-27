@@ -104,14 +104,15 @@ jobs:
           WITH_MESA: ${{ github.event_name != 'pull_request' }}
         run: |
           packages=(libxkbcommon-dev libwayland-dev pkg-config)
-          # The tray icon's default AppIndicator backend (tray-icon README).
-          packages+=(libgtk-3-dev libayatana-appindicator3-dev)
           # The LLVM tools cargo-xwin drives (clang-cl, lld-link, llvm-lib).
           packages+=(clang lld llvm)
           # Mesa's software Vulkan (lavapipe): the runner has no GPU, and the headless
           # snapshot below needs an adapter.
           if [ "$WITH_MESA" = "true" ]; then
             packages+=(mesa-vulkan-drivers)
+            # The live tray smoke below: a private session bus, a virtual X server,
+            # and the test's own StatusNotifierWatcher.
+            packages+=(xvfb xauth dbus-daemon python3-dbus python3-gi)
           fi
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends "${packages[@]}"
@@ -158,3 +159,7 @@ jobs:
       - name: Headless UI snapshot exists
         if: github.event_name != 'pull_request'
         run: test -s "$RUNNER_TEMP/wraex.png"
+
+      - name: Live Linux tray smoke
+        if: github.event_name != 'pull_request'
+        run: dbus-run-session -- xvfb-run -a /usr/bin/python3 ../tools/linux-tray-smoke.py target/debug/wraex

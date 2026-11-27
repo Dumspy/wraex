@@ -86,10 +86,6 @@ in
     xorg.libX11
     xorg.libXcursor
     xorg.libXi
-    # The tray icon's AppIndicator backend (tray-icon README): GTK 3 to build the
-    # menu, libayatana-appindicator3 loaded at runtime.
-    gtk3
-    libayatana-appindicator
   ];
 
   env = lib.mkIf pkgs.stdenv.isLinux {
@@ -100,8 +96,6 @@ in
       pkgs.xorg.libX11
       pkgs.xorg.libXcursor
       pkgs.xorg.libXi
-      pkgs.gtk3
-      pkgs.libayatana-appindicator
     ];
   };
 
