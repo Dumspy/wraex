@@ -819,8 +819,11 @@ pub fn focus_window(hwnd: isize) -> bool {
         if window.is_invalid() {
             return false;
         }
-        if SetForegroundWindow(window).as_bool() {
+        if GetForegroundWindow() == window {
             return true;
+        }
+        if SetForegroundWindow(window).as_bool() {
+            return GetForegroundWindow() == window;
         }
         let foreground = GetForegroundWindow();
         let our_thread = GetCurrentThreadId();
@@ -833,7 +836,7 @@ pub fn focus_window(hwnd: isize) -> bool {
         if attached {
             let _ = AttachThreadInput(our_thread, their_thread, false);
         }
-        focused
+        focused && GetForegroundWindow() == window
     }
 }
 

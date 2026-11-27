@@ -430,9 +430,11 @@ impl Shortcuts {
     /// button, not a hotkey. Same as the hotkey's action without keys to release.
     pub fn user_stash_search(&mut self, text: &str, ctx: PressContext<'_>) {
         let PressContext { keys, system_clipboard, clock, window, overlay, overlay_handle, .. } = ctx;
+        if !overlay.focus_for_stash(window, overlay_handle) {
+            return;
+        }
         let os = self.os;
         self.clipboard.restore_shortly(system_clipboard, clock, |clipboard| {
-            overlay.assert_game_active(window, overlay_handle);
             stash_search(text, clipboard, keys, os);
         });
     }
@@ -445,6 +447,9 @@ impl Shortcuts {
         let game = self.game;
         let os = self.os;
 
+        if matches!(entry.action, Action::StashSearch { .. }) && !overlay.focus_for_stash(window, overlay_handle) {
+            return Vec::new();
+        }
         release_pressed_keys(entry, keys);
 
         let mut events = Vec::new();
@@ -464,8 +469,6 @@ impl Shortcuts {
             }
             Action::StashSearch { text } => {
                 self.clipboard.restore_shortly(system_clipboard, clock, |clipboard| {
-                    // The search box only takes the text while the game has focus.
-                    overlay.assert_game_active(window, overlay_handle);
                     stash_search(text, clipboard, keys, os);
                 });
             }
@@ -1244,6 +1247,39 @@ mod tests {
         assert!(window.is_active(), "the game got its focus back before typing");
         assert!(!controller.is_interactable());
         assert_eq!(handle.calls(), vec![OverlayCall::ClickThrough(true), OverlayCall::FocusGame]);
+    }
+
+    #[test]
+    fn failed_focus_leaves_keys_and_clipboard_alone() {
+        let mut shortcuts = windows(GameId::Poe1);
+        let mut keys = FakeKeySender::default();
+        let mut clipboard = FakeClipboard::scripted(&["old"]);
+        let mut window = GameWindow::new();
+        window.set_active(true);
+        let mut controller = OverlayController::new(GameId::Poe1, Os::Windows);
+        let mut handle = FakeOverlay::default();
+        handle.deny_focus = true;
+        let clock = FakeClock::default();
+        for hotkey in [false, true] {
+            let ctx = PressContext {
+                keys: &mut keys,
+                system_clipboard: &mut clipboard,
+                clock: &clock,
+                window: &mut window,
+                overlay: &mut controller,
+                overlay_handle: &mut handle,
+                cursor: Point { x: 0., y: 0. },
+                show_mods_key: "Alt",
+            };
+            if hotkey {
+                shortcuts.press(&entry("Ctrl + 1", Action::StashSearch { text: "search".into() }, true), ctx);
+            } else {
+                shortcuts.user_stash_search("search", ctx);
+            }
+            assert!(keys.steps().is_empty());
+            assert!(clipboard.written().is_empty());
+            assert!(shortcuts.clipboard.pending_restore_deadline().is_none());
+        }
     }
 
     #[test]

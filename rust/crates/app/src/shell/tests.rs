@@ -44,8 +44,9 @@ impl OverlayHandle for FakeOverlay {
         self.calls.push(OverlayCall::ClickThrough(click_through));
     }
 
-    fn focus_game(&mut self) {
+    fn focus_game(&mut self) -> bool {
         self.calls.push(OverlayCall::FocusGame);
+        true
     }
 
     fn is_visible(&self) -> bool {
