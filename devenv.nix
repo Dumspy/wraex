@@ -6,6 +6,39 @@ let
   # reference checkouts in ref/ and the golden harness stay first-class.
   # (`cargo fmt` has no --manifest-path, so run everything from rust/.)
   cargo = "cd ${root}/rust && cargo";
+  # The git hooks run from the repo root and can run outside this shell (a GUI
+  # git client, say), so they put the pinned toolchain on PATH themselves.
+  # Shared with the check: tasks below, so a hook runs exactly what CI runs.
+  inRust = script: ''
+    set -eu
+    export PATH=${config.languages.rust.toolchainPackage}/bin:$PATH
+    cd ${root}/rust
+    ${script}
+  '';
+  fmtCheck = pkgs.writeShellScript "cargo-fmt-check" (inRust ''
+    if ! cargo fmt --all --check; then
+      echo "rust/: formatting differs; run 'cargo fmt --all' in rust/ and commit the result" >&2
+      exit 1
+    fi
+  '');
+  clippyCheck = pkgs.writeShellScript "cargo-clippy" (inRust ''
+    exec cargo clippy --workspace --all-targets -- -D warnings
+  '');
+  # `rune` and every vendor patch must move together; a stale patch rev can
+  # still compile when the vendored crate's version did not change.
+  runePin = ''
+    cd ${root}
+    revs=$(grep -oE 'rev = "[0-9a-f]{40}"' rust/Cargo.toml | sort -u | wc -l)
+    if [ "$revs" -ne 1 ]; then
+      echo "rust/Cargo.toml has $revs different Rune revs (rune + [patch.crates-io])"
+      exit 1
+    fi
+    if grep -q 'patch.unused' rust/Cargo.lock; then
+      echo "rust/Cargo.lock has unused patches: bump the patch revs with rune"
+      exit 1
+    fi
+  '';
+  runePinCheck = pkgs.writeShellScript "rune-pin" runePin;
   # `act` needs Docker, and some actions expect a GITHUB_TOKEN. The `gh` one is
   # passed when it is logged in; checkout of the submodules is local, so the
   # token is optional. `set --` builds act's extra arguments, for any shell.
@@ -74,23 +107,10 @@ in
 
   # One entrypoint for local checks: `devenv tasks run check:all`.
   tasks = {
-    "check:fmt".exec = "${cargo} fmt --all --check";
-    "check:clippy".exec = "${cargo} clippy --workspace --all-targets -- -D warnings";
+    "check:fmt".exec = "${fmtCheck}";
+    "check:clippy".exec = "${clippyCheck}";
     "check:test".exec = "${cargo} test --workspace";
-    # `rune` and every vendor patch must move together; a stale patch rev can
-    # still compile when the vendored crate's version did not change.
-    "check:rune-pin".exec = ''
-      cd ${root}
-      revs=$(grep -oE 'rev = "[0-9a-f]{40}"' rust/Cargo.toml | sort -u | wc -l)
-      if [ "$revs" -ne 1 ]; then
-        echo "rust/Cargo.toml has $revs different Rune revs (rune + [patch.crates-io])"
-        exit 1
-      fi
-      if grep -q 'patch.unused' rust/Cargo.lock; then
-        echo "rust/Cargo.lock has unused patches: bump the patch revs with rune"
-        exit 1
-      fi
-    '';
+    "check:rune-pin".exec = runePin;
     # Golden fixtures (tools/golden). `golden:prepare` once per reference bump:
     # it installs the references' npm deps and builds their index files.
     "golden:prepare".exec = "cd ${root}/tools/golden && npm ci --no-audit --no-fund && npm run prepare-refs";
@@ -127,6 +147,11 @@ in
       ${actToken}
       act "$@" pull_request -W .github/workflows/ci.yml
     '';
+    "ci:fixtures:local".exec = ''
+      cd ${root}
+      ${actToken}
+      act "$@" pull_request -W .github/workflows/fixtures.yml
+    '';
     "ci:release:local".exec = ''
       cd ${root}
       ${actToken}
@@ -143,6 +168,40 @@ in
       git -C ${root}/ref/ee2 fetch --depth 1 origin "tag $EE2_TAG"
       git -C ${root}/ref/ee2 checkout --detach FETCH_HEAD
     '';
+  };
+
+  # Cheap Rust checks as git hooks: fmt on commit, the Rune pin and clippy on
+  # push. These replace CI's former fmt and rune-pin jobs, which CI keeps only
+  # as seconds-long steps in the test job because a hook can be skipped; in an
+  # emergency, `git push --no-verify` (or `git commit --no-verify`) skips them.
+  git-hooks.hooks = {
+    fmt = {
+      enable = true;
+      name = "cargo fmt";
+      entry = "${fmtCheck}";
+      files = "\\.rs$";
+      pass_filenames = false;
+      stages = [ "pre-commit" ];
+    };
+    rune-pin = {
+      enable = true;
+      name = "Rune pin";
+      entry = "${runePinCheck}";
+      pass_filenames = false;
+      always_run = true;
+      stages = [ "pre-push" ];
+    };
+    # Not the attribute name `clippy`: git-hooks.nix ships a built-in hook of
+    # that name whose defaults (and packages) assume Cargo.toml at the root.
+    rust-clippy = {
+      id = "clippy";
+      enable = true;
+      name = "cargo clippy";
+      entry = "${clippyCheck}";
+      pass_filenames = false;
+      always_run = true;
+      stages = [ "pre-push" ];
+    };
   };
 
   enterShell = ''

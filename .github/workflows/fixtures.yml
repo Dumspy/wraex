@@ -1,0 +1,107 @@
+# The fixtures check is its own workflow because a workflow-level `paths` filter costs
+# nothing when it skips, while the same filter on a job inside ci.yml would still bill
+# a whole job to decide not to run it. No status check is required on the branch rules,
+# so a skipped run blocks nothing (see ci.yml's header).
+name: Fixtures
+
+on:
+  push:
+    branches: [development, main]
+    paths:
+      # The harness itself and the fixtures it produces.
+      - "tools/golden/**"
+      - "fixtures/**"
+      # The references: a submodule bump shows up as a `ref/apt` or `ref/ee2` path.
+      - "ref/**"
+      # The crates whose tests and data indexes this job checks (wraex-poe1 and
+      # wraex-poe2 depend on wraex-core, wraex-game and, for tests, wraex-golden).
+      - "rust/crates/core/**"
+      - "rust/crates/game/**"
+      - "rust/crates/golden/**"
+      - "rust/crates/poe1/**"
+      - "rust/crates/poe2/**"
+      - "rust/Cargo.toml"
+      - "rust/Cargo.lock"
+      - "rust-toolchain.toml"
+      - ".github/workflows/fixtures.yml"
+  pull_request:
+    # ready_for_review is what starts this on a draft (see the `if:` on the job).
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      # The harness itself and the fixtures it produces.
+      - "tools/golden/**"
+      - "fixtures/**"
+      # The references: a submodule bump shows up as a `ref/apt` or `ref/ee2` path.
+      - "ref/**"
+      # The crates whose tests and data indexes this job checks (wraex-poe1 and
+      # wraex-poe2 depend on wraex-core, wraex-game and, for tests, wraex-golden).
+      - "rust/crates/core/**"
+      - "rust/crates/game/**"
+      - "rust/crates/golden/**"
+      - "rust/crates/poe1/**"
+      - "rust/crates/poe2/**"
+      - "rust/Cargo.toml"
+      - "rust/Cargo.lock"
+      - "rust-toolchain.toml"
+      - ".github/workflows/fixtures.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fixtures-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # Debuginfo is most of rust-cache's ~1.8 GB and slows linking; the cost is line
+  # numbers in CI backtraces. `test` inherits `dev`, and rust-cache already sets
+  # CARGO_INCREMENTAL=0.
+  CARGO_PROFILE_DEV_DEBUG: "0"
+
+jobs:
+  # Regenerates the fixtures from the pinned TypeScript references and fails on
+  # any diff: committed fixtures must be exactly what the references produce.
+  fixtures:
+    name: fixtures
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Draft pull requests are pushed to repeatedly, so skip them.
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: actions/setup-node@v7
+        with:
+          # EE2's CI version.
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            tools/golden/package-lock.json
+            ref/apt/renderer/package-lock.json
+            ref/ee2/renderer/package-lock.json
+      - run: npm ci --no-audit --no-fund
+        working-directory: tools/golden
+      - run: npm run prepare-refs
+        working-directory: tools/golden
+      - run: npm run regen
+        working-directory: tools/golden
+      # The Rust data layer builds its indexes in memory; check they hold the same
+      # rows as the `*.index.bin` files prepare-refs just generated.
+      - run: rustup toolchain install
+      # Dependencies build at opt-level 2 (rust/Cargo.toml), so keep them cached.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+          save-if: ${{ github.ref == 'refs/heads/development' }}
+      - name: Rust indexes match the generated index files
+        run: cargo test --locked -p wraex-poe1 -p wraex-poe2 -- --ignored
+        working-directory: rust
+      - name: Fixtures match the references
+        run: |
+          git status --short -- fixtures
+          git diff --quiet -- fixtures
+          test -z "$(git ls-files --others --exclude-standard -- fixtures)"
+      - name: References left untouched
+        run: test -z "$(git submodule foreach --quiet git status --porcelain)"
