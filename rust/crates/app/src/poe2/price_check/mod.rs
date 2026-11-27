@@ -219,7 +219,7 @@ impl PriceCheck {
 
     /// [`PriceCheck::with_mode`] in the league the app selected from the trade site's list.
     pub fn with_mode_league(text: &str, mode: Mode, league: &str) -> Self {
-        Self::with_client(text, mode, league, Self::new_client(mode), &serde_json::Value::Null)
+        Self::with_client(text, mode, league, Self::new_client(mode), &serde_json::Value::Null, &[])
     }
 
     pub(crate) fn new_client(mode: Mode) -> crate::trade::Shared {
@@ -232,23 +232,30 @@ impl PriceCheck {
         league: &str,
         client: crate::trade::Shared,
         config: &serde_json::Value,
+        overviews: &[(&'static str, String)],
     ) -> Self {
         // Item art follows the window's switch: a live window fetches from the CDN, a
         // replay reads the screenshot harness's recordings.
         crate::ui::art::set_mode(mode);
         let data = data(mode);
         let item = parse_clipboard(data, text).map_err(|fail| ParseError::Rejected { key: fail.0 });
-        Self::build(text.to_owned(), item, mode, league, client, config)
+        Self::build(text.to_owned(), item, mode, league, client, config, overviews)
     }
 
     /// `MAIN->CLIENT::item-text` with the item already parsed: what the item search sends when
     /// one of its picked entries is pressed (`WidgetItemSearch.vue`'s `starredItemClick`, which
     /// builds a `createVirtualItem` and `Host.selfDispatch`es it). `parseClipboard` is skipped;
     /// the text is the virtual item's own `rawText`.
-    pub(crate) fn with_item(item: Item, mode: Mode, client: crate::trade::Shared, config: &serde_json::Value) -> Self {
+    pub(crate) fn with_item(
+        item: Item,
+        mode: Mode,
+        league: &str,
+        client: crate::trade::Shared,
+        config: &serde_json::Value,
+    ) -> Self {
         crate::ui::art::set_mode(mode);
         let text = item.raw_text.clone();
-        Self::build(text, Ok(item), mode, DEFAULT_LEAGUE, client, config)
+        Self::build(text, Ok(item), mode, league, client, config, &[])
     }
 
     /// A window with no item: the live app's idle state before a hotkey brings one. Nothing is
@@ -262,6 +269,7 @@ impl PriceCheck {
             league,
             Self::new_client(mode),
             &serde_json::Value::Null,
+            &[],
         )
     }
 
@@ -273,6 +281,7 @@ impl PriceCheck {
         league: &str,
         client: crate::trade::Shared,
         config: &serde_json::Value,
+        overviews: &[(&'static str, String)],
     ) -> Self {
         let widget = crate::settings::widget(config, "price-check").unwrap_or(&serde_json::Value::Null);
         let mut options = preset_options_for(league);
@@ -320,6 +329,7 @@ impl PriceCheck {
             filters.trade.listing_type = "online".to_owned();
         }
         check.trade.latency = widget["apiLatencySeconds"].as_f64().unwrap_or(API_LATENCY_SECONDS);
+        check.apply_price_overviews(overviews);
         check.sync_inputs();
         // `CheckedItem.vue`'s `watch(..., { immediate: true })` starts the search the
         // reference makes by itself (a unique, a trial coin, ...).
@@ -351,12 +361,22 @@ impl PriceCheck {
         let overviews: Vec<(&str, &str)> = overviews.iter().map(|(kind, body)| (*kind, body.as_str())).collect();
         let now = crate::trade::now(self.mode);
         self.prices.loaded(data(self.mode), &overviews, now);
+        self.normalize_rows();
+    }
+
+    fn normalize_rows(&mut self) {
+        for row in &mut self.trade.rows {
+            row.normalize_price(data(self.mode), &mut self.prices);
+        }
     }
 
     /// `AppSpec::poll`: applies a landed search or price answer and the blur rule; true
     /// when something changed.
     pub fn poll(&mut self) -> bool {
         let landed = self.trade.poll();
+        if landed && self.prices_requested {
+            self.normalize_rows();
+        }
         let priced = self.poll_prices();
         let blurred = self.sync_input_focus();
         landed || priced || blurred
@@ -379,12 +399,7 @@ impl PriceCheck {
             return false;
         };
         match answer {
-            Ok(overviews) => {
-                let overviews: Vec<(&str, &str)> =
-                    overviews.iter().map(|(kind, body)| (*kind, body.as_str())).collect();
-                let now = crate::trade::now(self.mode);
-                self.prices.loaded(data(self.mode), &overviews, now);
-            }
+            Ok(overviews) => self.apply_price_overviews(&overviews),
             Err(error) => wraex_platform::log!("wraex: fetching poe.ninja prices failed: {error}"),
         }
         true
@@ -495,7 +510,7 @@ impl PriceCheck {
                 self.trade.lazy_request = None;
                 let request =
                     create_trade_request(data(self.mode), &filters, &stats, &item).map_err(|error| error.to_string());
-                trade::Query::Trade { league, request, prices: self.prices.clone() }
+                trade::Query::Trade { league, request: request.map(Box::new), prices: self.prices.clone() }
             }
             Api::Bulk => {
                 // `CheckedItem.vue` forces online listings before a bulk search.
@@ -503,9 +518,8 @@ impl PriceCheck {
                 filters.trade.listing_type = "online".to_owned();
                 let ref_name = item.info().ref_name.clone().unwrap_or_default();
                 let request = create_bulk_request(&filters, &item, optimistic_have(&ref_name));
-                self.trade.lazy_request =
-                    Some(trade::LazyBulk { league: league.clone(), filters, item, prices: self.prices.clone() });
-                trade::Query::Bulk { league, request, prices: self.prices.clone() }
+                self.trade.lazy_request = Some(trade::LazyBulk { league: league.clone(), filters, item });
+                trade::Query::Bulk { league, request }
             }
         };
         self.trade.begin(query);

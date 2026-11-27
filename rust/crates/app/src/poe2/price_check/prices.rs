@@ -37,15 +37,21 @@ pub fn load(mode: Mode) -> Prices {
 /// worker that `poll` collects. (Upstream refreshes every 31 minutes while a price check is
 /// in use; this window loads once when it opens.)
 pub fn fetch(league: &wraex_core::leagues::SelectedLeague) -> Result<Vec<(&'static str, String)>, String> {
-    use wraex_core::trade::api::Transport;
-
     if !league.is_popular || league.realm != "pc-ggg" {
         return Ok(Vec::new());
     }
+    type Overviews = Vec<(&'static str, String)>;
+    static CACHE: std::sync::LazyLock<crate::market_cache::MarketCache<Overviews>> =
+        std::sync::LazyLock::new(Default::default);
+    CACHE.get(&league.id, wraex_poe2::prices::UPDATE_INTERVAL_MS, || download(&league.id))
+}
+
+fn download(league: &str) -> Result<Vec<(&'static str, String)>, String> {
+    use wraex_core::trade::api::Transport;
     let transport = crate::trade::live_transport();
     let mut bodies = Vec::with_capacity(NINJA_TYPES.len());
     for (kind, _, _) in NINJA_TYPES {
-        let response = transport.send(&overview_request(&league.id, kind))?;
+        let response = transport.send(&overview_request(league, kind))?;
         if response.status != 200 {
             return Err(format!("poe.ninja's {kind} overview answered {}", response.status));
         }
