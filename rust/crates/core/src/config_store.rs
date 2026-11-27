@@ -28,7 +28,7 @@ pub struct ConfigStore {
 }
 
 impl ConfigStore {
-    pub fn new(path: PathBuf) -> Self {
+    pub const fn new(path: PathBuf) -> Self {
         Self { path, is_tmp_file: false }
     }
 
@@ -59,7 +59,7 @@ impl ConfigStore {
         if let Some(dir) = self.path.parent() {
             std::fs::create_dir_all(dir)?;
         }
-        let mut file = tempfile::NamedTempFile::new_in(self.path.parent().unwrap_or(Path::new(".")))?;
+        let mut file = tempfile::NamedTempFile::new_in(self.path.parent().unwrap_or_else(|| Path::new(".")))?;
         file.write_all(contents.as_bytes())?;
         file.as_file().sync_all()?;
         file.persist(&self.path)?;

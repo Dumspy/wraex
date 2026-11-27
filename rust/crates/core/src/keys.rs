@@ -1,7 +1,8 @@
-//! `ipc/KeyToCode.ts`, identical in both references: key names, Windows
-//! virtual-key codes (which the game's config uses), and hotkey strings
-//! (`Ctrl + Shift + K`). `KeyToElectron` maps to Electron accelerators and is
-//! not needed here.
+//! `ipc/KeyToCode.ts`, identical in both references.
+//!
+//! Key names, Windows virtual-key codes (which the game's config uses), and hotkey
+//! strings (`Ctrl + Shift + K`). `KeyToElectron` maps to Electron accelerators and
+//! is not needed here.
 
 /// `KeyToCode`, in JavaScript's iteration order (integer keys first).
 pub const KEY_TO_CODE: [(&str, u32); 105] = [
@@ -122,10 +123,12 @@ pub fn code_to_key(code: &str) -> Option<&'static str> {
     KEY_TO_CODE.iter().find(|(_, c)| c.to_string() == code).map(|(k, _)| *k)
 }
 
-/// [`KEY_TO_CODE`]'s reverse for a Windows virtual-key code, as the low-level keyboard hook
-/// reports it (`KBDLLHOOKSTRUCT.vkCode`). The left/right modifier variants (`VK_LCONTROL` 0xA2,
-/// `VK_RCONTROL` 0xA3, ...) map to the plain name: they are the same key as far as a hotkey or
-/// `uiohook`'s events are concerned, and `KeyToCode` only has the plain one.
+/// [`KEY_TO_CODE`]'s reverse for a Windows virtual-key code.
+///
+/// The code is what the low-level keyboard hook reports
+/// (`KBDLLHOOKSTRUCT.vkCode`). The left/right modifier variants (`VK_LCONTROL` 0xA2,
+/// `VK_RCONTROL` 0xA3, ...) map to the plain name: they are the same key as far as a
+/// hotkey or `uiohook`'s events are concerned, and `KeyToCode` only has the plain one.
 pub fn vk_to_key(code: u32) -> Option<&'static str> {
     match code {
         0xA0 | 0xA1 => return Some("Shift"), // VK_LSHIFT, VK_RSHIFT
@@ -142,6 +145,10 @@ pub fn is_mod_key(key: &str) -> bool {
 }
 
 /// `hotkeyToString`: modifiers first, in a fixed order, then the keys.
+#[expect(
+    clippy::fn_params_excessive_bools,
+    reason = "line-for-line port of upstream `hotkeyToString(keys, ctrl, shift, alt)` (ipc/KeyToCode.ts); its callers mirror the JS call sites"
+)]
 pub fn hotkey_to_string(keys: &[&str], mut ctrl: bool, mut shift: bool, mut alt: bool) -> String {
     ctrl |= keys.contains(&"Ctrl");
     shift |= keys.contains(&"Shift");

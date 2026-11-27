@@ -1,5 +1,6 @@
-//! The update check: upstream's `AppUpdater.ts` runs electron-updater, which
-//! downloads and installs the new version. Wraex is notify-only for now: it asks
+//! The update check: upstream's `AppUpdater.ts` runs electron-updater.
+//!
+//! Upstream downloads and installs the new version. Wraex is notify-only for now: it asks
 //! GitHub for this repository's latest release and reports whether it is newer
 //! (self-update is Dumspy/wraex#3).
 //!
@@ -28,7 +29,7 @@ pub enum NoDownloadReason {
 }
 
 /// `UpdateInfo` (`ipc/types.ts`): the state of the update check.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "state", rename_all = "kebab-case")]
 pub enum UpdateInfo {
     Initial,
@@ -110,9 +111,8 @@ fn is_newer(latest: &str, current: &str) -> Option<bool> {
         Ordering::Greater => true,
         Ordering::Less => false,
         Ordering::Equal => match (latest.prerelease, current.prerelease) {
-            (None, None) => false,
+            (None | Some(_), None) => false,
             (None, Some(_)) => true,
-            (Some(_), None) => false,
             (Some(latest), Some(current)) => latest > current,
         },
     })
@@ -161,6 +161,7 @@ pub fn check(transport: &impl Transport, now: Millis, no_download_reason: Option
 }
 
 #[cfg(test)]
+#[expect(clippy::disallowed_macros, reason = "expected JSON written as literals")]
 mod tests {
     use std::cell::RefCell;
 
@@ -298,7 +299,7 @@ mod tests {
 
     #[test]
     fn no_download_reason_follows_the_flag() {
-        let args = |args: &[&str]| args.iter().map(|arg| arg.to_string()).collect::<Vec<_>>();
+        let args = |args: &[&str]| args.iter().map(std::string::ToString::to_string).collect::<Vec<_>>();
         assert_eq!(no_download_reason(&args(&[])), Some(NoDownloadReason::NotSupported));
         assert_eq!(no_download_reason(&args(&["wraex", "--no-updates"])), Some(NoDownloadReason::DisabledByFlag));
     }

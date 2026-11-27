@@ -36,39 +36,42 @@ impl Ndjson {
     pub fn lines(&self) -> impl Iterator<Item = (usize, &str)> {
         let mut start = 0;
         std::iter::from_fn(move || {
-            if start == self.text.len() {
-                return None;
-            }
-            let end = start + self.text[start..].find('\n').expect("ends with a newline");
-            let line = (start, &self.text[start..end]);
-            start = end + 1;
+            let rest = self.text.get(start..)?;
+            let end = rest.find('\n')?;
+            let line = (start, rest.get(..end).unwrap_or_default());
+            start = start.saturating_add(end).saturating_add(1);
             Some(line)
         })
     }
 
     /// The line starting at `start` (`ndjson.slice(start, ndjson.indexOf('\n', start))`).
     pub fn line_at(&self, start: usize) -> &str {
-        let rest = &self.text[start..];
-        &rest[..rest.find('\n').expect("ends with a newline")]
+        // `new` guarantees a newline at the end of every line.
+        let rest = self.text.get(start..).unwrap_or_default();
+        let end = rest.find('\n').unwrap_or(rest.len());
+        rest.get(..end).unwrap_or_default()
     }
 
     /// `ndjsonFindLines(ndjson)(includes, andIncludes)`: lines whose raw text
     /// contains `includes` and every string in `and_includes`.
     ///
     /// Matches against the raw text, so the search strings depend on how the file
-    /// is formatted (PoE2's ndjson has spaces after `:`, PoE1's does not). After a
+    /// is formatted (PoE2's `ndjson` has spaces after `:`, PoE1's does not). After a
     /// match the search resumes on the next line.
     pub fn find_lines<'a>(&'a self, includes: &'a str, and_includes: &'a [&'a str]) -> impl Iterator<Item = &'a str> {
         let text = self.text.as_str();
         let mut start = 0;
         std::iter::from_fn(move || {
             while start != text.len() {
-                let match_pos = start + text[start..].find(includes)?;
+                let rest = text.get(start..)?;
+                let match_pos = start.saturating_add(rest.find(includes)?);
                 // Works for the first line too (no newline before it).
-                let line_start = text[..match_pos].rfind('\n').map_or(0, |i| i + 1);
-                let end = match_pos + text[match_pos..].find('\n').expect("ends with a newline");
-                let line = &text[line_start..end];
-                start = end + 1;
+                let line_start =
+                    text.get(..match_pos).and_then(|head| head.rfind('\n')).map_or(0, |i| i.saturating_add(1));
+                // Every line ends in a newline (`Ndjson::new`).
+                let end = match_pos.saturating_add(text.get(match_pos..)?.find('\n')?);
+                let line = text.get(line_start..end).unwrap_or_default();
+                start = end.saturating_add(1);
                 if and_includes.iter().all(|s| line.contains(s)) {
                     return Some(line);
                 }
@@ -80,7 +83,7 @@ impl Ndjson {
     fn parse_line<'a, T: Deserialize<'a>>(&self, path: &str, start: usize, line: &'a str) -> Result<T, DataError> {
         serde_json::from_str(line).map_err(|source| DataError::Json {
             path: path.to_owned(),
-            line: self.text[..start].matches('\n').count() + 1,
+            line: self.text.get(..start).unwrap_or_default().matches('\n').count().saturating_add(1),
             source,
         })
     }
@@ -111,12 +114,21 @@ impl HashIndex {
         let mut utf16 = 0u32;
         for (start, line) in ndjson.lines() {
             line_starts.insert(utf16, offset(start));
-            utf16 += line.encode_utf16().count() as u32 + 1;
+            let units = u32::try_from(line.encode_utf16().count()).unwrap_or(u32::MAX);
+            utf16 = utf16.saturating_add(units).saturating_add(1);
         }
-        let word = |at: usize| u32::from_le_bytes(bin[at..at + 4].try_into().unwrap());
-        let rows = (0..bin.len() / 8)
-            .map(|i| Some((word(i * 8), *line_starts.get(&word(i * 8 + 4))?)))
-            .collect::<Option<Vec<_>>>()?;
+        let word = |at: usize| -> Option<u32> {
+            let end = at.checked_add(4)?;
+            let bytes: [u8; 4] = bin.get(at..end)?.try_into().ok()?;
+            Some(u32::from_le_bytes(bytes))
+        };
+        let mut rows = Vec::new();
+        for i in 0..bin.len().checked_div(8)? {
+            let at = i.saturating_mul(8);
+            let hash = word(at)?;
+            let start = word(at.saturating_add(4))?;
+            rows.push((hash, *line_starts.get(&start)?));
+        }
         Some(Self { rows })
     }
 
@@ -127,16 +139,16 @@ impl HashIndex {
     /// `dataBinarySearch`, then the row's start offset. With duplicate hashes this
     /// returns whichever row the bisection lands on, exactly like the reference.
     pub fn find(&self, hash: u32) -> Option<usize> {
-        let (mut left, mut right) = (0i64, self.rows.len() as i64 - 1);
+        let len = i64::try_from(self.rows.len()).unwrap_or(i64::MAX);
+        let (mut left, mut right) = (0_i64, len.saturating_sub(1));
         while left <= right {
-            let mid = (left + right) / 2;
-            let (value, start) = self.rows[mid as usize];
-            if value < hash {
-                left = mid + 1;
-            } else if value > hash {
-                right = mid - 1;
-            } else {
-                return Some(start as usize);
+            let mid = i64::midpoint(left, right);
+            // `mid` is inside the table.
+            let (value, start) = *self.rows.get(usize::try_from(mid).unwrap_or(0))?;
+            match value.cmp(&hash) {
+                std::cmp::Ordering::Less => left = mid.saturating_add(1),
+                std::cmp::Ordering::Greater => right = mid.saturating_sub(1),
+                std::cmp::Ordering::Equal => return Some(usize::try_from(start).unwrap_or(usize::MAX)),
             }
         }
         None
@@ -153,7 +165,8 @@ pub fn js_string(value: &Option<String>) -> &str {
 }
 
 fn offset(start: usize) -> u32 {
-    u32::try_from(start).expect("data files are smaller than 4 GiB")
+    // Data files are smaller than 4 GiB.
+    u32::try_from(start).unwrap_or(u32::MAX)
 }
 
 /// The fields of an `items.ndjson` line that the indexes and `commonFind` use.
@@ -199,15 +212,15 @@ impl ItemTable {
         Ok(Self { path: path.to_owned(), ndjson, by_name: HashIndex::new(by_name), by_ref: HashIndex::new(by_ref) })
     }
 
-    pub fn ndjson(&self) -> &Ndjson {
+    pub const fn ndjson(&self) -> &Ndjson {
         &self.ndjson
     }
 
-    pub fn name_index(&self) -> &HashIndex {
+    pub const fn name_index(&self) -> &HashIndex {
         &self.by_name
     }
 
-    pub fn ref_index(&self) -> &HashIndex {
+    pub const fn ref_index(&self) -> &HashIndex {
         &self.by_ref
     }
 
@@ -229,8 +242,8 @@ impl ItemTable {
         let mut out = Vec::new();
         while start != self.ndjson.text.len() {
             let line = self.ndjson.line_at(start);
-            let record: ItemHead =
-                self.ndjson.parse_line(&self.path, start, line).expect("every line parsed when the table was built");
+            // Every line parsed when the table was built.
+            let record: ItemHead = self.ndjson.parse_line(&self.path, start, line).ok()?;
             let prop = if by_ref { &record.ref_name } else { &record.name };
             if record.namespace != namespace || prop.as_deref() != Some(name) {
                 break;
@@ -239,7 +252,7 @@ impl ItemTable {
             if !js_truthy(&record.disc) && !js_truthy(&record.unique) {
                 break;
             }
-            start += line.len() + 1;
+            start = start.saturating_add(line.len()).saturating_add(1);
         }
         Some(out)
     }
@@ -287,15 +300,15 @@ impl StatTable {
         Ok(Self { ndjson, by_ref: HashIndex::new(by_ref), by_matcher: HashIndex::new(by_matcher) })
     }
 
-    pub fn ndjson(&self) -> &Ndjson {
+    pub const fn ndjson(&self) -> &Ndjson {
         &self.ndjson
     }
 
-    pub fn ref_index(&self) -> &HashIndex {
+    pub const fn ref_index(&self) -> &HashIndex {
         &self.by_ref
     }
 
-    pub fn matcher_index(&self) -> &HashIndex {
+    pub const fn matcher_index(&self) -> &HashIndex {
         &self.by_matcher
     }
 
@@ -371,10 +384,8 @@ mod tests {
     #[test]
     fn find_lines_matches_raw_text_once_per_line() {
         let items = items();
-        let found: Vec<_> = items.find_lines(r#""Beta""#, &[]).collect();
-        assert_eq!(found.len(), 3);
-        let found: Vec<_> = items.find_lines(r#""Beta""#, &["UNIQUE", "Gamma"]).collect();
-        assert_eq!(found.len(), 1);
+        assert_eq!(items.find_lines(r#""Beta""#, &[]).count(), 3);
+        assert_eq!(items.find_lines(r#""Beta""#, &["UNIQUE", "Gamma"]).count(), 1);
         // The first line has no newline before it.
         assert_eq!(items.find_lines("Alpha", &[]).next().unwrap(), items.ndjson().lines().next().unwrap().1);
         assert_eq!(items.find_lines("", &[]).count(), 6);

@@ -1,6 +1,8 @@
 //! The game's own files: `main/src/host-files/{GameConfig,GameLogWatcher,utils}.ts`
-//! of both references, which differ only in paths and EE2's extras (log reading
-//! can be switched off and re-read from the start).
+//! of both references.
+//!
+//! They differ only in paths and EE2's extras (log reading can be switched off
+//! and re-read from the start).
 //!
 //! - [`guess_file_location`]: exactly one readable candidate, else none
 //!   (standalone and Steam both installed is ambiguous).
@@ -34,13 +36,13 @@ pub enum Os {
 }
 
 impl Os {
-    pub const fn current() -> Option<Os> {
+    pub const fn current() -> Option<Self> {
         if cfg!(windows) {
-            Some(Os::Windows)
+            Some(Self::Windows)
         } else if cfg!(target_os = "linux") {
-            Some(Os::Linux)
+            Some(Self::Linux)
         } else if cfg!(target_os = "macos") {
-            Some(Os::MacOs)
+            Some(Self::MacOs)
         } else {
             None
         }
@@ -181,7 +183,7 @@ impl LogWatcher {
     }
 
     /// `re-parse-log` (EE2): read the whole file again on the next poll.
-    pub fn reread_from_start(&mut self) {
+    pub const fn reread_from_start(&mut self) {
         self.offset = 0;
     }
 
@@ -197,11 +199,13 @@ impl LogWatcher {
             if read == 0 {
                 break;
             }
-            let text = String::from_utf8_lossy(&buf[..read]);
+            let Some(chunk) = buf.get(..read) else { break };
+            let text = String::from_utf8_lossy(chunk);
             let lines: Vec<String> =
                 text.split('\n').map(|l| crate::js::trim(l).to_owned()).filter(|l| !l.is_empty()).collect();
             batches.push(lines);
-            self.offset += read as u64;
+            let read = u64::try_from(read).unwrap_or(u64::MAX);
+            self.offset = self.offset.saturating_add(read);
         }
         Ok(batches)
     }
@@ -254,7 +258,7 @@ mod tests {
         .unwrap();
         assert_eq!(show_mods_key(&ini), Some("Alt + D".into()));
         assert_eq!(guess_file_location(&[ini.clone(), dir.join("missing")]), Some(ini.clone()));
-        assert_eq!(guess_file_location(&[ini.clone(), ini.clone()]), None);
+        assert_eq!(guess_file_location(&[ini.clone(), ini]), None);
         std::fs::remove_dir_all(&dir).unwrap();
     }
 
@@ -265,7 +269,8 @@ mod tests {
         let log = dir.join("Client.txt");
         std::fs::write(&log, "old line\n").unwrap();
         let mut watcher = LogWatcher::open(&log).unwrap();
-        assert!(watcher.poll().unwrap().is_empty());
+        let batches = watcher.poll().unwrap();
+        assert_eq!(batches, Vec::<Vec<String>>::new());
 
         let mut f = std::fs::OpenOptions::new().append(true).open(&log).unwrap();
         writeln!(f, "2026/11/24 10:00:00 1 [INFO Client 1] : You have entered Hideout.\r\n  ").unwrap();

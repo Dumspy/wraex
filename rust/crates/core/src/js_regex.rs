@@ -62,8 +62,22 @@ impl<'t> Captures<'t> {
 
     /// `match[0]`
     pub fn whole(&self) -> &'t str {
-        self.inner.get(0).expect("group 0 always matches").as_str()
+        self.matched().as_str()
     }
+
+    /// Group 0 is the whole match, so it always participates.
+    #[expect(clippy::expect_used, reason = "group 0 always participates in a match")]
+    fn matched(&self) -> fancy_regex::Match<'t> {
+        self.inner.get(0).expect("group 0 always matches")
+    }
+}
+
+/// `fancy-regex`'s only runtime error is its backtrack limit, which the reference's
+/// engine has no equivalent of: it stays a hard failure rather than silently
+/// changing a match.
+#[expect(clippy::expect_used, reason = "a backtrack-limit error must fail loudly, as before")]
+fn limit<T>(result: Result<T, fancy_regex::Error>) -> T {
+    result.expect("regex backtrack limit")
 }
 
 impl Regex {
@@ -95,12 +109,12 @@ impl Regex {
 
     /// `re.test(text)` (for a regex without the `g` flag).
     pub fn is_match(&self, text: &str) -> bool {
-        self.inner.is_match(text).expect("regex backtrack limit")
+        limit(self.inner.is_match(text))
     }
 
     /// `re.exec(text)` / `text.match(re)` (without the `g` flag).
     pub fn captures<'t>(&self, text: &'t str) -> Option<Captures<'t>> {
-        self.inner.captures(text).expect("regex backtrack limit").map(|inner| Captures { inner })
+        limit(self.inner.captures(text)).map(|inner| Captures { inner })
     }
 
     /// `text.replace(re, fn)` with the `g` flag (`replaceAll`): every
@@ -109,25 +123,32 @@ impl Regex {
         let mut out = String::with_capacity(text.len());
         let mut last = 0;
         for caps in self.inner.captures_iter(text) {
-            let caps = Captures { inner: caps.expect("regex backtrack limit") };
-            let m = caps.inner.get(0).unwrap();
-            out.push_str(&text[last..m.start()]);
+            let caps = Captures { inner: limit(caps) };
+            let m = caps.matched();
+            // Both offsets are match boundaries.
+            out.push_str(text.get(last..m.start()).unwrap_or_default());
             out.push_str(&replace(&caps));
             last = m.end();
         }
-        out.push_str(&text[last..]);
+        out.push_str(text.get(last..).unwrap_or_default());
         out
     }
 
     /// `text.replace(re, fn)` without the `g` flag: the first match only.
     pub fn replace_first(&self, text: &str, replace: impl FnOnce(&Captures<'_>) -> String) -> String {
-        match self.captures(text) {
-            None => text.to_owned(),
-            Some(caps) => {
-                let m = caps.inner.get(0).unwrap();
-                format!("{}{}{}", &text[..m.start()], replace(&caps), &text[m.end()..])
-            }
-        }
+        self.captures(text).map_or_else(
+            || text.to_owned(),
+            |caps| {
+                let m = caps.matched();
+                // Both offsets are match boundaries.
+                format!(
+                    "{}{}{}",
+                    text.get(..m.start()).unwrap_or_default(),
+                    replace(&caps),
+                    text.get(m.end()..).unwrap_or_default()
+                )
+            },
+        )
     }
 }
 
@@ -138,69 +159,105 @@ fn is_meta(c: char) -> bool {
 }
 
 fn hex_escape(chars: &mut std::iter::Peekable<std::str::Chars<'_>>, len: usize) -> Option<u32> {
-    let digits: String = (0..len).map_while(|_| chars.next_if(|c| c.is_ascii_hexdigit())).collect();
-    (digits.len() == len).then(|| u32::from_str_radix(&digits, 16).unwrap())
+    let digits: String = (0..len).map_while(|_| chars.next_if(char::is_ascii_hexdigit)).collect();
+    if digits.len() != len {
+        return None;
+    }
+    u32::from_str_radix(&digits, 16).ok()
+}
+
+/// Appends `args`; a `String` never refuses them.
+fn push_fmt(out: &mut String, args: fmt::Arguments<'_>) {
+    fmt::Write::write_fmt(out, args).unwrap_or_default();
+}
+
+/// Pushes `[class]`, or `[^class]` when `negated`.
+fn push_class(out: &mut String, class: &str, negated: bool) {
+    out.push('[');
+    if negated {
+        out.push('^');
+    }
+    out.push_str(class);
+    out.push(']');
+}
+
+/// Pushes `\x{...}` with `code` in upper-case hex, `regex-syntax`'s notation.
+fn push_hex_escape(out: &mut String, code: u32) {
+    out.push_str(r"\x{");
+    push_fmt(out, format_args!("{code:X}"));
+    out.push('}');
+}
+
+/// Expands the escape `\e` (`in_class` when a `[...]` body is being written).
+fn push_escape(
+    e: char,
+    chars: &mut std::iter::Peekable<std::str::Chars<'_>>,
+    in_class: bool,
+    out: &mut String,
+) -> Result<(), String> {
+    match e {
+        'd' if in_class => out.push_str("0-9"),
+        'd' => out.push_str("[0-9]"),
+        'w' if in_class => out.push_str(WORD_CLASS),
+        'w' => push_class(out, WORD_CLASS, false),
+        's' if in_class => out.push_str(SPACE_CLASS),
+        's' => push_class(out, SPACE_CLASS, false),
+        'D' => out.push_str("[^0-9]"),
+        'W' => push_class(out, WORD_CLASS, true),
+        'S' => push_class(out, SPACE_CLASS, true),
+        'b' | 'B' if in_class => return Err(format!("`\\{e}` in a class")),
+        // Unicode word boundaries in Rust; identical for the texts the
+        // references match (no non-ASCII word characters next to them).
+        'b' | 'B' => {
+            out.push('\\');
+            out.push(e);
+        }
+        'n' | 'r' | 't' | 'f' | 'v' => {
+            let code = match e {
+                'n' => 0x0a,
+                'r' => 0x0d,
+                't' => 0x09,
+                'f' => 0x0c,
+                _ => 0x0b,
+            };
+            push_hex_escape(out, code);
+        }
+        '0' if !chars.peek().is_some_and(char::is_ascii_digit) => out.push_str(r"\x{0}"),
+        'x' => {
+            let code = hex_escape(chars, 2).ok_or("bad \\x escape")?;
+            push_hex_escape(out, code);
+        }
+        'u' => {
+            let code = hex_escape(chars, 4).ok_or("bad \\u escape")?;
+            push_hex_escape(out, code);
+        }
+        '1'..='9' if !in_class => {
+            out.push('\\');
+            out.push(e);
+            while let Some(d) = chars.next_if(char::is_ascii_digit) {
+                out.push(d);
+            }
+        }
+        'k' | 'c' | 'p' | 'P' => return Err(format!("unsupported escape `\\{e}`")),
+        c if c.is_ascii_alphanumeric() => return Err(format!("unsupported escape `\\{c}`")),
+        c if is_meta(c) => {
+            out.push('\\');
+            out.push(c);
+        }
+        c => out.push(c),
+    }
+    Ok(())
 }
 
 fn translate(source: &str, dot_all: bool) -> Result<String, String> {
-    let mut out = String::with_capacity(source.len() * 2);
+    let mut out = String::with_capacity(source.len().saturating_mul(2));
     let mut chars = source.chars().peekable();
     let mut in_class = false;
     while let Some(c) = chars.next() {
         match c {
             '\\' => {
                 let e = chars.next().ok_or("trailing backslash")?;
-                match e {
-                    'd' if in_class => out.push_str("0-9"),
-                    'd' => out.push_str("[0-9]"),
-                    'w' if in_class => out.push_str(WORD_CLASS),
-                    'w' => out.push_str(&format!("[{WORD_CLASS}]")),
-                    's' if in_class => out.push_str(SPACE_CLASS),
-                    's' => out.push_str(&format!("[{SPACE_CLASS}]")),
-                    'D' => out.push_str("[^0-9]"),
-                    'W' => out.push_str(&format!("[^{WORD_CLASS}]")),
-                    'S' => out.push_str(&format!("[^{SPACE_CLASS}]")),
-                    'b' | 'B' if in_class => return Err(format!("`\\{e}` in a class")),
-                    // Unicode word boundaries in Rust; identical for the texts the
-                    // references match (no non-ASCII word characters next to them).
-                    'b' | 'B' => {
-                        out.push('\\');
-                        out.push(e);
-                    }
-                    'n' | 'r' | 't' | 'f' | 'v' => {
-                        let code = match e {
-                            'n' => 0x0a,
-                            'r' => 0x0d,
-                            't' => 0x09,
-                            'f' => 0x0c,
-                            _ => 0x0b,
-                        };
-                        out.push_str(&format!("\\x{{{code:X}}}"));
-                    }
-                    '0' if !chars.peek().is_some_and(char::is_ascii_digit) => out.push_str(r"\x{0}"),
-                    'x' => {
-                        let code = hex_escape(&mut chars, 2).ok_or("bad \\x escape")?;
-                        out.push_str(&format!("\\x{{{code:X}}}"));
-                    }
-                    'u' => {
-                        let code = hex_escape(&mut chars, 4).ok_or("bad \\u escape")?;
-                        out.push_str(&format!("\\x{{{code:X}}}"));
-                    }
-                    '1'..='9' if !in_class => {
-                        out.push('\\');
-                        out.push(e);
-                        while let Some(d) = chars.next_if(char::is_ascii_digit) {
-                            out.push(d);
-                        }
-                    }
-                    'k' | 'c' | 'p' | 'P' => return Err(format!("unsupported escape `\\{e}`")),
-                    c if c.is_ascii_alphanumeric() => return Err(format!("unsupported escape `\\{c}`")),
-                    c if is_meta(c) => {
-                        out.push('\\');
-                        out.push(c);
-                    }
-                    c => out.push(c),
-                }
+                push_escape(e, &mut chars, in_class, &mut out)?;
             }
             '[' if in_class => out.push_str(r"\["),
             '[' => {
@@ -225,7 +282,10 @@ fn translate(source: &str, dot_all: bool) -> Result<String, String> {
             '.' if !in_class => out.push_str(if dot_all { r"[\x{0}-\x{10FFFF}]" } else { DOT }),
             '(' if !in_class && chars.peek() == Some(&'?') => {
                 out.push('(');
-                out.push(chars.next().unwrap());
+                // The `?` that the guard peeked.
+                if let Some(question) = chars.next() {
+                    out.push(question);
+                }
                 // `(?<name>` (not `(?<=` / `(?<!`) becomes `(?P<name>`.
                 if chars.peek() == Some(&'<') {
                     let mut ahead = chars.clone();
@@ -261,9 +321,9 @@ fn translate(source: &str, dot_all: bool) -> Result<String, String> {
 
 /// Whether the text after a `{` is `n}`, `n,}` or `n,m}`.
 fn is_quantifier(mut rest: std::iter::Peekable<std::str::Chars<'_>>) -> bool {
-    let mut digits = 0;
+    let mut digits = 0_usize;
     while rest.next_if(char::is_ascii_digit).is_some() {
-        digits += 1;
+        digits = digits.saturating_add(1);
     }
     if digits == 0 {
         return false;

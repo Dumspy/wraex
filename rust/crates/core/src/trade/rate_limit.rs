@@ -22,12 +22,12 @@ pub struct RateLimiter {
 }
 
 impl RateLimiter {
-    pub fn new(max: u32, window: f64) -> Self {
+    pub const fn new(max: u32, window: f64) -> Self {
         Self { max, window, stack: Vec::new() }
     }
 
     fn window_millis(&self) -> Millis {
-        (self.window * 1000.0) as Millis
+        crate::num::f64_to_u64(self.window * 1000.0)
     }
 
     /// Drops the requests whose window has passed (`ResourceHandle`'s timer).
@@ -37,7 +37,7 @@ impl RateLimiter {
 
     /// Counts a request made at `now` (`push`).
     fn push(&mut self, now: Millis) {
-        let at = now + self.window_millis();
+        let at = now.saturating_add(self.window_millis());
         let i = self.stack.partition_point(|&x| x <= at);
         self.stack.insert(i, at);
     }
@@ -45,7 +45,7 @@ impl RateLimiter {
     /// `available`: requests that can be made right away.
     pub fn available(&mut self, now: Millis) -> u32 {
         self.release(now);
-        self.max.saturating_sub(self.stack.len() as u32)
+        self.max.saturating_sub(u32::try_from(self.stack.len()).unwrap_or(u32::MAX))
     }
 
     /// `isFullyUtilized`
@@ -56,17 +56,21 @@ impl RateLimiter {
     /// Requests counted against the limit at `now`.
     pub fn used(&mut self, now: Millis) -> u32 {
         self.release(now);
-        self.stack.len() as u32
+        u32::try_from(self.stack.len()).unwrap_or(u32::MAX)
     }
 
     /// `isEqualLimit`
+    #[expect(
+        clippy::float_cmp,
+        reason = "server windows must match a limiter exactly: both sides are `f64::from(seconds) + latency_seconds`"
+    )]
     pub fn is_equal_limit(&self, max: u32, window: f64) -> bool {
         self.max == max && self.window == window
     }
 
     /// How long until a request fits: until the oldest one is released.
     fn delay(&mut self, now: Millis) -> Millis {
-        if self.is_fully_utilized(now) { self.stack[0].saturating_sub(now) } else { 0 }
+        if self.is_fully_utilized(now) { self.stack.first().map_or(0, |&at| at.saturating_sub(now)) } else { 0 }
     }
 }
 
@@ -97,7 +101,7 @@ pub struct RetryAfter {
 impl std::fmt::Display for RetryAfter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // `Math.round(ms / 1000)`
-        write!(f, "Retry after {} seconds", (self.millis + 500) / 1000)
+        write!(f, "Retry after {} seconds", self.millis.saturating_add(500) / 1000)
     }
 }
 
@@ -160,10 +164,10 @@ impl RateLimits {
 
         // Burst to the server's state where it counts more requests than we do.
         for limiter in &mut self.limiters {
-            let s = server.iter().find(|s| limiter.is_equal_limit(s.max, s.window)).expect("kept above");
+            let Some(s) = server.iter().find(|s| limiter.is_equal_limit(s.max, s.window)) else { continue };
             let used = limiter.used(now);
             if s.state > used {
-                let burst = (s.state - used).min(limiter.available(now));
+                let burst = s.state.saturating_sub(used).min(limiter.available(now));
                 for _ in 0..burst {
                     limiter.push(now);
                 }
@@ -200,12 +204,12 @@ impl RateLimits {
             .map(|l| {
                 l.release(now);
                 Sim {
-                    max: l.max as usize,
+                    max: usize::try_from(l.max).unwrap_or(usize::MAX),
                     window: l.window,
                     stack: if ignore_state {
                         Vec::new()
                     } else {
-                        l.stack.iter().map(|&at| (at - now) as f64).collect()
+                        l.stack.iter().map(|&at| crate::num::u64_to_f64(at.saturating_sub(now))).collect()
                     },
                 }
             })
@@ -229,10 +233,15 @@ impl RateLimits {
                 }
             }
             for l in &mut sim {
-                l.stack.push(total + l.window * 1000.0);
+                #[expect(
+                    clippy::suboptimal_flops,
+                    reason = "upstream is `total + window * 1000`; `mul_add` would round differently"
+                )]
+                let at = total + l.window * 1000.0;
+                l.stack.push(at);
             }
         }
-        total as Millis
+        crate::num::f64_to_u64(total)
     }
 }
 

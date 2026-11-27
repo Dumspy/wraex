@@ -1,8 +1,9 @@
-//! Trade request pieces both references share: the bulk exchange request of
-//! `web/price-check/trade/pathofexile-bulk.ts` (the game picks the listing
-//! status), and `dot-prop`'s `setProperty`, which both use to build search
-//! filters. [`rate_limit`] tracks the trade site's rate limits and [`api`]
-//! sends requests within them.
+//! Trade request pieces both references share.
+//!
+//! The bulk exchange request of `web/price-check/trade/pathofexile-bulk.ts` (the
+//! game picks the listing status), and `dot-prop`'s `setProperty`, which both
+//! use to build search filters. [`rate_limit`] tracks the trade site's rate
+//! limits and [`api`] sends requests within them.
 
 pub mod api;
 pub mod rate_limit;
@@ -11,8 +12,10 @@ use serde::Serialize;
 use serde_json::{Map, Value};
 
 /// `setProperty(object, path, value)` from `dot-prop`: creates the objects on a
-/// dotted path and sets the last key. `None` is JavaScript's `undefined`, which
-/// `JSON.stringify` leaves out, so the key goes but the objects stay.
+/// dotted path and sets the last key.
+///
+/// `None` is JavaScript's `undefined`, which `JSON.stringify` leaves out, so the
+/// key goes but the objects stay.
 pub fn prop_set(object: &mut Map<String, Value>, path: &str, value: Option<Value>) {
     let mut keys = path.split('.').peekable();
     let mut current = object;
@@ -32,7 +35,12 @@ pub fn prop_set(object: &mut Map<String, Value>, path: &str, value: Option<Value
         if !entry.is_object() {
             *entry = Value::Object(Map::new());
         }
-        current = entry.as_object_mut().expect("just made an object");
+        if let Value::Object(child) = entry {
+            current = child;
+        } else {
+            // Impossible: `entry` was just made into an object.
+            return;
+        }
     }
 }
 
@@ -54,13 +62,13 @@ pub struct BulkQuery {
     pub minimum: Option<f64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct BulkStatus {
     /// `online`, `onlineleague` or `any`.
     pub option: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct BulkSort {
     pub have: &'static str,
 }
@@ -76,6 +84,7 @@ pub fn bulk_request(have: Vec<String>, want: Option<String>, status: String, min
 }
 
 #[cfg(test)]
+#[expect(clippy::disallowed_macros, reason = "expected JSON written as literals")]
 mod tests {
     use super::*;
     use serde_json::json;

@@ -32,7 +32,7 @@ impl ClientStrings {
         let mut opened = false;
         let mut closed = false;
         for (n, raw) in source.lines().enumerate() {
-            let err = |message: String| DataError::Syntax { path: path.to_owned(), line: n + 1, message };
+            let err = |message: String| DataError::Syntax { path: path.to_owned(), line: n.saturating_add(1), message };
             let line = raw.trim();
             if line.is_empty() || line.starts_with("//") || (line.starts_with("/**") && line.ends_with("*/")) {
                 continue;
@@ -125,7 +125,7 @@ struct Cursor<'a> {
 impl Cursor<'_> {
     fn bump(&mut self) -> Option<char> {
         let c = self.rest.chars().next()?;
-        self.rest = &self.rest[c.len_utf8()..];
+        self.rest = self.rest.get(c.len_utf8()..).unwrap_or_default();
         Some(c)
     }
 
@@ -159,9 +159,8 @@ impl Cursor<'_> {
 
     /// A single- or double-quoted JavaScript string literal.
     fn string(&mut self) -> Result<String, String> {
-        let quote = match self.bump() {
-            Some(q @ ('\'' | '"')) => q,
-            _ => return Err("expected a string".into()),
+        let Some(quote @ ('\'' | '"')) = self.bump() else {
+            return Err("expected a string".into());
         };
         let mut out = String::new();
         loop {
@@ -178,16 +177,22 @@ impl Cursor<'_> {
                     'x' => out.push(self.hex(2)?),
                     'u' if self.rest.starts_with('{') => {
                         let end = self.rest.find('}').ok_or("unterminated \\u{")?;
-                        let code = u32::from_str_radix(&self.rest[1..end], 16).map_err(|e| e.to_string())?;
+                        let digits = self.rest.get(1..end).unwrap_or_default();
+                        let code = u32::from_str_radix(digits, 16).map_err(|e| e.to_string())?;
                         out.push(char::from_u32(code).ok_or("bad code point")?);
-                        self.rest = &self.rest[end + 1..];
+                        self.rest = self.rest.get(end.saturating_add(1)..).unwrap_or_default();
                     }
                     'u' => {
                         let unit = self.hex_unit(4)?;
                         if (0xd800..0xdc00).contains(&unit) && self.rest.starts_with("\\u") {
-                            self.rest = &self.rest[2..];
+                            self.rest = self.rest.get(2..).unwrap_or_default();
                             let low = self.hex_unit(4)?;
-                            let code = 0x10000 + ((unit - 0xd800) << 10) + (low.wrapping_sub(0xdc00));
+                            // `unit` is a high surrogate, so only a truncated pair
+                            // (a low escape below 0xDC00) can fail here.
+                            let low = low.checked_sub(0xdc00).ok_or("bad surrogate pair")?;
+                            let code = 0x1_0000_u32
+                                .saturating_add(unit.saturating_sub(0xd800).saturating_mul(0x400))
+                                .saturating_add(low);
                             out.push(char::from_u32(code).ok_or("bad surrogate pair")?);
                         } else {
                             out.push(char::from_u32(unit).ok_or("lone surrogate")?);
@@ -206,7 +211,7 @@ impl Cursor<'_> {
     fn hex_unit(&mut self, len: usize) -> Result<u32, String> {
         let digits = self.rest.get(..len).ok_or("short escape")?;
         let unit = u32::from_str_radix(digits, 16).map_err(|e| e.to_string())?;
-        self.rest = &self.rest[len..];
+        self.rest = self.rest.get(len..).unwrap_or_default();
         Ok(unit)
     }
 
@@ -244,11 +249,11 @@ impl Cursor<'_> {
             return Err("empty regex".into());
         }
         let flags_len = self.rest.find(|c: char| !c.is_ascii_alphabetic()).unwrap_or(self.rest.len());
-        let flags = self.rest[..flags_len].to_owned();
+        let flags = self.rest.get(..flags_len).unwrap_or_default().to_owned();
         if let Some(bad) = flags.chars().find(|c| !"dgimsuvy".contains(*c)) {
             return Err(format!("unknown regex flag `{bad}`"));
         }
-        self.rest = &self.rest[flags_len..];
+        self.rest = self.rest.get(flags_len..).unwrap_or_default();
         Regex::new(&source, &flags)
     }
 }
