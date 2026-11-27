@@ -1,0 +1,73 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "foulborn_item": {
+              "option": "false"
+            },
+            "vestigial": {
+              "option": "false"
+            }
+          }
+        }
+      },
+      "name": "Cinderswallow Urn",
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": true,
+              "id": "enchant.stat_3287581721",
+              "value": {}
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_1558071928",
+              "value": {}
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_1437957544",
+              "value": {
+                "min": 11
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_2557247391",
+              "value": {}
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_3477833022",
+              "value": {
+                "min": 7
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_1217476473",
+              "value": {
+                "min": 3
+              }
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Silver Flask"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "true"
+            },
+            "twice_corrupted": {
+              "option": "false"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "category": {
+              "option": "jewel"
+            },
+            "rarity": {
+              "option": "magic"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": true,
+              "id": "implicit.stat_1654414582",
+              "value": {}
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_983749596",
+              "value": {
+                "min": 7
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_3382807662",
+              "value": {
+                "min": 8
+              }
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      }
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

@@ -1,0 +1,951 @@
+{
+  "areaAtlasDrops": 52,
+  "areaItemRarity": 31,
+  "areaPackSize": 20,
+  "baseType": "Map",
+  "category": "Map",
+  "influences": [],
+  "info": {
+    "area": {},
+    "craftable": {
+      "category": "Map"
+    },
+    "icon": "/images/maps/normal.png",
+    "name": "Map",
+    "namespace": "ITEM",
+    "refName": "Map"
+  },
+  "infoVariants": [
+    {
+      "area": {},
+      "craftable": {
+        "category": "Map"
+      },
+      "icon": "/images/maps/normal.png",
+      "name": "Map",
+      "namespace": "ITEM",
+      "refName": "Map"
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 83,
+  "mapTier": 16,
+  "name": "Steel Voyage",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Area is influenced by The Elder"
+              }
+            ],
+            "ref": "Area is influenced by The Elder",
+            "trade": {
+              "ids": {
+                "implicit": [
+                  "implicit.stat_1792283443|2"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Area is influenced by The Elder"
+          }
+        },
+        {
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Map is occupied by The Constrictor"
+              }
+            ],
+            "ref": "Map is occupied by The Constrictor",
+            "trade": {
+              "ids": {
+                "implicit": [
+                  "implicit.stat_3624393862|3"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Map is occupied by The Constrictor"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Area is Influenced by the Originator's Memories"
+              }
+            ],
+            "ref": "Area is Influenced by the Originator's Memories",
+            "trade": {
+              "ids": {
+                "implicit": [
+                  "implicit.stat_2696470877"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Area is Influenced by the Originator's Memories"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Fecund",
+        "tags": [
+          "Life"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 49,
+            "min": 40,
+            "unscalable": false,
+            "value": 44
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "#% more Monster Life"
+              },
+              {
+                "negate": true,
+                "string": "#% less Monster Life"
+              }
+            ],
+            "ref": "#% more Monster Life",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_95249895"
+                ],
+                "fractured": [
+                  "fractured.stat_95249895"
+                ],
+                "implicit": [
+                  "implicit.stat_95249895"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% more Monster Life"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Conflagrating",
+        "tags": [
+          "Elemental",
+          "Fire",
+          "Ailment"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "All Monster Damage from Hits always Ignites"
+              }
+            ],
+            "ref": "All Monster Damage from Hits always Ignites",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_816367946"
+                ],
+                "fractured": [
+                  "fractured.stat_816367946"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "All Monster Damage from Hits always Ignites"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Vulnerability",
+        "tags": [
+          "Caster",
+          "Curse"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Players are Cursed with Vulnerability"
+              }
+            ],
+            "ref": "Players are Cursed with Vulnerability",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_1366534040"
+                ],
+                "fractured": [
+                  "fractured.stat_1366534040"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Players are Cursed with Vulnerability"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Venom",
+        "tags": [
+          "Chaos",
+          "Ailment"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Monsters Poison on Hit"
+              }
+            ],
+            "ref": "Monsters Poison on Hit",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_3350803563"
+                ],
+                "fractured": [
+                  "fractured.stat_3350803563"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Monsters Poison on Hit"
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Rare",
+  "rawText": "Item Class: Maps\nRarity: Rare\nSteel Voyage\nMap (Tier 16)\n--------\nAtlas Drops: +52% (augmented)\nItem Rarity: +31% (augmented)\nMonster Pack Size: +20% (augmented)\n--------\nItem Level: 83\n--------\nMonster Level: 83\n--------\n{ Implicit Modifier }\nArea is influenced by The Elder — Unscalable Value\nMap is occupied by The Constrictor(...) — Unscalable Value\n{ Implicit Modifier }\nArea is Influenced by the Originator's Memories — Unscalable Value\n--------\n{ Prefix Modifier \"Fecund\" — Life }\n44(40-49)% more Monster Life\n{ Prefix Modifier \"Conflagrating\" — Elemental, Fire, Ailment }\nAll Monster Damage from Hits always Ignites — Unscalable Value\n(Ignite deals Fire Damage over time, based on the base Fire Damage of the Skill, for 4 seconds)\n{ Suffix Modifier \"of Vulnerability\" — Caster, Curse }\nPlayers are Cursed with Vulnerability\n(Vulnerability is a Hex which increases Physical Damage taken by 15% and causes Hits to have +25% chance to inflict Bleeding on the target. It lasts 8 seconds)\n{ Suffix Modifier \"of Venom\" — Chaos, Ailment }\nMonsters Poison on Hit — Unscalable Value\n(Poison deals Chaos Damage over time, based on the base Physical and Chaos Damage of the Skill. Multiple instances of Poison stack)\n--------\nTravel to a Map of this tier or lower by using this in a personal Map Device. Maps can only be used once. \n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Area is influenced by The Elder"
+                    }
+                  ],
+                  "ref": "Area is influenced by The Elder",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_1792283443|2"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Area is influenced by The Elder"
+                }
+              },
+              {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Map is occupied by The Constrictor"
+                    }
+                  ],
+                  "ref": "Map is occupied by The Constrictor",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_3624393862|3"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Map is occupied by The Constrictor"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Area is influenced by The Elder"
+                }
+              ],
+              "ref": "Area is influenced by The Elder",
+              "trade": {
+                "ids": {
+                  "implicit": [
+                    "implicit.stat_1792283443|2"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Area is influenced by The Elder"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Area is influenced by The Elder"
+          }
+        ],
+        "ref": "Area is influenced by The Elder",
+        "trade": {
+          "ids": {
+            "implicit": [
+              "implicit.stat_1792283443|2"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Area is influenced by The Elder"
+                    }
+                  ],
+                  "ref": "Area is influenced by The Elder",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_1792283443|2"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Area is influenced by The Elder"
+                }
+              },
+              {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Map is occupied by The Constrictor"
+                    }
+                  ],
+                  "ref": "Map is occupied by The Constrictor",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_3624393862|3"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Map is occupied by The Constrictor"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Map is occupied by The Constrictor"
+                }
+              ],
+              "ref": "Map is occupied by The Constrictor",
+              "trade": {
+                "ids": {
+                  "implicit": [
+                    "implicit.stat_3624393862|3"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Map is occupied by The Constrictor"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Map is occupied by The Constrictor"
+          }
+        ],
+        "ref": "Map is occupied by The Constrictor",
+        "trade": {
+          "ids": {
+            "implicit": [
+              "implicit.stat_3624393862|3"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Area is Influenced by the Originator's Memories"
+                    }
+                  ],
+                  "ref": "Area is Influenced by the Originator's Memories",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_2696470877"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Area is Influenced by the Originator's Memories"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Area is Influenced by the Originator's Memories"
+                }
+              ],
+              "ref": "Area is Influenced by the Originator's Memories",
+              "trade": {
+                "ids": {
+                  "implicit": [
+                    "implicit.stat_2696470877"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Area is Influenced by the Originator's Memories"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Area is Influenced by the Originator's Memories"
+          }
+        ],
+        "ref": "Area is Influenced by the Originator's Memories",
+        "trade": {
+          "ids": {
+            "implicit": [
+              "implicit.stat_2696470877"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 49,
+            "min": 40,
+            "value": 44
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Fecund",
+              "tags": [
+                "Life"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 49,
+                  "min": 40,
+                  "unscalable": false,
+                  "value": 44
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% more Monster Life"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% less Monster Life"
+                    }
+                  ],
+                  "ref": "#% more Monster Life",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_95249895"
+                      ],
+                      "fractured": [
+                        "fractured.stat_95249895"
+                      ],
+                      "implicit": [
+                        "implicit.stat_95249895"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% more Monster Life"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 49,
+              "min": 40,
+              "unscalable": false,
+              "value": 44
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "#% more Monster Life"
+                },
+                {
+                  "negate": true,
+                  "string": "#% less Monster Life"
+                }
+              ],
+              "ref": "#% more Monster Life",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_95249895"
+                  ],
+                  "fractured": [
+                    "fractured.stat_95249895"
+                  ],
+                  "implicit": [
+                    "implicit.stat_95249895"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% more Monster Life"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "#% more Monster Life"
+          },
+          {
+            "negate": true,
+            "string": "#% less Monster Life"
+          }
+        ],
+        "ref": "#% more Monster Life",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_95249895"
+            ],
+            "fractured": [
+              "fractured.stat_95249895"
+            ],
+            "implicit": [
+              "implicit.stat_95249895"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Conflagrating",
+              "tags": [
+                "Elemental",
+                "Fire",
+                "Ailment"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "All Monster Damage from Hits always Ignites"
+                    }
+                  ],
+                  "ref": "All Monster Damage from Hits always Ignites",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_816367946"
+                      ],
+                      "fractured": [
+                        "fractured.stat_816367946"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "All Monster Damage from Hits always Ignites"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "All Monster Damage from Hits always Ignites"
+                }
+              ],
+              "ref": "All Monster Damage from Hits always Ignites",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_816367946"
+                  ],
+                  "fractured": [
+                    "fractured.stat_816367946"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "All Monster Damage from Hits always Ignites"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "All Monster Damage from Hits always Ignites"
+          }
+        ],
+        "ref": "All Monster Damage from Hits always Ignites",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_816367946"
+            ],
+            "fractured": [
+              "fractured.stat_816367946"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Vulnerability",
+              "tags": [
+                "Caster",
+                "Curse"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Players are Cursed with Vulnerability"
+                    }
+                  ],
+                  "ref": "Players are Cursed with Vulnerability",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1366534040"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1366534040"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Players are Cursed with Vulnerability"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Players are Cursed with Vulnerability"
+                }
+              ],
+              "ref": "Players are Cursed with Vulnerability",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_1366534040"
+                  ],
+                  "fractured": [
+                    "fractured.stat_1366534040"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Players are Cursed with Vulnerability"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Players are Cursed with Vulnerability"
+          }
+        ],
+        "ref": "Players are Cursed with Vulnerability",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_1366534040"
+            ],
+            "fractured": [
+              "fractured.stat_1366534040"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Venom",
+              "tags": [
+                "Chaos",
+                "Ailment"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Monsters Poison on Hit"
+                    }
+                  ],
+                  "ref": "Monsters Poison on Hit",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3350803563"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3350803563"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Monsters Poison on Hit"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Monsters Poison on Hit"
+                }
+              ],
+              "ref": "Monsters Poison on Hit",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_3350803563"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3350803563"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Monsters Poison on Hit"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Monsters Poison on Hit"
+          }
+        ],
+        "ref": "Monsters Poison on Hit",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_3350803563"
+            ],
+            "fractured": [
+              "fractured.stat_3350803563"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": []
+}

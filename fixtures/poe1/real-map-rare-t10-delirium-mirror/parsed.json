@@ -1,0 +1,610 @@
+{
+  "areaAtlasDrops": 52,
+  "areaItemRarity": 31,
+  "areaPackSize": 20,
+  "baseType": "Map",
+  "category": "Map",
+  "influences": [],
+  "info": {
+    "area": {},
+    "craftable": {
+      "category": "Map"
+    },
+    "icon": "/images/maps/normal.png",
+    "name": "Map",
+    "namespace": "ITEM",
+    "refName": "Map"
+  },
+  "infoVariants": [
+    {
+      "area": {},
+      "craftable": {
+        "category": "Map"
+      },
+      "icon": "/images/maps/normal.png",
+      "name": "Map",
+      "namespace": "ITEM",
+      "refName": "Map"
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 79,
+  "mapTier": 10,
+  "name": "Eerie Direction",
+  "newMods": [
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Demonic",
+        "tags": [],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Area is inhabited by Demons"
+              }
+            ],
+            "ref": "Area is inhabited by Demons",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_3916182167"
+                ],
+                "fractured": [
+                  "fractured.stat_3916182167"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Area is inhabited by Demons"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Chaining",
+        "tags": [],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 2,
+            "min": 2,
+            "unscalable": false,
+            "value": 2
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Monsters' skills Chain # additional times"
+              }
+            ],
+            "ref": "Monsters' skills Chain # additional times",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_3183973644"
+                ],
+                "fractured": [
+                  "fractured.stat_3183973644"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Monsters' skills Chain # additional times"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "mechanic": "explicit-rareonly",
+        "name": "of Insanity",
+        "tags": [],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Area contains a Mirror of Delirium"
+              }
+            ],
+            "ref": "Area contains a Mirror of Delirium",
+            "trade": {
+              "ids": {
+                "enchant": [
+                  "enchant.stat_2398157267"
+                ],
+                "explicit": [
+                  "explicit.stat_2398157267"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Area contains a Mirror of Delirium"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Enervation",
+        "tags": [],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 100,
+            "min": 100,
+            "unscalable": false,
+            "value": 100
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Monsters have #% chance to steal Power, Frenzy and Endurance charges on Hit"
+              },
+              {
+                "string": "Monsters steal Power, Frenzy and Endurance charges on Hit",
+                "value": 100
+              }
+            ],
+            "ref": "Monsters have #% chance to steal Power, Frenzy and Endurance charges on Hit",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_3222482040"
+                ],
+                "fractured": [
+                  "fractured.stat_3222482040"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Monsters steal Power, Frenzy and Endurance charges on Hit",
+            "value": 100
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Rare",
+  "rawText": "Item Class: Maps\nRarity: Rare\nEerie Direction\nMap (Tier 10)\n--------\nAtlas Drops: +52% (augmented)\nItem Rarity: +31% (augmented)\nMonster Pack Size: +20% (augmented)\n--------\nItem Level: 79\n--------\nMonster Level: 77\n--------\n{ Prefix Modifier \"Demonic\" (Tier: 1) }\nArea is inhabited by Demons — Unscalable Value\n{ Prefix Modifier \"Chaining\" (Tier: 1) }\nMonsters' skills Chain 2 additional times\n{ Rare-only Suffix Modifier \"of Insanity\" (Tier: 1) }\nArea contains a Mirror of Delirium — Unscalable Value\n{ Suffix Modifier \"of Enervation\" (Tier: 1) }\nMonsters steal Power, Frenzy and Endurance charges on Hit\n--------\nTravel to a Map of this tier or lower by using this in a personal Map Device. Maps can only be used once. \n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Demonic",
+              "tags": [],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Area is inhabited by Demons"
+                    }
+                  ],
+                  "ref": "Area is inhabited by Demons",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3916182167"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3916182167"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Area is inhabited by Demons"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Area is inhabited by Demons"
+                }
+              ],
+              "ref": "Area is inhabited by Demons",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_3916182167"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3916182167"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Area is inhabited by Demons"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Area is inhabited by Demons"
+          }
+        ],
+        "ref": "Area is inhabited by Demons",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_3916182167"
+            ],
+            "fractured": [
+              "fractured.stat_3916182167"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 2,
+            "min": 2,
+            "value": 2
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Chaining",
+              "tags": [],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 2,
+                  "min": 2,
+                  "unscalable": false,
+                  "value": 2
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Monsters' skills Chain # additional times"
+                    }
+                  ],
+                  "ref": "Monsters' skills Chain # additional times",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3183973644"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3183973644"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Monsters' skills Chain # additional times"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 2,
+              "min": 2,
+              "unscalable": false,
+              "value": 2
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Monsters' skills Chain # additional times"
+                }
+              ],
+              "ref": "Monsters' skills Chain # additional times",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_3183973644"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3183973644"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Monsters' skills Chain # additional times"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Monsters' skills Chain # additional times"
+          }
+        ],
+        "ref": "Monsters' skills Chain # additional times",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_3183973644"
+            ],
+            "fractured": [
+              "fractured.stat_3183973644"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "mechanic": "explicit-rareonly",
+              "name": "of Insanity",
+              "tags": [],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Area contains a Mirror of Delirium"
+                    }
+                  ],
+                  "ref": "Area contains a Mirror of Delirium",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_2398157267"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2398157267"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Area contains a Mirror of Delirium"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Area contains a Mirror of Delirium"
+                }
+              ],
+              "ref": "Area contains a Mirror of Delirium",
+              "trade": {
+                "ids": {
+                  "enchant": [
+                    "enchant.stat_2398157267"
+                  ],
+                  "explicit": [
+                    "explicit.stat_2398157267"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Area contains a Mirror of Delirium"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Area contains a Mirror of Delirium"
+          }
+        ],
+        "ref": "Area contains a Mirror of Delirium",
+        "trade": {
+          "ids": {
+            "enchant": [
+              "enchant.stat_2398157267"
+            ],
+            "explicit": [
+              "explicit.stat_2398157267"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 100,
+            "min": 100,
+            "value": 100
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Enervation",
+              "tags": [],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 100,
+                  "min": 100,
+                  "unscalable": false,
+                  "value": 100
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Monsters have #% chance to steal Power, Frenzy and Endurance charges on Hit"
+                    },
+                    {
+                      "string": "Monsters steal Power, Frenzy and Endurance charges on Hit",
+                      "value": 100
+                    }
+                  ],
+                  "ref": "Monsters have #% chance to steal Power, Frenzy and Endurance charges on Hit",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3222482040"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3222482040"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Monsters steal Power, Frenzy and Endurance charges on Hit",
+                  "value": 100
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 100,
+              "min": 100,
+              "unscalable": false,
+              "value": 100
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Monsters have #% chance to steal Power, Frenzy and Endurance charges on Hit"
+                },
+                {
+                  "string": "Monsters steal Power, Frenzy and Endurance charges on Hit",
+                  "value": 100
+                }
+              ],
+              "ref": "Monsters have #% chance to steal Power, Frenzy and Endurance charges on Hit",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_3222482040"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3222482040"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Monsters steal Power, Frenzy and Endurance charges on Hit",
+              "value": 100
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Monsters have #% chance to steal Power, Frenzy and Endurance charges on Hit"
+          },
+          {
+            "string": "Monsters steal Power, Frenzy and Endurance charges on Hit",
+            "value": 100
+          }
+        ],
+        "ref": "Monsters have #% chance to steal Power, Frenzy and Endurance charges on Hit",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_3222482040"
+            ],
+            "fractured": [
+              "fractured.stat_3222482040"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": []
+}

@@ -1,0 +1,32 @@
+Item Class: Maps
+Rarity: Rare
+Steel Voyage
+Map (Tier 16)
+--------
+Atlas Drops: +52% (augmented)
+Item Rarity: +31% (augmented)
+Monster Pack Size: +20% (augmented)
+--------
+Item Level: 83
+--------
+Monster Level: 83
+--------
+{ Implicit Modifier }
+Area is influenced by The Elder — Unscalable Value
+Map is occupied by The Constrictor(...) — Unscalable Value
+{ Implicit Modifier }
+Area is Influenced by the Originator's Memories — Unscalable Value
+--------
+{ Prefix Modifier "Fecund" — Life }
+44(40-49)% more Monster Life
+{ Prefix Modifier "Conflagrating" — Elemental, Fire, Ailment }
+All Monster Damage from Hits always Ignites — Unscalable Value
+(Ignite deals Fire Damage over time, based on the base Fire Damage of the Skill, for 4 seconds)
+{ Suffix Modifier "of Vulnerability" — Caster, Curse }
+Players are Cursed with Vulnerability
+(Vulnerability is a Hex which increases Physical Damage taken by 15% and causes Hits to have +25% chance to inflict Bleeding on the target. It lasts 8 seconds)
+{ Suffix Modifier "of Venom" — Chaos, Ailment }
+Monsters Poison on Hit — Unscalable Value
+(Poison deals Chaos Damage over time, based on the base Physical and Chaos Damage of the Skill. Multiple instances of Poison stack)
+--------
+Travel to a Map of this tier or lower by using this in a personal Map Device. Maps can only be used once. 

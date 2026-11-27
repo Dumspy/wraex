@@ -1,0 +1,368 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": true,
+          "twice": false,
+          "value": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "magic"
+        },
+        "searchExact": {
+          "baseType": "Cobalt Jewel",
+          "baseTypeTrade": "Cobalt Jewel"
+        },
+        "searchRelaxed": {
+          "category": "Jewel",
+          "disabled": false
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": true,
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "mechanic": "corrupted",
+                  "tags": [
+                    "Caster",
+                    "Curse"
+                  ],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "You cannot be Cursed with Silence"
+                        }
+                      ],
+                      "ref": "You cannot be Cursed with Silence",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_1654414582"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1654414582"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "You cannot be Cursed with Silence"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "You cannot be Cursed with Silence"
+                    }
+                  ],
+                  "ref": "You cannot be Cursed with Silence",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1654414582"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1654414582"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "You cannot be Cursed with Silence"
+                }
+              }
+            }
+          ],
+          "statRef": "You cannot be Cursed with Silence",
+          "tag": "corrupted",
+          "text": "You cannot be Cursed with Silence",
+          "tradeId": [
+            "implicit.stat_1654414582"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 7,
+              "min": 5
+            },
+            "default": {
+              "max": 7,
+              "min": 7
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 7,
+            "value": 7
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 7,
+                "min": 5,
+                "value": 7
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Vivid",
+                  "tags": [
+                    "Life"
+                  ],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 7,
+                      "min": 5,
+                      "unscalable": false,
+                      "value": 7
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased maximum Life"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced maximum Life"
+                        }
+                      ],
+                      "ref": "#% increased maximum Life",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_983749596"
+                          ],
+                          "enchant": [
+                            "enchant.stat_983749596"
+                          ],
+                          "explicit": [
+                            "explicit.stat_983749596"
+                          ],
+                          "fractured": [
+                            "fractured.stat_983749596"
+                          ],
+                          "implicit": [
+                            "implicit.stat_983749596"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased maximum Life"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 7,
+                  "min": 5,
+                  "unscalable": false,
+                  "value": 7
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased maximum Life"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced maximum Life"
+                    }
+                  ],
+                  "ref": "#% increased maximum Life",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_983749596"
+                      ],
+                      "enchant": [
+                        "enchant.stat_983749596"
+                      ],
+                      "explicit": [
+                        "explicit.stat_983749596"
+                      ],
+                      "fractured": [
+                        "fractured.stat_983749596"
+                      ],
+                      "implicit": [
+                        "implicit.stat_983749596"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased maximum Life"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased maximum Life",
+          "tag": "explicit",
+          "text": "#% increased maximum Life",
+          "tradeId": [
+            "explicit.stat_983749596"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 8,
+              "min": 6
+            },
+            "default": {
+              "max": 8,
+              "min": 8
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 8,
+            "value": 8
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 8,
+                "min": 6,
+                "value": 8
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Zealousness",
+                  "tags": [
+                    "Damage",
+                    "Elemental",
+                    "Fire"
+                  ],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 8,
+                      "min": 6,
+                      "unscalable": false,
+                      "value": 8
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% to Fire Damage over Time Multiplier"
+                        }
+                      ],
+                      "ref": "+#% to Fire Damage over Time Multiplier",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_3382807662"
+                          ],
+                          "explicit": [
+                            "explicit.stat_3382807662"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3382807662"
+                          ],
+                          "implicit": [
+                            "implicit.stat_3382807662"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% to Fire Damage over Time Multiplier"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 8,
+                  "min": 6,
+                  "unscalable": false,
+                  "value": 8
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% to Fire Damage over Time Multiplier"
+                    }
+                  ],
+                  "ref": "+#% to Fire Damage over Time Multiplier",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_3382807662"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3382807662"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3382807662"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3382807662"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% to Fire Damage over Time Multiplier"
+                }
+              }
+            }
+          ],
+          "statRef": "+#% to Fire Damage over Time Multiplier",
+          "tag": "explicit",
+          "text": "#% to Fire Damage over Time Multiplier",
+          "tradeId": [
+            "explicit.stat_3382807662"
+          ]
+        }
+      ]
+    }
+  ]
+}

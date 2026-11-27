@@ -1,0 +1,12 @@
+Item Class: Divination Cards
+Rarity: Divination Card
+Dark Temptation
+--------
+Stack Size: 5/5
+--------
+Obliteration
+--------
+"Only a fool looks to the occult for power and expects to be spared from its wrath." 
+- Voll, Emperor of Purity
+--------
+Shift click to unstack.

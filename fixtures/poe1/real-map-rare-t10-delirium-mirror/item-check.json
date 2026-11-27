@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Maps%0ARarity%3A%20Rare%0AEerie%20Direction%0AMap%20(Tier%2010)%0A--------%0AAtlas%20Drops%3A%20%2B52%25%20(augmented)%0AItem%20Rarity%3A%20%2B31%25%20(augmented)%0AMonster%20Pack%20Size%3A%20%2B20%25%20(augmented)%0A--------%0AItem%20Level%3A%2079%0A--------%0AMonster%20Level%3A%2077%0A--------%0A%7B%20Prefix%20Modifier%20%22Demonic%22%20(Tier%3A%201)%20%7D%0AArea%20is%20inhabited%20by%20Demons%20%E2%80%94%20Unscalable%20Value%0A%7B%20Prefix%20Modifier%20%22Chaining%22%20(Tier%3A%201)%20%7D%0AMonsters'%20skills%20Chain%202%20additional%20times%0A%7B%20Rare-only%20Suffix%20Modifier%20%22of%20Insanity%22%20(Tier%3A%201)%20%7D%0AArea%20contains%20a%20Mirror%20of%20Delirium%20%E2%80%94%20Unscalable%20Value%0A%7B%20Suffix%20Modifier%20%22of%20Enervation%22%20(Tier%3A%201)%20%7D%0AMonsters%20steal%20Power%2C%20Frenzy%20and%20Endurance%20charges%20on%20Hit%0A--------%0ATravel%20to%20a%20Map%20of%20this%20tier%20or%20lower%20by%20using%20this%20in%20a%20personal%20Map%20Device.%20Maps%20can%20only%20be%20used%20once.%20%0A",
+  "poedb": "https://poedb.tw/us/Map",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Map\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Map"
+}

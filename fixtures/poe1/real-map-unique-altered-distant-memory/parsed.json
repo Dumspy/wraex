@@ -1,0 +1,527 @@
+{
+  "areaAtlasDrops": 100,
+  "areaPackSize": 25,
+  "baseType": "Map",
+  "category": "Map",
+  "influences": [],
+  "info": {
+    "area": {},
+    "icon": "https://web.poecdn.com/gen/image/WzI4LDE0LHsiZiI6IjJESXRlbXMvTWFwcy9TeW50aGVzaXNDb2xkR3VhcmRpYW5NYXAiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MX1d/5800fc91db/SynthesisColdGuardianMap.png",
+    "name": "Altered Distant Memory",
+    "namespace": "UNIQUE",
+    "refName": "Altered Distant Memory",
+    "unique": {
+      "base": "Map"
+    }
+  },
+  "infoVariants": [
+    {
+      "area": {},
+      "icon": "https://web.poecdn.com/gen/image/WzI4LDE0LHsiZiI6IjJESXRlbXMvTWFwcy9TeW50aGVzaXNDb2xkR3VhcmRpYW5NYXAiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MX1d/5800fc91db/SynthesisColdGuardianMap.png",
+      "name": "Altered Distant Memory",
+      "namespace": "UNIQUE",
+      "refName": "Altered Distant Memory",
+      "unique": {
+        "base": "Map"
+      }
+    }
+  ],
+  "isCorrupted": {},
+  "isUnidentified": false,
+  "itemLevel": 85,
+  "mapTier": 16,
+  "name": "Altered Distant Memory",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 100,
+            "min": 100,
+            "unscalable": false,
+            "value": 100
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "#% increased Experience gain"
+              },
+              {
+                "negate": true,
+                "string": "#% reduced Experience gain"
+              }
+            ],
+            "ref": "#% increased Experience gain",
+            "trade": {
+              "ids": {
+                "enchant": [
+                  "enchant.stat_57434274"
+                ],
+                "explicit": [
+                  "explicit.stat_3666934677",
+                  "explicit.stat_57434274"
+                ],
+                "fractured": [
+                  "fractured.stat_3666934677"
+                ],
+                "implicit": [
+                  "implicit.stat_3666934677"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% increased Experience gain"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 5,
+            "min": 3,
+            "unscalable": false,
+            "value": 4
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Map has # additional random Modifier"
+              },
+              {
+                "string": "Map has # additional random Modifiers"
+              }
+            ],
+            "ref": "Map has # additional random Modifier",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_4003278965"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Map has # additional random Modifiers"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 4,
+            "min": 2,
+            "unscalable": false,
+            "value": 2
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Map has # additional Synthesis Global Modifier"
+              },
+              {
+                "string": "Map has # additional Synthesis Global Modifiers"
+              }
+            ],
+            "ref": "Map has # additional Synthesis Global Modifier",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_2132807290"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Map has # additional Synthesis Global Modifiers"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": []
+    }
+  ],
+  "rarity": "Unique",
+  "rawText": "Item Class: Maps\nRarity: Unique\nAltered Distant Memory\nMap (Tier 16)\n--------\nAtlas Drops: +100% (augmented)\nMonster Pack Size: +25% (augmented)\n--------\nItem Level: 85\n--------\nMonster Level: 81\n--------\n{ Unique Modifier }\n100% increased Experience gain\n{ Unique Modifier }\nMap has 4(3-5) additional random Modifiers\n{ Unique Modifier }\nMap has 2(2-4) additional Synthesis Global Modifiers\n{ Unique Modifier }\nMonster Level: 81 — Unscalable Value\n--------\nThe winters of my youth were cold and harsh.\nWe had nothing, yet to my mother's credit, I wanted for so little.\n--------\nTravel to a Map of this tier or lower by using this in a personal Map Device. Maps can only be used once. \n--------\nCorrupted\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 100,
+            "min": 100,
+            "value": 100
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 100,
+                  "min": 100,
+                  "unscalable": false,
+                  "value": 100
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Experience gain"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Experience gain"
+                    }
+                  ],
+                  "ref": "#% increased Experience gain",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_57434274"
+                      ],
+                      "explicit": [
+                        "explicit.stat_3666934677",
+                        "explicit.stat_57434274"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3666934677"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3666934677"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Experience gain"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 100,
+              "min": 100,
+              "unscalable": false,
+              "value": 100
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "#% increased Experience gain"
+                },
+                {
+                  "negate": true,
+                  "string": "#% reduced Experience gain"
+                }
+              ],
+              "ref": "#% increased Experience gain",
+              "trade": {
+                "ids": {
+                  "enchant": [
+                    "enchant.stat_57434274"
+                  ],
+                  "explicit": [
+                    "explicit.stat_3666934677",
+                    "explicit.stat_57434274"
+                  ],
+                  "fractured": [
+                    "fractured.stat_3666934677"
+                  ],
+                  "implicit": [
+                    "implicit.stat_3666934677"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% increased Experience gain"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "#% increased Experience gain"
+          },
+          {
+            "negate": true,
+            "string": "#% reduced Experience gain"
+          }
+        ],
+        "ref": "#% increased Experience gain",
+        "trade": {
+          "ids": {
+            "enchant": [
+              "enchant.stat_57434274"
+            ],
+            "explicit": [
+              "explicit.stat_3666934677",
+              "explicit.stat_57434274"
+            ],
+            "fractured": [
+              "fractured.stat_3666934677"
+            ],
+            "implicit": [
+              "implicit.stat_3666934677"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 5,
+            "min": 3,
+            "value": 4
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 5,
+                  "min": 3,
+                  "unscalable": false,
+                  "value": 4
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Map has # additional random Modifier"
+                    },
+                    {
+                      "string": "Map has # additional random Modifiers"
+                    }
+                  ],
+                  "ref": "Map has # additional random Modifier",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_4003278965"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Map has # additional random Modifiers"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 5,
+              "min": 3,
+              "unscalable": false,
+              "value": 4
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Map has # additional random Modifier"
+                },
+                {
+                  "string": "Map has # additional random Modifiers"
+                }
+              ],
+              "ref": "Map has # additional random Modifier",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_4003278965"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Map has # additional random Modifiers"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Map has # additional random Modifier"
+          },
+          {
+            "string": "Map has # additional random Modifiers"
+          }
+        ],
+        "ref": "Map has # additional random Modifier",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_4003278965"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 4,
+            "min": 2,
+            "value": 2
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 4,
+                  "min": 2,
+                  "unscalable": false,
+                  "value": 2
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Map has # additional Synthesis Global Modifier"
+                    },
+                    {
+                      "string": "Map has # additional Synthesis Global Modifiers"
+                    }
+                  ],
+                  "ref": "Map has # additional Synthesis Global Modifier",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_2132807290"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Map has # additional Synthesis Global Modifiers"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 4,
+              "min": 2,
+              "unscalable": false,
+              "value": 2
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Map has # additional Synthesis Global Modifier"
+                },
+                {
+                  "string": "Map has # additional Synthesis Global Modifiers"
+                }
+              ],
+              "ref": "Map has # additional Synthesis Global Modifier",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_2132807290"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Map has # additional Synthesis Global Modifiers"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Map has # additional Synthesis Global Modifier"
+          },
+          {
+            "string": "Map has # additional Synthesis Global Modifiers"
+          }
+        ],
+        "ref": "Map has # additional Synthesis Global Modifier",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_2132807290"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "uniqueBase": {
+    "area": {},
+    "craftable": {
+      "category": "Map"
+    },
+    "icon": "/images/maps/normal.png",
+    "name": "Map",
+    "namespace": "ITEM",
+    "refName": "Map"
+  },
+  "unknownModifiers": [
+    {
+      "text": "Monster Level: 81 — Unscalable Value",
+      "type": "explicit"
+    }
+  ]
+}

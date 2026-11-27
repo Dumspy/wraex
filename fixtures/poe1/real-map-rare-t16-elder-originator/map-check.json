@@ -1,0 +1,15 @@
+[
+  {
+    "matcher": "#% more Monster Life",
+    "roll": 44
+  },
+  {
+    "matcher": "All Monster Damage from Hits always Ignites"
+  },
+  {
+    "matcher": "Players are Cursed with Vulnerability"
+  },
+  {
+    "matcher": "Monsters Poison on Hit"
+  }
+]

@@ -1,0 +1,785 @@
+{
+  "areaAtlasDrops": 58,
+  "areaItemRarity": 34,
+  "areaPackSize": 22,
+  "baseType": "Map",
+  "category": "Map",
+  "influences": [],
+  "info": {
+    "area": {},
+    "craftable": {
+      "category": "Map"
+    },
+    "icon": "/images/maps/normal.png",
+    "name": "Map",
+    "namespace": "ITEM",
+    "refName": "Map"
+  },
+  "infoVariants": [
+    {
+      "area": {},
+      "craftable": {
+        "category": "Map"
+      },
+      "icon": "/images/maps/normal.png",
+      "name": "Map",
+      "namespace": "ITEM",
+      "refName": "Map"
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 83,
+  "mapTier": 16,
+  "name": "Remote Crosscut",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "implicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 0,
+            "matchers": [
+              {
+                "string": "Map contains Drox's Citadel"
+              }
+            ],
+            "ref": "Map contains Drox's Citadel",
+            "trade": {
+              "ids": {
+                "implicit": [
+                  "implicit.stat_2563183002|4"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Map contains Drox's Citadel"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Burning",
+        "tags": [
+          "Damage",
+          "Physical",
+          "Elemental",
+          "Fire"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 110,
+            "min": 90,
+            "unscalable": false,
+            "value": 108
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Monsters deal #% extra Physical Damage as Fire"
+              }
+            ],
+            "ref": "Monsters deal #% extra Physical Damage as Fire",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_1497673356"
+                ],
+                "fractured": [
+                  "fractured.stat_1497673356"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Monsters deal #% extra Physical Damage as Fire"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "name": "Fecund",
+        "tags": [
+          "Life"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 49,
+            "min": 40,
+            "unscalable": false,
+            "value": 45
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "#% more Monster Life"
+              },
+              {
+                "negate": true,
+                "string": "#% less Monster Life"
+              }
+            ],
+            "ref": "#% more Monster Life",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_95249895"
+                ],
+                "fractured": [
+                  "fractured.stat_95249895"
+                ],
+                "implicit": [
+                  "implicit.stat_95249895"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "#% more Monster Life"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Giants",
+        "tags": [],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 100,
+            "min": 100,
+            "unscalable": false,
+            "value": 100
+          },
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Monsters have #% increased Area of Effect"
+              },
+              {
+                "negate": true,
+                "string": "Monsters have #% reduced Area of Effect"
+              }
+            ],
+            "ref": "Monsters have #% increased Area of Effect",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_1708461270"
+                ],
+                "fractured": [
+                  "fractured.stat_1708461270"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Monsters have #% increased Area of Effect"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "suffix",
+        "name": "of Stasis",
+        "tags": [
+          "Life",
+          "Mana",
+          "Defences",
+          "Energy Shield"
+        ],
+        "tier": 1,
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "fromAreaMods": "yes",
+            "matchers": [
+              {
+                "string": "Players cannot Regenerate Life, Mana or Energy Shield"
+              }
+            ],
+            "ref": "Players cannot Regenerate Life, Mana or Energy Shield",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_1910157106"
+                ],
+                "fractured": [
+                  "fractured.stat_1910157106"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Players cannot Regenerate Life, Mana or Energy Shield"
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Rare",
+  "rawText": "Item Class: Maps\nRarity: Rare\nRemote Crosscut\nMap (Tier 16)\n--------\nAtlas Drops: +58% (augmented)\nItem Rarity: +34% (augmented)\nMonster Pack Size: +22% (augmented)\n--------\nItem Level: 83\n--------\nMonster Level: 83\n--------\n{ Implicit Modifier }\nMap contains Drox's Citadel(...) — Unscalable Value\n--------\n{ Prefix Modifier \"Burning\" (Tier: 1) — Damage, Physical, Elemental, Fire }\nMonsters deal 108(90-110)% extra Physical Damage as Fire\n{ Prefix Modifier \"Fecund\" (Tier: 1) — Life }\n45(40-49)% more Monster Life\n{ Suffix Modifier \"of Giants\" (Tier: 1) }\nMonsters have 100% increased Area of Effect\n{ Suffix Modifier \"of Stasis\" (Tier: 1) — Life, Mana, Defences, Energy Shield }\nPlayers cannot Regenerate Life, Mana or Energy Shield — Unscalable Value\n--------\nTravel to a Map of this tier or lower by using this in a personal Map Device. Maps can only be used once. \n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "implicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Map contains Drox's Citadel"
+                    }
+                  ],
+                  "ref": "Map contains Drox's Citadel",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_2563183002|4"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Map contains Drox's Citadel"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 0,
+              "matchers": [
+                {
+                  "string": "Map contains Drox's Citadel"
+                }
+              ],
+              "ref": "Map contains Drox's Citadel",
+              "trade": {
+                "ids": {
+                  "implicit": [
+                    "implicit.stat_2563183002|4"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Map contains Drox's Citadel"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 0,
+        "matchers": [
+          {
+            "string": "Map contains Drox's Citadel"
+          }
+        ],
+        "ref": "Map contains Drox's Citadel",
+        "trade": {
+          "ids": {
+            "implicit": [
+              "implicit.stat_2563183002|4"
+            ]
+          }
+        }
+      },
+      "type": "implicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 110,
+            "min": 90,
+            "value": 108
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Burning",
+              "tags": [
+                "Damage",
+                "Physical",
+                "Elemental",
+                "Fire"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 110,
+                  "min": 90,
+                  "unscalable": false,
+                  "value": 108
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Monsters deal #% extra Physical Damage as Fire"
+                    }
+                  ],
+                  "ref": "Monsters deal #% extra Physical Damage as Fire",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1497673356"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1497673356"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Monsters deal #% extra Physical Damage as Fire"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 110,
+              "min": 90,
+              "unscalable": false,
+              "value": 108
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Monsters deal #% extra Physical Damage as Fire"
+                }
+              ],
+              "ref": "Monsters deal #% extra Physical Damage as Fire",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_1497673356"
+                  ],
+                  "fractured": [
+                    "fractured.stat_1497673356"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Monsters deal #% extra Physical Damage as Fire"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Monsters deal #% extra Physical Damage as Fire"
+          }
+        ],
+        "ref": "Monsters deal #% extra Physical Damage as Fire",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_1497673356"
+            ],
+            "fractured": [
+              "fractured.stat_1497673356"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 49,
+            "min": 40,
+            "value": 45
+          },
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "name": "Fecund",
+              "tags": [
+                "Life"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 49,
+                  "min": 40,
+                  "unscalable": false,
+                  "value": 45
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "#% more Monster Life"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% less Monster Life"
+                    }
+                  ],
+                  "ref": "#% more Monster Life",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_95249895"
+                      ],
+                      "fractured": [
+                        "fractured.stat_95249895"
+                      ],
+                      "implicit": [
+                        "implicit.stat_95249895"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% more Monster Life"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 49,
+              "min": 40,
+              "unscalable": false,
+              "value": 45
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "#% more Monster Life"
+                },
+                {
+                  "negate": true,
+                  "string": "#% less Monster Life"
+                }
+              ],
+              "ref": "#% more Monster Life",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_95249895"
+                  ],
+                  "fractured": [
+                    "fractured.stat_95249895"
+                  ],
+                  "implicit": [
+                    "implicit.stat_95249895"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "#% more Monster Life"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "#% more Monster Life"
+          },
+          {
+            "negate": true,
+            "string": "#% less Monster Life"
+          }
+        ],
+        "ref": "#% more Monster Life",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_95249895"
+            ],
+            "fractured": [
+              "fractured.stat_95249895"
+            ],
+            "implicit": [
+              "implicit.stat_95249895"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 100,
+            "min": 100,
+            "value": 100
+          },
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Giants",
+              "tags": [],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 100,
+                  "min": 100,
+                  "unscalable": false,
+                  "value": 100
+                },
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Monsters have #% increased Area of Effect"
+                    },
+                    {
+                      "negate": true,
+                      "string": "Monsters have #% reduced Area of Effect"
+                    }
+                  ],
+                  "ref": "Monsters have #% increased Area of Effect",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1708461270"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1708461270"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Monsters have #% increased Area of Effect"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 100,
+              "min": 100,
+              "unscalable": false,
+              "value": 100
+            },
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Monsters have #% increased Area of Effect"
+                },
+                {
+                  "negate": true,
+                  "string": "Monsters have #% reduced Area of Effect"
+                }
+              ],
+              "ref": "Monsters have #% increased Area of Effect",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_1708461270"
+                  ],
+                  "fractured": [
+                    "fractured.stat_1708461270"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Monsters have #% increased Area of Effect"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Monsters have #% increased Area of Effect"
+          },
+          {
+            "negate": true,
+            "string": "Monsters have #% reduced Area of Effect"
+          }
+        ],
+        "ref": "Monsters have #% increased Area of Effect",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_1708461270"
+            ],
+            "fractured": [
+              "fractured.stat_1708461270"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "generation": "suffix",
+              "name": "of Stasis",
+              "tags": [
+                "Life",
+                "Mana",
+                "Defences",
+                "Energy Shield"
+              ],
+              "tier": 1,
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Players cannot Regenerate Life, Mana or Energy Shield"
+                    }
+                  ],
+                  "ref": "Players cannot Regenerate Life, Mana or Energy Shield",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1910157106"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1910157106"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Players cannot Regenerate Life, Mana or Energy Shield"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "fromAreaMods": "yes",
+              "matchers": [
+                {
+                  "string": "Players cannot Regenerate Life, Mana or Energy Shield"
+                }
+              ],
+              "ref": "Players cannot Regenerate Life, Mana or Energy Shield",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_1910157106"
+                  ],
+                  "fractured": [
+                    "fractured.stat_1910157106"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Players cannot Regenerate Life, Mana or Energy Shield"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "fromAreaMods": "yes",
+        "matchers": [
+          {
+            "string": "Players cannot Regenerate Life, Mana or Energy Shield"
+          }
+        ],
+        "ref": "Players cannot Regenerate Life, Mana or Energy Shield",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_1910157106"
+            ],
+            "fractured": [
+              "fractured.stat_1910157106"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "unknownModifiers": []
+}

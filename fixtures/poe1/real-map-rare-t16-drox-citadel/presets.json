@@ -1,0 +1,304 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "mapBlighted": {
+          "value": false
+        },
+        "mapTier": {
+          "disabled": false,
+          "value": 16
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Map",
+          "baseTypeTrade": "Map",
+          "discriminatorTrade": "map"
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 9007199254740991,
+              "min": 0
+            },
+            "default": {
+              "max": 64,
+              "min": 52
+            },
+            "dp": false,
+            "goodness": 6.439293542825909e-15,
+            "isNegated": false,
+            "min": 52,
+            "value": 58
+          },
+          "sources": [],
+          "statRef": "Atlas Drops: +#%",
+          "tag": "property",
+          "text": "Atlas Drops: +#%",
+          "tradeId": [
+            "item.map_atlas_drops"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 9007199254740991,
+              "min": 0
+            },
+            "default": {
+              "max": 38,
+              "min": 30
+            },
+            "dp": false,
+            "goodness": 3.774758283725533e-15,
+            "isNegated": false,
+            "min": 30,
+            "value": 34
+          },
+          "sources": [],
+          "statRef": "Item Rarity: +#%",
+          "tag": "property",
+          "text": "Item Rarity: +#%",
+          "tradeId": [
+            "item.map_item_rarity"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 9007199254740991,
+              "min": 0
+            },
+            "default": {
+              "max": 25,
+              "min": 19
+            },
+            "dp": false,
+            "goodness": 2.4424906541753448e-15,
+            "isNegated": false,
+            "min": 19,
+            "value": 22
+          },
+          "sources": [],
+          "statRef": "Monster Pack Size: +#%",
+          "tag": "property",
+          "text": "Monster Pack Size: +#%",
+          "tradeId": [
+            "item.map_pack_size"
+          ]
+        },
+        {
+          "disabled": false,
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Map contains Drox's Citadel"
+                        }
+                      ],
+                      "ref": "Map contains Drox's Citadel",
+                      "trade": {
+                        "ids": {
+                          "implicit": [
+                            "implicit.stat_2563183002|4"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Map contains Drox's Citadel"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Map contains Drox's Citadel"
+                    }
+                  ],
+                  "ref": "Map contains Drox's Citadel",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_2563183002|4"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Map contains Drox's Citadel"
+                }
+              }
+            }
+          ],
+          "statRef": "Map contains Drox's Citadel",
+          "tag": "variant",
+          "text": "Map contains Drox's Citadel",
+          "tradeId": [
+            "implicit.stat_2563183002|4"
+          ]
+        }
+      ]
+    },
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "mapBlighted": {
+          "value": false
+        },
+        "mapTier": {
+          "disabled": false,
+          "value": 16
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Map",
+          "baseTypeTrade": "Map",
+          "discriminatorTrade": "map"
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_bulk",
+      "stats": [
+        {
+          "disabled": false,
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Map contains Drox's Citadel"
+                        }
+                      ],
+                      "ref": "Map contains Drox's Citadel",
+                      "trade": {
+                        "ids": {
+                          "implicit": [
+                            "implicit.stat_2563183002|4"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Map contains Drox's Citadel"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Map contains Drox's Citadel"
+                    }
+                  ],
+                  "ref": "Map contains Drox's Citadel",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_2563183002|4"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Map contains Drox's Citadel"
+                }
+              }
+            }
+          ],
+          "statRef": "Map contains Drox's Citadel",
+          "tag": "variant",
+          "text": "Map contains Drox's Citadel",
+          "tradeId": [
+            "implicit.stat_2563183002|4"
+          ]
+        }
+      ]
+    }
+  ]
+}

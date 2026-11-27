@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Support%20Gems%0ARarity%3A%20Gem%0ACommunion%20Support%0A--------%0AExceptional%2C%20Spell%2C%20Minion%2C%20Physical%2C%20Support%0ALevel%3A%201%0ACost%20%26%20Reservation%20Multiplier%3A%20150%25%0A--------%0ARequirements%3A%0ALevel%3A%2072%0AInt%3A%20114%0A--------%0ASupports%20spell%20skills%20that%20hit%20enemies.%20Cannot%20modify%20the%20skills%20of%20minions.%0A--------%0ASupported%20Spells%20deal%2017%20to%2025%20added%20Physical%20Damage%20for%20each%20permanent%20Minion%0A%0AAdditional%20Effects%20From%20Quality%3A%0ASupported%20Skills%20deal%200(0-10)%25%20increased%20Spell%20Damage%0A--------%0AExperience%3A%201%2F226%2C854%2C909%0A--------%0ACatarina%20envisioned%20a%20Wraeclast%20of%20disparate%20societies%20united.%0AThat%20diversity%20would%20empower%20the%20Syndicate%20-%20and%20the%20increased%0Anumber%20of%20dispensible%20bodies%20was%20a%20convenient%20coincidence.%0A--------%0AThis%20is%20a%20Support%20Gem.%20It%20does%20not%20grant%20a%20bonus%20to%20your%20character%2C%20but%20to%20skills%20in%20sockets%20connected%20to%20it.%20Place%20into%20an%20item%20socket%20connected%20to%20a%20socket%20containing%20the%20Skill%20Gem%20you%20wish%20to%20augment.%20Right%20click%20to%20remove%20from%20a%20socket.%0A",
+  "poedb": "https://poedb.tw/us/Communion_Support",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Communion Support\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Communion Support"
+}

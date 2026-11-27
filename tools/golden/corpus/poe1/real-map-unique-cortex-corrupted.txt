@@ -1,0 +1,28 @@
+Item Class: Maps
+Rarity: Unique
+Cortex
+Map (Tier 16)
+--------
+Atlas Drops: +100% (augmented)
+Monster Pack Size: +25% (augmented)
+--------
+Item Level: 84
+--------
+Monster Level: 83
+--------
+{ Unique Modifier }
+100% increased Experience gain
+{ Unique Modifier }
+Map has 5(3-5) additional random Modifiers
+{ Unique Modifier }
+Map has 6(4-6) additional Synthesis Global Modifiers
+{ Unique Modifier }
+Monster Level: 83 — Unscalable Value
+--------
+Though my life is gone, my purpose is not.
+My will remains, emboldened and empowered
+by the righteousness of my cause.
+--------
+Travel to a Map of this tier or lower by using this in a personal Map Device. Maps can only be used once. 
+--------
+Corrupted

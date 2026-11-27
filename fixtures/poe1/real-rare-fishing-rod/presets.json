@@ -1,0 +1,773 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "itemLevel": {
+          "disabled": true,
+          "value": 85
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Fishing Rod",
+          "baseTypeTrade": "Fishing Rod"
+        },
+        "searchRelaxed": {
+          "category": "Fishing Rod",
+          "disabled": false
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 17,
+              "min": 16
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 16,
+            "value": 16
+          },
+          "sources": [],
+          "statRef": "Physical DPS: #",
+          "tag": "property",
+          "text": "Physical DPS: #",
+          "tradeId": [
+            "item.physical_dps"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 1.21,
+              "min": 1.2
+            },
+            "dp": true,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 1.2,
+            "value": 1.2
+          },
+          "sources": [],
+          "statRef": "Attacks per Second: #",
+          "tag": "property",
+          "text": "Attacks per Second: #",
+          "tradeId": [
+            "item.aps"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "default": {
+              "max": 5,
+              "min": 5
+            },
+            "dp": true,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 5,
+            "value": 5
+          },
+          "sources": [],
+          "statRef": "Critical Strike Chance: #%",
+          "tag": "property",
+          "text": "Critical Strike Chance: #%",
+          "tradeId": [
+            "item.crit"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 28,
+              "min": 24
+            },
+            "default": {
+              "max": 28,
+              "min": 24
+            },
+            "dp": false,
+            "goodness": 0.5,
+            "isNegated": false,
+            "min": 24,
+            "value": 26
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 28,
+                "min": 24,
+                "value": 26
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Casting",
+                  "tags": [
+                    "Caster",
+                    "Speed"
+                  ],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 28,
+                      "min": 24,
+                      "unscalable": false,
+                      "value": 26
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased Cast Speed"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Cast Speed"
+                        }
+                      ],
+                      "ref": "#% increased Cast Speed",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_2891184298"
+                          ],
+                          "enchant": [
+                            "enchant.stat_2891184298"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2891184298"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2891184298"
+                          ],
+                          "implicit": [
+                            "implicit.stat_2891184298"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Cast Speed"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 28,
+                  "min": 24,
+                  "unscalable": false,
+                  "value": 26
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Cast Speed"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Cast Speed"
+                    }
+                  ],
+                  "ref": "#% increased Cast Speed",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_2891184298"
+                      ],
+                      "enchant": [
+                        "enchant.stat_2891184298"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2891184298"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2891184298"
+                      ],
+                      "implicit": [
+                        "implicit.stat_2891184298"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Cast Speed"
+                }
+              }
+            }
+          ],
+          "statRef": "+#% total Cast Speed",
+          "tag": "pseudo",
+          "text": "+#% total Cast Speed ",
+          "tradeId": [
+            "pseudo.pseudo_total_cast_speed"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 40,
+              "min": 20
+            },
+            "default": {
+              "max": 39,
+              "min": 31
+            },
+            "dp": false,
+            "goodness": 0.75,
+            "isNegated": false,
+            "min": 31,
+            "value": 35
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 40,
+                "min": 20,
+                "value": 35
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Filigree",
+                  "tags": [],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 40,
+                      "min": 20,
+                      "unscalable": false,
+                      "value": 35
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased Fishing Line Strength"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Fishing Line Strength"
+                        }
+                      ],
+                      "ref": "#% increased Fishing Line Strength",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_1842038569"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1842038569"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Fishing Line Strength"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 40,
+                  "min": 20,
+                  "unscalable": false,
+                  "value": 35
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Fishing Line Strength"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Fishing Line Strength"
+                    }
+                  ],
+                  "ref": "#% increased Fishing Line Strength",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1842038569"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1842038569"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Fishing Line Strength"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Fishing Line Strength",
+          "tag": "explicit",
+          "text": "#% increased Fishing Line Strength",
+          "tradeId": [
+            "explicit.stat_1842038569"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 30,
+              "min": 15
+            },
+            "default": {
+              "max": 30,
+              "min": 27
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": true,
+            "min": 27,
+            "tradeInvert": false,
+            "value": 30
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": -15,
+                "min": -30,
+                "value": -30
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Calming",
+                  "tags": [],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": -15,
+                      "min": -30,
+                      "unscalable": false,
+                      "value": -30
+                    },
+                    "stat": {
+                      "better": -1,
+                      "matchers": [
+                        {
+                          "string": "#% increased Fishing Pool Consumption"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Fishing Pool Consumption"
+                        }
+                      ],
+                      "ref": "#% reduced Fishing Pool Consumption",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_1550221644"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1550221644"
+                          ]
+                        },
+                        "inverted": true
+                      }
+                    },
+                    "translation": {
+                      "negate": true,
+                      "string": "#% reduced Fishing Pool Consumption"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": -15,
+                  "min": -30,
+                  "unscalable": false,
+                  "value": -30
+                },
+                "stat": {
+                  "better": -1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Fishing Pool Consumption"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Fishing Pool Consumption"
+                    }
+                  ],
+                  "ref": "#% reduced Fishing Pool Consumption",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1550221644"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1550221644"
+                      ]
+                    },
+                    "inverted": true
+                  }
+                },
+                "translation": {
+                  "negate": true,
+                  "string": "#% reduced Fishing Pool Consumption"
+                }
+              }
+            }
+          ],
+          "statRef": "#% reduced Fishing Pool Consumption",
+          "tag": "explicit",
+          "text": "#% reduced Fishing Pool Consumption",
+          "tradeId": [
+            "explicit.stat_1550221644"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 20,
+              "min": 15
+            },
+            "default": {
+              "max": 20,
+              "min": 18
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 18,
+            "value": 20
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 20,
+                "min": 15,
+                "value": 20
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Fascination",
+                  "tags": [
+                    "Drop"
+                  ],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 20,
+                      "min": 15,
+                      "unscalable": false,
+                      "value": 20
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased Quantity of Fish Caught"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Quantity of Fish Caught"
+                        }
+                      ],
+                      "ref": "#% increased Quantity of Fish Caught",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_3802667447"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3802667447"
+                          ],
+                          "implicit": [
+                            "implicit.stat_3802667447"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Quantity of Fish Caught"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 20,
+                  "min": 15,
+                  "unscalable": false,
+                  "value": 20
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Quantity of Fish Caught"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Quantity of Fish Caught"
+                    }
+                  ],
+                  "ref": "#% increased Quantity of Fish Caught",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3802667447"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3802667447"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3802667447"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Quantity of Fish Caught"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Quantity of Fish Caught",
+          "tag": "explicit",
+          "text": "#% increased Quantity of Fish Caught",
+          "tradeId": [
+            "explicit.stat_3802667447"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 40,
+              "min": 25
+            },
+            "default": {
+              "max": 40,
+              "min": 35
+            },
+            "dp": false,
+            "goodness": 0.9333333333333333,
+            "isNegated": false,
+            "min": 35,
+            "value": 39
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 40,
+                "min": 25,
+                "value": 39
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of Bounty",
+                  "tags": [
+                    "Drop"
+                  ],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 40,
+                      "min": 25,
+                      "unscalable": false,
+                      "value": 39
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased Rarity of Fish Caught"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Rarity of Fish Caught"
+                        }
+                      ],
+                      "ref": "#% increased Rarity of Fish Caught",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_3310914132"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3310914132"
+                          ],
+                          "implicit": [
+                            "implicit.stat_3310914132"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased Rarity of Fish Caught"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 40,
+                  "min": 25,
+                  "unscalable": false,
+                  "value": 39
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Rarity of Fish Caught"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Rarity of Fish Caught"
+                    }
+                  ],
+                  "ref": "#% increased Rarity of Fish Caught",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3310914132"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3310914132"
+                      ],
+                      "implicit": [
+                        "implicit.stat_3310914132"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased Rarity of Fish Caught"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Rarity of Fish Caught",
+          "tag": "explicit",
+          "text": "#% increased Rarity of Fish Caught",
+          "tradeId": [
+            "explicit.stat_3310914132"
+          ]
+        }
+      ]
+    },
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "itemLevel": {
+          "disabled": false,
+          "value": 85
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Fishing Rod",
+          "baseTypeTrade": "Fishing Rod"
+        },
+        "searchRelaxed": {
+          "category": "Fishing Rod",
+          "disabled": true
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_base_item",
+      "stats": []
+    }
+  ]
+}

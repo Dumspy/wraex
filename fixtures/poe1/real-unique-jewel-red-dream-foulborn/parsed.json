@@ -1,0 +1,360 @@
+{
+  "baseType": "Crimson Jewel",
+  "category": "Jewel",
+  "dustEquivalent": 4370,
+  "influences": [],
+  "info": {
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvSmV3ZWxzL1RoZVJlZERyZWFtIiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/5fc736ec75/TheRedDream.png",
+    "name": "The Red Dream",
+    "namespace": "UNIQUE",
+    "refName": "The Red Dream",
+    "unique": {
+      "base": "Crimson Jewel",
+      "disenchantValue": 1.84
+    }
+  },
+  "infoVariants": [
+    {
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvSmV3ZWxzL1RoZVJlZERyZWFtIiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/5fc736ec75/TheRedDream.png",
+      "name": "The Red Dream",
+      "namespace": "UNIQUE",
+      "refName": "The Red Dream",
+      "unique": {
+        "base": "Crimson Jewel",
+        "disenchantValue": 1.84
+      }
+    }
+  ],
+  "isFoulborn": true,
+  "isUnidentified": false,
+  "itemLevel": 83,
+  "name": "The Red Dream",
+  "newMods": [
+    {
+      "info": {
+        "tags": [
+          "Damage",
+          "Elemental",
+          "Fire",
+          "Chaos"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 10,
+            "min": 6,
+            "unscalable": false,
+            "value": 8
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Gain #% of Fire Damage as Extra Chaos Damage"
+              }
+            ],
+            "ref": "Gain #% of Fire Damage as Extra Chaos Damage",
+            "trade": {
+              "ids": {
+                "crafted": [
+                  "crafted.stat_1599775597"
+                ],
+                "explicit": [
+                  "explicit.stat_1599775597"
+                ],
+                "fractured": [
+                  "fractured.stat_1599775597"
+                ],
+                "implicit": [
+                  "implicit.stat_1599775597"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Gain #% of Fire Damage as Extra Chaos Damage"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "mechanic": "foulborn",
+        "tags": [
+          "Life",
+          "Elemental",
+          "Fire"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 50,
+            "min": 50,
+            "unscalable": false,
+            "value": 50
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value"
+              }
+            ],
+            "ref": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_4068640319"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value"
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Unique",
+  "rawText": "Item Class: Jewels\nRarity: Unique\nFoulborn The Red Dream\nCrimson Jewel\n--------\nLimited to: 1\nRadius: Large\n--------\nItem Level: 83\n--------\n{ Unique Modifier — Damage, Elemental, Fire, Chaos }\nGain 8(6-10)% of Fire Damage as Extra Chaos Damage\n{ Foulborn Unique Modifier — Life, Elemental, Fire }\nPassives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at 50% of its value\n--------\nWe flow like blood into Chayula's open mouth,\nand spill into the land we have watched forever.\n--------\nPlace into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 10,
+            "min": 6,
+            "value": 8
+          },
+          "modifier": {
+            "info": {
+              "tags": [
+                "Damage",
+                "Elemental",
+                "Fire",
+                "Chaos"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 10,
+                  "min": 6,
+                  "unscalable": false,
+                  "value": 8
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Gain #% of Fire Damage as Extra Chaos Damage"
+                    }
+                  ],
+                  "ref": "Gain #% of Fire Damage as Extra Chaos Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1599775597"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1599775597"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1599775597"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1599775597"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Gain #% of Fire Damage as Extra Chaos Damage"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 10,
+              "min": 6,
+              "unscalable": false,
+              "value": 8
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Gain #% of Fire Damage as Extra Chaos Damage"
+                }
+              ],
+              "ref": "Gain #% of Fire Damage as Extra Chaos Damage",
+              "trade": {
+                "ids": {
+                  "crafted": [
+                    "crafted.stat_1599775597"
+                  ],
+                  "explicit": [
+                    "explicit.stat_1599775597"
+                  ],
+                  "fractured": [
+                    "fractured.stat_1599775597"
+                  ],
+                  "implicit": [
+                    "implicit.stat_1599775597"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Gain #% of Fire Damage as Extra Chaos Damage"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Gain #% of Fire Damage as Extra Chaos Damage"
+          }
+        ],
+        "ref": "Gain #% of Fire Damage as Extra Chaos Damage",
+        "trade": {
+          "ids": {
+            "crafted": [
+              "crafted.stat_1599775597"
+            ],
+            "explicit": [
+              "explicit.stat_1599775597"
+            ],
+            "fractured": [
+              "fractured.stat_1599775597"
+            ],
+            "implicit": [
+              "implicit.stat_1599775597"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 50,
+            "min": 50,
+            "value": 50
+          },
+          "modifier": {
+            "info": {
+              "mechanic": "foulborn",
+              "tags": [
+                "Life",
+                "Elemental",
+                "Fire"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 50,
+                  "min": 50,
+                  "unscalable": false,
+                  "value": 50
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value"
+                    }
+                  ],
+                  "ref": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_4068640319"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 50,
+              "min": 50,
+              "unscalable": false,
+              "value": 50
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value"
+                }
+              ],
+              "ref": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_4068640319"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value"
+          }
+        ],
+        "ref": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_4068640319"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "uniqueBase": {
+    "craftable": {
+      "category": "Jewel"
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvSmV3ZWxzL2Jhc2ljc3RyIiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/8129ab1f4d/basicstr.png",
+    "name": "Crimson Jewel",
+    "namespace": "ITEM",
+    "refName": "Crimson Jewel"
+  },
+  "unknownModifiers": []
+}

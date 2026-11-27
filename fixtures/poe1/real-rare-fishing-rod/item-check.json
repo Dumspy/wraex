@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Fishing%20Rods%0ARarity%3A%20Rare%0AFate%20Gill%0AFishing%20Rod%0A--------%0AFishing%20Rod%0APhysical%20Damage%3A%208-15%0ACritical%20Strike%20Chance%3A%205.00%25%0AAttacks%20per%20Second%3A%201.20%0AWeapon%20Range%3A%201.3%20metres%0A--------%0ARequirements%3A%0ALevel%3A%208%0A--------%0ASockets%3A%20R-W%20B-G%20%0A--------%0AItem%20Level%3A%2085%0A--------%0A%7B%20Prefix%20Modifier%20%22Filigree%22%20(Tier%3A%201)%20%7D%0A35(20-40)%25%20increased%20Fishing%20Line%20Strength%0A%7B%20Prefix%20Modifier%20%22Calming%22%20(Tier%3A%201)%20%7D%0A30(30-15)%25%20reduced%20Fishing%20Pool%20Consumption%0A%7B%20Prefix%20Modifier%20%22Alluring%22%20(Tier%3A%201)%20%7D%0ARhoa%20Feather%20Lure(...)%20%E2%80%94%20Unscalable%20Value%0A%7B%20Suffix%20Modifier%20%22of%20Fascination%22%20(Tier%3A%201)%20%E2%80%94%20Drop%20%7D%0A20(15-20)%25%20increased%20Quantity%20of%20Fish%20Caught%0A%7B%20Suffix%20Modifier%20%22of%20Bounty%22%20(Tier%3A%201)%20%E2%80%94%20Drop%20%7D%0A39(25-40)%25%20increased%20Rarity%20of%20Fish%20Caught%0A%7B%20Suffix%20Modifier%20%22of%20Casting%22%20(Tier%3A%201)%20%E2%80%94%20Caster%2C%20Speed%20%7D%0A26(24-28)%25%20increased%20Cast%20Speed%0A",
+  "poedb": "https://poedb.tw/us/Fishing_Rod",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Fishing Rod\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Fishing Rod"
+}

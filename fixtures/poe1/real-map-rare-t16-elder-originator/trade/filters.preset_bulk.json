@@ -1,0 +1,88 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "map_filters": {
+          "filters": {
+            "map_blighted": {
+              "option": "false"
+            },
+            "map_tier": {
+              "max": 16,
+              "min": 16
+            },
+            "map_uberblighted": {
+              "option": "false"
+            }
+          }
+        },
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            },
+            "split": {
+              "option": "false"
+            }
+          }
+        },
+        "trade_filters": {
+          "filters": {
+            "collapse": {
+              "option": "true"
+            },
+            "price": {
+              "option": "chaos_divine"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "implicit.stat_1792283443|2",
+              "value": {}
+            },
+            {
+              "disabled": false,
+              "id": "implicit.stat_3624393862|3",
+              "value": {}
+            },
+            {
+              "disabled": false,
+              "id": "implicit.stat_2696470877",
+              "value": {}
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": {
+        "discriminator": "map",
+        "option": "Map"
+      }
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

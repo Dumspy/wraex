@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Jewels%0ARarity%3A%20Magic%0AVivid%20Cobalt%20Jewel%20of%20Zealousness%0A--------%0AItem%20Level%3A%2080%0A--------%0A%7B%20Corruption%20Implicit%20Modifier%20%E2%80%94%20Caster%2C%20Curse%20%7D%0AYou%20cannot%20be%20Cursed%20with%20Silence%20%E2%80%94%20Unscalable%20Value%0A--------%0A%7B%20Prefix%20Modifier%20%22Vivid%22%20(Tier%3A%201)%20%E2%80%94%20Life%20%7D%0A7(5-7)%25%20increased%20maximum%20Life%0A%7B%20Suffix%20Modifier%20%22of%20Zealousness%22%20(Tier%3A%201)%20%E2%80%94%20Damage%2C%20Elemental%2C%20Fire%20%7D%0A%2B8(6-8)%25%20to%20Fire%20Damage%20over%20Time%20Multiplier%0A--------%0APlace%20into%20an%20allocated%20Jewel%20Socket%20on%20the%20Passive%20Skill%20Tree.%20Right%20click%20to%20remove%20from%20the%20Socket.%0A--------%0ACorrupted%0A",
+  "poedb": "https://poedb.tw/us/Cobalt_Jewel",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Cobalt Jewel\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Cobalt Jewel"
+}

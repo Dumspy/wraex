@@ -1,0 +1,32 @@
+{
+  "category": "Gem",
+  "gemLevel": 20,
+  "influences": [],
+  "info": {
+    "gem": {
+      "maxLevel": 20
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9BbWJ1c2hTa2lsbEdlbSIsInciOjEsImgiOjEsInNjYWxlIjoxfV0/92a4cb4028/AmbushSkillGem.png",
+    "name": "Ambush",
+    "namespace": "GEM",
+    "refName": "Ambush"
+  },
+  "infoVariants": [
+    {
+      "gem": {
+        "maxLevel": 20
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9BbWJ1c2hTa2lsbEdlbSIsInciOjEsImgiOjEsInNjYWxlIjoxfV0/92a4cb4028/AmbushSkillGem.png",
+      "name": "Ambush",
+      "namespace": "GEM",
+      "refName": "Ambush"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "Ambush",
+  "newMods": [],
+  "quality": 2,
+  "rawText": "Item Class: Skill Gems\nRarity: Gem\nAmbush\n--------\nCritical, Spell, Movement, Duration, Travel\nLevel: 20 (Max)\nCost: 23 Mana\nCooldown Time: 5.00 sec\nCast Time: 0.30 sec\nQuality: +2% (augmented)\n--------\nRequirements:\nLevel: 70\nDex: 98\nInt: 68\n--------\nTeleports you to a nearby enemy, applying a buff to you for a short duration and blinding the enemy for a secondary duration. Performing a melee attack with a One-Handed Weapon removes the buff to exert that attack.\n--------\nBase duration is 1.50 seconds\nBuff is removed to Exert the next Melee Attack you perform\nAttacks Exerted by this Skill cannot be Exerted by other Skills\n(Vaal Attacks, Channelling Attacks, Retaliation Attacks, and Attacks which Repeat cannot be Exerted)\nExerted Attacks have +25% to Critical Strike Chance\nExerted Attacks have +138% to Critical Strike Multiplier\nBase Debuff Duration is 3.00 seconds\n\nAdditional Effects From Quality:\nExerted Attacks have +1(0-10)% to Critical Strike Chance\n--------\nPlace into an item socket to gain this skill. Right click to remove from a socket.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

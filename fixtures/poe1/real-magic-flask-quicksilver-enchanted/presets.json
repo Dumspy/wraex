@@ -1,0 +1,856 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "itemLevel": {
+          "disabled": true,
+          "value": 83
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Quicksilver Flask",
+          "baseTypeTrade": "Quicksilver Flask"
+        },
+        "searchRelaxed": {
+          "category": "Flask",
+          "disabled": true
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": [
+        {
+          "disabled": true,
+          "hidden": "hide_harvest_and_instilling",
+          "roll": {
+            "default": {
+              "max": 67,
+              "min": 67
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 67,
+            "value": 67
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 67,
+                "min": 67,
+                "value": 67
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "enchant"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 67,
+                      "min": 67,
+                      "unscalable": false,
+                      "value": 67
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased effect"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced effect"
+                        }
+                      ],
+                      "ref": "#% increased effect",
+                      "trade": {
+                        "ids": {
+                          "enchant": [
+                            "enchant.stat_2448920197"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2448920197"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2448920197"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased effect"
+                    }
+                  },
+                  {
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Gains no Charges during Effect"
+                        }
+                      ],
+                      "ref": "Gains no Charges during Effect",
+                      "trade": {
+                        "ids": {
+                          "enchant": [
+                            "enchant.stat_4123533923"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Gains no Charges during Effect"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 67,
+                  "min": 67,
+                  "unscalable": false,
+                  "value": 67
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased effect"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced effect"
+                    }
+                  ],
+                  "ref": "#% increased effect",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_2448920197"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2448920197"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2448920197"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased effect"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased effect",
+          "tag": "enchant",
+          "text": "#% increased effect",
+          "tradeId": [
+            "enchant.stat_2448920197"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "hide_harvest_and_instilling",
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "enchant"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 67,
+                      "min": 67,
+                      "unscalable": false,
+                      "value": 67
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased effect"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced effect"
+                        }
+                      ],
+                      "ref": "#% increased effect",
+                      "trade": {
+                        "ids": {
+                          "enchant": [
+                            "enchant.stat_2448920197"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2448920197"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2448920197"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased effect"
+                    }
+                  },
+                  {
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Gains no Charges during Effect"
+                        }
+                      ],
+                      "ref": "Gains no Charges during Effect",
+                      "trade": {
+                        "ids": {
+                          "enchant": [
+                            "enchant.stat_4123533923"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Gains no Charges during Effect"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Gains no Charges during Effect"
+                    }
+                  ],
+                  "ref": "Gains no Charges during Effect",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_4123533923"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Gains no Charges during Effect"
+                }
+              }
+            }
+          ],
+          "statRef": "Gains no Charges during Effect",
+          "tag": "enchant",
+          "text": "Gains no Charges during Effect",
+          "tradeId": [
+            "enchant.stat_4123533923"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 27,
+              "min": 23
+            },
+            "default": {
+              "max": 24,
+              "min": 23
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": true,
+            "max": 24,
+            "tradeInvert": true,
+            "value": 23
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": -23,
+                "min": -27,
+                "value": -23
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Alchemist's",
+                  "tags": [],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": -23,
+                      "min": -27,
+                      "unscalable": false,
+                      "value": -23
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased Duration"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Duration"
+                        }
+                      ],
+                      "ref": "#% increased Duration",
+                      "trade": {
+                        "ids": {
+                          "enchant": [
+                            "enchant.stat_1256719186"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1256719186"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1256719186"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "negate": true,
+                      "string": "#% reduced Duration"
+                    }
+                  },
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 25,
+                      "min": 25,
+                      "unscalable": false,
+                      "value": 25
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased effect"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced effect"
+                        }
+                      ],
+                      "ref": "#% increased effect",
+                      "trade": {
+                        "ids": {
+                          "enchant": [
+                            "enchant.stat_2448920197"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2448920197"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2448920197"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased effect"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": -23,
+                  "min": -27,
+                  "unscalable": false,
+                  "value": -23
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased Duration"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced Duration"
+                    }
+                  ],
+                  "ref": "#% increased Duration",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_1256719186"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1256719186"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1256719186"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "negate": true,
+                  "string": "#% reduced Duration"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased Duration",
+          "tag": "explicit",
+          "text": "#% reduced Duration",
+          "tradeId": [
+            "explicit.stat_1256719186"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 25,
+              "min": 25
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 25,
+            "value": 25
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 25,
+                "min": 25,
+                "value": 25
+              },
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "name": "Alchemist's",
+                  "tags": [],
+                  "tier": 1,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": -23,
+                      "min": -27,
+                      "unscalable": false,
+                      "value": -23
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased Duration"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced Duration"
+                        }
+                      ],
+                      "ref": "#% increased Duration",
+                      "trade": {
+                        "ids": {
+                          "enchant": [
+                            "enchant.stat_1256719186"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1256719186"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1256719186"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "negate": true,
+                      "string": "#% reduced Duration"
+                    }
+                  },
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 25,
+                      "min": 25,
+                      "unscalable": false,
+                      "value": 25
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% increased effect"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% reduced effect"
+                        }
+                      ],
+                      "ref": "#% increased effect",
+                      "trade": {
+                        "ids": {
+                          "enchant": [
+                            "enchant.stat_2448920197"
+                          ],
+                          "explicit": [
+                            "explicit.stat_2448920197"
+                          ],
+                          "fractured": [
+                            "fractured.stat_2448920197"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "#% increased effect"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 25,
+                  "min": 25,
+                  "unscalable": false,
+                  "value": 25
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% increased effect"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% reduced effect"
+                    }
+                  ],
+                  "ref": "#% increased effect",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_2448920197"
+                      ],
+                      "explicit": [
+                        "explicit.stat_2448920197"
+                      ],
+                      "fractured": [
+                        "fractured.stat_2448920197"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "#% increased effect"
+                }
+              }
+            }
+          ],
+          "statRef": "#% increased effect",
+          "tag": "explicit",
+          "text": "#% increased effect",
+          "tradeId": [
+            "explicit.stat_2448920197"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 44,
+              "min": 40
+            },
+            "default": {
+              "max": 44,
+              "min": 42
+            },
+            "dp": false,
+            "goodness": 0.25,
+            "isNegated": true,
+            "max": 44,
+            "tradeInvert": true,
+            "value": 43
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": -40,
+                "min": -44,
+                "value": -43
+              },
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Skink",
+                  "tags": [],
+                  "tier": 2,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": -40,
+                      "min": -44,
+                      "unscalable": false,
+                      "value": -43
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% more Duration"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% less Duration"
+                        }
+                      ],
+                      "ref": "#% more Duration",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_1506355899"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1506355899"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "negate": true,
+                      "string": "#% less Duration"
+                    }
+                  },
+                  {
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Immunity to Bleeding and Corrupted Blood during Effect"
+                        }
+                      ],
+                      "ref": "Immunity to Bleeding and Corrupted Blood during Effect",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_3965637181"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3965637181"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Immunity to Bleeding and Corrupted Blood during Effect"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": -40,
+                  "min": -44,
+                  "unscalable": false,
+                  "value": -43
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "#% more Duration"
+                    },
+                    {
+                      "negate": true,
+                      "string": "#% less Duration"
+                    }
+                  ],
+                  "ref": "#% more Duration",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1506355899"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1506355899"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "negate": true,
+                  "string": "#% less Duration"
+                }
+              }
+            }
+          ],
+          "statRef": "#% more Duration",
+          "tag": "explicit",
+          "text": "#% less Duration",
+          "tradeId": [
+            "explicit.stat_1506355899"
+          ]
+        },
+        {
+          "disabled": false,
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "generation": "suffix",
+                  "name": "of the Skink",
+                  "tags": [],
+                  "tier": 2,
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": -40,
+                      "min": -44,
+                      "unscalable": false,
+                      "value": -43
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "#% more Duration"
+                        },
+                        {
+                          "negate": true,
+                          "string": "#% less Duration"
+                        }
+                      ],
+                      "ref": "#% more Duration",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_1506355899"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1506355899"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "negate": true,
+                      "string": "#% less Duration"
+                    }
+                  },
+                  {
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Immunity to Bleeding and Corrupted Blood during Effect"
+                        }
+                      ],
+                      "ref": "Immunity to Bleeding and Corrupted Blood during Effect",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_3965637181"
+                          ],
+                          "fractured": [
+                            "fractured.stat_3965637181"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Immunity to Bleeding and Corrupted Blood during Effect"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Immunity to Bleeding and Corrupted Blood during Effect"
+                    }
+                  ],
+                  "ref": "Immunity to Bleeding and Corrupted Blood during Effect",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3965637181"
+                      ],
+                      "fractured": [
+                        "fractured.stat_3965637181"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Immunity to Bleeding and Corrupted Blood during Effect"
+                }
+              }
+            }
+          ],
+          "statRef": "Immunity to Bleeding and Corrupted Blood during Effect",
+          "tag": "explicit",
+          "text": "Immunity to Bleeding and Corrupted Blood during Effect",
+          "tradeId": [
+            "explicit.stat_3965637181"
+          ]
+        }
+      ]
+    }
+  ]
+}

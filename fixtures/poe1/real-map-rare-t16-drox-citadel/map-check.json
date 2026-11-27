@@ -1,0 +1,17 @@
+[
+  {
+    "matcher": "Monsters deal #% extra Physical Damage as Fire",
+    "roll": 108
+  },
+  {
+    "matcher": "#% more Monster Life",
+    "roll": 45
+  },
+  {
+    "matcher": "Monsters have #% increased Area of Effect",
+    "roll": 100
+  },
+  {
+    "matcher": "Players cannot Regenerate Life, Mana or Energy Shield"
+  }
+]

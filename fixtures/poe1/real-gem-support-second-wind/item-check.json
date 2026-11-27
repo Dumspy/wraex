@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Support%20Gems%0ARarity%3A%20Gem%0ASecond%20Wind%20Support%0A--------%0ASupport%0ALevel%3A%201%0ACost%20%26%20Reservation%20Multiplier%3A%20200%25%0AQuality%3A%20%2B20%25%20(augmented)%0A--------%0ARequirements%3A%0ALevel%3A%2031%0ADex%3A%2033%0AInt%3A%2023%0A--------%0ASupports%20skills%20with%20cooldowns.%0ACannot%20support%20triggered%20skills.%0A--------%0ASupported%20Skills%20have%2024%25%20reduced%20Cooldown%20Recovery%20Rate%0ASupported%20Non-Instant%20Skills%20have%20%2B1%20Cooldown%20Use%0A%0AAdditional%20Effects%20From%20Quality%3A%0ASupported%20Skills%20have%20%2B5(0-5)%25%20increased%20Cooldown%20Recovery%20Rate%0A--------%0AExperience%3A%201%2F285%2C815%0A--------%0AThis%20is%20a%20Support%20Gem.%20It%20does%20not%20grant%20a%20bonus%20to%20your%20character%2C%20but%20to%20skills%20in%20sockets%20connected%20to%20it.%20Place%20into%20an%20item%20socket%20connected%20to%20a%20socket%20containing%20the%20Skill%20Gem%20you%20wish%20to%20augment.%20Right%20click%20to%20remove%20from%20a%20socket.%0A",
+  "poedb": "https://poedb.tw/us/Second_Wind_Support",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Second Wind Support\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Second Wind Support"
+}

@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Stackable%20Currency%0ARarity%3A%20Currency%0ARunegraft%20of%20Gemcraft%0A--------%0AStack%20Size%3A%201%2F10%0AReplaces%20one%20Mastery%20Passive%20Skill%0A--------%0A%2B1%20to%20Level%20of%20all%20non-Exceptional%20Support%20Gems%0A--------%0ARight%20click%20this%20item%20then%20left%20click%0Aan%20allocated%20Passive%20Mastery%20Skill.%0AOnly%20one%20Runegraft%20of%20any%20given%0Atype%20can%20be%20in%20use%20at%20a%20time.%0A",
+  "poedb": "https://poedb.tw/us/Runegraft_of_Gemcraft",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Runegraft of Gemcraft\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Runegraft of Gemcraft"
+}

@@ -1,0 +1,32 @@
+{
+  "category": "Currency",
+  "influences": [],
+  "info": {
+    "exchangeable": true,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvU2V0dGxlcnMvVmlsbGFnZVJ1bmUxNCIsInNjYWxlIjoxfV0/6288329dc0/VillageRune14.png",
+    "name": "Runegraft of Gemcraft",
+    "namespace": "ITEM",
+    "refName": "Runegraft of Gemcraft",
+    "tradeTag": "runegraft-of-gemcraft"
+  },
+  "infoVariants": [
+    {
+      "exchangeable": true,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvU2V0dGxlcnMvVmlsbGFnZVJ1bmUxNCIsInNjYWxlIjoxfV0/6288329dc0/VillageRune14.png",
+      "name": "Runegraft of Gemcraft",
+      "namespace": "ITEM",
+      "refName": "Runegraft of Gemcraft",
+      "tradeTag": "runegraft-of-gemcraft"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "Runegraft of Gemcraft",
+  "newMods": [],
+  "rawText": "Item Class: Stackable Currency\nRarity: Currency\nRunegraft of Gemcraft\n--------\nStack Size: 1/10\nReplaces one Mastery Passive Skill\n--------\n+1 to Level of all non-Exceptional Support Gems\n--------\nRight click this item then left click\nan allocated Passive Mastery Skill.\nOnly one Runegraft of any given\ntype can be in use at a time.\n",
+  "stackSize": {
+    "max": 10,
+    "value": 1
+  },
+  "statsByType": [],
+  "unknownModifiers": []
+}

@@ -1,0 +1,30 @@
+Item Class: Skill Gems
+Rarity: Gem
+Ambush
+--------
+Critical, Spell, Movement, Duration, Travel
+Level: 20 (Max)
+Cost: 23 Mana
+Cooldown Time: 5.00 sec
+Cast Time: 0.30 sec
+Quality: +2% (augmented)
+--------
+Requirements:
+Level: 70
+Dex: 98
+Int: 68
+--------
+Teleports you to a nearby enemy, applying a buff to you for a short duration and blinding the enemy for a secondary duration. Performing a melee attack with a One-Handed Weapon removes the buff to exert that attack.
+--------
+Base duration is 1.50 seconds
+Buff is removed to Exert the next Melee Attack you perform
+Attacks Exerted by this Skill cannot be Exerted by other Skills
+(Vaal Attacks, Channelling Attacks, Retaliation Attacks, and Attacks which Repeat cannot be Exerted)
+Exerted Attacks have +25% to Critical Strike Chance
+Exerted Attacks have +138% to Critical Strike Multiplier
+Base Debuff Duration is 3.00 seconds
+
+Additional Effects From Quality:
+Exerted Attacks have +1(0-10)% to Critical Strike Chance
+--------
+Place into an item socket to gain this skill. Right click to remove from a socket.

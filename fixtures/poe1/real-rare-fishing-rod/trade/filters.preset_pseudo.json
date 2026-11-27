@@ -1,0 +1,80 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "category": {
+              "option": "weapon.rod"
+            },
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": true,
+              "id": "pseudo.pseudo_total_cast_speed",
+              "value": {
+                "min": 24
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_1842038569",
+              "value": {
+                "min": 31
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_1550221644",
+              "value": {
+                "min": 27
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_3802667447",
+              "value": {
+                "min": 18
+              }
+            },
+            {
+              "disabled": true,
+              "id": "explicit.stat_3310914132",
+              "value": {
+                "min": 35
+              }
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      }
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

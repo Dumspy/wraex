@@ -1,0 +1,32 @@
+{
+  "category": "Currency",
+  "influences": [],
+  "info": {
+    "exchangeable": true,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvUmVmbGVjdGl2ZU1pc3QiLCJzY2FsZSI6MX1d/26956f795e/ReflectiveMist.png",
+    "name": "Reflecting Mist",
+    "namespace": "ITEM",
+    "refName": "Reflecting Mist",
+    "tradeTag": "reflecting-mist"
+  },
+  "infoVariants": [
+    {
+      "exchangeable": true,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvUmVmbGVjdGl2ZU1pc3QiLCJzY2FsZSI6MX1d/26956f795e/ReflectiveMist.png",
+      "name": "Reflecting Mist",
+      "namespace": "ITEM",
+      "refName": "Reflecting Mist",
+      "tradeTag": "reflecting-mist"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "Reflecting Mist",
+  "newMods": [],
+  "rawText": "Item Class: Stackable Currency\nRarity: Currency\nReflecting Mist\n--------\nStack Size: 4/10\n--------\nUnpredictably reflects a rare amulet or ring, breaking it\ninto two mirrored halves with reflected modifiers\n--------\nRight click this item then left click a rare amulet or ring to reflect it. Cannot be used on Veiled or Influenced items.\nShift click to unstack.\n",
+  "stackSize": {
+    "max": 10,
+    "value": 4
+  },
+  "statsByType": [],
+  "unknownModifiers": []
+}

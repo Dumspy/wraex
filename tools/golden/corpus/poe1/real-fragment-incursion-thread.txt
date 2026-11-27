@@ -1,0 +1,9 @@
+Item Class: Map Fragments
+Rarity: Normal
+Incursion Thread
+--------
+Stack Size: 295/100
+--------
+Threads Temporal Incursions into an Area
+--------
+Can be used in a personal Map Device to add content to a Map.

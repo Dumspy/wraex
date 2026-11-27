@@ -1,0 +1,81 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "armour_filters": {
+          "filters": {
+            "base_defence_percentile": {
+              "min": 67
+            }
+          }
+        },
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "vestigial": {
+              "option": "false"
+            }
+          }
+        }
+      },
+      "name": "Greed's Embrace",
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "pseudo.pseudo_total_elemental_resistance",
+              "value": {
+                "min": 3
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_2250533757",
+              "value": {}
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_295075366",
+              "value": {}
+            }
+          ],
+          "type": "and"
+        },
+        {
+          "disabled": false,
+          "filters": [
+            {
+              "disabled": false,
+              "id": "explicit.stat_3666934677",
+              "value": {
+                "min": 5
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_57434274",
+              "value": {
+                "min": 5
+              }
+            }
+          ],
+          "type": "count",
+          "value": {
+            "min": 1
+          }
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Golden Plate"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

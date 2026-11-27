@@ -33,7 +33,16 @@ any gem.
 - `real-*`: real in-game copies (advanced format, Ctrl+Alt+C), from the
   maintainer's own play: fractured and eldritch-implicit rares, a Foulborn unique
   a six-socket unique, and three maps (a rare T16, a foil Valdo map with its
-  reward, a corrupted blighted map).
+  reward, a corrupted blighted map). From issue #11, also real copies: a unique
+  and an enchanted magic flask, a corrupted magic jewel, a Foulborn unique jewel,
+  a large cluster jewel, a rare fishing rod, a Foulborn unique body armour, rare
+  maps (T16 with a Drox citadel, T16 Elder/Originator, T10 delirium mirror),
+  two corrupted unique maps (Cortex, Altered Distant Memory), currency
+  (Runegraft, Reflecting Mist, Allflame Ember, Essence of Delirium), a
+  divination card, two fragments, an invitation, a skill gem and two support
+  gems (one exceptional). Kept byte-exact, trailing spaces included. The fishing
+  rod's lure and the unique maps' "Monster Level" mod are unknown to APT's stat
+  data, which the fixtures record as upstream does.
 - `adv-*`: hand-written in the advanced format, aimed at parser branches the
   real copies miss: magic names, legacy rolls (volatile, reflecting), negated
   rolls, catalyst quality, veiled and synthesised mods, enchant and scourge

@@ -1,0 +1,23 @@
+Item Class: Maps
+Rarity: Rare
+Eerie Direction
+Map (Tier 10)
+--------
+Atlas Drops: +52% (augmented)
+Item Rarity: +31% (augmented)
+Monster Pack Size: +20% (augmented)
+--------
+Item Level: 79
+--------
+Monster Level: 77
+--------
+{ Prefix Modifier "Demonic" (Tier: 1) }
+Area is inhabited by Demons — Unscalable Value
+{ Prefix Modifier "Chaining" (Tier: 1) }
+Monsters' skills Chain 2 additional times
+{ Rare-only Suffix Modifier "of Insanity" (Tier: 1) }
+Area contains a Mirror of Delirium — Unscalable Value
+{ Suffix Modifier "of Enervation" (Tier: 1) }
+Monsters steal Power, Frenzy and Endurance charges on Hit
+--------
+Travel to a Map of this tier or lower by using this in a personal Map Device. Maps can only be used once. 

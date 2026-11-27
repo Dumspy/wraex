@@ -1,0 +1,25 @@
+Item Class: Utility Flasks
+Rarity: Magic
+Alchemist's Quicksilver Flask of the Skink
+--------
+Lasts 2.60 (augmented) Seconds
+Consumes 30 of 60 Charges on use
+Currently has 60 Charges
+40% increased Movement Speed
+--------
+Requirements:
+Level: 64
+--------
+Item Level: 83
+--------
+67% increased effect (enchant)
+Gains no Charges during Effect (enchant)
+--------
+{ Prefix Modifier "Alchemist's" (Tier: 1) }
+23(27-23)% reduced Duration
+25% increased effect
+{ Suffix Modifier "of the Skink" (Tier: 2) }
+43(44-40)% less Duration
+Immunity to Bleeding and Corrupted Blood during Effect
+--------
+Right click to drink. Can only hold charges while in belt. Refills as you kill monsters.

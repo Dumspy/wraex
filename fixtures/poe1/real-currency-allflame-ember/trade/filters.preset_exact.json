@@ -1,0 +1,21 @@
+{
+  "api": "bulk",
+  "request": {
+    "engine": "new",
+    "query": {
+      "have": [
+        "divine",
+        "chaos"
+      ],
+      "status": {
+        "option": "online"
+      },
+      "want": [
+        "allflame-ember-of-the-wildwood"
+      ]
+    },
+    "sort": {
+      "have": "asc"
+    }
+  }
+}

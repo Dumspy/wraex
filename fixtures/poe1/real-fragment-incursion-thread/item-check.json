@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Map%20Fragments%0ARarity%3A%20Normal%0AIncursion%20Thread%0A--------%0AStack%20Size%3A%20295%2F100%0A--------%0AThreads%20Temporal%20Incursions%20into%20an%20Area%0A--------%0ACan%20be%20used%20in%20a%20personal%20Map%20Device%20to%20add%20content%20to%20a%20Map.%0A",
+  "poedb": "https://poedb.tw/us/Incursion_Thread",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Incursion Thread\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Incursion Thread"
+}

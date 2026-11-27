@@ -1,0 +1,20 @@
+Item Class: Jewels
+Rarity: Unique
+Foulborn The Red Dream
+Crimson Jewel
+--------
+Limited to: 1
+Radius: Large
+--------
+Item Level: 83
+--------
+{ Unique Modifier — Damage, Elemental, Fire, Chaos }
+Gain 8(6-10)% of Fire Damage as Extra Chaos Damage
+{ Foulborn Unique Modifier — Life, Elemental, Fire }
+Passives granting Fire Resistance or all Elemental Resistances in Radius
+also grant increased Maximum Life at 50% of its value
+--------
+We flow like blood into Chayula's open mouth,
+and spill into the land we have watched forever.
+--------
+Place into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.

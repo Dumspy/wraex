@@ -1,0 +1,582 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "foulborn": {
+          "value": false
+        },
+        "searchExact": {
+          "baseTypeTrade": "Silver Flask",
+          "name": "Cinderswallow Urn",
+          "nameTrade": "Cinderswallow Urn"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        },
+        "vestigial": {
+          "value": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": true,
+          "hidden": "hide_harvest_and_instilling",
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "enchant"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Used when Charges reach full"
+                        }
+                      ],
+                      "ref": "Used when Charges reach full",
+                      "trade": {
+                        "ids": {
+                          "enchant": [
+                            "enchant.stat_3287581721"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Used when Charges reach full"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Used when Charges reach full"
+                    }
+                  ],
+                  "ref": "Used when Charges reach full",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_3287581721"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Used when Charges reach full"
+                }
+              }
+            }
+          ],
+          "statRef": "Used when Charges reach full",
+          "tag": "enchant",
+          "text": "Used when Charges reach full",
+          "tradeId": [
+            "enchant.stat_3287581721"
+          ]
+        },
+        {
+          "disabled": true,
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "generation": "prefix",
+                  "mechanic": "explicit-veiled",
+                  "name": "Catarina's",
+                  "tags": [],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Enemies Ignited by you during Effect have Malediction"
+                        }
+                      ],
+                      "ref": "Enemies Ignited by you during Effect have Malediction",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_1558071928"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Enemies Ignited by you during Effect have Malediction"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Enemies Ignited by you during Effect have Malediction"
+                    }
+                  ],
+                  "ref": "Enemies Ignited by you during Effect have Malediction",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1558071928"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Enemies Ignited by you during Effect have Malediction"
+                }
+              }
+            }
+          ],
+          "statRef": "Enemies Ignited by you during Effect have Malediction",
+          "tag": "explicit-veiled",
+          "text": "Enemies Ignited by you during Effect have Malediction",
+          "tradeId": [
+            "explicit.stat_1558071928"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 20,
+              "min": 10
+            },
+            "default": {
+              "max": 13,
+              "min": 11
+            },
+            "dp": false,
+            "goodness": 0.2,
+            "isNegated": false,
+            "min": 11,
+            "value": 12
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 20,
+                "min": 10,
+                "value": 12
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 20,
+                      "min": 10,
+                      "unscalable": false,
+                      "value": 12
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "# to Maximum Charges"
+                        }
+                      ],
+                      "ref": "+# to Maximum Charges",
+                      "trade": {
+                        "ids": {
+                          "enchant": [
+                            "enchant.stat_1437957544"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1437957544"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1437957544"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "# to Maximum Charges"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 20,
+                  "min": 10,
+                  "unscalable": false,
+                  "value": 12
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to Maximum Charges"
+                    }
+                  ],
+                  "ref": "+# to Maximum Charges",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_1437957544"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1437957544"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1437957544"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Maximum Charges"
+                }
+              }
+            }
+          ],
+          "statRef": "+# to Maximum Charges",
+          "tag": "explicit",
+          "text": "# to Maximum Charges",
+          "tradeId": [
+            "explicit.stat_1437957544"
+          ]
+        },
+        {
+          "disabled": true,
+          "hidden": "filters.hide_const_roll",
+          "roll": {
+            "default": {
+              "max": 5,
+              "min": 5
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "value": 5
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 5,
+                "min": 5,
+                "value": 5
+              },
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 5,
+                      "min": 5,
+                      "unscalable": false,
+                      "value": 5
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Recharges # Charge when you Consume an Ignited corpse"
+                        },
+                        {
+                          "string": "Recharges # Charges when you Consume an Ignited corpse"
+                        }
+                      ],
+                      "ref": "Recharges # Charge when you Consume an Ignited corpse",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_2557247391"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Recharges # Charges when you Consume an Ignited corpse"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 5,
+                  "min": 5,
+                  "unscalable": false,
+                  "value": 5
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Recharges # Charge when you Consume an Ignited corpse"
+                    },
+                    {
+                      "string": "Recharges # Charges when you Consume an Ignited corpse"
+                    }
+                  ],
+                  "ref": "Recharges # Charge when you Consume an Ignited corpse",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_2557247391"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Recharges # Charges when you Consume an Ignited corpse"
+                }
+              }
+            }
+          ],
+          "statRef": "Recharges # Charge when you Consume an Ignited corpse",
+          "tag": "explicit",
+          "text": "Recharges # Charge when you Consume an Ignited corpse",
+          "tradeId": [
+            "explicit.stat_2557247391"
+          ]
+        },
+        {
+          "disabled": true,
+          "roll": {
+            "bounds": {
+              "max": 10,
+              "min": 7
+            },
+            "default": {
+              "max": 9,
+              "min": 7
+            },
+            "dp": false,
+            "goodness": 0.3333333333333333,
+            "isNegated": false,
+            "min": 7,
+            "value": 8
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 10,
+                "min": 7,
+                "value": 8
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Damage"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 10,
+                      "min": 7,
+                      "unscalable": false,
+                      "value": 8
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Enemies Ignited by you during Effect take #% increased Damage"
+                        },
+                        {
+                          "negate": true,
+                          "string": "Enemies Ignited by you during Effect take #% reduced Damage"
+                        }
+                      ],
+                      "ref": "Enemies Ignited by you during Effect take #% increased Damage",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_3477833022"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Enemies Ignited by you during Effect take #% increased Damage"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 10,
+                  "min": 7,
+                  "unscalable": false,
+                  "value": 8
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Enemies Ignited by you during Effect take #% increased Damage"
+                    },
+                    {
+                      "negate": true,
+                      "string": "Enemies Ignited by you during Effect take #% reduced Damage"
+                    }
+                  ],
+                  "ref": "Enemies Ignited by you during Effect take #% increased Damage",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3477833022"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Enemies Ignited by you during Effect take #% increased Damage"
+                }
+              }
+            }
+          ],
+          "statRef": "Enemies Ignited by you during Effect take #% increased Damage",
+          "tag": "explicit",
+          "text": "Enemies Ignited by you during Effect take #% increased Damage",
+          "tradeId": [
+            "explicit.stat_3477833022"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 3,
+              "min": 1
+            },
+            "default": {
+              "max": 3,
+              "min": 3
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 3,
+            "value": 3
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 3,
+                "min": 1,
+                "value": 3
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Life"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 3,
+                      "min": 1,
+                      "unscalable": false,
+                      "value": 3
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Recover #% of Life when you Kill an Enemy during Effect"
+                        }
+                      ],
+                      "ref": "Recover #% of Life when you Kill an Enemy during Effect",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_1217476473"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Recover #% of Life when you Kill an Enemy during Effect"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 3,
+                  "min": 1,
+                  "unscalable": false,
+                  "value": 3
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Recover #% of Life when you Kill an Enemy during Effect"
+                    }
+                  ],
+                  "ref": "Recover #% of Life when you Kill an Enemy during Effect",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1217476473"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Recover #% of Life when you Kill an Enemy during Effect"
+                }
+              }
+            }
+          ],
+          "statRef": "Recover #% of Life when you Kill an Enemy during Effect",
+          "tag": "variant",
+          "text": "Recover #% of Life when you Kill an Enemy during Effect",
+          "tradeId": [
+            "explicit.stat_1217476473"
+          ]
+        }
+      ]
+    }
+  ]
+}

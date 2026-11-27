@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Misc%20Map%20Items%0ARarity%3A%20Normal%0AScreaming%20Invitation%0A--------%0AItem%20Level%3A%2083%0A--------%0A%7B%20Implicit%20Modifier%20%7D%0AModifiers%20to%20Item%20Quantity%20affect%20the%20amount%20of%20rewards%20dropped%20by%20the%20boss%20%E2%80%94%20Unscalable%20Value%0A--------%0AFrom%20the%20heart%20of%20the%20Tangle%2C%20the%20Eater%20of%20Worlds%0Areaches%20out%20for%20control%20of%20the%20Atlas.%0A--------%0AOpen%20portals%20to%20Absence%20of%20Symmetry%20and%20Harmony%20by%20using%20this%20item%20in%20a%20personal%20Map%20Device.%20While%20viewing%20your%20Atlas%2C%20Right-click%20this%20item%20to%20pinpoint%20its%20location.%0A",
+  "poedb": "https://poedb.tw/us/Screaming_Invitation",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Screaming Invitation\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Screaming Invitation"
+}

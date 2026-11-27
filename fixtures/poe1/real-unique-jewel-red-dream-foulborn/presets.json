@@ -1,0 +1,256 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "foulborn": {
+          "value": true
+        },
+        "searchExact": {
+          "baseTypeTrade": "Crimson Jewel",
+          "name": "The Red Dream",
+          "nameTrade": "The Red Dream"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        },
+        "vestigial": {
+          "value": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 10,
+              "min": 6
+            },
+            "default": {
+              "max": 9,
+              "min": 7
+            },
+            "dp": false,
+            "goodness": 0.5,
+            "isNegated": false,
+            "min": 7,
+            "value": 8
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 10,
+                "min": 6,
+                "value": 8
+              },
+              "modifier": {
+                "info": {
+                  "tags": [
+                    "Damage",
+                    "Elemental",
+                    "Fire",
+                    "Chaos"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 10,
+                      "min": 6,
+                      "unscalable": false,
+                      "value": 8
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Gain #% of Fire Damage as Extra Chaos Damage"
+                        }
+                      ],
+                      "ref": "Gain #% of Fire Damage as Extra Chaos Damage",
+                      "trade": {
+                        "ids": {
+                          "crafted": [
+                            "crafted.stat_1599775597"
+                          ],
+                          "explicit": [
+                            "explicit.stat_1599775597"
+                          ],
+                          "fractured": [
+                            "fractured.stat_1599775597"
+                          ],
+                          "implicit": [
+                            "implicit.stat_1599775597"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Gain #% of Fire Damage as Extra Chaos Damage"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 10,
+                  "min": 6,
+                  "unscalable": false,
+                  "value": 8
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Gain #% of Fire Damage as Extra Chaos Damage"
+                    }
+                  ],
+                  "ref": "Gain #% of Fire Damage as Extra Chaos Damage",
+                  "trade": {
+                    "ids": {
+                      "crafted": [
+                        "crafted.stat_1599775597"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1599775597"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1599775597"
+                      ],
+                      "implicit": [
+                        "implicit.stat_1599775597"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Gain #% of Fire Damage as Extra Chaos Damage"
+                }
+              }
+            }
+          ],
+          "statRef": "Gain #% of Fire Damage as Extra Chaos Damage",
+          "tag": "explicit",
+          "text": "Gain #% of Fire Damage as Extra Chaos Damage",
+          "tradeId": [
+            "explicit.stat_1599775597"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "default": {
+              "max": 50,
+              "min": 50
+            },
+            "dp": false,
+            "goodness": 1,
+            "isNegated": false,
+            "min": 50,
+            "value": 50
+          },
+          "sources": [
+            {
+              "contributes": {
+                "max": 50,
+                "min": 50,
+                "value": 50
+              },
+              "modifier": {
+                "info": {
+                  "mechanic": "foulborn",
+                  "tags": [
+                    "Life",
+                    "Elemental",
+                    "Fire"
+                  ],
+                  "type": "explicit"
+                },
+                "stats": [
+                  {
+                    "roll": {
+                      "dp": false,
+                      "max": 50,
+                      "min": 50,
+                      "unscalable": false,
+                      "value": 50
+                    },
+                    "stat": {
+                      "better": 1,
+                      "matchers": [
+                        {
+                          "string": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value"
+                        }
+                      ],
+                      "ref": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value",
+                      "trade": {
+                        "ids": {
+                          "explicit": [
+                            "explicit.stat_4068640319"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "roll": {
+                  "dp": false,
+                  "max": 50,
+                  "min": 50,
+                  "unscalable": false,
+                  "value": 50
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value"
+                    }
+                  ],
+                  "ref": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_4068640319"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value"
+                }
+              }
+            }
+          ],
+          "statRef": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value",
+          "tag": "foulborn",
+          "text": "Passives granting Fire Resistance or all Elemental Resistances in Radius\nalso grant increased Maximum Life at #% of its value",
+          "tradeId": [
+            "explicit.stat_4068640319"
+          ]
+        }
+      ]
+    }
+  ]
+}

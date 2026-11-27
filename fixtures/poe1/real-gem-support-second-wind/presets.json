@@ -1,0 +1,37 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "twice": false,
+          "value": false
+        },
+        "gemLevel": {
+          "disabled": true,
+          "value": 1
+        },
+        "quality": {
+          "disabled": false,
+          "value": 20
+        },
+        "searchExact": {
+          "baseType": "Second Wind Support",
+          "baseTypeTrade": "Second Wind Support"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": []
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "category": "Divination Card",
+  "influences": [],
+  "info": {
+    "exchangeable": true,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvRGl2aW5hdGlvbi9JbnZlbnRvcnlJY29uIiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/f34bf8cbb5/InventoryIcon.png",
+    "name": "Dark Temptation",
+    "namespace": "DIVINATION_CARD",
+    "refName": "Dark Temptation"
+  },
+  "infoVariants": [
+    {
+      "exchangeable": true,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvRGl2aW5hdGlvbi9JbnZlbnRvcnlJY29uIiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/f34bf8cbb5/InventoryIcon.png",
+      "name": "Dark Temptation",
+      "namespace": "DIVINATION_CARD",
+      "refName": "Dark Temptation"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "Dark Temptation",
+  "newMods": [],
+  "rawText": "Item Class: Divination Cards\nRarity: Divination Card\nDark Temptation\n--------\nStack Size: 5/5\n--------\nObliteration\n--------\n\"Only a fool looks to the occult for power and expects to be spared from its wrath.\" \n- Voll, Emperor of Purity\n--------\nShift click to unstack.\n",
+  "stackSize": {
+    "max": 5,
+    "value": 5
+  },
+  "statsByType": [],
+  "unknownModifiers": []
+}

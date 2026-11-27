@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Maps%0ARarity%3A%20Unique%0ACortex%0AMap%20(Tier%2016)%0A--------%0AAtlas%20Drops%3A%20%2B100%25%20(augmented)%0AMonster%20Pack%20Size%3A%20%2B25%25%20(augmented)%0A--------%0AItem%20Level%3A%2084%0A--------%0AMonster%20Level%3A%2083%0A--------%0A%7B%20Unique%20Modifier%20%7D%0A100%25%20increased%20Experience%20gain%0A%7B%20Unique%20Modifier%20%7D%0AMap%20has%205(3-5)%20additional%20random%20Modifiers%0A%7B%20Unique%20Modifier%20%7D%0AMap%20has%206(4-6)%20additional%20Synthesis%20Global%20Modifiers%0A%7B%20Unique%20Modifier%20%7D%0AMonster%20Level%3A%2083%20%E2%80%94%20Unscalable%20Value%0A--------%0AThough%20my%20life%20is%20gone%2C%20my%20purpose%20is%20not.%0AMy%20will%20remains%2C%20emboldened%20and%20empowered%0Aby%20the%20righteousness%20of%20my%20cause.%0A--------%0ATravel%20to%20a%20Map%20of%20this%20tier%20or%20lower%20by%20using%20this%20in%20a%20personal%20Map%20Device.%20Maps%20can%20only%20be%20used%20once.%20%0A--------%0ACorrupted%0A",
+  "poedb": "https://poedb.tw/us/Cortex",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Cortex\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Cortex"
+}
