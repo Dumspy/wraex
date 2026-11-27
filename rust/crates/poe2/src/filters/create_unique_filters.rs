@@ -58,7 +58,7 @@ fn create_mageblood_filters(
         .filter(|s| s.kind == ModifierType::Explicit && s.stat.stat_ref.starts_with("Legacy"))
         .collect();
 
-    let duplicates = 4.0 - legacies.len() as f64;
+    let duplicates = 4.0 - wraex_core::num::usize_to_f64(legacies.len());
     let prop = Prop {
         disabled: Some(false),
         hidden: Some("dont_hide_me"),

@@ -25,7 +25,7 @@ use std::sync::OnceLock;
 
 use serde::Serialize;
 use wraex_core::js;
-use wraex_core::js_regex::Regex;
+use wraex_core::js_regex::{Captures, Regex};
 
 use crate::data::Data;
 
@@ -146,22 +146,22 @@ pub enum Event {
 
 impl Event {
     /// `data.type`; the same strings as [`InfoType`]'s serde form.
-    pub fn info_type(&self) -> InfoType {
+    pub const fn info_type(&self) -> InfoType {
         match self {
-            Event::Log => InfoType::Log,
-            Event::GameStart => InfoType::GameStart,
-            Event::Login => InfoType::Login,
-            Event::LoadZone { .. } => InfoType::LoadZone,
-            Event::LevelUp { .. } => InfoType::LevelUp,
-            Event::GameVersion { .. } => InfoType::GameVersion,
-            Event::AltTab { .. } => InfoType::AltTab,
-            Event::Npc { .. } => InfoType::Npc,
-            Event::PlayerDeath { .. } => InfoType::PlayerDeath,
-            Event::PassiveTree { .. } => InfoType::PassiveTree,
-            Event::PermanentBonus { .. } => InfoType::PermanentBonus,
-            Event::SkillPoint { .. } => InfoType::SkillPoint,
-            Event::MapNav { .. } => InfoType::MapNav,
-            Event::Afk { .. } => InfoType::Afk,
+            Self::Log => InfoType::Log,
+            Self::GameStart => InfoType::GameStart,
+            Self::Login => InfoType::Login,
+            Self::LoadZone { .. } => InfoType::LoadZone,
+            Self::LevelUp { .. } => InfoType::LevelUp,
+            Self::GameVersion { .. } => InfoType::GameVersion,
+            Self::AltTab { .. } => InfoType::AltTab,
+            Self::Npc { .. } => InfoType::Npc,
+            Self::PlayerDeath { .. } => InfoType::PlayerDeath,
+            Self::PassiveTree { .. } => InfoType::PassiveTree,
+            Self::PermanentBonus { .. } => InfoType::PermanentBonus,
+            Self::SkillPoint { .. } => InfoType::SkillPoint,
+            Self::MapNav { .. } => InfoType::MapNav,
+            Self::Afk { .. } => InfoType::Afk,
         }
     }
 }
@@ -188,6 +188,7 @@ const PERMANENT_BONUS_REGEX: &str = r"(?<char_name>.+) has received (?<bonus>.+)
 const SKILL_POINT_REGEX: &str = r"You have received (?<points>(\d+|an?)) (?<point_type>.*) Skill Points?\.";
 const MAP_NAV_REGEX: &str = r"Set Source \[(?<map_name>.+)\]";
 
+#[expect(clippy::panic, reason = "the patterns are compile-time constants; an invalid one is a programming error")]
 fn compile(source: &str) -> Regex {
     Regex::new(source, "").unwrap_or_else(|e| panic!("{e}"))
 }
@@ -240,23 +241,31 @@ fn split_namespace(text: &str) -> (Namespace, &str) {
     let Some(rest) = text.strip_prefix('[') else {
         return (Namespace::Plain, text);
     };
-    let Some(end) = rest.find(']') else {
+    let Some((namespace, rest)) = rest.split_once(']') else {
         return (Namespace::Plain, text);
     };
-    let namespace = match &rest[..end] {
+    let namespace = match namespace {
         "STARTUP" => Namespace::Startup,
         "HTTP2" => Namespace::Http2,
         "WINDOW" => Namespace::Window,
         "SCENE" => Namespace::Scene,
         _ => Namespace::Other,
     };
-    (namespace, js::trim(&rest[end + 1..]))
+    (namespace, js::trim(rest))
 }
 
-/// `getClientLogParseVersion`. The reference compares the client version against
-/// `0.4.0j` through a `lessThanVersion` whose every branch returns `0`, so both
-/// sides of the comparison and the version itself have no effect yet.
-pub fn get_client_log_parse_version(_version: &str) -> i32 {
+/// A named group's text. The patterns are constants, so a group the pattern
+/// declares is always present; a missing one reads as `""`.
+fn group<'t>(caps: &Captures<'t>, name: &str) -> &'t str {
+    caps.name(name).unwrap_or_default()
+}
+
+/// `getClientLogParseVersion`.
+///
+/// The reference compares the client version against `0.4.0j` through a
+/// `lessThanVersion` whose every branch returns `0`, so both sides of the
+/// comparison and the version itself have no effect yet.
+pub const fn get_client_log_parse_version(_version: &str) -> i32 {
     0
 }
 
@@ -307,12 +316,12 @@ impl ClientLog {
     }
 
     /// `gameStartMillis`
-    pub fn game_start_millis(&self) -> f64 {
+    pub const fn game_start_millis(&self) -> f64 {
         self.game_start_millis
     }
 
     /// `logParseVersion`
-    pub fn log_parse_version(&self) -> i32 {
+    pub const fn log_parse_version(&self) -> i32 {
         self.log_parse_version
     }
 
@@ -324,9 +333,9 @@ impl ClientLog {
     /// rolls over below `gameStartMillis`; neither changes state.
     pub fn handle_line(&mut self, line: &str) -> Option<ClientLogEvent> {
         let caps = whole_line().captures(line)?;
-        let datetime = caps.name("datetime").expect("the log regex captures datetime");
-        let millis = js::parse_int(caps.name("millis").expect("the log regex captures millis"));
-        let text = caps.name("text").expect("the log regex captures text");
+        let datetime = caps.name("datetime")?;
+        let millis = js::parse_int(caps.name("millis")?);
+        let text = caps.name("text")?;
 
         let event = self.parse_client_log_text(text, datetime, millis, self.log_parse_version);
         self.update_refs(&event);
@@ -359,21 +368,17 @@ impl ClientLog {
                     Event::Log
                 }
             }
-            Namespace::Http2 => match text.strip_prefix(GAME_VERSION_LINE) {
-                Some(rest) => Event::GameVersion { version: rest.split(' ').next().unwrap_or("").to_owned() },
-                None => Event::Log,
-            },
+            Namespace::Http2 => text.strip_prefix(GAME_VERSION_LINE).map_or(Event::Log, |rest| Event::GameVersion {
+                version: rest.split(' ').next().unwrap_or("").to_owned(),
+            }),
             Namespace::Window => match text {
                 "Gained focus" => Event::AltTab { game_focused: true },
                 "Lost focus" => Event::AltTab { game_focused: false },
                 _ => Event::Log,
             },
-            Namespace::Scene => match map_nav().captures(text) {
-                Some(caps) => Event::MapNav {
-                    map_name: caps.name("map_name").expect("MAP_NAV_REGEX captures map_name").to_owned(),
-                },
-                None => Event::Log,
-            },
+            Namespace::Scene => map_nav()
+                .captures(text)
+                .map_or(Event::Log, |caps| Event::MapNav { map_name: group(&caps, "map_name").to_owned() }),
             Namespace::Plain => self.parse_plain(text),
             Namespace::Other => Event::Log,
         };
@@ -394,22 +399,22 @@ impl ClientLog {
         }
         if let Some(caps) = self.zone_gen.captures(text) {
             return Event::LoadZone {
-                zone: caps.name("zone").expect("LOG_ZONE_GEN captures zone").to_lowercase(),
-                area_level: js::parse_int(caps.name("area_level").expect("LOG_ZONE_GEN captures area_level")),
-                seed: js::parse_int(caps.name("seed").expect("LOG_ZONE_GEN captures seed")),
+                zone: group(&caps, "zone").to_lowercase(),
+                area_level: js::parse_int(group(&caps, "area_level")),
+                seed: js::parse_int(group(&caps, "seed")),
             };
         }
         if let Some(caps) = passive_skill().captures(text) {
             return Event::PassiveTree {
-                allocate: caps.name("direction").expect("the regex captures direction") == "allocated",
-                node_id: caps.name("node_id").expect("the regex captures node_id").to_owned(),
-                node_name: caps.name("node_name").expect("the regex captures node_name").to_owned(),
+                allocate: group(&caps, "direction") == "allocated",
+                node_id: group(&caps, "node_id").to_owned(),
+                node_name: group(&caps, "node_name").to_owned(),
             };
         }
         // Either a normal log line or an NPC/local chat message.
-        if let Some(colon) = text.find(':') {
-            let possible_name = js::trim(&text[..colon]);
-            let message = js::trim(&text[colon + 1..]);
+        if let Some((possible_name, message)) = text.split_once(':') {
+            let possible_name = js::trim(possible_name);
+            let message = js::trim(message);
             if KNOWN_NPC_NAMES.contains(&possible_name) {
                 return Event::Npc { npc_name: possible_name.to_owned(), message: message.to_owned() };
             }
@@ -425,31 +430,26 @@ impl ClientLog {
         }
         if let Some(caps) = self.level_up.captures(colon_less) {
             return Event::LevelUp {
-                level: js::parse_int(caps.name("level").expect("LOG_LEVEL_UP captures level")),
-                char_name: caps.name("char_name").expect("LOG_LEVEL_UP captures char_name").to_owned(),
-                char_class: caps.name("char_class").expect("LOG_LEVEL_UP captures char_class").to_owned(),
+                level: js::parse_int(group(&caps, "level")),
+                char_name: group(&caps, "char_name").to_owned(),
+                char_class: group(&caps, "char_class").to_owned(),
             };
         }
         if let Some(caps) = permanent_bonus().captures(colon_less) {
             return Event::PermanentBonus {
-                permanent_bonus: caps.name("bonus").expect("the regex captures bonus").to_owned(),
-                char_name: caps.name("char_name").expect("the regex captures char_name").to_owned(),
+                permanent_bonus: group(&caps, "bonus").to_owned(),
+                char_name: group(&caps, "char_name").to_owned(),
             };
         }
         if let Some(caps) = skill_point().captures(colon_less) {
-            let points = caps.name("points").expect("SKILL_POINT_REGEX captures points");
+            let points = group(&caps, "points");
             let count = if points.starts_with('a') { 1.0 } else { js::parse_int(points) };
-            return Event::SkillPoint {
-                points: count,
-                point_type: point_type(caps.name("point_type").expect("SKILL_POINT_REGEX captures point_type")),
-            };
+            return Event::SkillPoint { points: count, point_type: point_type(group(&caps, "point_type")) };
         }
         // The reference matches deaths against the untrimmed text, so the colon
         // stays part of `char_name`.
         if let Some(caps) = slain().captures(whole) {
-            return Event::PlayerDeath {
-                char_name: caps.name("char_name").expect("SLAIN_REGEX captures char_name").to_owned(),
-            };
+            return Event::PlayerDeath { char_name: group(&caps, "char_name").to_owned() };
         }
         Event::Log
     }
@@ -467,12 +467,12 @@ impl ClientLog {
                         self.player_level = 1.0;
                     }
                     self.area_level = *area_level;
-                    self.zone_name = zone.clone();
+                    self.zone_name.clone_from(zone);
                 }
             }
             Event::LevelUp { level, char_name, .. } => {
                 self.player_level = *level;
-                self.last_character = char_name.clone();
+                self.last_character.clone_from(char_name);
             }
             Event::GameVersion { version } => {
                 self.log_parse_version = get_client_log_parse_version(version);
@@ -483,14 +483,14 @@ impl ClientLog {
 
     /// `setPlayerLevel(number | "")`: the settings widget's empty input leaves
     /// the level alone.
-    pub fn set_player_level(&mut self, level: Option<f64>) {
+    pub const fn set_player_level(&mut self, level: Option<f64>) {
         if let Some(level) = level {
             self.player_level = level;
         }
     }
 
     /// `testOnlyResetGameMillis`, kept for the tests that replay several logs.
-    pub fn reset_game_start_millis(&mut self) {
+    pub const fn reset_game_start_millis(&mut self) {
         self.game_start_millis = 0.0;
     }
 }
@@ -514,19 +514,23 @@ fn point_type(name: &str) -> PointType {
 
 /// `Date.parse("YYYY/MM/DD HH:mm:ss")` with the group's digits. V8 reads such a
 /// date in local time; `utc_offset_seconds` is that zone's offset east of UTC.
+#[expect(clippy::arithmetic_side_effects, reason = "epoch seconds of a log timestamp stay far inside i64")]
 fn timestamp(datetime: &str, utc_offset_seconds: i32) -> f64 {
-    let part = |from: usize, to: usize| {
-        datetime[from..to].parse::<i64>().unwrap_or_else(|_| panic!("`{datetime}` is not a log timestamp"))
+    let part = |from: usize, to: usize| datetime.get(from..to).and_then(|part| part.parse::<i64>().ok());
+    let (Some(year), Some(month), Some(day), Some(hour), Some(minute), Some(second)) =
+        (part(0, 4), part(5, 7), part(8, 10), part(11, 13), part(14, 16), part(17, 19))
+    else {
+        // `Date.parse` of a malformed date is NaN.
+        return f64::NAN;
     };
-    let (year, month, day) = (part(0, 4), part(5, 7), part(8, 10));
-    let (hour, minute, second) = (part(11, 13), part(14, 16), part(17, 19));
     let seconds = days_from_civil(year, month, day) * 86_400 + hour * 3_600 + minute * 60 + second;
-    ((seconds - i64::from(utc_offset_seconds)) * 1_000) as f64
+    wraex_core::num::i64_to_f64((seconds - i64::from(utc_offset_seconds)) * 1_000)
 }
 
 /// Days since 1970-01-01 for a proleptic Gregorian date (Howard Hinnant's
 /// `days_from_civil`).
-fn days_from_civil(year: i64, month: i64, day: i64) -> i64 {
+#[expect(clippy::arithmetic_side_effects, reason = "civil-date arithmetic on epoch years stays far inside i64")]
+const fn days_from_civil(year: i64, month: i64, day: i64) -> i64 {
     let year = if month <= 2 { year - 1 } else { year };
     let era = if year >= 0 { year } else { year - 399 } / 400;
     let year_of_era = year - era * 400;
@@ -591,21 +595,21 @@ mod tests {
                 events.extend(log.handle_line(line));
             }
         }
-        assert!(!events.is_empty());
+        assert_ne!(events, Vec::new());
     }
 
     /// `clientLog` › "should parse second log".
     #[test]
     fn the_second_log_parses() {
         let (_, events) = run(red_vale());
-        assert!(!events.is_empty());
+        assert_ne!(events, Vec::new());
     }
 
     /// `clientLog` › "Should parse full campaign client log".
     #[test]
     fn the_full_campaign_log_parses() {
         let (_, events) = run(&full_campaign());
-        assert!(!events.is_empty());
+        assert_ne!(events, Vec::new());
     }
 
     /// `clientLog` › "Timestamp should be correct format": the log's naive
@@ -616,7 +620,7 @@ mod tests {
         const DAY_START: f64 = 1_757_548_800_000.0;
         const DAY_END: f64 = 1_757_635_200_000.0;
         let (_, events) = run(log1());
-        assert!(!events.is_empty());
+        assert_ne!(events, Vec::new());
         for event in &events {
             assert!(event.ts >= DAY_START && event.ts < DAY_END, "{}", event.ts);
         }
@@ -648,7 +652,7 @@ mod tests {
             let level_ups = of(&events, InfoType::LevelUp);
             assert_eq!(level_ups.len(), expected, "{label}");
             for event in level_ups {
-                let Event::LevelUp { char_name, .. } = event else { unreachable!() };
+                let Event::LevelUp { char_name, .. } = event else { panic!("unexpected event") };
                 assert!(char_name.to_lowercase().contains("kvan"), "{label}: {char_name}");
             }
         }
@@ -662,7 +666,7 @@ mod tests {
             let versions = of(&events, InfoType::GameVersion);
             assert_eq!(versions.len(), expected, "{label}");
             for event in versions {
-                let Event::GameVersion { version } = event else { unreachable!() };
+                let Event::GameVersion { version } = event else { panic!("unexpected event") };
                 assert_eq!(version.to_lowercase(), "4.4.0j", "{label}");
             }
         }
@@ -677,17 +681,20 @@ mod tests {
             assert_eq!(alt_tabs.len(), expected, "{label}");
             let mut last_was = true;
             for event in alt_tabs {
-                let Event::AltTab { game_focused } = event else { unreachable!() };
+                let Event::AltTab { game_focused } = event else { panic!("unexpected event") };
                 assert_eq!(*game_focused, !last_was, "{label}");
                 last_was = *game_focused;
             }
         }
     }
 
+    /// `(label, events)` pairs per log for the NPC-dialog case.
+    type NpcCounts = &'static [(&'static str, &'static [(&'static str, usize)])];
+
     /// `clientLog` › "Should have npc dialog".
     #[test]
     fn npc_dialog_event_counts() {
-        let expected: &[(&str, &[(&str, usize)])] = &[
+        let expected: NpcCounts = &[
             ("log1", &[]),
             (
                 "red vale",
@@ -709,7 +716,7 @@ mod tests {
             assert_eq!(npc.len(), want.values().sum::<usize>(), "{label}: count");
             let mut npc_counts: BTreeMap<&str, usize> = BTreeMap::new();
             for event in npc {
-                let Event::Npc { npc_name, .. } = event else { unreachable!() };
+                let Event::Npc { npc_name, .. } = event else { panic!("unexpected event") };
                 *npc_counts.entry(npc_name.as_str()).or_insert(0) += 1;
             }
             assert_eq!(npc_counts, want, "{label}: names");
@@ -724,7 +731,7 @@ mod tests {
             let deaths = of(&events, InfoType::PlayerDeath);
             assert_eq!(deaths.len(), expected, "{label}");
             for event in deaths {
-                let Event::PlayerDeath { char_name } = event else { unreachable!() };
+                let Event::PlayerDeath { char_name } = event else { panic!("unexpected event") };
                 assert!(char_name.to_lowercase().contains("kvan"), "{label}: {char_name}");
             }
         }
@@ -740,7 +747,7 @@ mod tests {
             assert_eq!(nodes.len(), expected, "{label}");
             let (mut add, mut remove) = (0, 0);
             for event in nodes {
-                let Event::PassiveTree { allocate, node_id, .. } = event else { unreachable!() };
+                let Event::PassiveTree { allocate, node_id, .. } = event else { panic!("unexpected event") };
                 assert!(node_id.chars().any(|c| c.is_ascii_digit()), "{label}: {node_id}");
                 if *allocate {
                     add += 1;
@@ -760,7 +767,7 @@ mod tests {
             let bonuses = of(&events, InfoType::PermanentBonus);
             assert_eq!(bonuses.len(), expected, "{label}");
             for event in bonuses {
-                let Event::PermanentBonus { permanent_bonus, char_name } = event else { unreachable!() };
+                let Event::PermanentBonus { permanent_bonus, char_name } = event else { panic!("unexpected event") };
                 assert!(char_name.to_lowercase().contains("kvan"), "{label}: {char_name}");
                 assert!(permanent_bonus.chars().any(|c| c.is_ascii_digit()), "{label}: {permanent_bonus}");
             }
@@ -775,7 +782,7 @@ mod tests {
             let points = of(&events, InfoType::SkillPoint);
             assert_eq!(points.len(), expected, "{label}");
             for event in points {
-                let Event::SkillPoint { points, point_type } = event else { unreachable!() };
+                let Event::SkillPoint { points, point_type } = event else { panic!("unexpected event") };
                 assert_eq!(*points, 2.0, "{label}");
                 assert!(matches!(point_type, PointType::Passive | PointType::WeaponSet), "{label}");
             }
@@ -792,7 +799,7 @@ mod tests {
             assert_eq!(sets.len(), expected, "{label}");
             let (mut null_count, mut unknown_count) = (0, 0);
             for event in sets {
-                let Event::MapNav { map_name } = event else { unreachable!() };
+                let Event::MapNav { map_name } = event else { panic!("unexpected event") };
                 match map_name.as_str() {
                     "(null)" => null_count += 1,
                     "(unknown)" => unknown_count += 1,
@@ -813,7 +820,7 @@ mod tests {
             if expected >= 2 {
                 let wants = [true, false];
                 for (event, want) in afks.iter().zip(wants) {
-                    let Event::Afk { is_afk } = event else { unreachable!() };
+                    let Event::Afk { is_afk } = event else { panic!("unexpected event") };
                     assert_eq!(*is_afk, want, "{label}");
                 }
             }
@@ -894,6 +901,7 @@ mod tests {
     /// The events serialise in the `@ipc/types` shape, and each variant's `type`
     /// is its `ClientLogInfoType` string.
     #[test]
+    #[expect(clippy::disallowed_macros, reason = "expected JSON written as literals")]
     fn events_serialise_with_the_ipc_shape() {
         let event = ClientLogEvent {
             ts: 1_757_614_903_000.0,

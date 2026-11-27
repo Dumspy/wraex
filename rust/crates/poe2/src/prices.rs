@@ -23,10 +23,11 @@ pub const UPDATE_INTERVAL_MS: u64 = 31 * 60 * 1000;
 pub const INTEREST_SPAN_MS: u64 = 20 * 60 * 1000;
 
 /// poe.ninja's PoE2 exchange overviews (`type`), the namespace the app looks
-/// their items up in, and their page on poe.ninja. Upstream's namespace map
-/// comes from its server; this list is poe.ninja's non-empty types (checked
-/// 2026-11-24). The page slugs follow poe.ninja's naming but are unconfirmed:
-/// its site refuses scripted requests.
+/// their items up in, and their page on poe.ninja.
+///
+/// Upstream's namespace map comes from its server; this list is poe.ninja's
+/// non-empty types (checked 2026-11-24). The page slugs follow poe.ninja's
+/// naming but are unconfirmed: its site refuses scripted requests.
 pub const NINJA_TYPES: [(&str, &str, &str); 14] = [
     ("Currency", "ITEM", "currency"),
     ("Fragments", "ITEM", "fragments"),
@@ -86,7 +87,7 @@ pub struct ExchangeLine {
     pub sparkline: Sparkline,
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExchangeItem {
     pub id: String,
@@ -199,15 +200,17 @@ pub fn league_to_url(league: &str) -> String {
         "Hardcore" => "hardcore".to_owned(),
         _ => {
             let id = league.to_lowercase().replace(' ', "");
-            match id.strip_prefix("hc") {
-                Some(rest) => format!("{rest}hc"),
-                None => id,
-            }
+            let Some(rest) = id.strip_prefix("hc") else { return id };
+            format!("{rest}hc")
         }
     }
 }
 
 /// `displayRounding`, with `truncateLargeNumbers` shortening to k/m/b/t.
+#[expect(
+    clippy::fn_params_excessive_bools,
+    reason = "upstream's `displayRounding(value, fraction, truncateLargeNumbers)` signature, kept for its callers"
+)]
 pub fn display_rounding(value: f64, fraction: bool, truncate_large_numbers: bool) -> String {
     let short = |v: f64| {
         let n: f64 = to_fixed(v, 1).parse().unwrap_or(f64::NAN);
@@ -287,7 +290,7 @@ impl Prices {
     }
 
     /// `queuePricesFetch`: the user looked at a price; keep prices fresh.
-    pub fn mark_interest(&mut self, now: u64) {
+    pub const fn mark_interest(&mut self, now: u64) {
         self.last_interest = Some(now);
     }
 
@@ -384,7 +387,7 @@ impl Prices {
         self.database.clear();
         for (kind, overview) in overviews {
             let Some(&(_, ns, url)) = NINJA_TYPES.iter().find(|(t, _, _)| *t == kind) else { continue };
-            rates.get_or_insert(overview.core.rates.clone());
+            rates.get_or_insert_with(|| overview.core.rates.clone());
             let entries = overview
                 .lines
                 .into_iter()
@@ -409,15 +412,12 @@ impl Prices {
         // TODO (upstream): search the requested currency instead of divine.
         if let Some(rates) = rates.filter(|r| r.values().any(|&v| v >= 10.0)) {
             let preferred = self.selected_core_currency().map(|c| c.id);
-            match preferred.filter(|&p| p != "div" && rates.get(p).is_some_and(|&r| r >= 5.0)) {
-                Some(id) => {
-                    self.xchg_rate = rates.get(id).copied();
-                    self.xchg_rate_currency = Some(id);
-                }
-                None => {
-                    self.xchg_rate = rates.get("exalted").copied();
-                    self.xchg_rate_currency = Some("exalted");
-                }
+            if let Some(id) = preferred.filter(|&p| p != "div" && rates.get(p).is_some_and(|&r| r >= 5.0)) {
+                self.xchg_rate = rates.get(id).copied();
+                self.xchg_rate_currency = Some(id);
+            } else {
+                self.xchg_rate = rates.get("exalted").copied();
+                self.xchg_rate_currency = Some("exalted");
             }
         }
 
@@ -441,7 +441,7 @@ impl Prices {
     }
 
     /// `initialLoading`: nothing to show yet.
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.database.is_empty()
     }
 
@@ -479,11 +479,11 @@ impl Prices {
             }
             return CurrencyValue { min: value, max: value, currency: "div" };
         }
-        match self.selected_core_currency() {
-            Some(c) => CurrencyValue { min: core, max: core, currency: c.id },
+        self.selected_core_currency().map_or_else(
             // Shouldn't happen once a currency has loaded.
-            None => CurrencyValue { min: value, max: value, currency: "div" },
-        }
+            || CurrencyValue { min: value, max: value, currency: "div" },
+            |c| CurrencyValue { min: core, max: core, currency: c.id },
+        )
     }
 
     /// `autoCurrency([min, max])`
@@ -492,10 +492,10 @@ impl Prices {
         if core_min > self.rate() && !core_only {
             return CurrencyValue { min, max, currency: "div" };
         }
-        match self.selected_core_currency() {
-            Some(c) => CurrencyValue { min: core_min, max: core_max, currency: c.id },
-            None => CurrencyValue { min, max, currency: "div" },
-        }
+        self.selected_core_currency().map_or_else(
+            || CurrencyValue { min, max, currency: "div" },
+            |c| CurrencyValue { min: core_min, max: core_max, currency: c.id },
+        )
     }
 
     /// `cachedCurrencyByQuery`: `count` of an item, priced and cached.
@@ -545,6 +545,11 @@ impl Prices {
     }
 
     /// `comparePrice`
+    #[expect(
+        clippy::float_cmp,
+        clippy::suspicious_operation_groupings,
+        reason = "upstream's `==` compares `min` with `max` on each side"
+    )]
     pub fn compare_price(&self, left: CurrencyValue, op: PriceOp, right: CurrencyValue) -> Result<bool, String> {
         let (l, r) = (self.to_divine(left)?, self.to_divine(right)?);
         Ok(match op {
@@ -603,7 +608,8 @@ mod tests {
         // 100 exalted orbs, in exalted.
         let value = prices.cached_currency_by_query(&query, 100.0).unwrap();
         assert_eq!(value.currency, "exalted");
-        assert!((value.min - 0.00755 * 100.0 * 132.4).abs() < 1e-9);
+        let expected = 0.00755 * 100.0 * 132.4;
+        assert!((value.min - expected).abs() < 1e-9);
         // A divine's worth switches to divines.
         assert_eq!(prices.auto_currency(1.0, false), CurrencyValue { min: 1.0, max: 1.0, currency: "div" });
         assert_eq!(prices.auto_currency(3.0, false).currency, "div");

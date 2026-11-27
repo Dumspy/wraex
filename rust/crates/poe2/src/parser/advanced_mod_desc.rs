@@ -56,7 +56,7 @@ fn empty_object<S: Serializer, T>(_: &T, s: S) -> Result<S::Ok, S::Error> {
 
 impl ModifierInfo {
     /// `{ type, tags: [] }`
-    pub fn new(kind: ModifierType) -> Self {
+    pub const fn new(kind: ModifierType) -> Self {
         Self {
             kind,
             generation: None,
@@ -89,9 +89,10 @@ fn number_or_none(x: Option<&str>) -> Option<f64> {
 /// `parseModInfoLine(line, type)`: `kind` is the type from the stat lines'
 /// suffixes, which the mod line can override.
 pub fn parse_mod_info_line(d: &Data, line: &str, mut kind: ModifierType) -> Result<ModifierInfo, Fail> {
-    let inner = &line[1..line.len() - 1];
-    let parts: Vec<&str> = inner.split('\u{2014}').map(js::trim).collect();
-    let (mod_text, x_text2, x_text3) = (parts[0], parts.get(1).copied(), parts.get(2).copied());
+    let inner = line.get(1..line.len().saturating_sub(1)).unwrap_or_default();
+    let mut parts = inner.split('\u{2014}').map(js::trim);
+    let mod_text = parts.next().unwrap_or_default();
+    let (x_text2, x_text3) = (parts.next(), parts.next());
 
     let mut generation = None;
     let (mut name, mut tier) = (None, None);
@@ -107,7 +108,7 @@ pub fn parse_mod_info_line(d: &Data, line: &str, mut kind: ModifierType) -> Resu
         let mut ty: String = m.name("type").ok_or(Fail::THROW)?.to_owned();
         // `type2` only exists in some languages' regex ("mostly for spanish").
         let mut ty2: Option<String> = m.name("type2").map(str::to_owned);
-        let strip = |s: &str, prefix: &str| js::trim(&s[prefix.len()..]).to_owned();
+        let strip = |s: &str, prefix: &str| js::trim(s.get(prefix.len()..).unwrap_or_default()).to_owned();
 
         let fractured = d.s("FRACTURED_MODIFIER");
         if ty.starts_with(fractured) {
@@ -255,7 +256,7 @@ mod tests {
     #[test]
     fn reads_mod_types() {
         let d = en();
-        let lines = |l: &[&str]| l.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        let lines = |l: &[&str]| l.iter().map(std::string::ToString::to_string).collect::<Vec<_>>();
         assert_eq!(parse_mod_type(d, &lines(&["a (rune)", "b"])), (ModifierType::Augment, lines(&["a", "b"])));
         assert_eq!(parse_mod_type(d, &lines(&["a"])), (ModifierType::Explicit, lines(&["a"])));
         assert_eq!(parse_mod_type(d, &lines(&["Desecrated Prefix"])).0, ModifierType::Veiled);
@@ -308,11 +309,14 @@ mod tests {
 
     /// `createTestModInfo()` (`specs/Parser/mods.ts`): the mod info line with its
     /// stat lines, the type the parser settles on, and the fields it reads.
-    #[allow(clippy::type_complexity)]
+    #[expect(
+        clippy::type_complexity,
+        reason = "one row per `createTestModInfo()` case: info line, stats, and the fields `parseModInfoLine` reads"
+    )]
     const TEST_MODS: &[(&str, &[&str], ModifierType, Option<Generation>, Option<&str>, Option<f64>, &[&str])] = &[
         (
             r#"{ Prefix Modifier "Crackling" (Tier: 7) — Damage, Elemental, Lightning, Attack }"#,
-            &[r#"Adds 1(1-4) to 50(46-66) Lightning Damage"#],
+            &[r"Adds 1(1-4) to 50(46-66) Lightning Damage"],
             ModifierType::Explicit,
             Some(Generation::Prefix),
             Some("Crackling"),
@@ -321,7 +325,7 @@ mod tests {
         ),
         (
             r#"{ Suffix Modifier "of the Brute" (Tier: 8) — Attribute }"#,
-            &[r#"+8(5-8) to Strength"#],
+            &[r"+8(5-8) to Strength"],
             ModifierType::Explicit,
             Some(Generation::Suffix),
             Some("of the Brute"),
@@ -330,7 +334,7 @@ mod tests {
         ),
         (
             r#"{ Prefix Modifier "Shocking" (Tier: 4) — Damage, Elemental, Lightning, Attack }"#,
-            &[r#"Adds 5(1-5) to 82(62-89) Lightning Damage"#],
+            &[r"Adds 5(1-5) to 82(62-89) Lightning Damage"],
             ModifierType::Explicit,
             Some(Generation::Prefix),
             Some("Shocking"),
@@ -339,7 +343,7 @@ mod tests {
         ),
         (
             r#"{ Prefix Modifier "Scorching" (Tier: 5) — Damage, Elemental, Fire, Attack }"#,
-            &[r#"Adds 27(20-30) to 36(31-46) Fire Damage"#],
+            &[r"Adds 27(20-30) to 36(31-46) Fire Damage"],
             ModifierType::Explicit,
             Some(Generation::Prefix),
             Some("Scorching"),
@@ -348,7 +352,7 @@ mod tests {
         ),
         (
             r#"{ Prefix Modifier "Icy" (Tier: 8) — Damage, Elemental, Cold, Attack }"#,
-            &[r#"Adds 9(6-9) to 13(10-15) Cold Damage"#],
+            &[r"Adds 9(6-9) to 13(10-15) Cold Damage"],
             ModifierType::Explicit,
             Some(Generation::Prefix),
             Some("Icy"),
@@ -357,7 +361,7 @@ mod tests {
         ),
         (
             r#"{ Suffix Modifier "of Radiance" (Tier: 1) — Attack }"#,
-            &[r#"+57(41-60) to Accuracy Rating"#, r#"15% increased Light Radius"#],
+            &[r"+57(41-60) to Accuracy Rating", r"15% increased Light Radius"],
             ModifierType::Explicit,
             Some(Generation::Suffix),
             Some("of Radiance"),
@@ -365,8 +369,8 @@ mod tests {
             &["Attack"],
         ),
         (
-            r#"{ Unique Modifier — Defences }"#,
-            &[r#"56(50-70)% increased Energy Shield"#],
+            r"{ Unique Modifier — Defences }",
+            &[r"56(50-70)% increased Energy Shield"],
             ModifierType::Explicit,
             None,
             None,
@@ -374,8 +378,8 @@ mod tests {
             &["Defences"],
         ),
         (
-            r#"{ Unique Modifier — Mana }"#,
-            &[r#"40% increased Mana Regeneration Rate while stationary"#],
+            r"{ Unique Modifier — Mana }",
+            &[r"40% increased Mana Regeneration Rate while stationary"],
             ModifierType::Explicit,
             None,
             None,
@@ -383,8 +387,8 @@ mod tests {
             &["Mana"],
         ),
         (
-            r#"{ Unique Modifier — Elemental, Lightning, Resistance }"#,
-            &[r#"+26(20-30)% to Lightning Resistance"#],
+            r"{ Unique Modifier — Elemental, Lightning, Resistance }",
+            &[r"+26(20-30)% to Lightning Resistance"],
             ModifierType::Explicit,
             None,
             None,
@@ -392,8 +396,8 @@ mod tests {
             &["Elemental", "Lightning", "Resistance"],
         ),
         (
-            r#"{ Unique Modifier — Elemental, Lightning, Resistance }"#,
-            &[r#"+5% to Maximum Lightning Resistance"#],
+            r"{ Unique Modifier — Elemental, Lightning, Resistance }",
+            &[r"+5% to Maximum Lightning Resistance"],
             ModifierType::Explicit,
             None,
             None,
@@ -401,8 +405,8 @@ mod tests {
             &["Elemental", "Lightning", "Resistance"],
         ),
         (
-            r#"{ Unique Modifier — Mana }"#,
-            &[r#"40% increased Mana Regeneration Rate"#],
+            r"{ Unique Modifier — Mana }",
+            &[r"40% increased Mana Regeneration Rate"],
             ModifierType::Explicit,
             None,
             None,
@@ -411,7 +415,7 @@ mod tests {
         ),
         (
             r#"{ Prefix Modifier "Vaporous" (Tier: 3) — Defences }"#,
-            &[r#"+143(124-151) to Evasion Rating"#],
+            &[r"+143(124-151) to Evasion Rating"],
             ModifierType::Explicit,
             Some(Generation::Prefix),
             Some("Vaporous"),
@@ -420,7 +424,7 @@ mod tests {
         ),
         (
             r#"{ Suffix Modifier "of the Wrestler" (Tier: 7) — Attribute }"#,
-            &[r#"+12(9-12) to Strength"#],
+            &[r"+12(9-12) to Strength"],
             ModifierType::Explicit,
             Some(Generation::Suffix),
             Some("of the Wrestler"),
@@ -429,7 +433,7 @@ mod tests {
         ),
         (
             r#"{ Suffix Modifier "of Warmth" (Tier: 3) — Mana }"#,
-            &[r#"8(8-12)% increased Mana Regeneration Rate"#, r#"5% increased Light Radius"#],
+            &[r"8(8-12)% increased Mana Regeneration Rate", r"5% increased Light Radius"],
             ModifierType::Explicit,
             Some(Generation::Suffix),
             Some("of Warmth"),
@@ -438,7 +442,7 @@ mod tests {
         ),
         (
             r#"{ Suffix Modifier "of the Penguin" (Tier: 7) — Elemental, Cold, Resistance }"#,
-            &[r#"+15(11-15)% to Cold Resistance"#],
+            &[r"+15(11-15)% to Cold Resistance"],
             ModifierType::Explicit,
             Some(Generation::Suffix),
             Some("of the Penguin"),
@@ -446,8 +450,8 @@ mod tests {
             &["Elemental", "Cold", "Resistance"],
         ),
         (
-            r#"{ Implicit Modifier — Elemental, Fire, Cold, Lightning, Resistance }"#,
-            &[r#"+8(7-10)% to all Elemental Resistances"#],
+            r"{ Implicit Modifier — Elemental, Fire, Cold, Lightning, Resistance }",
+            &[r"+8(7-10)% to all Elemental Resistances"],
             ModifierType::Implicit,
             None,
             None,
@@ -456,7 +460,7 @@ mod tests {
         ),
         (
             r#"{ Prefix Modifier "Merciless" (Tier: 1) — Damage, Physical, Attack }"#,
-            &[r#"173(170-179)% increased Physical Damage"#],
+            &[r"173(170-179)% increased Physical Damage"],
             ModifierType::Explicit,
             Some(Generation::Prefix),
             Some("Merciless"),
@@ -465,7 +469,7 @@ mod tests {
         ),
         (
             r#"{ Prefix Modifier "Dictator's" (Tier: 1) — Damage, Physical, Attack }"#,
-            &[r#"78(75-79)% increased Physical Damage"#, r#"+175(175-200) to Accuracy Rating"#],
+            &[r"78(75-79)% increased Physical Damage", r"+175(175-200) to Accuracy Rating"],
             ModifierType::Explicit,
             Some(Generation::Prefix),
             Some("Dictator's"),
@@ -474,7 +478,7 @@ mod tests {
         ),
         (
             r#"{ Prefix Modifier "Flaring" (Tier: 1) — Damage, Physical, Attack }"#,
-            &[r#"Adds 54(37-55) to 94(63-94) Physical Damage (desecrated)"#],
+            &[r"Adds 54(37-55) to 94(63-94) Physical Damage (desecrated)"],
             ModifierType::Desecrated,
             Some(Generation::Prefix),
             Some("Flaring"),
@@ -483,7 +487,7 @@ mod tests {
         ),
         (
             r#"{ Suffix Modifier "of Infamy" — Attack, Speed }"#,
-            &[r#"25(23-25)% increased Attack Speed (fractured)"#],
+            &[r"25(23-25)% increased Attack Speed (fractured)"],
             ModifierType::Fractured,
             Some(Generation::Suffix),
             Some("of Infamy"),
@@ -492,7 +496,7 @@ mod tests {
         ),
         (
             r#"{ Suffix Modifier "of the Sniper" (Tier: 1) }"#,
-            &[r#"+7 to Level of all Projectile Skills"#],
+            &[r"+7 to Level of all Projectile Skills"],
             ModifierType::Explicit,
             Some(Generation::Suffix),
             Some("of the Sniper"),
@@ -501,7 +505,7 @@ mod tests {
         ),
         (
             r#"{ Suffix Modifier "of Bursting" (Tier: 1) — Attack }"#,
-            &[r#"Loads 2 additional bolts"#],
+            &[r"Loads 2 additional bolts"],
             ModifierType::Explicit,
             Some(Generation::Suffix),
             Some("of Bursting"),
@@ -510,7 +514,7 @@ mod tests {
         ),
         (
             r#"{ Prefix Modifier "Impenetrable" (Tier: 1) — Defences }"#,
-            &[r#"103(101-110)% increased Armour"#],
+            &[r"103(101-110)% increased Armour"],
             ModifierType::Explicit,
             Some(Generation::Prefix),
             Some("Impenetrable"),
@@ -519,7 +523,7 @@ mod tests {
         ),
         (
             r#"{ Prefix Modifier "Hardened" (Tier: 1) — Defences }"#,
-            &[r#"+70(70-86) to Armour"#, r#"41(39-42)% increased Armour"#],
+            &[r"+70(70-86) to Armour", r"41(39-42)% increased Armour"],
             ModifierType::Explicit,
             Some(Generation::Prefix),
             Some("Hardened"),
@@ -528,7 +532,7 @@ mod tests {
         ),
         (
             r#"{ Prefix Modifier "Unmoving" (Tier: 2) — Defences }"#,
-            &[r#"+256(226-256) to Armour (desecrated)"#],
+            &[r"+256(226-256) to Armour (desecrated)"],
             ModifierType::Desecrated,
             Some(Generation::Prefix),
             Some("Unmoving"),
@@ -537,7 +541,7 @@ mod tests {
         ),
         (
             r#"{ Suffix Modifier "of the Titan" (Tier: 1) — Attribute }"#,
-            &[r#"+32(31-33) to Strength"#],
+            &[r"+32(31-33) to Strength"],
             ModifierType::Explicit,
             Some(Generation::Suffix),
             Some("of the Titan"),
@@ -546,7 +550,7 @@ mod tests {
         ),
         (
             r#"{ Suffix Modifier "of Allaying" (Tier: 3) — Physical, Ailment }"#,
-            &[r#"48(50-46)% reduced Duration of Bleeding on You"#],
+            &[r"48(50-46)% reduced Duration of Bleeding on You"],
             ModifierType::Explicit,
             Some(Generation::Suffix),
             Some("of Allaying"),
@@ -555,7 +559,7 @@ mod tests {
         ),
         (
             r#"{ Suffix Modifier "of the Essence" (Tier: 1) }"#,
-            &[r#"Hits against you have 44(40-50)% reduced Critical Damage Bonus"#],
+            &[r"Hits against you have 44(40-50)% reduced Critical Damage Bonus"],
             ModifierType::Explicit,
             Some(Generation::Suffix),
             Some("of the Essence"),
@@ -564,7 +568,7 @@ mod tests {
         ),
         (
             r#"{ Prefix Modifier "Malignant" (Tier: 4) — Damage, Chaos }"#,
-            &[r#"71(65-74)% increased Chaos Damage"#],
+            &[r"71(65-74)% increased Chaos Damage"],
             ModifierType::Explicit,
             Some(Generation::Prefix),
             Some("Malignant"),
@@ -573,7 +577,7 @@ mod tests {
         ),
         (
             r#"{ Prefix Modifier "Frostbound" (Tier: 1) — Damage, Elemental, Cold }"#,
-            &[r#"Gain 28(28-30)% of Damage as Extra Cold Damage"#],
+            &[r"Gain 28(28-30)% of Damage as Extra Cold Damage"],
             ModifierType::Explicit,
             Some(Generation::Prefix),
             Some("Frostbound"),
@@ -582,7 +586,7 @@ mod tests {
         ),
         (
             r#"{ Suffix Modifier "of the Hearth" (Tier: 1) — Mana }"#,
-            &[r#"22(18-22)% increased Mana Regeneration Rate"#, r#"15% increased Light Radius"#],
+            &[r"22(18-22)% increased Mana Regeneration Rate", r"15% increased Light Radius"],
             ModifierType::Explicit,
             Some(Generation::Suffix),
             Some("of the Hearth"),
@@ -591,7 +595,7 @@ mod tests {
         ),
         (
             r#"{ Suffix Modifier "of the Apt" (Tier: 4) }"#,
-            &[r#"20% reduced Attribute Requirements"#],
+            &[r"20% reduced Attribute Requirements"],
             ModifierType::Explicit,
             Some(Generation::Suffix),
             Some("of the Apt"),
@@ -599,8 +603,8 @@ mod tests {
             &[],
         ),
         (
-            r#"{ Implicit Modifier }"#,
-            &[r#"18(12-20)% increased Rarity of Items found"#],
+            r"{ Implicit Modifier }",
+            &[r"18(12-20)% increased Rarity of Items found"],
             ModifierType::Implicit,
             None,
             None,
@@ -609,7 +613,7 @@ mod tests {
         ),
         (
             r#"{ Prefix Modifier "Lady's" (Tier: 5) }"#,
-            &[r#"+30(30-33) to Spirit"#],
+            &[r"+30(30-33) to Spirit"],
             ModifierType::Explicit,
             Some(Generation::Prefix),
             Some("Lady's"),
@@ -618,7 +622,7 @@ mod tests {
         ),
         (
             r#"{ Prefix Modifier "Gentian" (Tier: 6) — Mana }"#,
-            &[r#"+90(90-104) to maximum Mana"#],
+            &[r"+90(90-104) to maximum Mana"],
             ModifierType::Explicit,
             Some(Generation::Prefix),
             Some("Gentian"),
@@ -627,7 +631,7 @@ mod tests {
         ),
         (
             r#"{ Prefix Modifier "Incanter's" (Tier: 1) — Damage, Caster }"#,
-            &[r#"29(27-30)% increased Spell Damage"#],
+            &[r"29(27-30)% increased Spell Damage"],
             ModifierType::Explicit,
             Some(Generation::Prefix),
             Some("Incanter's"),
@@ -636,7 +640,7 @@ mod tests {
         ),
         (
             r#"{ Fractured Suffix Modifier "of the Ice" (Tier: 2) — Elemental, Cold, Resistance }"#,
-            &[r#"+37(36-40)% to Cold Resistance"#],
+            &[r"+37(36-40)% to Cold Resistance"],
             ModifierType::Fractured,
             Some(Generation::Suffix),
             Some("of the Ice"),
@@ -645,7 +649,7 @@ mod tests {
         ),
         (
             r#"{ Suffix Modifier "of the Sorcerer" (Tier: 1) — Caster, Gem }"#,
-            &[r#"+3 to Level of all Spell Skills"#],
+            &[r"+3 to Level of all Spell Skills"],
             ModifierType::Explicit,
             Some(Generation::Suffix),
             Some("of the Sorcerer"),
@@ -654,7 +658,7 @@ mod tests {
         ),
         (
             r#"{ Desecrated Suffix Modifier "of Amanamu" (Tier: 1) — Elemental, Fire, Chaos, Resistance }"#,
-            &[r#"+17(13-17)% to Fire and Chaos Resistances"#],
+            &[r"+17(13-17)% to Fire and Chaos Resistances"],
             ModifierType::Desecrated,
             Some(Generation::Suffix),
             Some("of Amanamu"),
@@ -663,7 +667,7 @@ mod tests {
         ),
         (
             r#"{ Crafted Prefix Modifier "Gentian" (Tier: 6) — Mana }"#,
-            &[r#"+90(90-104) to maximum Mana"#],
+            &[r"+90(90-104) to maximum Mana"],
             ModifierType::Crafted,
             Some(Generation::Prefix),
             Some("Gentian"),

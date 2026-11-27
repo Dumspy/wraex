@@ -90,11 +90,11 @@ pub fn stat_refs() -> impl Iterator<Item = &'static str> {
         .copied()
 }
 
-fn js_max(a: f64, b: f64) -> f64 {
+const fn js_max(a: f64, b: f64) -> f64 {
     if a.is_nan() || b.is_nan() { f64::NAN } else { a.max(b) }
 }
 
-fn js_min(a: f64, b: f64) -> f64 {
+const fn js_min(a: f64, b: f64) -> f64 {
     if a.is_nan() || b.is_nan() { f64::NAN } else { a.min(b) }
 }
 
@@ -143,6 +143,7 @@ pub fn calc_prop_bounds(total: f64, stats: PropStats, item: &Item, inverted: boo
         max: calc_increased(flat_base + base.flat.max, base.incr.max, 0.0, inverted),
         option: None,
     };
+    #[expect(clippy::expect_used, reason = "`calcPropBase` only returns sources whose roll it read")]
     let sources = if !stats.incr.is_empty() && !stats.flat.is_empty() {
         base.sources.into_iter().map(|s| StatSource { contributes: None, ..s }).collect()
     } else if !stats.incr.is_empty() {
@@ -237,6 +238,6 @@ mod tests {
     fn rounds_like_javascript() {
         assert_eq!(js_round(2.5), 3.0);
         assert_eq!(js_round(-2.5), -2.0);
-        assert_eq!(js_round(2.4999999999999996), 2.0);
+        assert_eq!(js_round(2.499_999_999_999_999_6), 2.0);
     }
 }

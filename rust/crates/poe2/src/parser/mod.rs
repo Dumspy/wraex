@@ -48,8 +48,8 @@ pub struct Fail(pub Cow<'static, str>);
 
 impl Fail {
     /// Anything the reference throws on, caught by `parseClipboard`.
-    pub const THROW: Fail = Fail(Cow::Borrowed("item.parse_error"));
-    pub const UNKNOWN: Fail = Fail(Cow::Borrowed("item.unknown"));
+    pub const THROW: Self = Self(Cow::Borrowed("item.parse_error"));
+    pub const UNKNOWN: Self = Self(Cow::Borrowed("item.unknown"));
 }
 
 type R<T> = Result<T, Fail>;
@@ -159,9 +159,10 @@ pub fn parse_clipboard(d: &Data, clipboard: &str) -> Result<Item, Fail> {
         first.append(next);
         *next = first;
     }
-    let mut item = parse_name_plate(d, &mut sections[0])?;
+    let Some(first_section) = sections.first_mut() else { return Err(Fail::THROW) };
+    let mut item = parse_name_plate(d, first_section)?;
     sections.remove(0);
-    item.raw_text = clipboard.to_owned();
+    clipboard.clone_into(&mut item.raw_text);
 
     for step in PARSERS {
         match step {
@@ -169,13 +170,14 @@ pub fn parse_clipboard(d: &Data, clipboard: &str) -> Result<Item, Fail> {
             S(parser) => {
                 let mut i = 0;
                 while i < sections.len() {
-                    match parser(&sections[i], &mut item, d)? {
+                    let Some(section) = sections.get(i) else { break };
+                    match parser(section, &mut item, d)? {
                         Parsed => {
                             sections.remove(i);
                             break;
                         }
                         ParserSkipped => break,
-                        Skipped => i += 1,
+                        Skipped => i = i.saturating_add(1),
                     }
                 }
             }
@@ -190,8 +192,8 @@ fn truthy(x: Option<f64>) -> bool {
 }
 
 /// `str` set and non-empty (truthy).
-fn non_empty(s: &Option<String>) -> Option<&str> {
-    s.as_deref().filter(|s| !s.is_empty())
+fn non_empty(s: Option<&String>) -> Option<&str> {
+    s.map(String::as_str).filter(|s| !s.is_empty())
 }
 
 /// `re.exec(text)![1]`, throwing when it does not match.
@@ -232,7 +234,7 @@ fn normalize_name(item: &mut Item, d: &Data) -> R<()> {
             }
             Ok(None)
         };
-        match non_empty(&item.base_type).map(str::to_owned) {
+        match non_empty(item.base_type.as_ref()).map(str::to_owned) {
             Some(base) => {
                 if let Some(b) = blight(&base)? {
                     item.base_type = Some(b);
@@ -255,7 +257,7 @@ fn normalize_name(item: &mut Item, d: &Data) -> R<()> {
             ("METAMORPH_LIVER", "Metamorph Liver"),
         ] {
             if d.re(key).is_match(&item.name) {
-                item.name = name.to_owned();
+                name.clone_into(&mut item.name);
                 break;
             }
         }
@@ -298,17 +300,17 @@ fn find_in_database(item: &mut Item, d: &Data) -> R<()> {
             return Err(Fail::UNKNOWN);
         }
     }
-    let mut info = info.unwrap();
+    let Some(mut info) = info else { return Err(Fail::UNKNOWN) };
 
-    if info[0].unique.is_some() {
+    if info.first().is_some_and(|i| i.unique.is_some()) {
         let base_of = |i: &BaseType| i.unique.as_ref().map(|u| u.base.clone());
         let unique_info: Vec<BaseType> = info.iter().filter(|i| base_of(i) == item.base_type).cloned().collect();
         if !unique_info.is_empty() {
             info = unique_info;
-        } else if let Some(base_type) = non_empty(&item.base_type)
+        } else if let Some(base_type) = non_empty(item.base_type.as_ref())
             && let Some(base_info) = d.item_by_translated(Namespace::Item, base_type).filter(|b| !b.is_empty())
         {
-            let base_ref = base_info[0].ref_name.clone();
+            let base_ref = base_info.first().and_then(|b| b.ref_name.clone());
             info.retain(|i| base_of(i) == base_ref);
         }
     }
@@ -331,17 +333,21 @@ fn find_in_database(item: &mut Item, d: &Data) -> R<()> {
     Ok(())
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_map(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
-    if let Some(rest) = section[0].strip_prefix(d.s("MAP_TIER")) {
+    if let Some(rest) = section.first().and_then(|l| l.strip_prefix(d.s("MAP_TIER"))) {
         item.map_tier = Some(js::number(rest));
         return Ok(Parsed);
     }
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_waystone(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     let tier = item.info().map.as_ref().and_then(|m| m.tier).filter(|t| *t != 0);
-    let (true, Some(tier)) = (section[0].starts_with(d.s("WAYSTONE_REVIVES")), tier) else { return Ok(Skipped) };
+    let (true, Some(tier)) = (section.first().is_some_and(|l| l.starts_with(d.s("WAYSTONE_REVIVES"))), tier) else {
+        return Ok(Skipped);
+    };
     // We are a map now.
     item.map_tier = Some(f64::from(tier));
     for line in section {
@@ -374,18 +380,22 @@ fn parse_blighted_map(item: &mut Item, d: &Data) -> R<()> {
     });
     let Some(calc) = calc else { return Ok(()) };
     let value = calc.sources.first().and_then(|s| s.contributes).ok_or(Fail::THROW)?.value;
+    #[expect(clippy::float_cmp, reason = "JS `===` on the rolled value")]
     let (blighted, map) =
         if value == 9.0 { ("Blight-ravaged", "Blight-ravaged Map") } else { ("Blighted", "Blighted Map") };
     let icon = d.item_by_ref(Namespace::Item, map).and_then(|m| m.into_iter().next()).ok_or(Fail::THROW)?.icon;
     item.map_blighted = Some(blighted);
     // `item.info` is still `infoVariants[0]` here: the same object upstream.
     if let Some(first) = item.info_variants.as_mut().and_then(|v| v.first_mut()) {
-        first.icon = icon.clone();
+        icon.clone_into(&mut first.icon);
     }
-    item.info.as_mut().expect("info is set").icon = icon;
+    if let Some(info) = item.info.as_mut() {
+        info.icon = icon;
+    }
     Ok(())
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`VirtualParser` table entry: `PARSERS` fixes the signature")]
 fn parse_fractured(item: &mut Item, _: &Data) -> R<()> {
     if item.new_mods.iter().any(|m| m.info.kind == ModifierType::Fractured) {
         item.is_fractured = Some(true);
@@ -447,7 +457,7 @@ fn pick_correct_variant(item: &mut Item, _: &Data) -> R<()> {
 
 /// `isItemMissingItemClass`: meta skill gems come without an item class line.
 fn is_item_missing_item_class(d: &Data, section: &[String]) -> bool {
-    (2..=3).contains(&section.len()) && section[0].starts_with(d.s("RARITY"))
+    (2..=3).contains(&section.len()) && section.first().is_some_and(|l| l.starts_with(d.s("RARITY")))
 }
 
 fn parse_name_plate(d: &Data, section: &mut Vec<String>) -> R<Item> {
@@ -480,7 +490,7 @@ fn parse_name_plate(d: &Data, section: &mut Vec<String>) -> R<Item> {
     let mut line = lines.pop_front();
     let mut rarity_text = None;
     if let Some(l) = line.as_deref().filter(|l| l.starts_with(d.s("RARITY"))) {
-        rarity_text = Some(l[d.s("RARITY").len()..].to_owned());
+        rarity_text = Some(l.get(d.s("RARITY").len()..).unwrap_or_default().to_owned());
         line = lines.pop_front();
     }
     let name = markup_condition_parser(&line.ok_or(Fail::THROW)?);
@@ -511,6 +521,7 @@ fn parse_name_plate(d: &Data, section: &mut Vec<String>) -> R<Item> {
     Ok(item)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_influence(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if section.len() <= 2 {
         let count_before = item.influences.len();
@@ -536,12 +547,14 @@ fn parse_influence(section: &[String], item: &mut Item, d: &Data) -> R<Section> 
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_corrupted(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
-    let first = js::trim(&section[0]);
+    let Some(line) = section.first() else { return Ok(Skipped) };
+    let first = js::trim(line);
     if first == d.s("CORRUPTED") || first == d.s("DOUBLE_CORRUPTED") {
         item.is_corrupted = true;
         Ok(Parsed)
-    } else if section[0] == d.s("UNMODIFIABLE") {
+    } else if line == d.s("UNMODIFIABLE") {
         item.is_corrupted = true;
         item.is_unmodifiable = Some(true);
         Ok(Parsed)
@@ -550,19 +563,21 @@ fn parse_corrupted(section: &[String], item: &mut Item, d: &Data) -> R<Section> 
     }
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_foil(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if item.rarity != Some(Rarity::Unique) {
         return Ok(ParserSkipped);
     }
-    if section[0] == d.s("FOIL_UNIQUE") {
+    if section.first().is_some_and(|l| l == d.s("FOIL_UNIQUE")) {
         item.is_foil = Some(true);
         return Ok(Parsed);
     }
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_unidentified(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
-    let Some(m) = d.re("UNIDENTIFIED").captures(&section[0]) else { return Ok(Skipped) };
+    let Some(m) = section.first().and_then(|l| d.re("UNIDENTIFIED").captures(l)) else { return Ok(Skipped) };
     item.is_unidentified = true;
     if let Some(tier) = m.name("tier").filter(|t| !t.is_empty()) {
         item.unidentified_tier = Some(js::number(tier));
@@ -570,6 +585,7 @@ fn parse_unidentified(section: &[String], item: &mut Item, d: &Data) -> R<Sectio
     Ok(Parsed)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_item_level(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     let prefix = if item.ref_name_is("Filled Coffin") { d.s("CORPSE_LEVEL") } else { d.s("ITEM_LEVEL") };
     for line in section {
@@ -582,18 +598,20 @@ fn parse_item_level(section: &[String], item: &mut Item, d: &Data) -> R<Section>
 }
 
 fn parse_requirements(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
-    if !section[0].starts_with(d.s("REQUIRES")) || item.category.as_ref().is_some_and(|c| GEM.contains(c)) {
+    let Some(first) = section.first() else { return Ok(Skipped) };
+    if !first.starts_with(d.s("REQUIRES")) || item.category.as_ref().is_some_and(|c| GEM.contains(c)) {
         return Ok(Skipped);
     }
     // TODO (upstream): remove the throw once validated in other languages.
-    let m = d.re("REQUIRES_LINE").captures(&section[0]).ok_or(Fail::THROW)?;
+    let m = d.re("REQUIRES_LINE").captures(first).ok_or(Fail::THROW)?;
     let n = |group: &str| js::parse_int(m.name(group).unwrap_or("0"));
     item.requires = Some(Requires { level: n("level"), str: n("str"), dex: n("dex"), int: n("int") });
     Ok(Parsed)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_talisman_tier(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
-    if let Some(rest) = section[0].strip_prefix(d.s("TALISMAN_TIER")) {
+    if let Some(rest) = section.first().and_then(|l| l.strip_prefix(d.s("TALISMAN_TIER"))) {
         item.talisman_tier = Some(js::number(rest));
         return Ok(Parsed);
     }
@@ -615,6 +633,7 @@ fn parse_gem(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_stack_size(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if item.rarity != Some(Rarity::Normal)
         && !matches!(
@@ -624,11 +643,11 @@ fn parse_stack_size(section: &[String], item: &mut Item, d: &Data) -> R<Section>
     {
         return Ok(ParserSkipped);
     }
-    if let Some(rest) = section[0].strip_prefix(d.s("STACK_SIZE")) {
+    if let Some(rest) = section.first().and_then(|l| l.strip_prefix(d.s("STACK_SIZE"))) {
         // Portal Scroll "Stack Size: 2[localized separator]448/40"
         let digits: String = rest.chars().filter(|c| c.is_ascii_digit() || *c == '/').collect();
         let mut parts = digits.split('/').map(js::number);
-        let size = StackSize { value: parts.next().unwrap(), max: parts.next() };
+        let size = StackSize { value: parts.next().unwrap_or_default(), max: parts.next() };
         if !item.ref_name_is("Idol of Estazunti") {
             item.stack_size = Some(size);
         }
@@ -638,16 +657,17 @@ fn parse_stack_size(section: &[String], item: &mut Item, d: &Data) -> R<Section>
 }
 
 fn empty_sockets(count: f64) -> Vec<Option<EditorItem>> {
-    vec![None; count as usize]
+    vec![None; wraex_core::num::f64_to_usize(count)]
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_augment_sockets(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     let category_max = get_max_sockets(item);
     if category_max == 0.0 {
         return Ok(ParserSkipped);
     }
-    if let Some(rest) = section[0].strip_prefix(d.s("SOCKETS")) {
-        let current = js::trim_end(rest).matches('S').count() as f64;
+    if let Some(rest) = section.first().and_then(|l| l.strip_prefix(d.s("SOCKETS"))) {
+        let current = wraex_core::num::usize_to_f64(js::trim_end(rest).matches('S').count());
         let slots = if item.is_modifiable() { category_max.max(current) } else { current };
         item.augment_sockets =
             Some(AugmentSockets { empty: 0.0, current, normal: category_max, augments: empty_sockets(slots) });
@@ -665,9 +685,12 @@ fn parse_augment_sockets(section: &[String], item: &mut Item, d: &Data) -> R<Sec
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_sockets(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     let is_gem = item.category.as_ref().is_some_and(|c| GEM.contains(c));
-    let Some(rest) = section[0].strip_prefix(d.s("SOCKETS")).filter(|_| is_gem) else { return Ok(Skipped) };
+    let Some(rest) = section.first().and_then(|l| l.strip_prefix(d.s("SOCKETS"))).filter(|_| is_gem) else {
+        return Ok(Skipped);
+    };
     let shape: String = js::trim_end(rest).chars().map(|c| if c == ' ' || c == '-' { c } else { '#' }).collect();
     let linked = match shape.as_str() {
         "#-#-#-#-#-#" => Some(6),
@@ -676,9 +699,9 @@ fn parse_sockets(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     };
     // Counted after every socket became `#`, so `white` is always 0 upstream.
     item.gem_sockets = Some(GemSockets {
-        number: shape.matches('#').count() as f64,
+        number: wraex_core::num::usize_to_f64(shape.matches('#').count()),
         linked,
-        white: shape.matches('W').count() as f64,
+        white: wraex_core::num::usize_to_f64(shape.matches('W').count()),
     });
     Ok(Parsed)
 }
@@ -769,10 +792,8 @@ fn parse_weapon(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
             ["FIRE_DAMAGE", "COLD_DAMAGE", "LIGHTNING_DAMAGE"].into_iter().find_map(|key| line.strip_prefix(d.s(key)))
         {
             let damage = damage_sum(d, rest);
-            item.weapon_elemental = Some(match item.weapon_elemental.filter(|e| js::truthy(*e)) {
-                Some(e) => damage + e,
-                None => damage,
-            });
+            item.weapon_elemental =
+                Some(item.weapon_elemental.filter(|e| js::truthy(*e)).map_or(damage, |e| damage + e));
         } else if let Some(rest) = line.strip_prefix(d.s("RELOAD_SPEED")) {
             item.weapon_reload = Some(js::parse_float(rest));
         } else if let Some(rest) = line.strip_prefix(d.s("BASE_SPIRIT")) {
@@ -804,7 +825,7 @@ fn parse_caster(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if !matches!(item.category, Some(ItemCategory::Wand | ItemCategory::Sceptre | ItemCategory::Staff)) {
         return Ok(ParserSkipped);
     }
-    if section.len() == 1 && section[0].starts_with(d.s("QUALITY")) {
+    if section.len() == 1 && section.first().is_some_and(|l| l.starts_with(d.s("QUALITY"))) {
         parse_quality_nested(d, section, item)?;
         return Ok(Parsed);
     }
@@ -819,10 +840,11 @@ fn parse_logbook_area(section: &[String], item: &mut Item, d: &Data) -> R<Sectio
         return Ok(Skipped);
     }
     // Skip the area, parse the faction (which is then dropped again).
-    if d.stat_by_match_str(&section[1]).is_none() {
+    if section.get(1).is_none_or(|faction| d.stat_by_match_str(faction).is_none()) {
         return Ok(Skipped);
     }
-    let (mod_type, lines) = parse_mod_type(d, &section[2..]);
+    let Some(rest) = section.get(2..) else { return Ok(Skipped) };
+    let (mod_type, lines) = parse_mod_type(d, rest);
     let mut area_mods = Vec::new();
     for line in &lines {
         let stat = StatString { string: line.clone(), unscalable: false };
@@ -872,16 +894,18 @@ fn parse_modifiers(section: &[String], item: &mut Item, d: &Data) -> R<Section> 
     Ok(Parsed)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_mirrored(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
-    if section.len() == 1 && section[0] == d.s("MIRRORED") {
+    if section.len() == 1 && section.first().is_some_and(|l| l == d.s("MIRRORED")) {
         item.is_mirrored = Some(true);
         return Ok(Parsed);
     }
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_sanctified(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
-    if section.len() == 1 && section[0] == d.s("SANCTIFIED") {
+    if section.len() == 1 && section.first().is_some_and(|l| l == d.s("SANCTIFIED")) {
         item.is_sanctified = Some(true);
         return Ok(Parsed);
     }
@@ -897,17 +921,19 @@ fn parse_flask(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     Ok(is_parsed)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_jewelery(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if !matches!(item.category, Some(ItemCategory::Amulet | ItemCategory::Ring | ItemCategory::Belt)) {
         return Ok(ParserSkipped);
     }
     // `QUALITY.substring(0, QUALITY.indexOf(":"))`: empty without a colon.
     let quality = d.s("QUALITY");
-    let prefix = quality.find(':').map_or("", |i| &quality[..i]);
+    let prefix = quality.find(':').map_or("", |i| quality.get(..i).unwrap_or_default());
     Ok(if section.iter().any(|l| l.starts_with(prefix)) { Parsed } else { Skipped })
 }
 
 /// Consumes "Charm Slots" sections so they are not recognised as modifiers.
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_charm_slots(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if item.category != Some(ItemCategory::Belt) {
         return Ok(ParserSkipped);
@@ -916,6 +942,7 @@ fn parse_charm_slots(section: &[String], item: &mut Item, d: &Data) -> R<Section
 }
 
 /// Consumes "Spirit: 100" sections so they are not recognised as modifiers.
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_spirit(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if item.category != Some(ItemCategory::Sceptre) {
         return Ok(ParserSkipped);
@@ -923,6 +950,7 @@ fn parse_spirit(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     Ok(if section.iter().any(|l| l.starts_with(d.s("BASE_SPIRIT"))) { Parsed } else { Skipped })
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_price_note(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     for line in section {
         if let Some(note) = line.strip_prefix(d.s("PRICE_NOTE")) {
@@ -933,6 +961,7 @@ fn parse_price_note(section: &[String], item: &mut Item, d: &Data) -> R<Section>
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_timelost_radius(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if item.category != Some(ItemCategory::Jewel) {
         return Ok(ParserSkipped);
@@ -940,12 +969,13 @@ fn parse_timelost_radius(section: &[String], item: &mut Item, d: &Data) -> R<Sec
     Ok(if section.iter().any(|l| l.starts_with(d.s("TIMELESS_RADIUS"))) { Parsed } else { Skipped })
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_sentinel_charge(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if item.category != Some(ItemCategory::Sentinel) {
         return Ok(ParserSkipped);
     }
     if section.len() == 1
-        && let Some(rest) = section[0].strip_prefix(d.s("SENTINEL_CHARGE"))
+        && let Some(rest) = section.first().and_then(|l| l.strip_prefix(d.s("SENTINEL_CHARGE")))
     {
         item.sentinel_charge = Some(js::parse_int(rest));
         return Ok(Parsed);
@@ -954,7 +984,7 @@ fn parse_sentinel_charge(section: &[String], item: &mut Item, d: &Data) -> R<Sec
 }
 
 fn parse_synthesised(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
-    if section.len() == 1 && section[0] == d.s("SECTION_SYNTHESISED") {
+    if section.len() == 1 && section.first().is_some_and(|l| l == d.s("SECTION_SYNTHESISED")) {
         item.is_synthesised = Some(true);
         let exec = |text: &str| -> R<String> {
             match d.re_ref("ITEM_SYNTHESISED").captures(text) {
@@ -962,7 +992,7 @@ fn parse_synthesised(section: &[String], item: &mut Item, d: &Data) -> R<Section
                 None => exec_group1(d.re("ITEM_SYNTHESISED"), text),
             }
         };
-        match non_empty(&item.base_type).map(str::to_owned) {
+        match non_empty(item.base_type.as_ref()).map(str::to_owned) {
             Some(base) => item.base_type = Some(exec(&base)?),
             None => item.name = exec(&item.name)?,
         }
@@ -972,7 +1002,7 @@ fn parse_synthesised(section: &[String], item: &mut Item, d: &Data) -> R<Section
 }
 
 /// `Normal`, or an unidentified magic, rare or unique item.
-fn may_have_quality_prefix(item: &Item) -> bool {
+const fn may_have_quality_prefix(item: &Item) -> bool {
     match item.rarity {
         Some(Rarity::Normal) => true,
         Some(Rarity::Magic | Rarity::Rare | Rarity::Unique) => item.is_unidentified,
@@ -999,10 +1029,12 @@ fn parse_exceptional(item: &mut Item, d: &Data) -> R<()> {
 }
 
 /// Runeforged items have a different base type upstream, so nothing is done.
-fn parse_runeforged(_: &mut Item, _: &Data) -> R<()> {
+#[expect(clippy::unnecessary_wraps, reason = "`VirtualParser` table entry: `PARSERS` fixes the signature")]
+const fn parse_runeforged(_: &mut Item, _: &Data) -> R<()> {
     Ok(())
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_category_by_help_text(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     let category = [
         ("BEAST_HELP", ItemCategory::CapturedBeast),
@@ -1010,7 +1042,7 @@ fn parse_category_by_help_text(section: &[String], item: &mut Item, d: &Data) ->
         ("VOIDSTONE_HELP", ItemCategory::Voidstone),
     ]
     .into_iter()
-    .find(|(key, _)| section[0] == d.s(key));
+    .find(|(key, _)| section.first().is_some_and(|l| l == d.s(key)));
     match category {
         Some((_, category)) => {
             item.category = Some(category);
@@ -1020,6 +1052,7 @@ fn parse_category_by_help_text(section: &[String], item: &mut Item, d: &Data) ->
     }
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_heist_blueprint(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if item.category != Some(ItemCategory::HeistBlueprint) {
         return Ok(ParserSkipped);
@@ -1050,6 +1083,7 @@ fn parse_heist_blueprint(section: &[String], item: &mut Item, d: &Data) -> R<Sec
     Ok(Parsed)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_trials(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if !item.ref_name_is("Djinn Barya") && !item.ref_name_is("Inscribed Ultimatum") {
         return Ok(ParserSkipped);
@@ -1083,6 +1117,7 @@ fn parse_area_level_nested(d: &Data, section: &[String], item: &mut Item) {
     }
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_area_level(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if !["Chronicle of Atzoatl", "Expedition Logbook", "Mirrored Tablet", "Forbidden Tome"]
         .iter()
@@ -1094,15 +1129,17 @@ fn parse_area_level(section: &[String], item: &mut Item, d: &Data) -> R<Section>
     Ok(if truthy(item.area_level) { Parsed } else { Skipped })
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`SectionParser` table entry: `PARSERS` fixes the signature")]
 fn parse_atzoatl_rooms(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if !item.ref_name_is("Chronicle of Atzoatl") {
         return Ok(ParserSkipped);
     }
-    if section[0] != d.s("INCURSION_OPEN") {
+    if section.first().is_none_or(|l| l != d.s("INCURSION_OPEN")) {
         return Ok(Skipped);
     }
     let mut state = IncursionRoom::Open;
-    for line in &section[1..] {
+    let Some(rooms) = section.get(1..) else { return Ok(Skipped) };
+    for line in rooms {
         if line == d.s("INCURSION_OBSTRUCTED") {
             state = IncursionRoom::Obstructed;
             continue;
@@ -1113,7 +1150,7 @@ fn parse_atzoatl_rooms(section: &[String], item: &mut Item, d: &Data) -> R<Secti
                     IncursionRoom::Open => matcher.string,
                     IncursionRoom::Obstructed => format!("{} {}", d.s("INCURSION_OBSTRUCTED"), matcher.string),
                 };
-                let value = f64::from(state as u8);
+                let value = f64::from(state.value());
                 item.new_mods.push(ParsedModifier {
                     info: ModifierInfo::new(ModifierType::Pseudo),
                     stats: vec![ParsedStat {
@@ -1155,7 +1192,8 @@ fn parse_mirrored_tablet(section: &[String], item: &mut Item, d: &Data) -> R<Sec
         let stat = StatString { string: line.clone(), unscalable: true };
         match try_parse_translation(d, &stat, ModifierType::Pseudo)? {
             Some(found) => {
-                item.new_mods.push(ParsedModifier { info: ModifierInfo::new(ModifierType::Pseudo), stats: vec![found] })
+                item.new_mods
+                    .push(ParsedModifier { info: ModifierInfo::new(ModifierType::Pseudo), stats: vec![found] });
             }
             None => item.unknown_modifiers.push(UnknownModifier { text: line.clone(), kind: ModifierType::Pseudo }),
         }
@@ -1217,6 +1255,7 @@ pub fn parse_stats_from_mod(
 }
 
 /// `transformToLegacyModifiers` (deprecated upstream).
+#[expect(clippy::unnecessary_wraps, reason = "`VirtualParser` table entry: `PARSERS` fixes the signature")]
 fn transform_to_legacy_modifiers(item: &mut Item, _: &Data) -> R<()> {
     item.stats_by_type = sum_stats_by_mod_type(&item.new_mods);
     Ok(())
@@ -1249,35 +1288,38 @@ fn apply_augment_sockets(item: &mut Item, d: &Data) -> R<()> {
     let mut augs: Vec<Vec<BaseType>> = Vec::new();
     let mut i = 0;
     while i < combos.len() {
-        let stats: Vec<&StatCalculated> = combos[i].iter().map(|&s| augment_stats[s]).collect();
+        let Some(combo) = combos.get(i) else { break };
+        let stats: Vec<&StatCalculated> = combo.iter().filter_map(|&s| augment_stats.get(s).copied()).collect();
+        let used = combo.clone();
         let found = determine_augments(d, augment_mod.as_ref().ok_or(Fail::THROW)?, &stats)?;
         if !found.is_empty() {
             augs.push(found);
-            for used in combos[i].clone() {
+            for used in used {
                 // Drop every combination that uses one of these stats.
                 combos.retain(|c| !c.contains(&used));
             }
             i = 0;
             continue;
         }
-        i += 1;
+        i = i.saturating_add(1);
     }
 
     let category = item.category.clone().unwrap_or(ItemCategory::Unknown);
     let mut augments: Vec<Option<EditorItem>> =
         augs.iter().flat_map(|group| build_editor_items(group, &category, true)).map(Some).collect();
     let (current, normal) = (sockets.current, sockets.normal);
-    let len = augments.len() as f64;
+    let len = wraex_core::num::usize_to_f64(augments.len());
     if len < current.max(normal) {
         // Possibly empty sockets.
         let empty = if item.is_corrupted { current - len } else { current.max(normal) - len };
-        for _ in 0..(empty.max(0.0) as usize) {
+        for _ in 0..wraex_core::num::f64_to_usize(empty.max(0.0)) {
             augments.push(None);
         }
     }
-    let sockets = item.augment_sockets.as_mut().expect("checked above");
-    sockets.empty = augments.iter().filter(|a| a.is_none()).count() as f64;
-    sockets.augments = augments;
+    if let Some(sockets) = item.augment_sockets.as_mut() {
+        sockets.empty = wraex_core::num::usize_to_f64(augments.iter().filter(|a| a.is_none()).count());
+        sockets.augments = augments;
+    }
     // Filling empty sockets from `savedAugments` comes with the item editor; with
     // the default `savedAugments: {}` upstream returns here.
     Ok(())
@@ -1292,9 +1334,14 @@ fn modified_bfs(remaining: f64, combo: &mut Vec<f64>, available: &[f64]) -> Opti
     if combo.len() >= 7 || available.len() > 8 {
         return Some(Vec::new());
     }
-    let max_repeats =
-        |v: &[f64]| v.iter().map(|x| v.iter().filter(|y| *y == x).count() as f64).fold(f64::NEG_INFINITY, f64::max);
-    let distinct = |v: &[f64]| v.iter().enumerate().filter(|(i, x)| !v[..*i].contains(x)).count();
+    #[expect(clippy::float_cmp, reason = "JS `===` when counting equal values")]
+    let max_repeats = |v: &[f64]| {
+        v.iter()
+            .map(|x| wraex_core::num::usize_to_f64(v.iter().filter(|y| *y == x).count()))
+            .fold(f64::NEG_INFINITY, f64::max)
+    };
+    let distinct =
+        |v: &[f64]| v.iter().enumerate().filter(|(i, x)| !v.get(..*i).is_some_and(|head| head.contains(x))).count();
     let mut best: Option<Vec<f64>> = None;
     for &value in available {
         if value > remaining {
@@ -1309,6 +1356,7 @@ fn modified_bfs(remaining: f64, combo: &mut Vec<f64>, available: &[f64]) -> Opti
             Some(b) if result.len() < b.len() => best = Some(result),
             Some(b) if result.len() == b.len() => {
                 let (rm, bm) = (max_repeats(&result), max_repeats(b));
+                #[expect(clippy::float_cmp, reason = "JS `===` on the repeat counts")]
                 if rm > bm || (rm == bm && distinct(&result) < distinct(b)) {
                     best = Some(result);
                 }
@@ -1323,6 +1371,7 @@ fn modified_bfs(remaining: f64, combo: &mut Vec<f64>, available: &[f64]) -> Opti
 }
 
 /// `SameValueZero` membership, as `Set#has` does for numbers.
+#[expect(clippy::float_cmp, reason = "JS `===` membership, plus the `NaN` case the reference adds")]
 fn set_has(values: &[f64], x: f64) -> bool {
     values.iter().any(|v| *v == x || (v.is_nan() && x.is_nan()))
 }
@@ -1367,7 +1416,8 @@ fn determine_augments(d: &Data, modifier: &ParsedModifier, stat_calcs: &[&StatCa
 
     // Something like "Raven-Touched".
     if applied.is_empty() {
-        return Ok(vec![augment_item(d, &possible[0].ref_name)?]);
+        let Some(first) = possible.first() else { return Ok(Vec::new()) };
+        return Ok(vec![augment_item(d, &first.ref_name)?]);
     }
 
     if applied.len() > 1 {
@@ -1390,12 +1440,12 @@ fn determine_augments(d: &Data, modifier: &ParsedModifier, stat_calcs: &[&StatCa
     let mut available: Vec<f64> = possible
         .iter()
         .map(|aug| {
-            if aug.values.len() == 1 {
-                return aug.values[0];
+            if let [value] = aug.values.as_slice() {
+                return *value;
             }
             // Stats like "# to # added Lightning Damage".
             if aug.base_stat.matches('#').count() > 1 {
-                let avg = aug.values.iter().sum::<f64>() / aug.values.len() as f64;
+                let avg = aug.values.iter().sum::<f64>() / wraex_core::num::usize_to_f64(aug.values.len());
                 return if js::truthy(avg) { avg } else { 0.0 };
             }
             // Everything else; an empty list reads `values[0]` as undefined.
@@ -1405,14 +1455,17 @@ fn determine_augments(d: &Data, modifier: &ParsedModifier, stat_calcs: &[&StatCa
     available.sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));
 
     // Search all combinations with the fewest augments.
-    let likely = modified_bfs(applied[0], &mut Vec::new(), &available).unwrap_or_default();
+    let Some(first_applied) = applied.first() else { return Ok(Vec::new()) };
+    let likely = modified_bfs(*first_applied, &mut Vec::new(), &available).unwrap_or_default();
     likely
         .iter()
         .map(|&v| {
-            let aug = possible
-                .iter()
-                .find(|aug| aug.values.contains(&v) || aug.values.iter().sum::<f64>() / aug.values.len() as f64 == v)
-                .ok_or(Fail::THROW)?;
+            #[expect(clippy::float_cmp, reason = "JS `===` on the rolled average")]
+            let matches_value = |aug: &AugmentData| {
+                aug.values.contains(&v)
+                    || aug.values.iter().sum::<f64>() / wraex_core::num::usize_to_f64(aug.values.len()) == v
+            };
+            let aug = possible.iter().find(|aug| matches_value(aug)).ok_or(Fail::THROW)?;
             augment_item(d, &aug.ref_name)
         })
         .collect()
@@ -1423,10 +1476,7 @@ fn apply_elemental_added(item: &mut Item, _: &Data) -> R<()> {
         return Ok(());
     }
     let add = |field: &mut Option<f64>, v: f64| {
-        *field = Some(match field.filter(|x| js::truthy(*x)) {
-            Some(x) => v + x,
-            None => v,
-        });
+        *field = Some(field.filter(|x| js::truthy(*x)).map_or(v, |x| v + x));
     };
     for calc in &item.stats_by_type {
         let field = match calc.stat.stat_ref.as_str() {
@@ -1452,12 +1502,13 @@ fn calc_base_percentile(item: &mut Item, d: &Data) -> R<()> {
     let bounds = |b: [u32; 2]| [f64::from(b[0]), f64::from(b[1])];
     // Base percentile is the same for all defences. AR/EV -> ES order: larger
     // rolls give a more precise result. No ward: it is not used anymore.
-    let percentile = if let (true, Some(ar)) = (truthy(item.armour_ar), info.ar) {
-        calc_prop_percentile(item.armour_ar.unwrap(), bounds(ar), quality_stats::ARMOUR, item)
-    } else if let (true, Some(ev)) = (truthy(item.armour_ev), info.ev) {
-        calc_prop_percentile(item.armour_ev.unwrap(), bounds(ev), quality_stats::EVASION, item)
-    } else if let (true, Some(es)) = (truthy(item.armour_es), info.es) {
-        calc_prop_percentile(item.armour_es.unwrap(), bounds(es), quality_stats::ENERGY_SHIELD, item)
+    let truthy_value = |x: Option<f64>| x.filter(|v| js::truthy(*v));
+    let percentile = if let (Some(value), Some(ar)) = (truthy_value(item.armour_ar), info.ar) {
+        calc_prop_percentile(value, bounds(ar), quality_stats::ARMOUR, item)
+    } else if let (Some(value), Some(ev)) = (truthy_value(item.armour_ev), info.ev) {
+        calc_prop_percentile(value, bounds(ev), quality_stats::EVASION, item)
+    } else if let (Some(value), Some(es)) = (truthy_value(item.armour_es), info.es) {
+        calc_prop_percentile(value, bounds(es), quality_stats::ENERGY_SHIELD, item)
     } else {
         return Ok(());
     };
@@ -1467,6 +1518,7 @@ fn calc_base_percentile(item: &mut Item, d: &Data) -> R<()> {
 
 /// `getMaxSockets`: augment sockets an item has without corruption.
 pub fn get_max_sockets(item: &Item) -> f64 {
+    use ItemCategory as C;
     let by_name = match item.info().ref_name.as_deref() {
         Some("Atziri's Splendour") => Some(6.0),
         Some("Runeseeker's Call") => Some(5.0),
@@ -1479,7 +1531,6 @@ pub fn get_max_sockets(item: &Item) -> f64 {
     if let Some(n) = by_name {
         return n;
     }
-    use ItemCategory as C;
     match item.category {
         Some(
             C::BodyArmour
@@ -1540,9 +1591,13 @@ pub fn is_armour_or_weapon_or_caster(category: Option<&ItemCategory>) -> Option<
 }
 
 /// `parseAffixStrings`: `[Ref|Text]` markup to its text (or the ref alone).
+#[expect(
+    clippy::expect_used,
+    reason = "a literal pattern from the reference: a compile failure is a bug, not an input"
+)]
 pub fn parse_affix_strings(text: &str) -> String {
     static RE: std::sync::OnceLock<Regex> = std::sync::OnceLock::new();
-    let re = RE.get_or_init(|| Regex::new(r"\[([^\]|]+)\|?([^\]]*)\]", "g").unwrap());
+    let re = RE.get_or_init(|| Regex::new(r"\[([^\]|]+)\|?([^\]]*)\]", "g").expect("valid pattern"));
     re.replace_all(text, |caps| {
         let part2 = caps.get(2).unwrap_or("");
         if part2.is_empty() { caps.get(1).unwrap_or("").to_owned() } else { part2.to_owned() }
@@ -1655,7 +1710,7 @@ mod tests {
     /// sections, and the test items split into the expected counts.
     #[test]
     fn an_empty_item_text_has_no_sections() {
-        assert!(item_text_to_sections("").is_empty());
+        assert_eq!(item_text_to_sections(""), Vec::<Vec<String>>::new());
     }
 
     #[test]
@@ -1678,7 +1733,7 @@ mod tests {
     #[test]
     fn parses_the_test_items_weapons() {
         let d = en();
-        #[allow(clippy::type_complexity)]
+        #[expect(clippy::type_complexity, reason = "one row per `parseWeapon` test case")]
         let cases: [(&str, f64, Option<f64>, f64, f64, Option<f64>, Option<f64>); 3] = [
             // physical, elemental, attacks per second, crit, reload, quality
             ("ee2-magic-item", 53.5, Some(25.5), 1.2, 5.0, None, None),
@@ -1702,7 +1757,7 @@ mod tests {
     #[test]
     fn parses_the_test_items_armour() {
         let d = en();
-        #[allow(clippy::type_complexity)]
+        #[expect(clippy::type_complexity, reason = "one row per `parseArmour` test case")]
         let cases: [(&str, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>); 3] = [
             // armour, evasion, energy shield, quality, block
             ("ee2-normal-item", Some(174.0), None, Some(60.0), Some(9.0), None),
@@ -1908,7 +1963,7 @@ Gain 21(21-27) Mana per enemy killed
     #[test]
     fn parses_a_waystones_properties() {
         let d = en();
-        #[allow(clippy::type_complexity)]
+        #[expect(clippy::type_complexity, reason = "one row per `parseMap` test case")]
         let cases: [(&str, u32, f64, f64, Option<f64>, f64, f64, Option<f64>); 2] = [
             // tier, revives, pack size, magic monsters, rare monsters, drop chance
             ("ee2-rare-map", 14, 2.0, 34.0, None, 28.0, 75.0, None),
@@ -1961,7 +2016,7 @@ Gain 21(21-27) Mana per enemy killed
 
     /// `specs/Parser/sectionUnit.test.ts` (`parseTrials`).
     #[test]
-    #[allow(clippy::type_complexity)]
+    #[expect(clippy::type_complexity, reason = "one row per `parseTrials` test case")]
     fn parses_djinn_barya_and_inscribed_ultimatum_trials() {
         let d = en();
         let cases: [(&str, &[&str], f64, f64, Option<&str>); 10] = [
@@ -2102,7 +2157,7 @@ Gain 21(21-27) Mana per enemy killed
             assert_eq!(parse_augment_sockets(&lines, &mut item, d), Ok(Parsed), "{line}");
             let sockets = item.augment_sockets.expect("sockets");
             assert_eq!((sockets.normal, sockets.empty, sockets.current), (1.0, 0.0, current), "{line}");
-            assert_eq!(sockets.augments.len(), current as usize, "{line}");
+            assert_eq!(sockets.augments.len(), wraex_core::num::f64_to_usize(current), "{line}");
             assert!(sockets.augments.iter().all(Option::is_none), "{line}");
         }
 

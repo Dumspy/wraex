@@ -28,7 +28,7 @@ struct PseudoRule {
     mutate: Option<fn(&mut StatFilter)>,
 }
 
-fn s(stat_ref: &'static str) -> RuleStat {
+const fn s(stat_ref: &'static str) -> RuleStat {
     RuleStat { stat_ref, multiplier: 1.0, required: false }
 }
 
@@ -107,7 +107,9 @@ fn pseudo_rules() -> Vec<PseudoRule> {
             disabled: Some(false),
             ..rule(
                 "#% total Elemental Resistance",
-                elemental().map(|i| RuleStat { multiplier: i.elements.len() as f64, ..s(i.stat_ref) }).collect(),
+                elemental()
+                    .map(|i| RuleStat { multiplier: wraex_core::num::usize_to_f64(i.elements.len()), ..s(i.stat_ref) })
+                    .collect(),
             )
         },
         PseudoRule { group: Some("to_x_ele_res"), ..rule("#% total to Fire Resistance", element_res("fire")) },
@@ -118,7 +120,7 @@ fn pseudo_rules() -> Vec<PseudoRule> {
         },
         PseudoRule {
             mutate: Some(|f| {
-                if f.sources.len() == 1 && is_augment(f.sources[0].modifier.info.kind) {
+                if f.sources.len() == 1 && f.sources.first().is_some_and(|s| is_augment(s.modifier.info.kind)) {
                     f.hidden = Some("filters.hide_crafted_chaos");
                 } else {
                     f.disabled = false;
@@ -147,7 +149,9 @@ fn pseudo_rules() -> Vec<PseudoRule> {
         rule("+# total maximum Energy Shield", vec![s("# to maximum Energy Shield")]),
         PseudoRule {
             mutate: Some(|f| {
-                if f.sources.len() != 1 || f.sources[0].modifier.info.kind != ModifierType::Implicit {
+                if f.sources.len() != 1
+                    || f.sources.first().is_none_or(|s| s.modifier.info.kind != ModifierType::Implicit)
+                {
                     f.disabled = false;
                 }
             }),
@@ -173,6 +177,7 @@ fn pseudo_rules() -> Vec<PseudoRule> {
 
 /// `filterPseudo`. The reference tracks the filters of a group by identity;
 /// here every pseudo filter gets an id.
+#[expect(clippy::too_many_lines, reason = "line-for-line port of upstream `filterPseudo` (filters/pseudo/index.ts)")]
 pub fn filter_pseudo(ctx: &mut Ctx) -> R<()> {
     let item = ctx.item;
     let mut filters: Vec<(Option<usize>, StatFilter)> =
@@ -234,7 +239,7 @@ pub fn filter_pseudo(ctx: &mut Ctx) -> R<()> {
     let find =
         |filters: &[(Option<usize>, StatFilter)], id: usize| filters.iter().position(|(fid, _)| *fid == Some(id));
     let value = |filters: &[(Option<usize>, StatFilter)], id: usize| -> Option<f64> {
-        find(filters, id).and_then(|i| filters[i].1.roll.as_ref()).map(|r| r.value)
+        find(filters, id).and_then(|i| filters.get(i)).and_then(|(_, f)| f.roll.as_ref()).map(|r| r.value)
     };
     let by_value_desc = |filters: &[(Option<usize>, StatFilter)], ids: &mut Vec<usize>| -> R<()> {
         let mut keyed = Vec::new();
@@ -247,8 +252,8 @@ pub fn filter_pseudo(ctx: &mut Ctx) -> R<()> {
         Ok(())
     };
     let hide = |filters: &mut [(Option<usize>, StatFilter)], id: usize, hidden: &'static str| {
-        if let Some(i) = find(filters, id) {
-            filters[i].1.hidden = Some(hidden);
+        if let Some(filter) = find(filters, id).and_then(|i| filters.get_mut(i)) {
+            filter.1.hidden = Some(hidden);
         }
     };
 
@@ -269,19 +274,28 @@ pub fn filter_pseudo(ctx: &mut Ctx) -> R<()> {
         if attrs.len() == 3 {
             let to_all = group("to_all_attrs");
             let values: Vec<Option<f64>> = attrs.iter().map(|&id| value(&filters, id)).collect();
-            if values.iter().all(|v| *v == values[0]) && to_all.is_some() {
+            let first = values.first().copied().flatten();
+            if values.iter().all(|v| *v == first) && to_all.is_some() {
                 filters.retain(|(fid, _)| !fid.is_some_and(|fid| attrs.contains(&fid)));
             } else {
                 if let Some(to_all) = &to_all {
                     filters.retain(|(fid, _)| !fid.is_some_and(|fid| to_all.contains(&fid)));
                 }
-                let [v0, v1, v2] = [values[0], values[1], values[2]].map(|v| v.unwrap_or(f64::NAN));
+                let at = |i: usize| values.get(i).copied().flatten().unwrap_or(f64::NAN);
+                let (v0, v1, v2) = (at(0), at(1), at(2));
                 if v2 / v0 < 0.3 {
+                    let second = attrs.get(1).copied();
+                    let third = attrs.get(2).copied();
+                    #[expect(clippy::float_cmp, reason = "JS `===` on the rolled values")]
                     if v1 == v2 {
-                        hide(&mut filters, attrs[1], "hide_attr_same_2nd_n_3rd");
-                        hide(&mut filters, attrs[2], "hide_attr_same_2nd_n_3rd");
-                    } else {
-                        hide(&mut filters, attrs[2], "hide_attr_smallest_total");
+                        if let Some(second) = second {
+                            hide(&mut filters, second, "hide_attr_same_2nd_n_3rd");
+                        }
+                        if let Some(third) = third {
+                            hide(&mut filters, third, "hide_attr_same_2nd_n_3rd");
+                        }
+                    } else if let Some(third) = third {
+                        hide(&mut filters, third, "hide_attr_smallest_total");
                     }
                 }
             }
@@ -293,14 +307,15 @@ pub fn filter_pseudo(ctx: &mut Ctx) -> R<()> {
             return Err(FilterError("Multiple to_all_res filters".to_owned()));
         }
         // Still in the list: this group is never replaced.
-        let index = find(&filters, ids[0]).ok_or_else(|| missing("to_all_res filter"))?;
+        let index = ids.first().and_then(|&id| find(&filters, id)).ok_or_else(|| missing("to_all_res filter"))?;
 
         let zero = StatRoll { value: 0.0, min: 0.0, max: 0.0, option: None };
         let mut all = zero;
         // fire, cold, lightning
         let mut elements = [zero; 3];
-        let element_index = |e: &str| ["fire", "cold", "lightning"].iter().position(|x| *x == e).expect("an element");
-        for source in &filters[index].1.sources {
+        let element_index = |e: &str| ["fire", "cold", "lightning"].iter().position(|x| *x == e).unwrap_or(0);
+        let Some(filter) = filters.get(index) else { return Err(missing("to_all_res filter")) };
+        for source in &filter.1.sources {
             // Shouldn't skip any.
             let Some(info) = RESISTANCES_INFO.iter().find(|i| i.stat_ref == source.stat.stat.stat_ref) else {
                 continue;
@@ -317,24 +332,28 @@ pub fn filter_pseudo(ctx: &mut Ctx) -> R<()> {
                 all.max += c.max;
             }
             for i in targets {
-                elements[i].value += c.value;
-                elements[i].min += c.min;
-                elements[i].max += c.max;
+                if let Some(element) = elements.get_mut(i) {
+                    element.value += c.value;
+                    element.min += c.min;
+                    element.max += c.max;
+                }
             }
         }
 
+        let value_at = |i: usize| elements.get(i).map_or(f64::NAN, |e| e.value);
         let mut min_roll = 0;
-        if elements[1].value < elements[min_roll].value {
+        if value_at(1) < value_at(min_roll) {
             min_roll = 1;
         }
-        if elements[2].value < elements[min_roll].value {
+        if value_at(2) < value_at(min_roll) {
             min_roll = 2;
         }
+        let picked = elements.get(min_roll).copied().unwrap_or(zero);
 
         let total = StatRoll {
-            value: all.value + elements[min_roll].value,
-            min: all.min + elements[min_roll].min,
-            max: all.max + elements[min_roll].max,
+            value: all.value + picked.value,
+            min: all.min + picked.min,
+            max: all.max + picked.max,
             option: None,
         };
 
@@ -355,17 +374,19 @@ pub fn filter_pseudo(ctx: &mut Ctx) -> R<()> {
             default.min = js_max(default.min, bounds.min);
             default.max = js_min(default.max, bounds.max);
 
-            filters[index].1.roll = Some(FilterRoll {
-                value: round_roll(total.value, dp),
-                min: Some(default.min),
-                max: None,
-                default,
-                bounds: None,
-                trade_invert: None,
-                dp,
-                is_negated: false,
-                goodness: None,
-            });
+            if let Some(filter) = filters.get_mut(index) {
+                filter.1.roll = Some(FilterRoll {
+                    value: round_roll(total.value, dp),
+                    min: Some(default.min),
+                    max: None,
+                    default,
+                    bounds: None,
+                    trade_invert: None,
+                    dp,
+                    is_negated: false,
+                    goodness: None,
+                });
+            }
         }
     }
 
@@ -373,11 +394,11 @@ pub fn filter_pseudo(ctx: &mut Ctx) -> R<()> {
     Ok(())
 }
 
-fn js_max(a: f64, b: f64) -> f64 {
+const fn js_max(a: f64, b: f64) -> f64 {
     if a.is_nan() || b.is_nan() { f64::NAN } else { a.max(b) }
 }
 
-fn js_min(a: f64, b: f64) -> f64 {
+const fn js_min(a: f64, b: f64) -> f64 {
     if a.is_nan() || b.is_nan() { f64::NAN } else { a.min(b) }
 }
 
@@ -477,8 +498,8 @@ mod tests {
         let item = pseudo_item();
         let mut ctx = make_ctx(d, &item, vec![]);
         filter_pseudo(&mut ctx).unwrap();
-        assert!(ctx.stats_by_type.is_empty());
-        assert!(ctx.filters.is_empty());
+        assert_eq!(ctx.stats_by_type, Vec::new());
+        assert_eq!(ctx.filters, Vec::new());
     }
 
     /// `specs/web/price-check/filters/pseudo/index.test.ts` (`filterPseudo`): a
@@ -489,7 +510,7 @@ mod tests {
         let item = pseudo_item();
         let mut ctx = make_ctx(d, &item, vec![create_stat_helper(d, FIRE_RES, 25.0, ModifierType::Explicit)]);
         filter_pseudo(&mut ctx).unwrap();
-        assert!(ctx.stats_by_type.is_empty());
+        assert_eq!(ctx.stats_by_type, Vec::new());
         assert_eq!(ctx.filters.len(), 2);
         let total = ctx.filters.iter().find(|f| f.stat_ref == "#% total Elemental Resistance").unwrap();
         let fire = ctx.filters.iter().find(|f| f.stat_ref == "#% total to Fire Resistance").unwrap();
@@ -512,7 +533,7 @@ mod tests {
             ],
         );
         filter_pseudo(&mut ctx).unwrap();
-        assert!(ctx.stats_by_type.is_empty());
+        assert_eq!(ctx.stats_by_type, Vec::new());
         assert_eq!(ctx.filters.len(), 3);
         assert!(ctx.filters.iter().any(|f| f.stat_ref == "#% total Elemental Resistance"));
         assert!(ctx.filters.iter().any(|f| f.stat_ref == "#% total to Fire Resistance"));

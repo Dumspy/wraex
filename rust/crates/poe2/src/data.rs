@@ -28,39 +28,42 @@ const REFERENCE_PUBLIC: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../re
 /// The game data the running app reads: `assets/poe2/data` in a packaged install (see
 /// [`wraex_core::assets`]), the reference checkout in development.
 pub fn source() -> DirSource {
-    match wraex_core::assets::Assets::get().path("poe2/data") {
-        Some(root) => DirSource::new(root),
-        None => reference_source(),
-    }
+    wraex_core::assets::Assets::get().path("poe2/data").map_or_else(reference_source, DirSource::new)
 }
 
-/// `ref/ee2/renderer/public/data`, the data EE2 ships: the reference checkout itself, for
-/// tests and development. The app reads [`source`], which is this in development.
+/// `ref/ee2/renderer/public/data`: the data EE2 ships, read from the reference checkout.
+///
+/// Tests and development read this; the app reads [`source`], which is this in development.
 pub fn reference_source() -> DirSource {
     DirSource::new(format!("{REFERENCE_PUBLIC}/data"))
 }
 
-/// The small art EE2's page serves (the core currency icons, the `404` fallback, the
-/// augments' sockets and runes), which the app draws through `wraex_app::ui::art`: read from
-/// `assets/poe2/images/<name>` in a packaged install, from the reference in development.
+/// The small art EE2's page serves: the core currency icons, the `404` fallback and the
+/// augments' sockets and runes.
+///
+/// The app draws it through `wraex_app::ui::art`: read from `assets/poe2/images/<name>` in a
+/// packaged install, from the reference in development.
 pub fn image_path(name: &str) -> std::path::PathBuf {
-    match wraex_core::assets::Assets::get().path("poe2/images") {
-        Some(dir) => dir.join(name),
-        None => std::path::Path::new(REFERENCE_PUBLIC).join("images").join(name),
-    }
+    wraex_core::assets::Assets::get()
+        .path("poe2/images")
+        .map_or_else(|| std::path::Path::new(REFERENCE_PUBLIC).join("images").join(name), |dir| dir.join(name))
 }
 
 /// EE2's product icon, which the app puts in the tray: `assets/poe2/icon.png` in a packaged
 /// install, `ref/ee2/renderer/public/icon.png` in development.
 pub fn icon_path() -> std::path::PathBuf {
-    match wraex_core::assets::Assets::get().path("poe2/icon.png") {
-        Some(path) => path,
-        None => std::path::Path::new(REFERENCE_PUBLIC).join("icon.png"),
-    }
+    wraex_core::assets::Assets::get()
+        .path("poe2/icon.png")
+        .unwrap_or_else(|| std::path::Path::new(REFERENCE_PUBLIC).join("icon.png"))
 }
 
 /// EE2's snapshot of `/api/trade2/data/{items,stats}` (`renderer/specs/data/`),
 /// which its tests and the golden harness serve instead of the trade site.
+#[expect(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    reason = "the pinned reference's trade-data snapshot ships with the checkout; unreadable or malformed is a broken environment, not a runtime case"
+)]
 pub fn reference_trade_data() -> TradeData {
     let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/ee2/renderer/specs/data");
     let read = |name: &str| std::fs::read_to_string(format!("{dir}/{name}.json")).unwrap();
@@ -125,7 +128,7 @@ pub struct Anointment {
     pub oils: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Eq)]
 pub struct StatTrade {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inverted: Option<bool>,
@@ -151,11 +154,11 @@ pub enum Namespace {
 impl Namespace {
     pub const fn as_str(self) -> &'static str {
         match self {
-            Namespace::DivinationCard => "DIVINATION_CARD",
-            Namespace::CapturedBeast => "CAPTURED_BEAST",
-            Namespace::Unique => "UNIQUE",
-            Namespace::Item => "ITEM",
-            Namespace::Gem => "GEM",
+            Self::DivinationCard => "DIVINATION_CARD",
+            Self::CapturedBeast => "CAPTURED_BEAST",
+            Self::Unique => "UNIQUE",
+            Self::Item => "ITEM",
+            Self::Gem => "GEM",
         }
     }
 }
@@ -196,7 +199,7 @@ pub struct BaseType {
     pub tags: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Disc {
     #[serde(rename = "propAR", skip_serializing_if = "Option::is_none")]
@@ -216,13 +219,13 @@ pub struct Disc {
     pub map_tier: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Eq)]
 pub struct StatRef {
     #[serde(rename = "ref")]
     pub stat_ref: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Craftable {
     /// An `ItemCategory` value; typed when `parser/meta.ts` is ported.
@@ -233,7 +236,7 @@ pub struct Craftable {
     pub unique_only: Option<bool>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct UniqueInfo {
     pub base: String,
@@ -241,7 +244,7 @@ pub struct UniqueInfo {
     pub fixed_stats: Option<Vec<String>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Eq)]
 pub struct MapInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub screenshot: Option<String>,
@@ -249,7 +252,7 @@ pub struct MapInfo {
     pub tier: Option<u32>,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct GemInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -262,7 +265,7 @@ pub struct GemInfo {
     pub normal_variant: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Eq)]
 pub struct ArmourInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ar: Option<[u32; 2]>,
@@ -295,6 +298,10 @@ impl AugmentLineData {
 }
 
 /// Tells a `null` field from a missing one: `Some(None)` is `null`.
+#[expect(
+    clippy::option_option,
+    reason = "`Some(None)` is a JSON `null` and `None` is a missing field (`tradeId` has both in EE2's data)"
+)]
 fn present<'de, T, D>(d: D) -> Result<Option<Option<T>>, D::Error>
 where
     T: Deserialize<'de>,
@@ -444,6 +451,10 @@ fn stat_keys(stat: &Stat) -> StatKeys {
     keys
 }
 
+#[expect(
+    clippy::expect_used,
+    reason = "the ndjson tables were read against the typed schema when built (`the_schema_covers_every_line`); a line that does not parse is corrupt data"
+)]
 fn parse<T: for<'de> Deserialize<'de>>(line: &str) -> T {
     serde_json::from_str(line).expect("every line parsed when the tables were built")
 }
@@ -488,6 +499,15 @@ pub struct Data {
     trade: Option<TradeData>,
 }
 
+/// `CLIENT_STRINGS[key]` for a key the caller knows the data has.
+#[expect(
+    clippy::panic,
+    reason = "a missing client-string key is a caller bug (upstream's `CLIENT_STRINGS[key]` throws); the panic names the key"
+)]
+fn missing_client_string(key: &str, kind: &str) -> ! {
+    panic!("client string {key} is not {kind}")
+}
+
 impl Data {
     /// `init(lang)` without the stat ref validation, which needs the refs the
     /// ported modules use (see [`Data::check_stat_refs`]). `trade` is the trade
@@ -515,15 +535,21 @@ impl Data {
         let mut trade_tag_to_ref = IndexMap::new();
         for item in lines(r#""tradeTag":"#) {
             let ref_name = js_string(&item.ref_name).to_owned();
-            trade_tag_to_ref.insert(item.trade_tag.expect("searched for tradeTag"), ref_name);
+            let trade_tag = item.trade_tag.ok_or_else(|| DataError::Syntax {
+                path: items_path.clone(),
+                line: 0,
+                message: "line matches `tradeTag` but the field is not a string".to_owned(),
+            })?;
+            trade_tag_to_ref.insert(trade_tag, ref_name);
         }
 
         // `loadUltraLateItems`
         let augment_list: Vec<BaseType> = lines(r#""craftable": {"category": "SoulCore"}"#)
-            .filter(|r| r.augment.as_ref().is_some_and(|a| a.iter().any(|s| s.trade_ids().is_some())))
-            .map(|mut r| {
-                r.augment.as_mut().unwrap().retain(|s| s.trade_ids().is_some());
-                r
+            .filter_map(|mut r| {
+                let augment = r.augment.as_mut()?;
+                augment.retain(|s| s.trade_ids().is_some());
+                let keeps_augment = augment.iter().any(|s| s.trade_ids().is_some());
+                keeps_augment.then_some(r)
             })
             .collect();
         let (augment_data_by_augment, augment_data_by_trade_id) = augments_to_lookups(&augment_list)
@@ -576,34 +602,34 @@ impl Data {
     /// `CLIENT_STRINGS[key]` as text. Every language defines the same keys as
     /// English (tested), so a missing key is a bug in the caller.
     pub fn s(&self, key: &str) -> &str {
-        self.client_strings.text(key).unwrap_or_else(|| panic!("client string {key} is not text"))
+        self.client_strings.text(key).unwrap_or_else(|| missing_client_string(key, "text"))
     }
 
     /// `CLIENT_STRINGS[key]` as a regex.
     pub fn re(&self, key: &str) -> &wraex_core::js_regex::Regex {
-        self.client_strings.regex(key).unwrap_or_else(|| panic!("client string {key} is not a regex"))
+        self.client_strings.regex(key).unwrap_or_else(|| missing_client_string(key, "a regex"))
     }
 
     /// `CLIENT_STRINGS[key]` as a list.
     pub fn list(&self, key: &str) -> &[String] {
-        self.client_strings.list(key).unwrap_or_else(|| panic!("client string {key} is not a list"))
+        self.client_strings.list(key).unwrap_or_else(|| missing_client_string(key, "a list"))
     }
 
     /// `CLIENT_STRINGS_REF[key]` (English) as text.
     pub fn s_ref(&self, key: &str) -> &str {
-        self.client_strings_ref.text(key).unwrap_or_else(|| panic!("client string {key} is not text"))
+        self.client_strings_ref.text(key).unwrap_or_else(|| missing_client_string(key, "text"))
     }
 
     /// `CLIENT_STRINGS_REF[key]` (English) as a regex.
     pub fn re_ref(&self, key: &str) -> &wraex_core::js_regex::Regex {
-        self.client_strings_ref.regex(key).unwrap_or_else(|| panic!("client string {key} is not a regex"))
+        self.client_strings_ref.regex(key).unwrap_or_else(|| missing_client_string(key, "a regex"))
     }
 
-    pub fn items(&self) -> &ItemTable {
+    pub const fn items(&self) -> &ItemTable {
         &self.items
     }
 
-    pub fn stats(&self) -> &StatTable {
+    pub const fn stats(&self) -> &StatTable {
         &self.stats
     }
 
@@ -671,12 +697,12 @@ impl Data {
     }
 
     /// `GROUPED_AUGMENTS`
-    pub fn grouped_augments(&self) -> &AugmentGroups {
+    pub const fn grouped_augments(&self) -> &AugmentGroups {
         &self.grouped_augments
     }
 
     /// `CATALYST_TYPES`
-    pub fn catalyst_types(&self) -> &CatalystTypes {
+    pub const fn catalyst_types(&self) -> &CatalystTypes {
         &self.catalyst_types
     }
 
@@ -691,7 +717,7 @@ impl Data {
     }
 
     /// The trade site's data, if it loaded.
-    pub fn trade(&self) -> Option<&TradeData> {
+    pub const fn trade(&self) -> Option<&TradeData> {
         self.trade.as_ref()
     }
 
@@ -732,7 +758,12 @@ impl Data {
                 unique: Some(UniqueInfo { base: base_type.to_owned(), fixed_stats: None }),
                 ..stub(n, Namespace::Unique)
             })
-        } else if query.base_type.is_none_or(str::is_empty) {
+        } else if let Some(base_type) = query.base_type.filter(|base_type| !base_type.is_empty()) {
+            trade.has_item(base_type).then(|| BaseType {
+                craftable: Some(craftable(ItemCategory::Unknown.as_str())),
+                ..stub(base_type, Namespace::Item)
+            })
+        } else {
             // TODO (upstream): currency works without tradeTag, just ninja only
             name.filter(|n| trade.has_item(n)).map(|n| {
                 let category = match query.category {
@@ -741,12 +772,6 @@ impl Data {
                     None => None,
                 };
                 BaseType { craftable: category, ..stub(n, Namespace::Item) }
-            })
-        } else {
-            let base_type = query.base_type.unwrap();
-            trade.has_item(base_type).then(|| BaseType {
-                craftable: Some(craftable(ItemCategory::Unknown.as_str())),
-                ..stub(base_type, Namespace::Item)
             })
         };
         base.map(|b| vec![b])
@@ -809,8 +834,7 @@ fn group_augments(augments: Vec<BaseType>) -> AugmentGroups {
             if !r.contains("Rune") || r.starts_with("Greater") || r.starts_with("Perfect") || r.starts_with("Lesser") {
                 return false;
             }
-            let split: Vec<&str> = r.split(' ').collect();
-            split.len() == 2 && split[1] == "Rune"
+            matches!(r.split(' ').collect::<Vec<_>>().as_slice(), [_, "Rune"])
         })
         .collect();
 
@@ -857,7 +881,7 @@ pub(crate) mod tests {
     use super::*;
     use std::sync::OnceLock;
 
-    pub(crate) fn en() -> &'static Data {
+    pub fn en() -> &'static Data {
         static EN: OnceLock<Data> = OnceLock::new();
         EN.get_or_init(|| Data::load(&reference_source(), "en", Some(reference_trade_data())).unwrap())
     }
@@ -949,7 +973,7 @@ pub(crate) mod tests {
         assert!(groups.rune.normal.iter().any(|a| a.ref_name.as_deref() == Some("Iron Rune")));
         assert!(groups.rune.greater.iter().all(|a| a.ref_name.as_ref().unwrap().starts_with("Greater")));
         assert!(groups.soul_core.normal.iter().all(|a| a.ref_name.as_ref().unwrap().starts_with("Soul Core")));
-        assert!(!data.catalyst_types().normal.is_empty());
+        assert_ne!(data.catalyst_types().normal.len(), 0);
         assert_eq!(data.catalyst_to_tag("defences_catalyst").unwrap(), ["Armour", "Evasion", "Energy Shield"]);
         assert_eq!(data.tag_to_catalyst("Evasion"), Some("defences_catalyst"));
     }
@@ -973,9 +997,8 @@ pub(crate) mod tests {
     fn the_schema_covers_every_line() {
         let source = reference_source();
         for lang in LANGUAGES {
-            for (file, check) in
-                [("items", roundtrip::<BaseType> as fn(&str) -> Result<(), String>), ("stats", roundtrip::<Stat>)]
-            {
+            let checks: [LineCheck; 2] = [("items", roundtrip::<BaseType>), ("stats", roundtrip::<Stat>)];
+            for (file, check) in checks {
                 let path = format!("{lang}/{file}.ndjson");
                 for (n, line) in source.read_string(&path).unwrap().lines().enumerate() {
                     check(line).unwrap_or_else(|e| panic!("{path}:{}: {e}", n + 1));
@@ -1004,6 +1027,9 @@ pub(crate) mod tests {
             }
         }
     }
+
+    /// A data file and the round-trip check for its line type.
+    type LineCheck = (&'static str, fn(&str) -> Result<(), String>);
 
     fn roundtrip<T: Serialize + for<'de> Deserialize<'de>>(line: &str) -> Result<(), String> {
         let original: serde_json::Value = serde_json::from_str(line).unwrap();

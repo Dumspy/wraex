@@ -99,12 +99,12 @@ pub enum TotalMode {
 /// `statSourcesTotal`. Sources without a roll count as 1 ("flag" semantics).
 pub fn stat_sources_total(sources: &[StatSource], mode: TotalMode) -> Option<StatRoll> {
     if mode == TotalMode::Count {
-        let count = sources.len() as f64;
-        let option = if sources.is_empty() { None } else { sources[0].contributes.and_then(|c| c.option) };
+        let count = wraex_core::num::usize_to_f64(sources.len());
+        let option = sources.first().and_then(|s| s.contributes).and_then(|c| c.option);
         return Some(StatRoll { value: count, min: count, max: count, option });
     }
-    if sources.len() == 1 {
-        return sources[0].contributes;
+    if let [source] = sources {
+        return source.contributes;
     }
     let f = |a: f64, b: f64| match mode {
         TotalMode::Max if a.is_nan() || b.is_nan() => f64::NAN,
@@ -141,9 +141,9 @@ pub fn translate_stat_with_roll(calc: &StatCalculated, roll: Option<&StatRoll>) 
         value: None,
         oils: None,
     };
-    let translation: &StatMatcher = match roll {
-        None => matchers.iter().find(|m| m.value.is_none()).or(matchers.first()).expect("stats have matchers"),
-        Some(roll) => {
+    let translation: &StatMatcher = roll.map_or_else(
+        || matchers.iter().find(|m| m.value.is_none()).or_else(|| matchers.first()).unwrap_or(&bug),
+        |roll| {
             let wanted = roll.option.filter(|o| wraex_core::js::truthy(*o)).unwrap_or(roll.value);
             matchers
                 .iter()
@@ -158,8 +158,8 @@ pub fn translate_stat_with_roll(calc: &StatCalculated, roll: Option<&StatRoll>) 
                 })
                 .or_else(|| matchers.iter().find(|m| m.value.is_none()))
                 .unwrap_or(&bug)
-        }
-    };
+        },
+    );
     let dp = roll.map(|_| {
         calc.stat.dp == Some(true)
             || calc
@@ -235,20 +235,20 @@ impl ModifierType {
     /// The value, which is also the key in `stat.trade.ids`.
     pub const fn as_str(self) -> &'static str {
         match self {
-            ModifierType::Pseudo => "pseudo",
-            ModifierType::Explicit => "explicit",
-            ModifierType::Implicit => "implicit",
-            ModifierType::Crafted => "crafted",
-            ModifierType::Enchant => "enchant",
-            ModifierType::Scourge => "scourge",
-            ModifierType::Necropolis => "necropolis",
-            ModifierType::Veiled => "veiled",
-            ModifierType::Fractured => "fractured",
-            ModifierType::Augment => "rune",
-            ModifierType::AddedAugment => "added-rune",
-            ModifierType::Sanctum => "sanctum",
-            ModifierType::Desecrated => "desecrated",
-            ModifierType::Skill => "skill",
+            Self::Pseudo => "pseudo",
+            Self::Explicit => "explicit",
+            Self::Implicit => "implicit",
+            Self::Crafted => "crafted",
+            Self::Enchant => "enchant",
+            Self::Scourge => "scourge",
+            Self::Necropolis => "necropolis",
+            Self::Veiled => "veiled",
+            Self::Fractured => "fractured",
+            Self::Augment => "rune",
+            Self::AddedAugment => "added-rune",
+            Self::Sanctum => "sanctum",
+            Self::Desecrated => "desecrated",
+            Self::Skill => "skill",
         }
     }
 }

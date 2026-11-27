@@ -36,7 +36,7 @@ pub fn decode_oils(calc: &StatCalculated) -> Option<Vec<Option<&'static str>>> {
         && let Some(anointments) = &calc.stat.anointments
     {
         encoded = if anointments.len() == 1 {
-            Some(anointments[0].oils.clone())
+            anointments.first().map(|a| a.oils.clone())
         } else {
             let roll = first.and_then(|s| s.stat.roll.as_ref()).map(|r| r.value);
             anointments.iter().find(|a| Some(a.roll) == roll).map(|a| a.oils.clone())
@@ -48,7 +48,13 @@ pub fn decode_oils(calc: &StatCalculated) -> Option<Vec<Option<&'static str>>> {
         encoded
             .split(',')
             .map(wraex_core::js::number)
-            .map(|i| if i.fract() == 0.0 && i >= 0.0 { EMOTIONS.get(i as usize).copied() } else { None })
+            .map(|i| {
+                if i.fract() == 0.0 && i >= 0.0 {
+                    EMOTIONS.get(wraex_core::num::f64_to_usize(i)).copied()
+                } else {
+                    None
+                }
+            })
             .collect(),
     )
 }

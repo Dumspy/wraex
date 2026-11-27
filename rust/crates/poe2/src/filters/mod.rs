@@ -49,7 +49,7 @@ pub struct FilterPreset {
     pub stats: Vec<StatFilter>,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchFilter {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -134,7 +134,7 @@ pub struct ItemFilters {
     pub requires: Option<RequiresFilter>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Discriminator {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
@@ -142,38 +142,38 @@ pub struct Discriminator {
     pub trade: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct ItemEditorSelection {
     pub disabled: bool,
     pub editing: bool,
     pub value: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct CorruptedFilter {
     pub value: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub exact: Option<bool>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct ValueFilter<T> {
     pub value: T,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Disabled {
     pub disabled: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct InfluenceFilter {
     pub value: ItemInfluence,
     pub disabled: bool,
 }
 
 /// `{ value, disabled }` (`unidentified`, `unidentifiedTier`, `ultimatumHint`).
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UnidentifiedFilter<T> {
     pub value: T,
     pub disabled: bool,
@@ -199,7 +199,7 @@ pub struct RequiresFilter {
     pub int: Option<FilterNumeric>,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TradeFilters {
     pub offline: bool,
@@ -224,7 +224,7 @@ pub struct FilterNumeric {
 }
 
 impl FilterNumeric {
-    pub fn new(value: f64, disabled: bool) -> Self {
+    pub const fn new(value: f64, disabled: bool) -> Self {
         Self { value, max: None, disabled }
     }
 }
@@ -323,8 +323,8 @@ pub struct AdditionalInfo {
 pub struct EmptyModifierCounts(pub [f64; 3]);
 
 impl Serialize for EmptyModifierCounts {
-    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        let mut map = s.serialize_map(Some(3))?;
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut map = serializer.serialize_map(Some(3))?;
         for (i, n) in self.0.iter().enumerate() {
             map.serialize_entry(&i.to_string(), n)?;
         }
@@ -349,31 +349,31 @@ pub enum FilterTag {
 }
 
 impl FilterTag {
-    pub const PSEUDO: FilterTag = FilterTag::Type(ModifierType::Pseudo);
-    pub const EXPLICIT: FilterTag = FilterTag::Type(ModifierType::Explicit);
-    pub const IMPLICIT: FilterTag = FilterTag::Type(ModifierType::Implicit);
-    pub const ENCHANT: FilterTag = FilterTag::Type(ModifierType::Enchant);
-    pub const FRACTURED: FilterTag = FilterTag::Type(ModifierType::Fractured);
-    pub const DESECRATED: FilterTag = FilterTag::Type(ModifierType::Desecrated);
-    pub const CRAFTED: FilterTag = FilterTag::Type(ModifierType::Crafted);
-    pub const SKILL: FilterTag = FilterTag::Type(ModifierType::Skill);
-    pub const AUGMENT: FilterTag = FilterTag::Type(ModifierType::Augment);
-    pub const ADDED_AUGMENT: FilterTag = FilterTag::Type(ModifierType::AddedAugment);
+    pub const PSEUDO: Self = Self::Type(ModifierType::Pseudo);
+    pub const EXPLICIT: Self = Self::Type(ModifierType::Explicit);
+    pub const IMPLICIT: Self = Self::Type(ModifierType::Implicit);
+    pub const ENCHANT: Self = Self::Type(ModifierType::Enchant);
+    pub const FRACTURED: Self = Self::Type(ModifierType::Fractured);
+    pub const DESECRATED: Self = Self::Type(ModifierType::Desecrated);
+    pub const CRAFTED: Self = Self::Type(ModifierType::Crafted);
+    pub const SKILL: Self = Self::Type(ModifierType::Skill);
+    pub const AUGMENT: Self = Self::Type(ModifierType::Augment);
+    pub const ADDED_AUGMENT: Self = Self::Type(ModifierType::AddedAugment);
 }
 
 impl Serialize for FilterTag {
-    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        s.serialize_str(match self {
-            FilterTag::Type(t) => t.as_str(),
-            FilterTag::Corrupted => "corrupted",
-            FilterTag::Synthesised => "synthesised",
-            FilterTag::Eldritch => "eldritch",
-            FilterTag::Variant => "variant",
-            FilterTag::Property => "property",
-            FilterTag::Delve => "explicit-delve",
-            FilterTag::Unveiled => "explicit-veiled",
-            FilterTag::Incursion => "explicit-incursion",
-            FilterTag::Mutated => "mutated",
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(match self {
+            Self::Type(t) => t.as_str(),
+            Self::Corrupted => "corrupted",
+            Self::Synthesised => "synthesised",
+            Self::Eldritch => "eldritch",
+            Self::Variant => "variant",
+            Self::Property => "property",
+            Self::Delve => "explicit-delve",
+            Self::Unveiled => "explicit-veiled",
+            Self::Incursion => "explicit-incursion",
+            Self::Mutated => "mutated",
         })
     }
 }
@@ -425,4 +425,27 @@ pub enum ItemIsElementalModifier {
     Fire = 1,
     Cold = 2,
     Lightning = 3,
+}
+
+impl ItemIsElementalModifier {
+    /// The enum's number, which `item.elemental_dps`'s option carries.
+    pub const fn value(self) -> u8 {
+        match self {
+            Self::Any => 0,
+            Self::Fire => 1,
+            Self::Cold => 2,
+            Self::Lightning => 3,
+        }
+    }
+}
+
+impl ItemHasEmptyModifier {
+    /// The enum's number, which indexes [`EmptyModifierCounts`].
+    pub const fn value(self) -> usize {
+        match self {
+            Self::Any => 0,
+            Self::Prefix => 1,
+            Self::Suffix => 2,
+        }
+    }
 }
