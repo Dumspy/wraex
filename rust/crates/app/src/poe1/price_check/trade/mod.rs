@@ -75,7 +75,7 @@ pub enum BulkCurrency {
 /// The price-check window's listings.
 pub struct Trade {
     mode: Mode,
-    client: Shared,
+    pub(crate) client: Shared,
     latest: Latest<Answer>,
     generation: u64,
     /// `TradeListing.vue`'s / `TradeBulk.vue`'s `error`.

@@ -370,6 +370,14 @@ impl App {
         // The overlay draws every widget whose `wmWants` is `show` at once: a timer it starts
         // and the item search's prices have to exist for each of them, not just the focused one.
         let prepared = self.widgets.as_mut().is_some_and(|overlay| overlay.ensure_states(self.mode));
+        let market_updated = if let Some(live) = &self.live
+            && let Some(search) = self.widgets.as_mut().and_then(|overlay| overlay.item_search.as_mut())
+            && search.game == GameId::Poe1
+        {
+            search.poll_market(live.market())
+        } else {
+            false
+        };
         // The item search's field shows the query its results came from: Rune's write-back of a
         // blurred field's model can land empty, and the view rebuilds the field from it.
         let repaired = self
@@ -386,7 +394,7 @@ impl App {
             }
             None => false,
         };
-        poe1 || poe2 || settings || widgets || opened || repaired || prepared
+        poe1 || poe2 || settings || widgets || opened || repaired || prepared || market_updated
     }
 
     /// `MAIN->CLIENT::item-text` with an item the parser never saw: the item search's
@@ -405,17 +413,25 @@ impl App {
         match picked {
             widgets::item_search::Picked::Poe1(item) => {
                 self.game = GameId::Poe1;
-                self.price_check = PriceCheck::with_item(*item, self.mode);
+                self.price_check = PriceCheck::with_item(*item, self.mode, self.price_check.trade.client.clone());
                 if let Some(waker) = &self.waker {
                     self.price_check.set_waker(waker.clone());
                 }
             }
             widgets::item_search::Picked::Poe2(item) => {
                 self.game = GameId::Poe2;
-                self.poe2 = Some(poe2::price_check::PriceCheck::with_item(*item, self.mode));
+                self.poe2 =
+                    Some(poe2::price_check::PriceCheck::with_item(*item, self.mode, self.poe2_client(self.mode)));
                 self.attach_waker();
             }
         }
+    }
+
+    fn poe2_client(&self, mode: Mode) -> trade::Shared {
+        self.poe2
+            .as_ref()
+            .map(|check| check.trade.client.clone())
+            .unwrap_or_else(|| poe2::price_check::PriceCheck::new_client(mode))
     }
 
     /// Run `f` on the item search's state, when the item-search widget built one. The scenes use
