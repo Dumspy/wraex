@@ -42,7 +42,7 @@ pub struct ModifierInfo {
 
 impl ModifierInfo {
     /// `{ type, tags: [] }`
-    pub fn new(kind: ModifierType) -> Self {
+    pub const fn new(kind: ModifierType) -> Self {
         Self {
             kind,
             generation: None,
@@ -70,9 +70,10 @@ fn number_or_none(x: Option<&str>) -> Option<f64> {
 
 /// `parseModInfoLine`
 pub fn parse_mod_info_line(d: &Data, line: &str) -> Result<ModifierInfo, Fail> {
-    let inner = &line[1..line.len() - 1];
-    let parts: Vec<&str> = inner.split('\u{2014}').map(js::trim).collect();
-    let (mod_text, x_text2, x_text3) = (parts[0], parts.get(1).copied(), parts.get(2).copied());
+    let inner = line.get(1..line.len().saturating_sub(1)).unwrap_or_default();
+    let mut parts = inner.split('\u{2014}').map(js::trim);
+    let mod_text = parts.next().ok_or(Fail::THROW)?;
+    let (x_text2, x_text3) = (parts.next(), parts.next());
 
     let mut info = ModifierInfo::new(ModifierType::Explicit);
 

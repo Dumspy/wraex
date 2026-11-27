@@ -44,24 +44,24 @@ pub enum LeagueSource {
 impl LeagueSource {
     pub fn request(self, host: &str) -> HttpRequest {
         let path = match self {
-            LeagueSource::Poe1 => "api/leagues?type=main&realm=pc",
-            LeagueSource::Poe2 => "api/trade2/data/leagues",
+            Self::Poe1 => "api/leagues?type=main&realm=pc",
+            Self::Poe2 => "api/trade2/data/leagues",
         };
         HttpRequest { method: Method::Get, url: format!("https://{host}/{path}"), headers: Vec::new(), body: None }
     }
 
     /// `TMP_CHALLENGE`: the temporary challenge league's place in the list.
-    fn challenge_index(self) -> usize {
+    const fn challenge_index(self) -> usize {
         match self {
-            LeagueSource::Poe1 => 1,
-            LeagueSource::Poe2 => 2,
+            Self::Poe1 => 1,
+            Self::Poe2 => 2,
         }
     }
 
     /// The leagues in a response body.
     pub fn parse(self, body: &str) -> Result<Vec<League>, String> {
         match self {
-            LeagueSource::Poe1 => {
+            Self::Poe1 => {
                 #[derive(Deserialize)]
                 struct Rule {
                     id: String,
@@ -87,7 +87,7 @@ impl LeagueSource {
                     .map(|l| League { id: l.id, is_popular: true, text: None })
                     .collect())
             }
-            LeagueSource::Poe2 => {
+            Self::Poe2 => {
                 #[derive(Deserialize)]
                 struct TradeLeague {
                     id: String,
@@ -128,7 +128,7 @@ pub struct Leagues {
 
 impl Leagues {
     /// `selectedId`: the configured league, once the list has loaded.
-    pub fn selected_id<'a>(&self, league_id: Option<&'a str>) -> Option<&'a str> {
+    pub const fn selected_id<'a>(&self, league_id: Option<&'a str>) -> Option<&'a str> {
         if self.list.is_empty() { None } else { league_id }
     }
 

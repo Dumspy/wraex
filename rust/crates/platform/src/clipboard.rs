@@ -100,7 +100,7 @@ pub struct HostClipboard {
 impl HostClipboard {
     /// `new HostClipboard(logger)`, plus the game (the Linux placeholder and the
     /// item detector's language table) and the OS (the Linux workarounds).
-    pub fn new(game: GameId, os: Os) -> Self {
+    pub const fn new(game: GameId, os: Os) -> Self {
         Self {
             game,
             os,
@@ -114,23 +114,23 @@ impl HostClipboard {
 
     /// `updateOptions(restoreClipboard)`: whether the previous clipboard comes
     /// back after a copy.
-    pub fn update_options(&mut self, restore_clipboard: bool) {
+    pub const fn update_options(&mut self, restore_clipboard: bool) {
         self.should_restore = restore_clipboard;
     }
 
     /// EE2's `updateDelay(initialDelay)`: the wait before the first poll. PoE1
     /// always uses [`POLL_DELAY`].
-    pub fn update_delay(&mut self, initial_delay: Millis) {
+    pub const fn update_delay(&mut self, initial_delay: Millis) {
         self.initial_delay = initial_delay;
     }
 
     /// `isPolling`.
-    pub fn is_polling(&self) -> bool {
+    pub const fn is_polling(&self) -> bool {
         self.capture.is_some()
     }
 
     /// `shouldRestore`.
-    pub fn should_restore(&self) -> bool {
+    pub const fn should_restore(&self) -> bool {
         self.should_restore
     }
 
@@ -157,12 +157,12 @@ impl HostClipboard {
         if is_poe_item(&text_before, self.game) {
             // An item from the previous copy is not the previous clipboard.
             text_before.clear();
-            if self.os != Os::Linux {
-                clipboard.write_text("");
-            } else {
+            if self.os == Os::Linux {
                 // Workaround for KDE's "Prevent empty clipboard": Proton then
                 // reads a changed clipboard, not the item's text.
                 clipboard.write_text(&self.force_empty(clock));
+            } else {
+                clipboard.write_text("");
             }
         } else if self.os == Os::Linux {
             // Workaround for Proton 10+, which ignores an unchanged clipboard.
@@ -172,7 +172,10 @@ impl HostClipboard {
         press_keys();
 
         let next_poll = clock.now().saturating_add(self.initial_delay);
-        let timeout = next_poll.saturating_add((POLL_LIMIT.div_ceil(POLL_DELAY) - 1) * POLL_DELAY);
+        // `POLL_LIMIT.div_ceil(POLL_DELAY) - 1` whole polls after the first, which are always
+        // at least one for these constants.
+        let poll_window = POLL_LIMIT.div_ceil(POLL_DELAY).saturating_sub(1).saturating_mul(POLL_DELAY);
+        let timeout = next_poll.saturating_add(poll_window);
         self.capture = Some(Capture { saved: text_before, next_poll, timeout });
     }
 
@@ -217,7 +220,7 @@ impl HostClipboard {
         self.is_restored = false;
         let saved = clipboard.read_text();
         let result = write(clipboard);
-        self.pending_restore = Some(PendingRestore { saved, due: clock.now() + RESTORE_AFTER });
+        self.pending_restore = Some(PendingRestore { saved, due: clock.now().saturating_add(RESTORE_AFTER) });
         Some(result)
     }
 
@@ -237,7 +240,9 @@ impl HostClipboard {
             return false;
         }
 
-        let pending = self.pending_restore.take().expect("checked above");
+        let Some(pending) = self.pending_restore.take() else {
+            return false;
+        };
         // `shouldRestore` is read here, not when the restore was scheduled.
         if self.should_restore {
             clipboard.write_text(&pending.saved);
@@ -308,7 +313,7 @@ mod tests {
         clock: &dyn Clock,
         presses: &mut usize,
     ) -> Result<String, ReadError> {
-        host.begin_capture(clipboard, clock, || *presses += 1);
+        host.begin_capture(clipboard, clock, || *presses = presses.saturating_add(1));
         loop {
             clock.sleep(host.capture_deadline().unwrap().saturating_sub(clock.now()));
             if let Some(result) = host.poll_capture(clipboard, clock.now()) {
@@ -355,13 +360,13 @@ mod tests {
         let clock = FakeClock::default();
         let mut presses = 0;
 
-        let _ = copy(&mut host, &mut clipboard, &clock, &mut presses);
+        _ = copy(&mut host, &mut clipboard, &clock, &mut presses);
         assert_eq!(clipboard.written(), vec!["__APT_FORCE_EMPTY_0"]);
 
         let mut host = HostClipboard::new(GameId::Poe2, Os::Linux);
         let mut clipboard = FakeClipboard::scripted(&["my password", ITEM]);
         let clock = FakeClock::default();
-        let _ = copy(&mut host, &mut clipboard, &clock, &mut presses);
+        _ = copy(&mut host, &mut clipboard, &clock, &mut presses);
         assert_eq!(clipboard.written(), vec!["__EE2_FORCE_EMPTY_0"]);
     }
 
@@ -372,7 +377,7 @@ mod tests {
         let mut clipboard = FakeClipboard::scripted(&["my password", ITEM]);
         let clock = FakeClock::default();
         let mut presses = 0;
-        let _ = copy(&mut host, &mut clipboard, &clock, &mut presses);
+        _ = copy(&mut host, &mut clipboard, &clock, &mut presses);
         assert_eq!(clipboard.written()[0], "__APT_FORCE_EMPTY_0");
 
         // On Windows a non-item clipboard is left alone, and with
@@ -380,7 +385,7 @@ mod tests {
         let mut host = HostClipboard::new(GameId::Poe1, Os::Windows);
         let mut clipboard = FakeClipboard::scripted(&["my password", ITEM]);
         let mut presses = 0;
-        let _ = copy(&mut host, &mut clipboard, &clock, &mut presses);
+        _ = copy(&mut host, &mut clipboard, &clock, &mut presses);
         assert_eq!(clipboard.written(), Vec::<String>::new());
     }
 

@@ -17,13 +17,19 @@ pub fn view(filter: &StatFilter, source: &StatSource) -> El {
     let info = &source.modifier.info;
     let mut mod_text = i18n::t(&format!("item.mod_{}", info.kind.as_str()));
     if let Some(name) = &info.name {
-        mod_text.push_str(&format!(" \"{name}\""));
+        mod_text.push_str(" \"");
+        mod_text.push_str(name);
+        mod_text.push('"');
     }
     if info.tier.is_some() || info.rank.is_some() {
-        mod_text.push_str(&format!(" ({})", i18n::fmt("item.mod_tier", &[&tier_text(info.tier)])));
+        mod_text.push_str(" (");
+        mod_text.push_str(&i18n::fmt("item.mod_tier", &[&tier_text(info.tier)]));
+        mod_text.push(')');
     }
     if let Some(rank) = info.rank {
-        mod_text.push_str(&format!(" ({})", i18n::fmt("item.mod_rank", &[&js::number_to_string(rank)])));
+        mod_text.push_str(" (");
+        mod_text.push_str(&i18n::fmt("item.mod_rank", &[&js::number_to_string(rank)]));
+        mod_text.push(')');
     }
 
     let (dp, is_negated) = filter.roll.as_ref().map_or((false, false), |roll| (roll.dp, roll.is_negated));
@@ -82,9 +88,6 @@ pub fn view(filter: &StatFilter, source: &StatSource) -> El {
 
 /// `t('item.mod_tier', [info.tier])` with JavaScript's `String(number)`.
 fn tier_text(tier: Option<f64>) -> String {
-    match tier {
-        Some(tier) => js::number_to_string(tier),
-        // `undefined` in the template's `[info.tier]`.
-        None => "undefined".to_owned(),
-    }
+    // `undefined` in the template's `[info.tier]`.
+    tier.map_or_else(|| "undefined".to_owned(), js::number_to_string)
 }

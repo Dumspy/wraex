@@ -15,7 +15,7 @@ use super::pseudo::{
 };
 use super::{
     FilterError, FilterGroup, FilterOrGroup, FilterRoll, FilterSource, FilterTag, ItemHasEmptyModifier, MinMax, R,
-    StatFilter, ValueFilter, missing,
+    StatFilter, ValueFilter, js_equal, missing,
 };
 use crate::data::{Data, stat_better};
 use crate::parser::advanced_mod_desc::Generation;
@@ -47,15 +47,15 @@ pub enum Mode {
     Bulk,
 }
 
-fn is(item: &Item, category: ItemCategory) -> bool {
-    item.category.as_ref() == Some(&category)
+fn is(item: &Item, category: &ItemCategory) -> bool {
+    item.category.as_ref() == Some(category)
 }
 
-fn js_max(a: f64, b: f64) -> f64 {
+const fn js_max(a: f64, b: f64) -> f64 {
     if a.is_nan() || b.is_nan() { f64::NAN } else { a.max(b) }
 }
 
-fn js_min(a: f64, b: f64) -> f64 {
+const fn js_min(a: f64, b: f64) -> f64 {
     if a.is_nan() || b.is_nan() { f64::NAN } else { a.min(b) }
 }
 
@@ -79,7 +79,7 @@ pub fn create_exact_stat_filters(
     search_stat_range: f64,
     mode: Option<Mode>,
 ) -> R<Vec<StatFilter>> {
-    if item.info().area.as_ref().is_some_and(|a| a.blighted == Some(true)) || is(item, C::Invitation) {
+    if item.info().area.as_ref().is_some_and(|a| a.blighted == Some(true)) || is(item, &C::Invitation) {
         return Ok(Vec::new());
     }
 
@@ -93,9 +93,9 @@ pub fn create_exact_stat_filters(
 
     if item.influences.is_empty()
         && item.is_fractured != Some(true)
-        && !is(item, C::Tincture)
-        && !is(item, C::Idol)
-        && !is(item, C::Chart)
+        && !is(item, &C::Tincture)
+        && !is(item, &C::Idol)
+        && !is(item, &C::Chart)
     {
         keep_by_type.push(ModifierType::Implicit);
     }
@@ -103,18 +103,18 @@ pub fn create_exact_stat_filters(
     let excluded = [C::ClusterJewel, C::Map, C::HeistContract, C::HeistBlueprint, C::Chart, C::Sentinel];
     let magic_explicits =
         item.rarity == Some(Rarity::Magic) && !item.category.as_ref().is_some_and(|c| excluded.contains(c));
-    if magic_explicits || (item.rarity == Some(Rarity::Rare) && is(item, C::Idol)) {
+    if magic_explicits || (item.rarity == Some(Rarity::Rare) && is(item, &C::Idol)) {
         keep_by_type.push(ModifierType::Explicit);
     }
 
-    if is(item, C::Flask) {
+    if is(item, &C::Flask) {
         keep_by_type.push(ModifierType::Crafted);
     }
 
     let mut ctx = Ctx {
         d,
         item,
-        search_in_range: if mode != Some(Mode::Props) { search_stat_range.min(2.0) } else { search_stat_range },
+        search_in_range: if mode == Some(Mode::Props) { search_stat_range } else { search_stat_range.min(2.0) },
         filters: Vec::new(),
         groups: Vec::new(),
         stats_by_type: stats_by_type
@@ -171,18 +171,18 @@ pub fn create_exact_stat_filters(
         }
     }
 
-    if is(item, C::ClusterJewel) {
+    if is(item, &C::ClusterJewel) {
         apply_cluster_jewel_rules(&mut ctx.filters, true)?;
     }
     // Not `else if` upstream either.
-    if is(item, C::HeistContract) || is(item, C::HeistBlueprint) {
+    if is(item, &C::HeistContract) || is(item, &C::HeistBlueprint) {
         apply_heist_rules(&mut ctx)?;
-    } else if is(item, C::Flask) {
+    } else if is(item, &C::Flask) {
         apply_flask_rules(&mut ctx.filters);
         apply_flask_hybrid_mod(&mut ctx)?;
-    } else if is(item, C::MemoryLine) || is(item, C::SanctumRelic) || is(item, C::Charm) {
+    } else if is(item, &C::MemoryLine) || is(item, &C::SanctumRelic) || is(item, &C::Charm) {
         enable_all_filters(&mut ctx.filters);
-    } else if is(item, C::Idol) {
+    } else if is(item, &C::Idol) {
         enable_good_rolled_filters(&mut ctx.filters, 0.66);
     }
 
@@ -252,17 +252,20 @@ pub fn init_ui_mod_filters(d: &Data, item: &Item, search_stat_range: f64) -> R<V
 }
 
 /// `calculatedStatToFilter`
+#[expect(
+    clippy::too_many_lines,
+    reason = "line-for-line port of upstream `calculatedStatToFilter` (`create-stat-filters.ts`)"
+)]
 pub fn calculated_stat_to_filter(calc: &StatCalculated, mut percent: f64, item: &Item) -> R<StatFilter> {
     let StatCalculated { stat, sources, kind } = calc;
     let kind = *kind;
     let trade_id = stat.trade.ids.get(kind.as_str()).cloned();
     let first = sources.first();
 
-    let mut option_filter = None;
-    if stat.trade.option == Some(true) {
+    let option_filter = if stat.trade.option == Some(true) {
         let first = first.ok_or_else(|| missing("sources[0]"))?;
         let value = first.contributes.ok_or_else(|| missing("contributes"))?.value;
-        option_filter = Some(StatFilter {
+        Some(StatFilter {
             trade_id: trade_id.clone(),
             stat_ref: stat.stat_ref.clone(),
             text: first.stat.translation.string.clone(),
@@ -276,8 +279,10 @@ pub fn calculated_stat_to_filter(calc: &StatCalculated, mut percent: f64, item: 
             option: Some(ValueFilter { value }),
             hidden: None,
             disabled: false,
-        });
-    }
+        })
+    } else {
+        None
+    };
 
     let total_mode = if item.ref_name_is("Mirrored Tablet") { TotalMode::Max } else { TotalMode::Sum };
     let roll = stat_sources_total(sources, total_mode);
@@ -341,7 +346,7 @@ pub fn calculated_stat_to_filter(calc: &StatCalculated, mut percent: f64, item: 
         {
             percent = 0.0;
         } else if rarity == Some(Rarity::Unique)
-            || (rarity == Some(Rarity::Magic) && is(item, C::Jewel))
+            || (rarity == Some(Rarity::Magic) && is(item, &C::Jewel))
             || sources
                 .iter()
                 .any(|s| s.modifier.info.tier == Some(1.0) && s.modifier.info.kind == ModifierType::Fractured)
@@ -355,7 +360,7 @@ pub fn calculated_stat_to_filter(calc: &StatCalculated, mut percent: f64, item: 
 
         let mut goodness = None;
         if stat.better != stat_better::NOT_COMPARABLE {
-            let fixed = roll.min == roll.max;
+            let fixed = js_equal(roll.min, roll.max);
             if fixed {
                 goodness = Some(1.0);
             } else {
@@ -393,7 +398,7 @@ pub fn calculated_stat_to_filter(calc: &StatCalculated, mut percent: f64, item: 
         };
         default.min = js_max(default.min, bounds.min);
         default.max = js_min(default.max, bounds.max);
-        let ranged = roll.min != roll.max;
+        let ranged = !js_equal(roll.min, roll.max);
         let mut filter_roll = FilterRoll {
             value: round_roll(roll.value, dp),
             min: None,
@@ -484,7 +489,7 @@ fn hide_not_variable_stat(filter: &mut StatFilter, item: &Item) -> R<()> {
 }
 
 /// `filterFillMinMax`
-fn filter_fill_min_max(roll: &mut FilterRoll, better: i8) {
+const fn filter_fill_min_max(roll: &mut FilterRoll, better: i8) {
     match better {
         stat_better::POSITIVE_ROLL => roll.min = Some(roll.default.min),
         stat_better::NEGATIVE_ROLL => roll.max = Some(roll.default.max),
@@ -519,9 +524,9 @@ fn filter_adjustment_for_negate(roll: &mut FilterRoll) {
 fn final_filter_tweaks(ctx: &mut Ctx) -> R<()> {
     let item = ctx.item;
 
-    if is(item, C::ClusterJewel) && item.rarity != Some(Rarity::Unique) {
+    if is(item, &C::ClusterJewel) && item.rarity != Some(Rarity::Unique) {
         apply_cluster_jewel_rules(&mut ctx.filters, false)?;
-    } else if is(item, C::Flask) {
+    } else if is(item, &C::Flask) {
         apply_flask_rules(&mut ctx.filters);
         apply_flask_hybrid_mod(ctx)?;
     }
@@ -538,13 +543,13 @@ fn final_filter_tweaks(ctx: &mut Ctx) -> R<()> {
             sources: Vec::new(),
             not: None,
             roll: None,
-            option: Some(ValueFilter { value: f64::from(has_empty_modifier as u8) }),
+            option: Some(ValueFilter { value: has_empty_modifier.as_value() }),
             hidden: Some("filters.hide_empty_mod"),
             disabled: true,
         });
     }
 
-    if is(item, C::Amulet) || is(item, C::Ring) {
+    if is(item, &C::Amulet) || is(item, &C::Ring) {
         apply_anointment_rules(&mut ctx.filters, item);
     }
 
@@ -568,7 +573,7 @@ fn final_filter_tweaks(ctx: &mut Ctx) -> R<()> {
         } else if filter.stat_sources().next().is_some_and(|s| s.stat.stat.jewellery_quality.is_some()) {
             filter.hidden = Some("hide_jewellery_quality");
         } else if filter.tag == FilterTag::IMPLICIT {
-            if item.rarity == Some(Rarity::Unique) && item.is_corrupted.is_none() && !is(item, C::Jewel) {
+            if item.rarity == Some(Rarity::Unique) && item.is_corrupted.is_none() && !is(item, &C::Jewel) {
                 // Hide not Corrupted, Vestigial implicits etc. that pseudo stats did not consume.
                 filter.hidden = Some("hide_unique_base_implicit");
                 filter.disabled = true;
@@ -596,9 +601,9 @@ fn final_filter_tweaks(ctx: &mut Ctx) -> R<()> {
                 break;
             }
         }
-        if has_visible_armour_prop {
-            ctx.filters[i].hidden = Some("hide_redundant");
-            ctx.filters[i].disabled = true;
+        if has_visible_armour_prop && let Some(filter) = ctx.filters.get_mut(i) {
+            filter.hidden = Some("hide_redundant");
+            filter.disabled = true;
         }
     }
 
@@ -624,10 +629,10 @@ fn apply_cluster_jewel_rules(filters: &mut [StatFilter], exact: bool) -> R<()> {
             filter.disabled = false;
             let roll = roll_mut(filter)?;
             let value = roll.value;
-            if value == 4.0 {
+            if js_equal(value, 4.0) {
                 // 4 is [_, 5]
                 roll.max = Some(5.0);
-            } else if value == 5.0 && exact {
+            } else if js_equal(value, 5.0) && exact {
                 // 5 is [5, 5] (and [_, 5] for a rare jewel)
                 roll.min = Some(roll.default.min);
             } else if [3.0, 6.0, 10.0, 11.0, 12.0].contains(&value) {
@@ -672,14 +677,14 @@ fn show_has_empty_modifier(item: &Item) -> Option<ItemHasEmptyModifier> {
     let crafted_mod = random_mods.iter().find(|m| m.info.kind == ModifierType::Crafted);
 
     if (random_mods.len() == 5 && crafted_mod.is_none()) || (random_mods.len() == 6 && crafted_mod.is_some()) {
-        let count = |g: Generation| random_mods.iter().filter(|m| m.info.generation == Some(g)).count() as i32;
+        let count = |g: Generation| random_mods.iter().filter(|m| m.info.generation == Some(g)).count();
         let (mut prefixes, mut suffixes) = (count(Generation::Prefix), count(Generation::Suffix));
 
         if let Some(crafted) = crafted_mod {
             if crafted.info.generation == Some(Generation::Prefix) {
-                prefixes -= 1;
+                prefixes = prefixes.saturating_sub(1);
             } else {
-                suffixes -= 1;
+                suffixes = suffixes.saturating_sub(1);
             }
         }
 

@@ -5,6 +5,12 @@
 //! removes it, as the JSON round trip in `updateConfig` does. The only per-game
 //! part is [`new_widget`]'s default widget, passed in by each game crate.
 
+#![expect(
+    clippy::disallowed_methods,
+    clippy::disallowed_macros,
+    reason = "upstream's upgradeConfig migrates untyped JSON across every historic config shape; fields it doesn't know must survive"
+)]
+
 use serde_json::{Map, Value, json};
 
 use crate::js::{json_value, number_to_string};
@@ -32,11 +38,22 @@ pub fn widgets(config: &mut Value) -> R<&mut Vec<Value>> {
     config.get_mut("widgets").and_then(Value::as_array_mut).ok_or_else(|| ConfigError("no widgets".into()))
 }
 
+/// `w.wmType` of a widget, when it is a string.
+fn wm_type_of(w: &Value) -> Option<&str> {
+    match w {
+        Value::Object(m) => match m.get("wmType") {
+            Some(Value::String(s)) => Some(s),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
 /// `config.widgets.find(w => w.wmType === type)!`
 pub fn widget<'a>(config: &'a mut Value, wm_type: &str) -> R<&'a mut Map<String, Value>> {
     let w = widgets(config)?
         .iter_mut()
-        .find(|w| w["wmType"] == wm_type)
+        .find(|w| wm_type_of(w) == Some(wm_type))
         .ok_or_else(|| ConfigError(format!("Cannot set properties of undefined ({wm_type})")))?;
     obj(w)
 }
@@ -95,211 +112,260 @@ pub fn new_widget(
 ) -> R<Value> {
     let mut w = default_widget(wm_type);
     // A double, written as JavaScript writes it (`10`, not `10.0`).
-    w["wmId"] = json_value(&next_wm_id(config)?);
-    for (k, v) in extra {
-        w[*k] = v.clone();
+    let wm_id = json_value(&next_wm_id(config)?);
+    if let Value::Object(o) = &mut w {
+        o.insert("wmId".into(), wm_id);
+        for (k, v) in extra {
+            o.insert((*k).to_owned(), v.clone());
+        }
     }
     Ok(w)
 }
 
+/// `config.configVersion = n`
+fn set_version(config: &mut Value, n: u32) -> R<()> {
+    obj(config)?.insert("configVersion".into(), json!(n));
+    Ok(())
+}
+
 /// `upgradeConfig` steps 3–16.
 pub fn upgrade_to_16(config: &mut Value, default_widget: &dyn Fn(&str) -> Value) -> R<()> {
-    let c = &mut *config;
-
-    if version(c) < 3.0 {
-        let strip = new_widget(c, default_widget, "image-strip", &[("wmZorder", Value::Null)])?;
-        widgets(c)?.push(strip);
-        let delve = new_widget(c, default_widget, "delve-grid", &[("wmZorder", Value::Null)])?;
-        widgets(c)?.push(delve);
-        widget(c, "menu")?.insert("alwaysShow".into(), json!(false));
-        c["configVersion"] = json!(3);
+    if version(config) < 3.0 {
+        to_3(config, default_widget)?;
     }
-
-    if version(c) < 4.0 {
-        widget(c, "price-check")?.insert("chaosPriceThreshold".into(), json!(0.05));
-        let map_check = widget(c, "map-check")?;
-        for e in map_check.get_mut("selectedStats").and_then(Value::as_array_mut).into_iter().flatten() {
-            let e = obj(e)?;
-            let match_ref = e.get("matchRef").cloned();
-            set(e, "matcher", match_ref);
-            e.remove("matchRef");
-        }
-        for strip in widgets(c)?.iter_mut().filter(|w| w["wmType"] == "image-strip") {
-            for (idx, e) in strip.get_mut("images").and_then(Value::as_array_mut).into_iter().flatten().enumerate() {
-                obj(e)?.insert("id".into(), json!(idx));
-            }
-        }
-        c["configVersion"] = json!(4);
+    if version(config) < 4.0 {
+        to_4(config)?;
     }
-
-    if version(c) < 5.0 {
-        for cmd in c.get_mut("commands").and_then(Value::as_array_mut).into_iter().flatten() {
-            obj(cmd)?.insert("send".into(), json!(true));
-        }
-        c["configVersion"] = json!(5);
+    if version(config) < 5.0 {
+        to_5(config)?;
     }
-
-    if version(c) < 6.0 {
-        let debug = c.get("logLevel") == Some(&json!("debug"));
-        let pc = widget(c, "price-check")?;
-        pc.insert("showRateLimitState".into(), json!(debug));
-        pc.insert("apiLatencySeconds".into(), json!(2));
-        c["configVersion"] = json!(6);
+    if version(config) < 6.0 {
+        to_6(config)?;
     }
-
-    if version(c) < 7.0 {
-        let map_check_key = top(c, "mapCheckKey");
-        let map_check = widget(c, "map-check")?;
-        map_check.insert("wmType".into(), json!("item-check"));
-        let selected = map_check.remove("selectedStats");
-        map_check.insert("maps".into(), json!({ "selectedStats": selected }));
-        if selected.is_none() {
-            map_check["maps"].as_object_mut().expect("just made").remove("selectedStats");
-        }
-        let o = obj(c)?;
-        o.insert(
-            "itemCheckKey".into(),
-            if truthy(map_check_key.as_ref()) { map_check_key.expect("truthy") } else { Value::Null },
-        );
-        o.remove("mapCheckKey");
-        c["configVersion"] = json!(7);
+    if version(config) < 7.0 {
+        to_7(config)?;
     }
-
-    if version(c) < 8.0 {
-        let item_check = widget(c, "item-check")?;
-        let maps = item_check.get_mut("maps").ok_or_else(|| ConfigError("no maps".into()))?;
-        obj(maps)?.insert("showNewStats".into(), json!(false));
-        let stats = maps
-            .get_mut("selectedStats")
-            .and_then(Value::as_array_mut)
-            .ok_or_else(|| ConfigError("no stats".into()))?;
-        for entry in stats.iter_mut() {
-            let decision = if truthy(entry.get("valueDanger")) {
-                "danger"
-            } else if truthy(entry.get("valueWarning")) {
-                "warning"
-            } else if truthy(entry.get("valueDesirable")) {
-                "desirable"
-            } else {
-                "seen"
-            };
-            let mut new = json!({ "decision": decision });
-            if let Some(m) = entry.get("matcher") {
-                new["matcher"] = m.clone();
-            }
-            *entry = new;
-        }
-        c["configVersion"] = json!(8);
+    if version(config) < 8.0 {
+        to_8(config)?;
     }
-
-    if version(c) < 9.0 {
-        let pc = widget(c, "price-check")?;
-        pc.insert("collapseListings".into(), json!("api"));
-        pc.insert("smartInitialSearch".into(), json!(true));
-        pc.insert("lockedInitialSearch".into(), json!(true));
-        pc.insert("activateStockFilter".into(), json!(false));
-        c["configVersion"] = json!(9);
+    if version(config) < 9.0 {
+        to_9(config)?;
     }
-
-    if version(c) < 10.0 {
-        let settings = new_widget(c, default_widget, "settings", &[])?;
-        widgets(c)?.push(settings);
-        let moved: Vec<(&str, Option<Value>)> = [
-            ("hotkey", "priceCheckKey"),
-            ("hotkeyHold", "priceCheckKeyHold"),
-            ("hotkeyLocked", "priceCheckLocked"),
-            ("showSeller", "showSeller"),
-            ("searchStatRange", "searchStatRange"),
-            ("showCursor", "priceCheckShowCursor"),
-        ]
-        .into_iter()
-        .map(|(to, from)| (to, top(c, from)))
-        .collect();
-        let pc = widget(c, "price-check")?;
-        for (to, value) in moved {
-            set(pc, to, value);
-        }
-        if pc.get("chaosPriceThreshold") == Some(&json!(0.05)) {
-            pc.insert("chaosPriceThreshold".into(), json!(0));
-        }
-        c["configVersion"] = json!(10);
+    if version(config) < 10.0 {
+        to_10(config, default_widget)?;
     }
-
-    if version(c) < 11.0 {
-        widget(c, "price-check")?.insert("requestPricePrediction".into(), json!(false));
-        c["configVersion"] = json!(11);
+    if version(config) < 11.0 {
+        to_11(config)?;
     }
-
-    if version(c) < 12.0 {
-        let after_settings = widgets(c)?.iter().position(|w| w["wmType"] == "settings");
-        let item_search = new_widget(c, default_widget, "item-search", &[("wmWants", json!("show"))])?;
-        // `findIndex` is -1 without one: `splice(0, ...)`.
-        let at = after_settings.map_or(0, |i| i + 1);
-        widgets(c)?.insert(at, item_search);
-        c["realm"] = json!("pc-ggg");
-        if c.get("language") == Some(&json!("zh_TW")) {
-            c["language"] = json!("cmn-Hant");
-        }
-        c["configVersion"] = json!(12);
+    if version(config) < 12.0 {
+        to_12(config, default_widget)?;
     }
-
-    if version(c) < 13.0 {
-        c["showAttachNotification"] = json!(true);
-        c["configVersion"] = json!(13);
+    if version(config) < 13.0 {
+        to_13(config)?;
     }
-
-    if version(c) < 14.0 {
-        for strip in widgets(c)?.iter_mut().filter(|w| w["wmType"] == "image-strip") {
-            for e in strip.get_mut("images").and_then(Value::as_array_mut).into_iter().flatten() {
-                if let Some(url) = e.get("url").and_then(Value::as_str)
-                    && let Some(rest) = url.strip_prefix("app-file://")
-                {
-                    e["url"] = json!(rest);
-                }
-            }
-        }
-        let (wiki, coe) = (top(c, "wikiKey"), top(c, "craftOfExileKey"));
-        let ic = widget(c, "item-check")?;
-        set(ic, "wikiKey", wiki);
-        ic.insert("poedbKey".into(), Value::Null);
-        set(ic, "craftOfExileKey", coe);
-        ic.insert("stashSearchKey".into(), Value::Null);
-        c["configVersion"] = json!(14);
+    if version(config) < 14.0 {
+        to_14(config)?;
     }
-
-    if version(c) < 15.0 {
-        widget(c, "price-check")?.insert("builtinBrowser".into(), json!(false));
-        widget(c, "item-search")?.insert("ocrGemsKey".into(), Value::Null);
-        let ic = widget(c, "item-check")?;
-        let maps = obj(ic.get_mut("maps").ok_or_else(|| ConfigError("no maps".into()))?)?;
-        maps.insert("profile".into(), json!(1));
-        for stat in maps.get_mut("selectedStats").and_then(Value::as_array_mut).into_iter().flatten() {
-            let p1 = match stat.get("decision").and_then(Value::as_str) {
-                Some("danger") => "d",
-                Some("warning") => "w",
-                Some("desirable") => "g",
-                _ => "s",
-            };
-            stat["decision"] = json!(format!("{p1}--"));
-        }
-        c["configVersion"] = json!(15);
+    if version(config) < 15.0 {
+        to_15(config)?;
     }
-
-    if version(c) < 16.0 {
-        let delve_key = top(c, "delveGridKey");
-        set(widget(c, "delve-grid")?, "toggleKey", delve_key);
-        let item_check_key = top(c, "itemCheckKey");
-        let ic = widget(c, "item-check")?;
-        set(ic, "hotkey", item_check_key);
-        let maps = obj(ic.get_mut("maps").ok_or_else(|| ConfigError("no maps".into()))?)?;
-        if !maps.contains_key("profile") {
-            maps.insert("profile".into(), json!(1));
-            maps.insert("selectedStats".into(), json!([]));
-        }
-        c["configVersion"] = json!(16);
+    if version(config) < 16.0 {
+        to_16(config)?;
     }
-
     Ok(())
+}
+
+fn to_3(config: &mut Value, default_widget: &dyn Fn(&str) -> Value) -> R<()> {
+    let strip = new_widget(config, default_widget, "image-strip", &[("wmZorder", Value::Null)])?;
+    widgets(config)?.push(strip);
+    let delve = new_widget(config, default_widget, "delve-grid", &[("wmZorder", Value::Null)])?;
+    widgets(config)?.push(delve);
+    widget(config, "menu")?.insert("alwaysShow".into(), json!(false));
+    set_version(config, 3)
+}
+
+fn to_4(config: &mut Value) -> R<()> {
+    widget(config, "price-check")?.insert("chaosPriceThreshold".into(), json!(0.05));
+    let map_check = widget(config, "map-check")?;
+    for e in map_check.get_mut("selectedStats").and_then(Value::as_array_mut).into_iter().flatten() {
+        let e = obj(e)?;
+        let match_ref = e.get("matchRef").cloned();
+        set(e, "matcher", match_ref);
+        e.remove("matchRef");
+    }
+    for strip in widgets(config)?.iter_mut().filter(|w| wm_type_of(w) == Some("image-strip")) {
+        for (idx, e) in strip.get_mut("images").and_then(Value::as_array_mut).into_iter().flatten().enumerate() {
+            obj(e)?.insert("id".into(), json!(idx));
+        }
+    }
+    set_version(config, 4)
+}
+
+fn to_5(config: &mut Value) -> R<()> {
+    for cmd in config.get_mut("commands").and_then(Value::as_array_mut).into_iter().flatten() {
+        obj(cmd)?.insert("send".into(), json!(true));
+    }
+    set_version(config, 5)
+}
+
+fn to_6(config: &mut Value) -> R<()> {
+    let debug = config.get("logLevel") == Some(&json!("debug"));
+    let pc = widget(config, "price-check")?;
+    pc.insert("showRateLimitState".into(), json!(debug));
+    pc.insert("apiLatencySeconds".into(), json!(2));
+    set_version(config, 6)
+}
+
+fn to_7(config: &mut Value) -> R<()> {
+    let map_check_key = top(config, "mapCheckKey");
+    let map_check = widget(config, "map-check")?;
+    map_check.insert("wmType".into(), json!("item-check"));
+    let selected = map_check.remove("selectedStats");
+    map_check.insert("maps".into(), json!({ "selectedStats": selected }));
+    if selected.is_none() {
+        let maps = obj(map_check.get_mut("maps").ok_or_else(|| ConfigError("no maps".into()))?)?;
+        maps.remove("selectedStats");
+    }
+    let item_check_key = map_check_key.filter(|v| truthy(Some(v))).unwrap_or(Value::Null);
+    let o = obj(config)?;
+    o.insert("itemCheckKey".into(), item_check_key);
+    o.remove("mapCheckKey");
+    set_version(config, 7)
+}
+
+fn to_8(config: &mut Value) -> R<()> {
+    let item_check = widget(config, "item-check")?;
+    let maps = item_check.get_mut("maps").ok_or_else(|| ConfigError("no maps".into()))?;
+    obj(maps)?.insert("showNewStats".into(), json!(false));
+    let stats =
+        maps.get_mut("selectedStats").and_then(Value::as_array_mut).ok_or_else(|| ConfigError("no stats".into()))?;
+    for entry in stats.iter_mut() {
+        let decision = if truthy(entry.get("valueDanger")) {
+            "danger"
+        } else if truthy(entry.get("valueWarning")) {
+            "warning"
+        } else if truthy(entry.get("valueDesirable")) {
+            "desirable"
+        } else {
+            "seen"
+        };
+        let mut new = Map::new();
+        new.insert("decision".into(), json!(decision));
+        if let Some(m) = entry.get("matcher") {
+            new.insert("matcher".into(), m.clone());
+        }
+        *entry = Value::Object(new);
+    }
+    set_version(config, 8)
+}
+
+fn to_9(config: &mut Value) -> R<()> {
+    let pc = widget(config, "price-check")?;
+    pc.insert("collapseListings".into(), json!("api"));
+    pc.insert("smartInitialSearch".into(), json!(true));
+    pc.insert("lockedInitialSearch".into(), json!(true));
+    pc.insert("activateStockFilter".into(), json!(false));
+    set_version(config, 9)
+}
+
+fn to_10(config: &mut Value, default_widget: &dyn Fn(&str) -> Value) -> R<()> {
+    let settings = new_widget(config, default_widget, "settings", &[])?;
+    widgets(config)?.push(settings);
+    let moved: Vec<(&str, Option<Value>)> = [
+        ("hotkey", "priceCheckKey"),
+        ("hotkeyHold", "priceCheckKeyHold"),
+        ("hotkeyLocked", "priceCheckLocked"),
+        ("showSeller", "showSeller"),
+        ("searchStatRange", "searchStatRange"),
+        ("showCursor", "priceCheckShowCursor"),
+    ]
+    .into_iter()
+    .map(|(to, from)| (to, top(config, from)))
+    .collect();
+    let pc = widget(config, "price-check")?;
+    for (to, value) in moved {
+        set(pc, to, value);
+    }
+    if pc.get("chaosPriceThreshold") == Some(&json!(0.05)) {
+        pc.insert("chaosPriceThreshold".into(), json!(0));
+    }
+    set_version(config, 10)
+}
+
+fn to_11(config: &mut Value) -> R<()> {
+    widget(config, "price-check")?.insert("requestPricePrediction".into(), json!(false));
+    set_version(config, 11)
+}
+
+fn to_12(config: &mut Value, default_widget: &dyn Fn(&str) -> Value) -> R<()> {
+    let after_settings = widgets(config)?.iter().position(|w| wm_type_of(w) == Some("settings"));
+    let item_search = new_widget(config, default_widget, "item-search", &[("wmWants", json!("show"))])?;
+    // `findIndex` is -1 without one: `splice(0, ...)`.
+    let at = after_settings.map_or(0, |i| i.saturating_add(1));
+    widgets(config)?.insert(at, item_search);
+    let o = obj(config)?;
+    o.insert("realm".into(), json!("pc-ggg"));
+    if o.get("language") == Some(&json!("zh_TW")) {
+        o.insert("language".into(), json!("cmn-Hant"));
+    }
+    set_version(config, 12)
+}
+
+fn to_13(config: &mut Value) -> R<()> {
+    obj(config)?.insert("showAttachNotification".into(), json!(true));
+    set_version(config, 13)
+}
+
+fn to_14(config: &mut Value) -> R<()> {
+    for strip in widgets(config)?.iter_mut().filter(|w| wm_type_of(w) == Some("image-strip")) {
+        for e in strip.get_mut("images").and_then(Value::as_array_mut).into_iter().flatten() {
+            let Value::Object(entry) = e else { continue };
+            let Some(Value::String(url)) = entry.get("url") else { continue };
+            if let Some(rest) = url.strip_prefix("app-file://") {
+                let rest = rest.to_owned();
+                entry.insert("url".into(), json!(rest));
+            }
+        }
+    }
+    let (wiki, coe) = (top(config, "wikiKey"), top(config, "craftOfExileKey"));
+    let ic = widget(config, "item-check")?;
+    set(ic, "wikiKey", wiki);
+    ic.insert("poedbKey".into(), Value::Null);
+    set(ic, "craftOfExileKey", coe);
+    ic.insert("stashSearchKey".into(), Value::Null);
+    set_version(config, 14)
+}
+
+fn to_15(config: &mut Value) -> R<()> {
+    widget(config, "price-check")?.insert("builtinBrowser".into(), json!(false));
+    widget(config, "item-search")?.insert("ocrGemsKey".into(), Value::Null);
+    let ic = widget(config, "item-check")?;
+    let maps = obj(ic.get_mut("maps").ok_or_else(|| ConfigError("no maps".into()))?)?;
+    maps.insert("profile".into(), json!(1));
+    for stat in maps.get_mut("selectedStats").and_then(Value::as_array_mut).into_iter().flatten() {
+        let p1 = match stat.get("decision").and_then(Value::as_str) {
+            Some("danger") => "d",
+            Some("warning") => "w",
+            Some("desirable") => "g",
+            _ => "s",
+        };
+        obj(stat)?.insert("decision".into(), json!(format!("{p1}--")));
+    }
+    set_version(config, 15)
+}
+
+fn to_16(config: &mut Value) -> R<()> {
+    let delve_key = top(config, "delveGridKey");
+    set(widget(config, "delve-grid")?, "toggleKey", delve_key);
+    let item_check_key = top(config, "itemCheckKey");
+    let ic = widget(config, "item-check")?;
+    set(ic, "hotkey", item_check_key);
+    let maps = obj(ic.get_mut("maps").ok_or_else(|| ConfigError("no maps".into()))?)?;
+    if !maps.contains_key("profile") {
+        maps.insert("profile".into(), json!(1));
+        maps.insert("selectedStats".into(), json!([]));
+    }
+    set_version(config, 16)
 }
 
 /// `${value}`
@@ -314,9 +380,11 @@ pub fn text(v: Option<&Value>) -> String {
 }
 
 pub fn shortcut(shortcut: String, action: Value, keep_mod_keys: bool) -> Value {
-    let mut s = json!({ "shortcut": shortcut, "action": action });
+    let mut s = Map::new();
+    s.insert("shortcut".to_owned(), Value::String(shortcut));
+    s.insert("action".to_owned(), action);
     if keep_mod_keys {
-        s["keepModKeys"] = json!(true);
+        s.insert("keepModKeys".to_owned(), Value::Bool(true));
     }
-    s
+    Value::Object(s)
 }

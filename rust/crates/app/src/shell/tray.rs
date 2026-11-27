@@ -19,7 +19,7 @@ const MACOS_ICON: u32 = 22;
 pub fn icon(game: GameId) -> Result<(Vec<u8>, u32, u32), String> {
     let path = match game {
         GameId::Poe2 => wraex_poe2::data::icon_path(),
-        _ => wraex_poe1::data::icon_path(),
+        GameId::Poe1 => wraex_poe1::data::icon_path(),
     };
     let bytes = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     let image = image::load_from_memory_with_format(&bytes, image::ImageFormat::Png)
@@ -45,7 +45,7 @@ mod tests {
         for game in [GameId::Poe1, GameId::Poe2] {
             let (rgba, width, height) = icon(game).unwrap_or_else(|e| panic!("{game:?}: {e}"));
             assert!(width > 0 && height > 0);
-            assert_eq!(rgba.len(), (width * height * 4) as usize);
+            assert_eq!(rgba.len(), usize::try_from(width * height * 4).expect("the icon's pixels fit in a usize"));
             #[cfg(target_os = "macos")]
             assert_eq!((width, height), (MACOS_ICON, MACOS_ICON), "AppTray.ts' 22 pt icon");
         }

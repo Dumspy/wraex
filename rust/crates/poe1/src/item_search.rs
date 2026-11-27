@@ -42,8 +42,8 @@ impl SearchResults {
     /// The matches, when the query found any.
     pub fn items(&self) -> &[BaseType] {
         match self {
-            SearchResults::TooMany => &[],
-            SearchResults::Found(items) => items,
+            Self::TooMany => &[],
+            Self::Found(items) => items,
         }
     }
 }
@@ -64,7 +64,7 @@ pub fn find_items(
     let mut parts: Vec<String> = js::split_whitespace(&search.to_lowercase()).into_iter().map(str::to_owned).collect();
     // `sort((a, b) => b.length - a.length)`: longest first, in JavaScript's UTF-16 lengths.
     parts.sort_by_key(|part| std::cmp::Reverse(js::length(part)));
-    let longest = parts.first().map(String::as_str).unwrap_or("");
+    let longest = parts.first().map_or("", String::as_str);
 
     let mut out = Vec::new();
     for item_name in item_names {
@@ -143,17 +143,52 @@ pub fn fuzzy_find_heist_gem(data: &Data, bad_str: &str) -> Option<FuzzyGem> {
 /// every key), which is what keeps the two cuts equivalent.
 fn template(source: &str) -> String {
     let units: Vec<u16> = source.encode_utf16().collect();
-    String::from_utf16_lossy(&units[1.min(units.len())..units.len().saturating_sub(1)])
+    let start = 1.min(units.len());
+    let end = units.len().saturating_sub(1);
+    String::from_utf16_lossy(units.get(start..end).unwrap_or_default())
 }
 
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
 
-    use serde_json::{Value, json};
+    use serde::{Deserialize, Serialize};
+    use serde_json::Value;
     use wraex_core::GameId;
 
     use super::*;
+
+    /// `fixtures/item-search/poe1.json`.
+    #[derive(Debug, Deserialize)]
+    struct Fixture {
+        searches: Vec<SearchEntry>,
+        fuzzy: Vec<FuzzyEntry>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct SearchEntry {
+        lang: String,
+        language: String,
+        tab: String,
+        query: String,
+        /// The matched `BaseType` list, or `false` (too short, or too many matches).
+        results: Value,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct FuzzyEntry {
+        lang: String,
+        query: String,
+        result: Value,
+    }
+
+    /// A fuzzy match as `fuzzyFindHeistGem`'s answer serialises.
+    #[derive(Debug, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct FuzzyMatch {
+        alt_quality: &'static str,
+        name: String,
+    }
 
     fn names(results: &SearchResults) -> Vec<&str> {
         results.items().iter().map(|item| item.name.as_str()).collect()
@@ -171,44 +206,37 @@ mod tests {
     /// reference's own `findItems` and `fuzzyFindHeistGem` gave.
     #[test]
     fn searches_and_fuzzy_matches_equal_the_fixtures() {
-        let fixture = wraex_golden::item_search_fixture(GameId::Poe1);
+        let fixture: Fixture =
+            serde_json::from_value(wraex_golden::item_search_fixture(GameId::Poe1)).expect("fixtures/item-search");
         let mut langs: HashMap<String, Data> = HashMap::new();
         let mut failures = Vec::new();
 
-        let searches = fixture["searches"].as_array().expect("searches");
-        assert!(!searches.is_empty(), "no recorded searches: run `npm run regen` in tools/golden");
-        for entry in searches {
-            let lang = entry["lang"].as_str().unwrap();
-            let language = entry["language"].as_str().unwrap();
-            let tab = entry["tab"].as_str().unwrap();
-            let query = entry["query"].as_str().unwrap();
+        assert!(!fixture.searches.is_empty(), "no recorded searches: run `npm run regen` in tools/golden");
+        for entry in &fixture.searches {
             let data = langs
-                .entry(lang.to_owned())
-                .or_insert_with(|| Data::load(&crate::data::reference_source(), lang).unwrap());
-            let actual = match tab {
-                "gem" => json_results(&find_gems(data, language, query)),
-                "replica" => json_results(&find_replicas(data, language, query)),
+                .entry(entry.lang.clone())
+                .or_insert_with(|| Data::load(&crate::data::reference_source(), &entry.lang).unwrap());
+            let actual = match entry.tab.as_str() {
+                "gem" => json_results(&find_gems(data, &entry.language, &entry.query)),
+                "replica" => json_results(&find_replicas(data, &entry.language, &entry.query)),
                 other => panic!("unknown PoE1 item-search tab {other:?}"),
             };
-            if let Some(diff) = wraex_golden::diff(&entry["results"], &actual) {
-                failures.push(format!("{tab} {query:?} (language {language}): {diff}"));
+            if let Some(diff) = wraex_golden::diff(&entry.results, &actual) {
+                failures.push(format!("{} {:?} (language {}): {diff}", entry.tab, entry.query, entry.language));
             }
         }
 
-        let fuzzy = fixture["fuzzy"].as_array().expect("fuzzy");
-        assert!(!fuzzy.is_empty(), "no recorded fuzzy lines: run `npm run regen` in tools/golden");
-        for entry in fuzzy {
-            let lang = entry["lang"].as_str().unwrap();
-            let query = entry["query"].as_str().unwrap();
+        assert!(!fixture.fuzzy.is_empty(), "no recorded fuzzy lines: run `npm run regen` in tools/golden");
+        for entry in &fixture.fuzzy {
             let data = langs
-                .entry(lang.to_owned())
-                .or_insert_with(|| Data::load(&crate::data::reference_source(), lang).unwrap());
-            let actual = match fuzzy_find_heist_gem(data, query) {
+                .entry(entry.lang.clone())
+                .or_insert_with(|| Data::load(&crate::data::reference_source(), &entry.lang).unwrap());
+            let actual = match fuzzy_find_heist_gem(data, &entry.query) {
                 None => Value::Null,
-                Some(gem) => json!({ "altQuality": gem.alt_quality, "name": gem.name }),
+                Some(gem) => wraex_core::js::json_value(&FuzzyMatch { alt_quality: gem.alt_quality, name: gem.name }),
             };
-            if let Some(diff) = wraex_golden::diff(&entry["result"], &actual) {
-                failures.push(format!("fuzzy {query:?}: {diff}"));
+            if let Some(diff) = wraex_golden::diff(&entry.result, &actual) {
+                failures.push(format!("fuzzy {:?}: {diff}", entry.query));
             }
         }
 
@@ -221,7 +249,7 @@ mod tests {
     #[test]
     fn the_alt_quality_gem_list_is_empty_at_this_revision() {
         let data = crate::data::tests::en();
-        assert!(data.altq_gem_names().is_empty());
+        assert_eq!(data.altq_gem_names(), Vec::<String>::new());
         assert_eq!(find_gems(data, "en", "empower"), SearchResults::Found(Vec::new()));
     }
 

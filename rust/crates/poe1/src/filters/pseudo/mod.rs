@@ -13,9 +13,10 @@ pub mod timeless_jewel;
 pub mod utils;
 
 use wraex_core::Rarity;
+use wraex_core::num::usize_to_f64;
 
 use super::create_stat_filters::{Ctx, calculated_stat_to_filter};
-use super::{FilterError, R, StatFilter, missing};
+use super::{FilterError, R, StatFilter, js_equal, missing};
 use crate::parser::modifiers::{ModifierType, StatCalculated, StatRoll, StatSource};
 
 struct RuleStat {
@@ -34,11 +35,11 @@ struct PseudoRule {
     mutate: Option<fn(&mut StatFilter)>,
 }
 
-fn s(stat_ref: &'static str) -> RuleStat {
+const fn s(stat_ref: &'static str) -> RuleStat {
     RuleStat { stat_ref, multiplier: 1.0, required: false, keep: false }
 }
 
-fn required(stat_ref: &'static str) -> RuleStat {
+const fn required(stat_ref: &'static str) -> RuleStat {
     RuleStat { required: true, ..s(stat_ref) }
 }
 
@@ -119,7 +120,8 @@ fn with_half_attribute(stat: &'static str, attr: &str) -> Vec<RuleStat> {
 
 fn mutate_chaos(filter: &mut StatFilter) {
     let sources: Vec<_> = filter.stat_sources().collect();
-    if sources.len() == 1 && sources[0].modifier.info.kind == ModifierType::Crafted {
+    let crafted = sources.len() == 1 && sources.first().is_some_and(|s| s.modifier.info.kind == ModifierType::Crafted);
+    if crafted {
         filter.hidden = Some("filters.hide_crafted_chaos");
     } else {
         filter.disabled = false;
@@ -127,6 +129,7 @@ fn mutate_chaos(filter: &mut StatFilter) {
 }
 
 /// `PSEUDO_RULES`
+#[expect(clippy::too_many_lines, reason = "line-for-line port of upstream `PSEUDO_RULES` (`pseudo/index.ts`)")]
 fn pseudo_rules() -> Vec<PseudoRule> {
     vec![
         PseudoRule {
@@ -136,7 +139,7 @@ fn pseudo_rules() -> Vec<PseudoRule> {
                 RESISTANCES_INFO
                     .iter()
                     .filter(|i| !i.elements.is_empty())
-                    .map(|i| RuleStat { multiplier: i.elements.len() as f64, keep: i.chaos, ..s(i.stat_ref) })
+                    .map(|i| RuleStat { multiplier: usize_to_f64(i.elements.len()), keep: i.chaos, ..s(i.stat_ref) })
                     .collect(),
             )
         },
@@ -272,6 +275,7 @@ fn pseudo_rules() -> Vec<PseudoRule> {
 
 /// `filterPseudo`. The reference tracks the filters of a group by identity;
 /// here every pseudo filter gets an id.
+#[expect(clippy::too_many_lines, reason = "line-for-line port of upstream `filterPseudo` (`pseudo/index.ts`)")]
 pub fn filter_pseudo(ctx: &mut Ctx) -> R<()> {
     let item = ctx.item;
     let is_unique = item.rarity == Some(Rarity::Unique);
@@ -379,22 +383,24 @@ pub fn filter_pseudo(ctx: &mut Ctx) -> R<()> {
 
     if let Some(mut attrs) = group("to_x_attr") {
         by_value_desc(&filters, &mut attrs)?;
-        if attrs.len() == 3 {
+        if let [_, second, third] = attrs.as_slice() {
             let to_all = group("to_all_attrs");
             let values: Vec<Option<f64>> = attrs.iter().map(|&id| value(&filters, id)).collect();
-            if values.iter().all(|v| *v == values[0]) && to_all.is_some() {
+            let all_equal = values.split_first().is_some_and(|(first, rest)| rest.iter().all(|v| v == first));
+            if all_equal && to_all.is_some() {
                 filters.retain(|(fid, _)| !fid.is_some_and(|fid| attrs.contains(&fid)));
             } else {
                 if let Some(to_all) = &to_all {
                     filters.retain(|(fid, _)| !fid.is_some_and(|fid| to_all.contains(&fid)));
                 }
-                let [v0, v1, v2] = [values[0], values[1], values[2]].map(|v| v.unwrap_or(f64::NAN));
+                let [v0, v1, v2] =
+                    [values.first(), values.get(1), values.get(2)].map(|v| v.copied().flatten().unwrap_or(f64::NAN));
                 if v2 / v0 < 0.3 {
-                    if v1 == v2 {
-                        hide(&mut filters, attrs[1], "hide_attr_same_2nd_n_3rd");
-                        hide(&mut filters, attrs[2], "hide_attr_same_2nd_n_3rd");
+                    if js_equal(v1, v2) {
+                        hide(&mut filters, *second, "hide_attr_same_2nd_n_3rd");
+                        hide(&mut filters, *third, "hide_attr_same_2nd_n_3rd");
                     } else {
-                        hide(&mut filters, attrs[2], "hide_attr_smallest_total");
+                        hide(&mut filters, *third, "hide_attr_smallest_total");
                     }
                 }
             }

@@ -1,10 +1,13 @@
-//! What a PoE2 price check shows from the trade site's answers:
+//! What a PoE2 price check shows from the trade site's answers.
+//!
 //! `parseFetchResult` (`pathofexile-trade.ts`) builds the tooltip-like display
 //! item of a fetched listing. Listings are read as JSON, as leniently as the
 //! reference reads them; where it would throw (`values[0][1]` of an empty
 //! list), the display item is an error, which upstream logs and leaves out.
 
-use serde::Serialize;
+use std::collections::BTreeMap;
+
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::data::Data;
@@ -48,7 +51,7 @@ mod prop {
 }
 
 /// `DisplayItemLine`
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct DisplayItemLine {
     pub text: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -67,12 +70,12 @@ impl DisplayItemLine {
     }
 }
 
-fn color(c: f64) -> Option<Value> {
-    Some(serde_json::json!(c))
+fn color(c: f64) -> Value {
+    Value::from(c)
 }
 
 /// `DisplayItem`
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DisplayItem {
     pub title: Vec<String>,
@@ -111,7 +114,7 @@ pub struct DisplayItem {
     pub icon: Icon,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Icon {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<Value>,
@@ -121,16 +124,248 @@ pub struct Icon {
     pub h: Option<Value>,
 }
 
+/// A fetched listing (`FetchResult`).
+///
+/// Fields the reference treats as plain JavaScript values (truthiness,
+/// `String(x)`, pass-through) stay [`Value`]; the ones it reads with a known
+/// type are typed. Everything the site may omit is optional.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct FetchResult {
+    pub id: String,
+    pub item: FetchItem,
+    pub listing: FetchListing,
+    #[serde(default)]
+    pub gone: Option<Value>,
+}
+
+/// `FetchResult['item']`.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FetchItem {
+    #[serde(default)]
+    pub w: Option<Value>,
+    #[serde(default)]
+    pub h: Option<Value>,
+    #[serde(default)]
+    pub icon: Option<Value>,
+    #[serde(default)]
+    pub sockets: Option<Value>,
+    #[serde(default)]
+    pub name: Option<String>,
+    #[serde(default)]
+    pub type_line: Option<Value>,
+    #[serde(default)]
+    pub rarity: Option<Value>,
+    #[serde(default)]
+    pub frame_type: Option<Value>,
+    /// The site's item level, shown as sent when the item has no `78` property.
+    #[serde(default)]
+    pub ilvl: Option<Value>,
+    /// Tested strictly (`=== false`), so a non-boolean stays as sent.
+    #[serde(default)]
+    pub identified: Option<Value>,
+    #[serde(default)]
+    pub unidentified_tier: Option<Value>,
+    #[serde(default)]
+    pub note: Option<Value>,
+    #[serde(default)]
+    pub sanctified: Option<Value>,
+    #[serde(default)]
+    pub duplicated: Option<Value>,
+    #[serde(default)]
+    pub stack_size: Option<Value>,
+    #[serde(default)]
+    pub corrupted: Option<Value>,
+    #[serde(default)]
+    pub double_corrupted: Option<Value>,
+    /// Only its length is read.
+    #[serde(default)]
+    pub gem_sockets: Option<Vec<Value>>,
+    #[serde(default)]
+    pub properties: Option<Vec<TradeDataRichLine>>,
+    #[serde(default)]
+    pub requirements: Option<Vec<TradeDataRichLine>>,
+    /// The site sends `[]` for an item without extended data; upstream reads it
+    /// as an empty object.
+    #[serde(default, deserialize_with = "lenient_extended")]
+    pub extended: Option<FetchResultExtended>,
+    #[serde(default)]
+    pub granted_skills: Option<Vec<TradeDataRichLine>>,
+    #[serde(default)]
+    pub implicit_mods: Option<Mods>,
+    #[serde(default)]
+    pub explicit_mods: Option<Mods>,
+    #[serde(default)]
+    pub crafted_mods: Option<Mods>,
+    #[serde(default)]
+    pub mutated_mods: Option<Mods>,
+    #[serde(default)]
+    pub enchant_mods: Option<Mods>,
+    #[serde(default)]
+    pub rune_mods: Option<Mods>,
+    #[serde(default)]
+    pub veiled_mods: Option<Vec<VeiledMod>>,
+    #[serde(default)]
+    pub pseudo_mods: Option<Mods>,
+    #[serde(default)]
+    pub desecrated_mods: Option<Mods>,
+    #[serde(default)]
+    pub fractured_mods: Option<Mods>,
+    #[serde(default)]
+    pub socketed_items: Option<Vec<Self>>,
+}
+
+/// `FetchResult['item']['extended']`: the item's totals and mod tiers.
+#[derive(Debug, Clone, Default, PartialEq, Deserialize)]
+pub struct FetchResultExtended {
+    #[serde(default)]
+    pub dps: Option<f64>,
+    #[serde(default)]
+    pub pdps: Option<f64>,
+    #[serde(default)]
+    pub edps: Option<f64>,
+    #[serde(default)]
+    pub ar: Option<f64>,
+    #[serde(default)]
+    pub ev: Option<f64>,
+    #[serde(default)]
+    pub es: Option<f64>,
+    #[serde(default)]
+    pub ward: Option<f64>,
+    #[serde(default)]
+    pub dps_aug: Option<bool>,
+    #[serde(default)]
+    pub pdps_aug: Option<bool>,
+    #[serde(default)]
+    pub edps_aug: Option<bool>,
+    #[serde(default)]
+    pub ar_aug: Option<bool>,
+    #[serde(default)]
+    pub ev_aug: Option<bool>,
+    #[serde(default)]
+    pub es_aug: Option<bool>,
+    #[serde(default)]
+    pub ward_aug: Option<bool>,
+    /// `Record<string, TradeModMetadata[]>`, keyed by mod block.
+    #[serde(default)]
+    pub mods: Option<BTreeMap<String, Vec<TradeModMetadata>>>,
+    /// `Record<string, TradeModHashes[]>`, keyed by mod block.
+    #[serde(default)]
+    pub hashes: Option<BTreeMap<String, Vec<TradeModHashes>>>,
+}
+
+/// `[displayHash, modIndexes]`: the `mods` a line's hash points to.
+pub type TradeModHashes = (String, Option<Vec<u64>>);
+
+/// `TradeModMetadata`; only the tier is displayed.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct TradeModMetadata {
+    #[serde(default)]
+    pub tier: Option<Value>,
+}
+
+/// `FetchResultMod`: a mod line with its tier-bearing mods.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct FetchResultMod {
+    #[serde(default)]
+    pub description: Option<Value>,
+    #[serde(default)]
+    pub mods: Option<Vec<FetchModInfo>>,
+}
+
+/// `FetchModInfo`; only the tier is displayed.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct FetchModInfo {
+    #[serde(default)]
+    pub tier: Option<Value>,
+}
+
+/// `FetchResult['item']['*Mods']`: `FetchResultMod[] | string[]`.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(untagged)]
+pub enum Mods {
+    /// String lines; their tiers come from `extended.hashes`.
+    Text(Vec<String>),
+    /// Object lines with their mod tiers inline.
+    Rich(Vec<FetchResultMod>),
+}
+
+/// `FetchResult['item']['veiledMods'][]`: a string or `{ description }`.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(untagged)]
+pub enum VeiledMod {
+    Text(String),
+    Rich(FetchResultMod),
+}
+
+/// `extended` is an object when the item has one; the site sends `[]` for an
+/// item without extended data (the Djinn Barya in the recorded answer), and
+/// upstream reads that as an object with no keys.
+fn lenient_extended<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<FetchResultExtended>, D::Error> {
+    let value = Value::deserialize(d)?;
+    if value.is_null() {
+        return Ok(None);
+    }
+    Ok(Some(serde_json::from_value(value).unwrap_or_default()))
+}
+
+/// A `TradeDataRichLine`: `values` is `[[text, displayMode], ...]`.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct TradeDataRichLine {
+    #[serde(default)]
+    pub name: Option<Value>,
+    #[serde(default)]
+    pub values: Vec<Vec<Value>>,
+    #[serde(rename = "type", default)]
+    pub kind: Option<i64>,
+}
+
+/// `FetchResult['listing']`.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct FetchListing {
+    #[serde(default)]
+    pub indexed: Option<String>,
+    #[serde(default)]
+    pub price: Option<Price>,
+    /// An instant buyout lists a `fee`; upstream tests it against `null`.
+    #[serde(default)]
+    pub fee: Option<Value>,
+    #[serde(default)]
+    pub account: Account,
+    #[serde(default)]
+    pub in_demand: Option<Value>,
+}
+
+/// `FetchResult['listing']['price']`.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct Price {
+    #[serde(default)]
+    pub amount: Option<f64>,
+    #[serde(default)]
+    pub currency: Option<String>,
+    #[serde(rename = "type", default)]
+    pub kind: Option<String>,
+}
+
+/// `Account`
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Account {
+    #[serde(default)]
+    pub name: Option<String>,
+    #[serde(default)]
+    pub last_character_name: Option<String>,
+    /// `{ status }`, or `null` for an offline account. The reference tests it
+    /// for truthiness, so it stays a [`Value`].
+    #[serde(default)]
+    pub online: Option<Value>,
+}
+
 /// What `parseFetchResult` throws on.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DisplayError(pub String);
 
 type R<T> = Result<T, DisplayError>;
-
-/// `x` unless it is `undefined` or `null`.
-fn get<'a>(v: &'a Value, key: &str) -> Option<&'a Value> {
-    v.get(key).filter(|x| !x.is_null())
-}
 
 fn truthy(v: Option<&Value>) -> bool {
     match v {
@@ -154,198 +389,240 @@ fn text(v: Option<&Value>) -> String {
 }
 
 /// `values[0][i]`, which throws when `values` is empty.
-fn first_value(values: &Value, i: usize) -> R<Option<&Value>> {
+fn first_value(values: &[Vec<Value>], i: usize) -> R<Option<&Value>> {
     let first =
-        values.get(0).ok_or_else(|| DisplayError("Cannot read properties of undefined (reading '1')".into()))?;
+        values.first().ok_or_else(|| DisplayError("Cannot read properties of undefined (reading '1')".into()))?;
     Ok(first.get(i))
 }
 
-fn values_len(values: Option<&Value>) -> usize {
-    values.and_then(Value::as_array).map_or(0, Vec::len)
+/// `parseFetchResult`: a listing as the trade site sent it.
+pub fn parse_fetch_result(d: &Data, result: &Value) -> R<DisplayItem> {
+    let fetched: FetchResult =
+        serde_json::from_value(result.clone()).map_err(|error| DisplayError(error.to_string()))?;
+    display_item(d, &fetched)
 }
 
-/// `parseFetchResult`
-pub fn parse_fetch_result(d: &Data, result: &Value) -> R<DisplayItem> {
-    let item = result.get("item").unwrap_or(&Value::Null);
+/// `parseFetchResult` on an already parsed listing.
+fn display_item(d: &Data, result: &FetchResult) -> R<DisplayItem> {
+    let item = &result.item;
 
     let mut title = Vec::new();
-    if let Some(name) = get(item, "name").and_then(Value::as_str).filter(|n| !n.is_empty()) {
-        title.push(name.to_owned());
+    if let Some(name) = item.name.as_ref().filter(|n| !n.is_empty()) {
+        title.push(name.clone());
     }
-    if truthy(item.get("typeLine")) {
-        title.push(text(item.get("typeLine")));
+    if truthy(item.type_line.as_ref()) {
+        title.push(text(item.type_line.as_ref()));
     }
 
     let mut item_tags = Vec::new();
     // Exclusive to every other tag but corrupted.
-    if item.get("identified") == Some(&Value::Bool(false)) {
-        let tag = if truthy(item.get("unidentifiedTier")) {
-            format!("Unidentified (Tier {})", text(item.get("unidentifiedTier")))
+    if item.identified.as_ref() == Some(&Value::Bool(false)) {
+        let tag = if truthy(item.unidentified_tier.as_ref()) {
+            format!("Unidentified (Tier {})", text(item.unidentified_tier.as_ref()))
         } else {
             "item.unidentified".to_owned()
         };
-        item_tags.push(DisplayItemLine::new(tag, None, color(colors::UNMET)));
+        item_tags.push(DisplayItemLine::new(tag, None, Some(color(colors::UNMET))));
     }
     // The rest should be exclusive.
-    if truthy(item.get("doubleCorrupted")) {
-        item_tags.push(DisplayItemLine::new(d.s("DOUBLE_CORRUPTED"), None, color(colors::UNMET)));
-    } else if truthy(item.get("corrupted")) {
-        item_tags.push(DisplayItemLine::new(d.s("CORRUPTED"), None, color(colors::UNMET)));
+    if truthy(item.double_corrupted.as_ref()) {
+        item_tags.push(DisplayItemLine::new(d.s("DOUBLE_CORRUPTED"), None, Some(color(colors::UNMET))));
+    } else if truthy(item.corrupted.as_ref()) {
+        item_tags.push(DisplayItemLine::new(d.s("CORRUPTED"), None, Some(color(colors::UNMET))));
     }
-    if truthy(item.get("duplicated")) {
-        item_tags.push(DisplayItemLine::new(d.s("MIRRORED"), None, color(colors::AUGMENTED)));
+    if truthy(item.duplicated.as_ref()) {
+        item_tags.push(DisplayItemLine::new(d.s("MIRRORED"), None, Some(color(colors::AUGMENTED))));
     }
-    if truthy(item.get("sanctified")) {
-        item_tags.push(DisplayItemLine::new(d.s("SANCTIFIED"), None, color(colors::SANCTIFIED)));
+    if truthy(item.sanctified.as_ref()) {
+        item_tags.push(DisplayItemLine::new(d.s("SANCTIFIED"), None, Some(color(colors::SANCTIFIED))));
     }
 
-    let extended = get(item, "extended");
-    let mod_block = |key: &str, block_color: Option<f64>, kind: &str| {
+    let extended = item.extended.as_ref();
+    let mod_block = |translated: Option<&Mods>, block_color: Option<f64>, kind: &str| {
         parse_mod_block(
-            get(item, key),
+            translated,
             block_color.unwrap_or(colors::AUGMENTED),
-            extended.and_then(|e| get(e, "mods")).and_then(|m| get(m, kind)),
-            extended.and_then(|e| get(e, "hashes")).and_then(|h| get(h, kind)),
+            extended.and_then(|e| e.mods.as_ref()).and_then(|m| m.get(kind)).map(Vec::as_slice),
+            extended.and_then(|e| e.hashes.as_ref()).and_then(|h| h.get(kind)).map(Vec::as_slice),
         )
     };
 
-    let veiled_mods = get(item, "veiledMods").and_then(Value::as_array).map(|mods| {
+    let veiled_mods = item.veiled_mods.as_ref().map(|mods| {
         mods.iter()
             .map(|vm| {
                 let t = match vm {
-                    Value::String(s) => s.clone(),
-                    other => text(other.get("description")),
+                    VeiledMod::Text(s) => s.clone(),
+                    VeiledMod::Rich(m) => text(m.description.as_ref()),
                 };
                 let label = if t.starts_with("Prefix") { "Unrevealed Prefix" } else { "Unrevealed Suffix" };
-                DisplayItemLine::new(label, None, color(colors::DESECRATED))
+                DisplayItemLine::new(label, None, Some(color(colors::DESECRATED)))
             })
             .collect()
     });
 
     Ok(DisplayItem {
         title,
-        rarity: get(item, "rarity").cloned(),
-        frame_type: get(item, "frameType").cloned(),
-        name_block: build_name_block(extended, get(item, "properties"))?,
-        item_props: build_item_props(item.get("ilvl"), get(item, "requirements"))?,
-        grant_skill: build_grant_skill_block(get(item, "grantedSkills"))?,
-        enchant_mods: mod_block("enchantMods", Some(colors::ENCHANT), "enchant"),
-        rune_mods: mod_block("runeMods", Some(colors::ENCHANT), "rune"),
-        implicit_mods: mod_block("implicitMods", None, "implicit"),
-        fractured_mods: mod_block("fracturedMods", Some(colors::FRACTURED), "fractured"),
-        explicit_mods: mod_block("explicitMods", None, "explicit"),
-        crafted_mods: mod_block("craftedMods", None, "crafted"),
-        desecrated_mods: mod_block("desecratedMods", Some(colors::DESECRATED), "desecrated"),
-        mutated_mods: mod_block("mutatedMods", Some(colors::MUTATED), "mutated"),
-        pseudo_mods: mod_block("pseudoMods", None, "pseudo"),
+        rarity: item.rarity.clone(),
+        frame_type: item.frame_type.clone(),
+        name_block: build_name_block(extended, item.properties.as_deref())?,
+        item_props: build_item_props(item.ilvl.as_ref(), item.requirements.as_deref())?,
+        grant_skill: build_grant_skill_block(item.granted_skills.as_deref())?,
+        enchant_mods: mod_block(item.enchant_mods.as_ref(), Some(colors::ENCHANT), "enchant"),
+        rune_mods: mod_block(item.rune_mods.as_ref(), Some(colors::ENCHANT), "rune"),
+        implicit_mods: mod_block(item.implicit_mods.as_ref(), None, "implicit"),
+        fractured_mods: mod_block(item.fractured_mods.as_ref(), Some(colors::FRACTURED), "fractured"),
+        explicit_mods: mod_block(item.explicit_mods.as_ref(), None, "explicit"),
+        crafted_mods: mod_block(item.crafted_mods.as_ref(), None, "crafted"),
+        desecrated_mods: mod_block(item.desecrated_mods.as_ref(), Some(colors::DESECRATED), "desecrated"),
+        mutated_mods: mod_block(item.mutated_mods.as_ref(), Some(colors::MUTATED), "mutated"),
+        pseudo_mods: mod_block(item.pseudo_mods.as_ref(), None, "pseudo"),
         veiled_mods,
-        sockets: get(item, "sockets").cloned(),
+        sockets: item.sockets.clone(),
         item_tags,
-        icon: Icon { url: get(item, "icon").cloned(), w: get(item, "w").cloned(), h: get(item, "h").cloned() },
+        icon: Icon { url: item.icon.clone(), w: item.w.clone(), h: item.h.clone() },
     })
 }
 
 /// `parseModBlock`: strings (tiers from `extended`) or objects (tiers inline).
 /// A missing color is `TradeNumberColors.Augmented`, the parameter's default.
 fn parse_mod_block(
-    translated: Option<&Value>,
+    translated: Option<&Mods>,
     block_color: f64,
-    mods: Option<&Value>,
-    hashes: Option<&Value>,
+    mods: Option<&[TradeModMetadata]>,
+    hashes: Option<&[TradeModHashes]>,
 ) -> Option<Vec<DisplayItemLine>> {
-    let lines = translated?.as_array()?;
-    if lines.is_empty() {
-        return Some(Vec::new());
+    let lines = translated?;
+    match lines {
+        Mods::Text(lines) => {
+            if lines.is_empty() {
+                return Some(Vec::new());
+            }
+            Some(
+                lines
+                    .iter()
+                    .enumerate()
+                    .map(|(index, s)| DisplayItemLine {
+                        text: parse_affix_strings(s),
+                        tier: get_tier(index, mods, hashes),
+                        value: None,
+                        color: Some(color(block_color)),
+                    })
+                    .collect(),
+            )
+        }
+        Mods::Rich(lines) => {
+            if lines.is_empty() {
+                return Some(Vec::new());
+            }
+            Some(
+                lines
+                    .iter()
+                    .map(|s| DisplayItemLine {
+                        text: parse_affix_strings(&text(s.description.as_ref())),
+                        tier: get_tier_v2(s.mods.as_deref()),
+                        value: None,
+                        color: Some(color(block_color)),
+                    })
+                    .collect(),
+            )
+        }
     }
-    if lines[0].is_string() {
-        return Some(
-            lines
-                .iter()
-                .enumerate()
-                .map(|(index, s)| DisplayItemLine {
-                    text: parse_affix_strings(&text(Some(s))),
-                    tier: get_tier(index, mods, hashes),
-                    value: None,
-                    color: color(block_color),
-                })
-                .collect(),
-        );
-    }
-    Some(
-        lines
-            .iter()
-            .map(|s| DisplayItemLine {
-                text: parse_affix_strings(&text(s.get("description"))),
-                tier: get_tier_v2(get(s, "mods")),
-                value: None,
-                color: color(block_color),
-            })
-            .collect(),
-    )
 }
 
 /// `getTier`: the tiers of the mods a line's hash points to.
-fn get_tier(display_index: usize, mods: Option<&Value>, hashes: Option<&Value>) -> Option<String> {
-    let mods = mods?.as_array().filter(|m| !m.is_empty())?;
+fn get_tier(
+    display_index: usize,
+    mods: Option<&[TradeModMetadata]>,
+    hashes: Option<&[TradeModHashes]>,
+) -> Option<String> {
+    let mods = mods.filter(|m| !m.is_empty())?;
     let entry = hashes?.get(display_index)?;
-    let indexes = get(entry, "1").or_else(|| entry.get(1)).filter(|x| !x.is_null())?.as_array()?;
+    let indexes = entry.1.as_ref()?;
     let tiers: Vec<String> = indexes
         .iter()
-        .filter_map(|i| i.as_u64().and_then(|i| mods.get(i as usize)))
-        .filter_map(|m| get(m, "tier"))
+        .filter_map(|i| usize::try_from(*i).ok().and_then(|i| mods.get(i)))
+        .filter_map(|m| m.tier.as_ref())
         .map(|t| text(Some(t)))
         .collect();
     Some(tiers.join(" + "))
 }
 
 /// `getTierV2`: the tiers of a line's mods (`undefined` joins as empty).
-fn get_tier_v2(mods: Option<&Value>) -> Option<String> {
-    let mods = mods?.as_array().filter(|m| !m.is_empty())?;
-    Some(mods.iter().map(|m| get(m, "tier").map_or(String::new(), |t| text(Some(t)))).collect::<Vec<_>>().join(" + "))
+fn get_tier_v2(mods: Option<&[FetchModInfo]>) -> Option<String> {
+    let mods = mods.filter(|m| !m.is_empty())?;
+    Some(
+        mods.iter()
+            .map(|m| m.tier.as_ref().map_or_else(String::new, |t| text(Some(t))))
+            .collect::<Vec<_>>()
+            .join(" + "),
+    )
 }
 
 /// `buildNameBlock`: the item's properties, defences and DPS from `extended`.
-fn build_name_block(extended: Option<&Value>, props: Option<&Value>) -> R<Vec<DisplayItemLine>> {
+fn build_name_block(
+    extended: Option<&FetchResultExtended>,
+    props: Option<&[TradeDataRichLine]>,
+) -> R<Vec<DisplayItemLine>> {
     let (Some(extended), Some(props)) = (extended, props) else { return Ok(Vec::new()) };
-    let ext = |key: &str| get(extended, key).cloned();
+    let ext = |value: Option<f64>| value.map(Value::from);
     // `useColor(aug)`
-    let use_color = |key: &str| if truthy(extended.get(key)) { colors::AUGMENTED } else { colors::WHITE };
+    let use_color = |aug: Option<bool>| if aug == Some(true) { colors::AUGMENTED } else { colors::WHITE };
 
     let mut block: Vec<DisplayItemLine> = Vec::new();
     let mut has_damage = false;
-    for p in props.as_array().map(Vec::as_slice).unwrap_or_default() {
-        let values = p.get("values").unwrap_or(&Value::Null);
-        let name = text(p.get("name"));
+    for p in props {
+        let values = p.values.as_slice();
+        let name = text(p.name.as_ref());
         // `useColor(aug) || values[0][1]`
-        let or_value_color = |key: &str| -> R<Option<Value>> {
-            let c = use_color(key);
-            if c != 0.0 { Ok(color(c)) } else { Ok(first_value(values, 1)?.cloned()) }
+        let or_value_color = |aug: Option<bool>| -> R<Option<Value>> {
+            let c = use_color(aug);
+            if c == 0.0 { Ok(first_value(values, 1)?.cloned()) } else { Ok(Some(color(c))) }
         };
-        let label: Option<String> = match p.get("type").and_then(Value::as_i64) {
+        let label: Option<String> = match p.kind {
             Some(prop::WEAPON_PHYSICAL_DAMAGE) => {
-                block.push(DisplayItemLine::new("item.physical_dps", ext("pdps"), color(use_color("pdps_aug"))));
+                block.push(DisplayItemLine::new(
+                    "item.physical_dps",
+                    ext(extended.pdps),
+                    Some(color(use_color(extended.pdps_aug))),
+                ));
                 has_damage = true;
                 continue;
             }
             Some(prop::WEAPON_ELEMENTAL_DAMAGE) => {
-                block.push(DisplayItemLine::new("item.elemental_dps", ext("edps"), color(use_color("edps_aug"))));
+                block.push(DisplayItemLine::new(
+                    "item.elemental_dps",
+                    ext(extended.edps),
+                    Some(color(use_color(extended.edps_aug))),
+                ));
                 has_damage = true;
                 continue;
             }
             Some(prop::ARMOUR_REDUCTION) => {
-                block.push(DisplayItemLine::new("item.armour", ext("ar"), or_value_color("ar_aug")?));
+                block.push(DisplayItemLine::new("item.armour", ext(extended.ar), or_value_color(extended.ar_aug)?));
                 continue;
             }
             Some(prop::ARMOUR_EVASION) => {
-                block.push(DisplayItemLine::new("item.evasion_rating", ext("ev"), or_value_color("ev_aug")?));
+                block.push(DisplayItemLine::new(
+                    "item.evasion_rating",
+                    ext(extended.ev),
+                    or_value_color(extended.ev_aug)?,
+                ));
                 continue;
             }
             Some(prop::ARMOUR_ENERGY_SHIELD) => {
-                block.push(DisplayItemLine::new("item.energy_shield", ext("es"), or_value_color("es_aug")?));
+                block.push(DisplayItemLine::new(
+                    "item.energy_shield",
+                    ext(extended.es),
+                    or_value_color(extended.es_aug)?,
+                ));
                 continue;
             }
             Some(prop::ARMOUR_WARD) => {
-                block.push(DisplayItemLine::new("item.runic_ward", ext("ward"), or_value_color("ward_aug")?));
+                block.push(DisplayItemLine::new(
+                    "item.runic_ward",
+                    ext(extended.ward),
+                    or_value_color(extended.ward_aug)?,
+                ));
                 continue;
             }
             Some(prop::QUALITY) => Some(format!("{}: {{0}}", parse_affix_strings(&name))),
@@ -363,61 +640,64 @@ fn build_name_block(extended: Option<&Value>, props: Option<&Value>) -> R<Vec<Di
             Some(prop::MAP_ITEM_DROP_CHANCE_BONUS) => Some("item.map_drop_chance".into()),
             Some(prop::MAP_RARITY_BONUS) => Some("item.map_item_rarity".into()),
             Some(prop::MAP_GOLD_QUANTITY_BONUS) => Some("item.map_gold".into()),
-            Some(prop::MAP_QUANTITY_BONUS) | Some(_) | None => None,
+            Some(prop::MAP_QUANTITY_BONUS | _) | None => None,
         };
 
-        let has_values = values_len(Some(values)) > 0;
+        let has_values = !values.is_empty();
         // If there is a value, there should be just one.
         block.push(DisplayItemLine::new(
             label.unwrap_or_else(|| format!("{} ", parse_affix_strings(&name))),
             Some(if has_values { first_value(values, 0)?.cloned().unwrap_or(Value::Null) } else { Value::from("") }),
-            if has_values { first_value(values, 1)?.cloned() } else { color(colors::WHITE) },
+            if has_values { first_value(values, 1)?.cloned() } else { Some(color(colors::WHITE)) },
         ));
     }
-    if has_damage {
-        let index = block.iter().position(|l| l.text.contains("dps")).expect("a dps line was pushed");
-        block.insert(index, DisplayItemLine::new("item.total_dps", ext("dps"), color(use_color("dps_aug"))));
+    if has_damage && let Some(index) = block.iter().position(|l| l.text.contains("dps")) {
+        block.insert(
+            index,
+            DisplayItemLine::new("item.total_dps", ext(extended.dps), Some(color(use_color(extended.dps_aug)))),
+        );
     }
     Ok(block)
 }
 
 /// `buildItemProps`: item level and requirements.
-fn build_item_props(ilvl: Option<&Value>, requirements: Option<&Value>) -> R<Option<Vec<DisplayItemLine>>> {
+fn build_item_props(
+    ilvl: Option<&Value>,
+    requirements: Option<&[TradeDataRichLine]>,
+) -> R<Option<Vec<DisplayItemLine>>> {
     if !truthy(ilvl) && requirements.is_none() {
         return Ok(None);
     }
     let mut block = Vec::new();
     if truthy(ilvl) {
-        block.push(DisplayItemLine::new("item.item_level", ilvl.cloned(), color(colors::WHITE)));
+        block.push(DisplayItemLine::new("item.item_level", ilvl.cloned(), Some(color(colors::WHITE))));
     }
-    if let Some(reqs) = requirements.and_then(Value::as_array).filter(|r| !r.is_empty()) {
-        let first_text =
-            |r: &Value| -> R<String> { Ok(text(first_value(r.get("values").unwrap_or(&Value::Null), 0)?)) };
-        let mut value = first_value(reqs[0].get("values").unwrap_or(&Value::Null), 0)?.cloned().unwrap_or(Value::Null);
-        if reqs.len() > 1 {
-            let mut rest = Vec::new();
-            for r in &reqs[1..] {
-                rest.push(format!("{} {}", first_text(r)?, text(r.get("name"))));
-            }
-            value = Value::from(parse_affix_strings(&format!("{}, {}", text(Some(&value)), rest.join(", "))));
+    if let Some((first, rest)) = requirements.and_then(<[TradeDataRichLine]>::split_first) {
+        let mut value = first_value(&first.values, 0)?.cloned().unwrap_or(Value::Null);
+        if !rest.is_empty() {
+            let parts = rest
+                .iter()
+                .map(|r| -> R<String> { Ok(format!("{} {}", text(first_value(&r.values, 0)?), text(r.name.as_ref()))) })
+                .collect::<R<Vec<_>>>()?;
+            value = Value::from(parse_affix_strings(&format!("{}, {}", text(Some(&value)), parts.join(", "))));
         }
         // No colon for requirements.
         block.push(DisplayItemLine::new(
-            format!("{} ", parse_affix_strings(&text(reqs[0].get("name")))),
+            format!("{} ", parse_affix_strings(&text(first.name.as_ref()))),
             Some(value),
-            color(colors::WHITE),
+            Some(color(colors::WHITE)),
         ));
     }
     Ok(Some(block))
 }
 
 /// `buildGrantSkillBlock`
-fn build_grant_skill_block(skills: Option<&Value>) -> R<Vec<DisplayItemLine>> {
+fn build_grant_skill_block(skills: Option<&[TradeDataRichLine]>) -> R<Vec<DisplayItemLine>> {
     let mut block = Vec::new();
-    for skill in skills.and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default() {
-        let values = skill.get("values").unwrap_or(&Value::Null);
+    for skill in skills.unwrap_or_default() {
+        let values = skill.values.as_slice();
         block.push(DisplayItemLine::new(
-            format!("{}: ", parse_affix_strings(&text(skill.get("name")))),
+            format!("{}: ", parse_affix_strings(&text(skill.name.as_ref()))),
             Some(Value::from(parse_affix_strings(&text(first_value(values, 0)?)))),
             first_value(values, 1)?.cloned(),
         ));
@@ -430,14 +710,18 @@ mod row_tests {
     use super::*;
     use crate::data::tests::en;
 
+    fn recorded_answer() -> Value {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/ee2/renderer/specs/docs/fetchResponses.json");
+        serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap()
+    }
+
     #[test]
     fn rows_from_ee2s_recorded_answer() {
-        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/ee2/renderer/specs/docs/fetchResponses.json");
-        let answer: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
-        let listings = answer["result"].as_array().unwrap();
+        let answer = recorded_answer();
+        let listings: Vec<FetchResult> = serde_json::from_value(answer["result"].clone()).unwrap();
         let mut prices = crate::prices::Prices::default();
         let now = wraex_core::relative_time::parse_iso("2026-01-07T18:47:51Z").unwrap();
-        let rows = pricing_results(en(), &mut prices, listings, "joukerone#4206", now);
+        let rows = pricing_results(en(), &mut prices, &listings, "joukerone#4206", now);
         assert_eq!(rows.len(), 21);
         let first = &rows[0];
         assert_eq!((first.price_amount, first.price_currency.as_str()), (2.0, "regal"));
@@ -453,16 +737,14 @@ mod row_tests {
     /// of each explicit line of a listing's tooltip.
     #[test]
     fn listing_tooltips_keep_their_affix_tiers() {
-        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/ee2/renderer/specs/docs/fetchResponses.json");
-        let answer: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let answer = recorded_answer();
+        let listings: Vec<FetchResult> = serde_json::from_value(answer["result"].clone()).unwrap();
         let tiers = |prefix: &str| {
-            let result = answer["result"]
-                .as_array()
-                .unwrap()
+            let result = listings
                 .iter()
-                .find(|result| result["id"].as_str().unwrap_or_default().starts_with(prefix))
+                .find(|result| result.id.starts_with(prefix))
                 .unwrap_or_else(|| panic!("no result {prefix}"));
-            let display = parse_fetch_result(en(), result).unwrap();
+            let display = display_item(en(), result).unwrap();
             display
                 .explicit_mods
                 .unwrap()
@@ -544,18 +826,30 @@ pub struct PricingResult {
 }
 
 /// `prop.values[0][0]` of the first property of `kind`.
-fn property(item: &Value, kind: i64) -> Option<Value> {
-    let prop =
-        item.get("properties")?.as_array()?.iter().find(|p| p.get("type").and_then(Value::as_i64) == Some(kind))?;
-    prop.get("values")?.get(0)?.get(0).cloned()
+fn property(item: &FetchItem, kind: i64) -> Option<Value> {
+    let prop = item.properties.as_ref()?.iter().find(|p| p.kind == Some(kind))?;
+    prop.values.first()?.first().cloned()
 }
 
 /// `getCurrencyDetailsId`: the poe.ninja query for a trade currency id.
 fn currency_details_id(d: &Data, id: &str) -> crate::prices::DbQuery {
-    match d.trade_tag_to_ref(id) {
-        Some(ref_name) => crate::prices::DbQuery { ns: "ITEM".into(), name: ref_name.to_owned(), variant: None },
+    d.trade_tag_to_ref(id).map_or_else(
         // Not a value, so nothing matches.
-        None => crate::prices::DbQuery { ns: "nan ns".into(), name: "nan item".into(), variant: None },
+        || crate::prices::DbQuery { ns: "nan ns".into(), name: "nan item".into(), variant: None },
+        |ref_name| crate::prices::DbQuery { ns: "ITEM".into(), name: ref_name.to_owned(), variant: None },
+    )
+}
+
+/// `account.online ? (status === "afk" ? "afk" : "online") : "offline"`, with
+/// JavaScript truthiness for the value.
+fn account_status(online: Option<&Value>) -> AccountStatus {
+    match online {
+        Some(Value::Object(map)) => match map.get("status") {
+            Some(Value::String(status)) if status == "afk" => AccountStatus::Afk,
+            _ => AccountStatus::Online,
+        },
+        Some(value) if truthy(Some(value)) => AccountStatus::Online,
+        _ => AccountStatus::Offline,
     }
 }
 
@@ -564,19 +858,19 @@ fn currency_details_id(d: &Data, id: &str) -> crate::prices::DbQuery {
 pub fn pricing_results(
     d: &Data,
     prices: &mut crate::prices::Prices,
-    listings: &[Value],
+    listings: &[FetchResult],
     account_name: &str,
     now: wraex_core::relative_time::EpochMillis,
 ) -> Vec<PricingResult> {
     listings
         .iter()
         .map(|result| {
-            let item = result.get("item").unwrap_or(&Value::Null);
-            let listing = result.get("listing").unwrap_or(&Value::Null);
-            let account = listing.get("account").unwrap_or(&Value::Null);
-            let price = get(listing, "price");
+            let item = &result.item;
+            let listing = &result.listing;
+            let account = &listing.account;
+            let price = listing.price.as_ref();
 
-            let mut currency = price.and_then(|p| get(p, "currency")).map(|c| text(Some(c)));
+            let mut currency = price.and_then(|p| p.currency.clone());
             let mut rank = None;
             if let Some(converted) =
                 currency.as_deref().and_then(|c| CONVERT_CURRENCY.iter().find(|(id, _)| *id == c)).map(|(_, v)| *v)
@@ -588,7 +882,7 @@ pub fn pricing_results(
                 };
                 currency = Some(converted.to_owned());
             }
-            let amount = price.and_then(|p| p.get("amount")).and_then(Value::as_f64);
+            let amount = price.and_then(|p| p.amount);
             let currency = currency.unwrap_or_else(|| "no price".to_owned());
 
             let query = currency_details_id(d, &currency);
@@ -600,23 +894,23 @@ pub fn pricing_results(
             };
 
             // `gemSockets.length`, else the fewest of the socketed items'.
-            let len = |v: Option<&Value>| v.and_then(Value::as_array).map(Vec::len);
-            let gem_sockets = len(item.get("gemSockets")).filter(|&n| n > 0).or_else(|| {
-                let socketed = item.get("socketedItems")?.as_array()?;
-                socketed.iter().filter_map(|s| len(get(s, "gemSockets"))).min()
+            let len = |v: Option<&Vec<Value>>| v.map(Vec::len);
+            let gem_sockets = len(item.gem_sockets.as_ref()).filter(|&n| n > 0).or_else(|| {
+                let socketed = item.socketed_items.as_ref()?;
+                socketed.iter().filter_map(|s| len(s.gem_sockets.as_ref())).min()
             });
 
             PricingResult {
-                id: text(result.get("id")),
-                item_level: property(item, 78).map_or_else(|| text(item.get("ilvl")), |v| text(Some(&v))),
-                stack_size: get(item, "stackSize").cloned(),
-                corrupted: get(item, "corrupted").cloned(),
+                id: result.id.clone(),
+                item_level: property(item, 78).map_or_else(|| text(item.ilvl.as_ref()), |v| text(Some(&v))),
+                stack_size: item.stack_size.clone(),
+                corrupted: item.corrupted.clone(),
                 quality: property(item, 6),
                 level: property(item, 5),
                 gem_sockets,
                 relative_date: listing
-                    .get("indexed")
-                    .and_then(Value::as_str)
+                    .indexed
+                    .as_deref()
                     .and_then(|i| wraex_core::relative_time::iso_to_relative_short(i, now))
                     .unwrap_or_default(),
                 price_amount: amount.unwrap_or(0.0),
@@ -624,20 +918,21 @@ pub fn pricing_results(
                 price_currency_rank: rank,
                 normalized_price: normalized.map(|n| crate::prices::display_rounding(n.min, false, false)),
                 normalized_price_currency,
-                is_mine: account.get("name").and_then(Value::as_str) == Some(account_name),
-                has_note: get(item, "note").is_some(),
-                is_instant_buyout: get(listing, "fee").is_some(),
-                account_name: text(account.get("name")),
-                account_status: match get(account, "online") {
-                    Some(online) if online.get("status").and_then(Value::as_str) == Some("afk") => AccountStatus::Afk,
-                    Some(_) => AccountStatus::Online,
-                    None => AccountStatus::Offline,
-                },
-                ign: text(account.get("lastCharacterName")),
-                display_item: parse_fetch_result(d, result).ok(),
-                in_demand: get(listing, "in_demand").cloned(),
-                gone: get(result, "gone").cloned(),
+                is_mine: account.name.as_deref() == Some(account_name),
+                has_note: item.note.is_some(),
+                is_instant_buyout: listing.fee.is_some(),
+                account_name: text_of(account.name.as_deref()),
+                account_status: account_status(account.online.as_ref()),
+                ign: text_of(account.last_character_name.as_deref()),
+                display_item: display_item(d, result).ok(),
+                in_demand: listing.in_demand.clone(),
+                gone: result.gone.clone(),
             }
         })
         .collect()
+}
+
+/// `${x}` of a string the site may omit (`undefined`).
+fn text_of(value: Option<&str>) -> String {
+    value.map_or_else(|| "undefined".to_owned(), str::to_owned)
 }

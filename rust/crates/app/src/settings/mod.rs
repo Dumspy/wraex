@@ -36,6 +36,8 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use rune::{Latest, TextEdit, Waker};
+use serde::Deserialize;
+use serde::de::{DeserializeOwned, Deserializer};
 use serde_json::Value;
 use wraex_core::GameId;
 use wraex_core::config_store::ConfigStore;
@@ -68,69 +70,69 @@ pub enum Page {
 
 impl Page {
     /// Every page, in menu order.
-    pub const ALL: [Page; 9] = [
-        Page::Hotkeys,
-        Page::Chat,
-        Page::General,
-        Page::PriceCheck,
-        Page::Maps,
-        Page::ItemCheck,
-        Page::Leveling,
-        Page::Debug,
-        Page::About,
+    pub const ALL: [Self; 9] = [
+        Self::Hotkeys,
+        Self::Chat,
+        Self::General,
+        Self::PriceCheck,
+        Self::Maps,
+        Self::ItemCheck,
+        Self::Leveling,
+        Self::Debug,
+        Self::About,
     ];
 
     /// The menu's groups: a separator goes under each group (`flatJoin`).
-    pub const MENU: [&'static [Page]; 5] = [
-        &[Page::Hotkeys, Page::Chat],
-        &[Page::General],
-        &[Page::PriceCheck, Page::Maps, Page::ItemCheck],
-        &[Page::Leveling],
-        &[Page::Debug, Page::About],
+    pub const MENU: [&'static [Self]; 5] = [
+        &[Self::Hotkeys, Self::Chat],
+        &[Self::General],
+        &[Self::PriceCheck, Self::Maps, Self::ItemCheck],
+        &[Self::Leveling],
+        &[Self::Debug, Self::About],
     ];
 
     /// Whether the game has this page: APT has no leveling widget, so its settings window has
     /// no Leveling page either.
     pub fn applies_to(self, game: GameId) -> bool {
-        self != Page::Leveling || game == GameId::Poe2
+        self != Self::Leveling || game == GameId::Poe2
     }
 
     /// The pages of `game`, in menu order.
-    pub fn for_game(game: GameId) -> impl Iterator<Item = Page> {
-        Page::ALL.into_iter().filter(move |page| page.applies_to(game))
+    pub fn for_game(game: GameId) -> impl Iterator<Item = Self> {
+        Self::ALL.into_iter().filter(move |page| page.applies_to(game))
     }
 
     /// The `--scene` suffix and the element keys' prefix.
-    pub fn slug(self) -> &'static str {
+    pub const fn slug(self) -> &'static str {
         match self {
-            Page::Hotkeys => "hotkeys",
-            Page::Chat => "chat",
-            Page::General => "general",
-            Page::PriceCheck => "price-check",
-            Page::Maps => "maps",
-            Page::ItemCheck => "item-check",
-            Page::Leveling => "leveling",
-            Page::Debug => "debug",
-            Page::About => "about",
+            Self::Hotkeys => "hotkeys",
+            Self::Chat => "chat",
+            Self::General => "general",
+            Self::PriceCheck => "price-check",
+            Self::Maps => "maps",
+            Self::ItemCheck => "item-check",
+            Self::Leveling => "leveling",
+            Self::Debug => "debug",
+            Self::About => "about",
         }
     }
 
     pub fn from_slug(slug: &str) -> Option<Self> {
-        Page::ALL.into_iter().find(|page| page.slug() == slug)
+        Self::ALL.into_iter().find(|page| page.slug() == slug)
     }
 
     /// The menu item's label (`t(component.name)`, where the component names its i18n key).
-    pub fn title_key(self) -> &'static str {
+    pub const fn title_key(self) -> &'static str {
         match self {
-            Page::Hotkeys => "settings.hotkeys",
-            Page::Chat => "settings.chat",
-            Page::General => "settings.general",
-            Page::PriceCheck => "price_check.name",
-            Page::Maps => "map_check.name",
-            Page::ItemCheck => "item.info",
-            Page::Leveling => "leveling.name",
-            Page::Debug => "settings.debug",
-            Page::About => "settings.about",
+            Self::Hotkeys => "settings.hotkeys",
+            Self::Chat => "settings.chat",
+            Self::General => "settings.general",
+            Self::PriceCheck => "price_check.name",
+            Self::Maps => "map_check.name",
+            Self::ItemCheck => "item.info",
+            Self::Leveling => "leveling.name",
+            Self::Debug => "settings.debug",
+            Self::About => "settings.about",
         }
     }
 }
@@ -146,59 +148,117 @@ pub enum Field {
 }
 
 impl Field {
+    /// `configModelValue(config, key)`: the value at the key, or null.
     pub fn read(self, config: &Value) -> &Value {
-        match self {
-            Field::Root(key) => config.get(key).unwrap_or(&Value::Null),
-            Field::Widget(wm_type, key) => widget(config, wm_type).and_then(|w| w.get(key)).unwrap_or(&Value::Null),
-            Field::Command(index, key) => {
-                config["commands"].get(index).and_then(|command| command.get(key)).unwrap_or(&Value::Null)
-            }
-            Field::Maps(key) => widget(config, "item-check")
-                .and_then(|w| w.get("maps"))
-                .and_then(|maps| maps.get(key))
-                .unwrap_or(&Value::Null),
-        }
+        let (target, key) = match self {
+            Self::Root(key) => (Some(config), key),
+            Self::Widget(wm_type, key) => (widget(config, wm_type), key),
+            Self::Command(index, key) => (command(config, index), key),
+            Self::Maps(key) => (maps(config), key),
+        };
+        target.and_then(|target| object_entry(target, key)).unwrap_or(&Value::Null)
     }
 
+    /// The `configModelValue` setter: write the key, when its object exists.
     pub fn write(self, config: &mut Value, value: Value) {
-        let target = match self {
-            Field::Root(_) => Some(config),
-            Field::Widget(wm_type, _) => widget_mut(config, wm_type),
-            Field::Command(index, _) => config.get_mut("commands").and_then(|commands| commands.get_mut(index)),
-            Field::Maps(_) => maps_mut(config),
-        };
-        let key = match self {
-            Field::Root(key) | Field::Maps(key) => key,
-            Field::Widget(_, key) | Field::Command(_, key) => key,
+        let (target, key) = match self {
+            Self::Root(key) => (Some(config), key),
+            Self::Widget(wm_type, key) => (widget_mut(config, wm_type), key),
+            Self::Command(index, key) => (command_mut(config, index), key),
+            Self::Maps(key) => (maps_mut(config), key),
         };
         if let Some(target) = target
-            && let Some(object) = target.as_object_mut()
+            && let Value::Object(object) = target
         {
             object.insert(key.to_owned(), value);
         }
     }
 }
 
+/// `value[key]` when `value` is an object (`undefined` otherwise).
+fn object_entry<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {
+    match value {
+        Value::Object(map) => map.get(key),
+        _ => None,
+    }
+}
+
+/// `config.commands[index]` (`props.config.commands[i]`).
+fn command(config: &Value, index: usize) -> Option<&Value> {
+    match object_entry(config, "commands")? {
+        Value::Array(commands) => commands.get(index),
+        _ => None,
+    }
+}
+
+/// `config.commands[index]`, writable.
+fn command_mut(config: &mut Value, index: usize) -> Option<&mut Value> {
+    match config {
+        Value::Object(map) => match map.get_mut("commands") {
+            Some(Value::Array(commands)) => commands.get_mut(index),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+/// `config.commands`, writable (`addCommand`/`removeCommand`).
+pub fn commands_mut(config: &mut Value) -> Option<&mut Vec<Value>> {
+    match config {
+        Value::Object(map) => match map.get_mut("commands") {
+            Some(Value::Array(commands)) => Some(commands),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
 /// `findWidget(type, config)`
 pub fn widget<'a>(config: &'a Value, wm_type: &str) -> Option<&'a Value> {
-    config["widgets"].as_array()?.iter().find(|w| w["wmType"] == wm_type)
+    let Value::Array(widgets) = object_entry(config, "widgets")? else {
+        return None;
+    };
+    widgets.iter().find(|widget| widget_type(widget) == Some(wm_type))
 }
 
 /// `findWidget(type, config)`, writable.
 pub fn widget_mut<'a>(config: &'a mut Value, wm_type: &str) -> Option<&'a mut Value> {
-    config["widgets"].as_array_mut()?.iter_mut().find(|w| w["wmType"] == wm_type)
+    let widgets = match config {
+        Value::Object(map) => match map.get_mut("widgets") {
+            Some(Value::Array(widgets)) => widgets,
+            _ => return None,
+        },
+        _ => return None,
+    };
+    widgets.iter_mut().find(|widget| widget_type(widget) == Some(wm_type))
+}
+
+/// `widget.wmType`; a missing or non-string one never matches a requested type.
+fn widget_type(widget: &Value) -> Option<&str> {
+    match object_entry(widget, "wmType")? {
+        Value::String(wm_type) => Some(wm_type),
+        _ => None,
+    }
 }
 
 /// The item check's `maps` object (`ItemCheckWidget.maps`).
+pub fn maps(config: &Value) -> Option<&Value> {
+    object_entry(widget(config, "item-check")?, "maps")
+}
+
+/// The item check's `maps` object (`ItemCheckWidget.maps`), writable.
 pub fn maps_mut(config: &mut Value) -> Option<&mut Value> {
-    widget_mut(config, "item-check")?.get_mut("maps")
+    match widget_mut(config, "item-check")? {
+        Value::Object(map) => map.get_mut("maps"),
+        _ => None,
+    }
 }
 
 /// `t(key)` for the window's game.
 pub fn t(game: GameId, key: &str) -> String {
     match game {
         GameId::Poe2 => crate::poe2::i18n::t(key),
-        _ => crate::poe1::i18n::t(key),
+        GameId::Poe1 => crate::poe1::i18n::t(key),
     }
 }
 
@@ -206,8 +266,77 @@ pub fn t(game: GameId, key: &str) -> String {
 pub fn fmt(game: GameId, key: &str, args: &[&str]) -> String {
     match game {
         GameId::Poe2 => crate::poe2::i18n::fmt(key, args),
-        _ => crate::poe1::i18n::fmt(key, args),
+        GameId::Poe1 => crate::poe1::i18n::fmt(key, args),
     }
+}
+
+/// An entry of `Config.commands` as the settings pages read it (`web/Config.ts`): each field
+/// leniently, so a hand-edited value of another type falls back as the old `?.field` chains did.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct CommandView {
+    #[serde(deserialize_with = "lenient")]
+    pub text: Option<String>,
+    #[serde(deserialize_with = "lenient")]
+    pub hotkey: Option<String>,
+    #[serde(deserialize_with = "lenient")]
+    pub send: Option<bool>,
+}
+
+impl CommandView {
+    /// A command entry; anything that is not an object reads as the defaults.
+    fn read(command: &Value) -> Self {
+        Self::deserialize(command).unwrap_or_default()
+    }
+
+    /// `command.text ?? ''`
+    pub fn text(&self) -> &str {
+        self.text.as_deref().unwrap_or_default()
+    }
+
+    /// `command.send ?? false`
+    pub fn send(&self) -> bool {
+        self.send.unwrap_or(false)
+    }
+
+    /// `command.hotkey ?? null`
+    pub fn hotkey(&self) -> Option<&str> {
+        self.hotkey.as_deref()
+    }
+}
+
+/// One config field read as upstream reads it: a value of another JSON type is the same as a
+/// missing one, and the other fields of the same view still read.
+fn lenient<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    let value = Value::deserialize(deserializer)?;
+    Ok(T::deserialize(value).ok())
+}
+
+/// A JSON array of `T`, or the empty list; an entry that is not `T` is skipped, as the old
+/// `as_array` + per-entry `as_str` reads did.
+pub(crate) fn array_or_empty<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: DeserializeOwned,
+{
+    let value = Value::deserialize(deserializer)?;
+    Ok(match value {
+        Value::Array(items) => items.iter().filter_map(|item| T::deserialize(item).ok()).collect(),
+        _ => Vec::new(),
+    })
+}
+
+/// A JSON string, or `""` for null and any other type (upstream's `typeof === 'string'` guard).
+pub(crate) fn string_or_empty<'de, D: Deserializer<'de>>(deserializer: D) -> Result<String, D::Error> {
+    let value = Value::deserialize(deserializer)?;
+    Ok(match value {
+        Value::String(text) => text,
+        _ => String::new(),
+    })
 }
 
 /// The about page's `checkForUpdates` request, off the UI thread: [`Latest`] has no `Debug`,
@@ -323,6 +452,10 @@ impl Settings {
     }
 
     /// `saveConfig()`: the working copy becomes the config, written as compact JSON.
+    #[expect(
+        clippy::expect_used,
+        reason = "a `serde_json::Value` always serialises (string keys, finite numbers), so the only error would be a bug in serde_json"
+    )]
     pub fn save(&mut self) -> std::io::Result<()> {
         let json = serde_json::to_string(&self.config).expect("the config is JSON");
         self.store.save(&json, self.save_temporary)?;
@@ -332,7 +465,7 @@ impl Settings {
     }
 
     /// `cancel()`: hide the window; the working copy is dropped on the next open.
-    pub fn cancel(&mut self) {
+    pub const fn cancel(&mut self) {
         self.open = false;
         self.recording = None;
         self.select_open = None;
@@ -404,8 +537,8 @@ impl Settings {
                 );
             }
             Page::Chat => {
-                for (index, command) in self.commands().iter().enumerate() {
-                    let text = command.get("text").and_then(Value::as_str).unwrap_or_default();
+                for index in 0..self.commands().len() {
+                    let text = self.command(index).text().to_owned();
                     edits.insert(format!("chat-command-{index}"), TextEdit::new(text));
                 }
             }
@@ -422,7 +555,18 @@ impl Settings {
 
     /// `props.config.commands`
     pub fn commands(&self) -> &[Value] {
-        self.config["commands"].as_array().map(Vec::as_slice).unwrap_or_default()
+        match &self.config {
+            Value::Object(map) => match map.get("commands") {
+                Some(Value::Array(commands)) => commands,
+                _ => &[],
+            },
+            _ => &[],
+        }
+    }
+
+    /// `props.config.commands[index]`, as a page reads it.
+    pub fn command(&self, index: usize) -> CommandView {
+        self.commands().get(index).map(CommandView::read).unwrap_or_default()
     }
 
     /// The fields' texts, by element key.
@@ -430,6 +574,10 @@ impl Settings {
         self.edits.get(key)
     }
 
+    #[expect(
+        clippy::panic,
+        reason = "each page binds only the field keys `seed_edits` registered for it; any other key is a programming error"
+    )]
     pub fn edit_mut(&mut self, key: &str) -> &mut TextEdit {
         self.edits.get_mut(key).unwrap_or_else(|| panic!("no text field keyed `{key}`"))
     }
@@ -441,12 +589,15 @@ impl Settings {
 
     /// The boolean at `field` (`configModelValue(..., key)` with a checkbox).
     pub fn bool(&self, field: Field) -> bool {
-        field.read(&self.config).as_bool().unwrap_or(false)
+        matches!(field.read(&self.config), Value::Bool(true))
     }
 
     /// The string at `field`; null and missing are empty.
     pub fn string(&self, field: Field) -> String {
-        field.read(&self.config).as_str().unwrap_or_default().to_owned()
+        match field.read(&self.config) {
+            Value::String(text) => text.clone(),
+            _ => String::new(),
+        }
     }
 
     /// Write a JSON value, as a `configModelValue` setter does.
@@ -493,7 +644,7 @@ fn update_check(mode: Mode, now: u64) -> UpdateInfo {
 pub fn default_config(game: GameId) -> Value {
     match game {
         GameId::Poe2 => wraex_poe2::config::default_config(),
-        _ => wraex_poe1::config::default_config(),
+        GameId::Poe1 => wraex_poe1::config::default_config(),
     }
 }
 
@@ -509,7 +660,7 @@ pub(crate) fn load_store(game: GameId, store: &ConfigStore) -> Option<Loaded> {
 
 /// `initConfig()`'s reading of a file: the config and whether an unreadable file made it a
 /// temporary save.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Loaded {
     pub config: Value,
     pub save_temporary: bool,
@@ -521,7 +672,7 @@ pub fn load(game: GameId, contents: Option<&str>) -> Loaded {
     let loaded = match game {
         GameId::Poe2 => wraex_poe2::config::load(contents)
             .map(|loaded| Loaded { config: loaded.config, save_temporary: loaded.save_temporary }),
-        _ => wraex_poe1::config::load(contents)
+        GameId::Poe1 => wraex_poe1::config::load(contents)
             .map(|loaded| Loaded { config: loaded.config, save_temporary: loaded.save_temporary }),
     };
     loaded.unwrap_or_else(|_| Loaded { config: default_config(game), save_temporary: true })
@@ -537,14 +688,15 @@ pub fn config_path(game: GameId) -> Option<PathBuf> {
 pub fn config_path_in(game: GameId, app_data: &std::path::Path) -> PathBuf {
     let folder = match game {
         GameId::Poe2 => "Path of Exile 2",
-        _ => "Path of Exile",
+        GameId::Poe1 => "Path of Exile",
     };
     app_data.join("Wraex").join(folder).join("config.json")
 }
 
-/// Where the HTTP transport saves the session's expiring cookies: `cookies.json` in
-/// `Wraex`, beside the per-game settings folders. Electron's default session is one
-/// session for both games, so the jar is one file too.
+/// Where the HTTP transport saves the session's expiring cookies.
+///
+/// `cookies.json` in `Wraex`, beside the per-game settings folders. Electron's default session
+/// is one session for both games, so the jar is one file too.
 pub fn cookies_path() -> Option<PathBuf> {
     Some(cookies_path_in(&app_data_dir()?))
 }
@@ -575,10 +727,10 @@ fn fallback_path(game: GameId) -> PathBuf {
     std::env::temp_dir().join("wraex").join(game_folder(game)).join("config.json")
 }
 
-fn game_folder(game: GameId) -> &'static str {
+const fn game_folder(game: GameId) -> &'static str {
     match game {
         GameId::Poe2 => "poe2",
-        _ => "poe1",
+        GameId::Poe1 => "poe1",
     }
 }
 
@@ -590,4 +742,5 @@ pub fn temp_store(game: GameId) -> ConfigStore {
 
 #[cfg(test)]
 #[path = "tests.rs"]
+#[expect(clippy::disallowed_macros, reason = "expected JSON written as literals")]
 mod tests;

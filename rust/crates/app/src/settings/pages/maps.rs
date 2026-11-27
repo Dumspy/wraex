@@ -2,11 +2,14 @@
 //! its per-profile decision (warning, deadly, good), and the profile's own list first.
 
 use rune::{El, col, el, row, text};
+use serde::Deserialize;
+use serde::Serialize;
 use serde_json::Value;
 use wraex_core::GameId;
+use wraex_core::js::json_value;
 
 use crate::settings::pages::{tr, tr_fmt};
-use crate::settings::{Field, Project, Settings, maps_mut};
+use crate::settings::{Field, Project, Settings, maps, maps_mut};
 use crate::theme::{self, text as type_};
 use crate::trade::Mode;
 use crate::ui;
@@ -23,23 +26,23 @@ pub enum Tag {
 
 impl Tag {
     /// `tagToShowOrder`: plain stats, then the uber-only ones, then the heist-only ones.
-    fn order(self) -> u8 {
+    const fn order(self) -> u8 {
         match self {
-            Tag::None => 0,
-            Tag::UberMapExclusive => 1,
-            Tag::HeistExclusive => 2,
-            Tag::Outdated => 3,
+            Self::None => 0,
+            Self::UberMapExclusive => 1,
+            Self::HeistExclusive => 2,
+            Self::Outdated => 3,
         }
     }
 
     /// `t('map.mods.…')`: a literal key with dots, which the i18n lookup can't reach as a path.
     fn label(self, game: GameId) -> &'static str {
         match self {
-            Tag::Outdated => "outdated",
-            Tag::HeistExclusive => "heist",
-            Tag::UberMapExclusive if game == GameId::Poe2 => "T17",
-            Tag::UberMapExclusive => "T16+",
-            Tag::None => "",
+            Self::Outdated => "outdated",
+            Self::HeistExclusive => "heist",
+            Self::UberMapExclusive if game == GameId::Poe2 => "T17",
+            Self::UberMapExclusive => "T16+",
+            Self::None => "",
         }
     }
 }
@@ -49,6 +52,29 @@ impl Tag {
 pub struct AreaMod {
     pub matcher: String,
     pub tag: Tag,
+}
+
+/// The item check's `maps` settings (`ItemCheckWidget.maps`), as this page reads them.
+#[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+struct MapsView {
+    #[serde(deserialize_with = "crate::settings::array_or_empty")]
+    selected_stats: Vec<StatDecision>,
+}
+
+/// One `selectedStats` entry (`MapCheckStat`): a matcher and its per-profile decisions.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+struct StatDecision {
+    matcher: String,
+    #[serde(default, deserialize_with = "crate::settings::string_or_empty")]
+    decision: String,
+}
+
+/// A new `selectedStats` entry, written as the template's `{ matcher, decision }` object.
+#[derive(Debug, Serialize)]
+struct NewStat<'a> {
+    matcher: &'a str,
+    decision: &'a str,
 }
 
 /// `findAllAreaMods()`: every stat the game marks as an area mod, one row per matcher text.
@@ -71,7 +97,7 @@ pub fn area_mods(game: GameId, mode: Mode) -> Vec<AreaMod> {
                 }
             }
         }
-        _ => {
+        GameId::Poe1 => {
             for stat in crate::poe1::price_check::data().stats_iter("AreaMods", &[]) {
                 let tag = match stat.from_area_mods.as_deref() {
                     Some("heist_exclusive") => Tag::HeistExclusive,
@@ -98,34 +124,62 @@ pub fn area_mods(game: GameId, mode: Mode) -> Vec<AreaMod> {
 pub fn is_outdated(game: GameId, mode: Mode, matcher: &str) -> bool {
     match game {
         GameId::Poe2 => crate::poe2::price_check::data(mode).stat_by_match_str(matcher).is_none(),
-        _ => crate::poe1::price_check::data().stat_by_match_str_v2(matcher).is_none(),
+        GameId::Poe1 => crate::poe1::price_check::data().stat_by_match_str_v2(matcher).is_none(),
     }
 }
 
-/// The `maps` object's `profile`.
+/// The `maps` object's `profile`, `1` when unset.
 fn profile(settings: &Settings) -> u32 {
-    Field::Maps("profile").read(&settings.config).as_u64().unwrap_or(1) as u32
+    let profile = match Field::Maps("profile").read(&settings.config) {
+        Value::Number(number) => number.as_u64(),
+        _ => None,
+    };
+    // `as u32`: the old cast kept the low 32 bits.
+    profile.map_or(1, |profile| u32::try_from(profile & u64::from(u32::MAX)).unwrap_or_default())
+}
+
+/// The `maps` settings, or the defaults when the config has no item check.
+fn maps_view(settings: &Settings) -> MapsView {
+    maps(&settings.config).and_then(|maps| MapsView::deserialize(maps).ok()).unwrap_or_default()
+}
+
+/// The profile's decision letter (`set.charAt(profile - 1)`).
+fn decision_at(set: &str, profile: u32) -> Option<char> {
+    usize::try_from(profile.saturating_sub(1)).ok().and_then(|index| set.chars().nth(index))
 }
 
 /// `decisionSet[profile - 1]`, or `-` for no entry.
 fn decision(settings: &Settings, matcher: &str) -> (String, String) {
     let profile = profile(settings);
-    let entry = settings
-        .config
-        .get("widgets")
-        .and_then(|widgets| widgets.as_array())
-        .and_then(|widgets| widgets.iter().find(|w| w["wmType"] == "item-check"))
-        .and_then(|widget| widget.get("maps"))
-        .and_then(|maps| maps.get("selectedStats"))
-        .and_then(|stats| stats.as_array())
-        .and_then(|stats| stats.iter().find(|stat| stat["matcher"] == matcher));
-    match entry {
-        Some(entry) => {
-            let set = entry["decision"].as_str().unwrap_or_default();
-            let at = set.chars().nth(profile.saturating_sub(1) as usize).unwrap_or('-');
+    maps_view(settings).selected_stats.iter().find(|stat| stat.matcher == matcher).map_or_else(
+        || (String::new(), "-".to_owned()),
+        |entry| {
+            let set = entry.decision.as_str();
+            let at = decision_at(set, profile).unwrap_or('-');
             (set.to_owned(), at.to_string())
-        }
-        None => (String::new(), "-".to_owned()),
+        },
+    )
+}
+
+/// `maps.selectedStats`, writable.
+fn selected_stats_mut(maps: &mut Value) -> Option<&mut Vec<Value>> {
+    match maps {
+        Value::Object(map) => match map.get_mut("selectedStats") {
+            Some(Value::Array(stats)) => Some(stats),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+/// `stat.matcher`, when the entry is an object holding a string.
+fn stat_matcher(stat: &Value) -> Option<&str> {
+    match stat {
+        Value::Object(map) => match map.get("matcher") {
+            Some(Value::String(matcher)) => Some(matcher),
+            _ => None,
+        },
+        _ => None,
     }
 }
 
@@ -135,10 +189,14 @@ fn set_decision(settings: &mut Settings, matcher: &str, value: &str) {
     let (set, _) = decision(settings, matcher);
     let next = set_decided(&set, profile, value);
     let Some(maps) = maps_mut(&mut settings.config) else { return };
-    let Some(stats) = maps.get_mut("selectedStats").and_then(Value::as_array_mut) else { return };
-    match stats.iter_mut().find(|stat| stat["matcher"] == matcher) {
-        Some(entry) => entry["decision"] = Value::String(next),
-        None => stats.push(serde_json::json!({ "matcher": matcher, "decision": next })),
+    let Some(stats) = selected_stats_mut(maps) else { return };
+    match stats.iter().position(|stat| stat_matcher(stat) == Some(matcher)) {
+        Some(at) => {
+            if let Some(Value::Object(entry)) = stats.get_mut(at) {
+                entry.insert("decision".to_owned(), Value::String(next));
+            }
+        }
+        None => stats.push(json_value(&NewStat { matcher, decision: &next })),
     }
 }
 
@@ -149,8 +207,7 @@ fn set_decided(set: &str, profile: u32, value: &str) -> String {
 
 /// `decisionHasColor`: a decided, not merely seen, profile.
 fn decision_has_color(set: &str, profile: u32) -> bool {
-    let at = set.chars().nth(profile.saturating_sub(1) as usize);
-    at != Some('-') && at != Some('s') && at.is_some()
+    decision_at(set, profile).is_some_and(|decision| decision != '-' && decision != 's')
 }
 
 /// The list's search box: `input placeholder="Search..."` over the stats' text. Its text is
@@ -162,11 +219,13 @@ fn search_field<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     let edit_key = "maps-search".to_owned();
     let change_key = "maps-search".to_owned();
     ui::field::text_field(
-        edit,
-        "maps-search",
-        Kind::Grow,
-        None,
-        &format!("{}...", tr(settings, "Search")),
+        &ui::field::TextFieldProps {
+            edit,
+            key: "maps-search",
+            kind: Kind::Grow,
+            width: None,
+            placeholder: &format!("{}...", tr(settings, "Search")),
+        },
         move |s: &mut S| project(s).edit_mut(&edit_key),
         move |s: &mut S, _tx: &mut rune::Tx| {
             let text = project(s).edit_text(&change_key);
@@ -182,50 +241,30 @@ fn row_entries(settings: &Settings) -> Vec<AreaMod> {
     let only_selected = settings.maps_only_selected;
     let search = settings.maps_search.to_lowercase();
     let queries: Vec<&str> = search.split(' ').filter(|part| !part.is_empty()).collect();
+    let view = maps_view(settings);
 
-    let mut rows: Vec<AreaMod> = settings
-        .config
-        .get("widgets")
-        .and_then(|widgets| widgets.as_array())
-        .and_then(|widgets| widgets.iter().find(|w| w["wmType"] == "item-check"))
-        .and_then(|widget| widget.get("maps"))
-        .and_then(|maps| maps.get("selectedStats"))
-        .and_then(|stats| stats.as_array())
-        .map(|stats| {
-            stats
-                .iter()
-                .filter_map(|stat| Some((stat["matcher"].as_str()?, stat["decision"].as_str().unwrap_or_default())))
-                .filter(|(matcher, set)| {
-                    decision_has_color(set, profile) && is_outdated(settings.game, settings.mode, matcher)
-                })
-                .map(|(matcher, _)| AreaMod { matcher: matcher.to_owned(), tag: Tag::Outdated })
-                .collect::<Vec<_>>()
+    let mut rows: Vec<AreaMod> = view
+        .selected_stats
+        .iter()
+        .filter(|stat| {
+            decision_has_color(&stat.decision, profile) && is_outdated(settings.game, settings.mode, &stat.matcher)
         })
-        .unwrap_or_default();
+        .map(|stat| AreaMod { matcher: stat.matcher.clone(), tag: Tag::Outdated })
+        .collect();
 
-    let selected: Vec<String> = settings
-        .config
-        .get("widgets")
-        .and_then(|widgets| widgets.as_array())
-        .and_then(|widgets| widgets.iter().find(|w| w["wmType"] == "item-check"))
-        .and_then(|widget| widget.get("maps"))
-        .and_then(|maps| maps.get("selectedStats"))
-        .and_then(|stats| stats.as_array())
-        .map(|stats| {
-            stats
-                .iter()
-                .filter(|stat| decision_has_color(stat["decision"].as_str().unwrap_or_default(), profile))
-                .filter_map(|stat| stat["matcher"].as_str().map(str::to_owned))
-                .collect()
-        })
-        .unwrap_or_default();
+    let selected: Vec<&str> = view
+        .selected_stats
+        .iter()
+        .filter(|stat| decision_has_color(&stat.decision, profile))
+        .map(|stat| stat.matcher.as_str())
+        .collect();
 
     for area in settings.area_mods.iter().flatten() {
         let text = area.matcher.to_lowercase();
         if !queries.iter().all(|part| text.contains(part)) {
             continue;
         }
-        if only_selected && !selected.contains(&area.matcher) {
+        if only_selected && !selected.contains(&area.matcher.as_str()) {
             continue;
         }
         if rows.iter().any(|row| row.matcher == area.matcher) {
@@ -340,10 +379,9 @@ fn entry<S: 'static>(settings: &Settings, area: &AreaMod, index: usize, profile:
             let matcher = matcher.clone();
             controls =
                 controls.child(ui::radio_icon(&format!("maps-{index}-{key}"), key, checked, move |s: &mut S| {
-                    set_decision(project(s), &matcher, value)
+                    set_decision(project(s), &matcher, value);
                 }));
         }
-        let matcher = matcher.clone();
         // `fa-trash-alt` for an outdated wording, `fa-times` otherwise (`w-4`, 14 pt glyph).
         let glyph = if area.tag == Tag::Outdated {
             ui::icon::trash(type_::SM.size, theme::red(400))

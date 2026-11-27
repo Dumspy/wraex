@@ -1,7 +1,8 @@
 //! `ref/ee2/renderer/src/web/item-check/hotkeyable-actions.ts`: what the item
 //! check's hotkeys open (wiki, poe2db, Craft of Exile) or send (stash searches
-//! for similar or same-priced items). Opening the URL and sending the event is
-//! the app shell's job.
+//! for similar or same-priced items).
+//!
+//! Opening the URL and sending the event is the app shell's job.
 
 use serde::{Deserialize, Serialize};
 use wraex_core::Rarity;
@@ -25,7 +26,7 @@ pub struct StashSearch {
     pub text: Option<String>,
 }
 
-fn stash_search(text: Option<String>) -> UserAction {
+const fn stash_search(text: Option<String>) -> UserAction {
     UserAction { name: "CLIENT->MAIN::user-action", payload: StashSearch { action: "stash-search", text } }
 }
 
@@ -57,6 +58,40 @@ fn poedb_lang(language: &str) -> &'static str {
 /// puts both in one map.
 fn poe2db_conversion(key: &str) -> Option<&'static str> {
     use ItemCategory as C;
+    const BY_REF_NAME: [(&str, &str); 22] = [
+        // Jewels
+        ("Ruby", "Ruby"),
+        ("Emerald", "Emerald"),
+        ("Sapphire", "Sapphire"),
+        ("Time-Lost Ruby", "Time-Lost_Ruby"),
+        ("Time-Lost Emerald", "Time-Lost_Emerald"),
+        ("Time-Lost Sapphire", "Time-Lost_Sapphire"),
+        // Flasks
+        ("Life Flask", "Life_Flasks"),
+        ("Mana Flask", "Mana_Flasks"),
+        ("Charm", "Charms"),
+        // Relics
+        ("Urn Relic", "Urn_Relic"),
+        ("Amphora Relic", "Amphora_Relic"),
+        ("Vase Relic", "Vase_Relic"),
+        ("Seal Relic", "Seal_Relic"),
+        ("Coffer Relic", "Coffer_Relic"),
+        ("Tapestry Relic", "Tapestry_Relic"),
+        ("Incense Relic", "Incense_Relic"),
+        // Tablets
+        ("Breach Precursor Tablet", "Breach_Precursor_Tablet"),
+        ("Expedition Precursor Tablet", "Expedition_Precursor_Tablet"),
+        ("Delirium Precursor Tablet", "Delirium_Precursor_Tablet"),
+        ("Ritual Precursor Tablet", "Ritual_Precursor_Tablet"),
+        ("Precursor Tablet", "Precursor_Tablet"),
+        ("Overseer Precursor Tablet", "Overseer_Precursor_Tablet"),
+    ];
+    // Waystones
+    const WAYSTONES: [(&str, &str); 3] = [
+        ("Waystones(Low)", "Waystones_low_tier"),
+        ("Waystones(Mid)", "Waystones_mid_tier"),
+        ("Waystones(Top)", "Waystones_top_tier"),
+    ];
     let category = |c: C| c.as_str().to_owned();
     let pages: [(String, &str); 28] = [
         // One-handed
@@ -92,40 +127,6 @@ fn poe2db_conversion(key: &str) -> Option<&'static str> {
         (category(C::Shield), "Shields"),
         (category(C::Focus), "Foci"),
         (category(C::Buckler), "Bucklers"),
-    ];
-    const BY_REF_NAME: [(&str, &str); 22] = [
-        // Jewels
-        ("Ruby", "Ruby"),
-        ("Emerald", "Emerald"),
-        ("Sapphire", "Sapphire"),
-        ("Time-Lost Ruby", "Time-Lost_Ruby"),
-        ("Time-Lost Emerald", "Time-Lost_Emerald"),
-        ("Time-Lost Sapphire", "Time-Lost_Sapphire"),
-        // Flasks
-        ("Life Flask", "Life_Flasks"),
-        ("Mana Flask", "Mana_Flasks"),
-        ("Charm", "Charms"),
-        // Relics
-        ("Urn Relic", "Urn_Relic"),
-        ("Amphora Relic", "Amphora_Relic"),
-        ("Vase Relic", "Vase_Relic"),
-        ("Seal Relic", "Seal_Relic"),
-        ("Coffer Relic", "Coffer_Relic"),
-        ("Tapestry Relic", "Tapestry_Relic"),
-        ("Incense Relic", "Incense_Relic"),
-        // Tablets
-        ("Breach Precursor Tablet", "Breach_Precursor_Tablet"),
-        ("Expedition Precursor Tablet", "Expedition_Precursor_Tablet"),
-        ("Delirium Precursor Tablet", "Delirium_Precursor_Tablet"),
-        ("Ritual Precursor Tablet", "Ritual_Precursor_Tablet"),
-        ("Precursor Tablet", "Precursor_Tablet"),
-        ("Overseer Precursor Tablet", "Overseer_Precursor_Tablet"),
-    ];
-    // Waystones
-    const WAYSTONES: [(&str, &str); 3] = [
-        ("Waystones(Low)", "Waystones_low_tier"),
-        ("Waystones(Mid)", "Waystones_mid_tier"),
-        ("Waystones(Top)", "Waystones_top_tier"),
     ];
     pages
         .iter()
@@ -200,7 +201,7 @@ pub fn find_same_priced_items(item: &Item, same_priced_type: SamePricedType) -> 
     let text = match item.info().name.as_deref().map(json_string) {
         Some(name)
             if same_priced_type == SamePricedType::Both
-                && note.encode_utf16().count() + name.encode_utf16().count() < 51 =>
+                && note.encode_utf16().count().saturating_add(name.encode_utf16().count()) < 51 =>
         {
             format!("{note}{name}")
         }

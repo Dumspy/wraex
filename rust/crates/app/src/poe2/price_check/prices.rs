@@ -19,6 +19,10 @@ pub const CORE_CURRENCY: &str = "exalted";
 const RECORDED: &str = "api.exiledexchange2.dev__proxy__standard__overviewData.json.GET.json";
 
 /// A price database with EE2's default core currency and, in a replay, the recorded prices.
+#[expect(
+    clippy::panic,
+    reason = "the recorded `overviewData.json` ships in the screenshot corpus; missing or unreadable is a broken checkout, not a runtime case"
+)]
 pub fn load(mode: Mode) -> Prices {
     let mut prices = Prices::default();
     prices.core_currency = Some(CORE_CURRENCY.to_owned());
@@ -33,9 +37,10 @@ pub fn load(mode: Mode) -> Prices {
     prices
 }
 
-/// poe.ninja's overviews for `league`, one request per [`NINJA_TYPES`] entry, sent from the
-/// worker that `poll` collects. (Upstream refreshes every 31 minutes while a price check is
-/// in use; this window loads once when it opens.)
+/// poe.ninja's overviews for `league`, one request per [`NINJA_TYPES`] entry.
+///
+/// The worker `poll` collects sends them. Upstream refreshes every 31 minutes while a price
+/// check is in use; this window loads once when it opens.
 pub fn fetch(league: &wraex_core::leagues::SelectedLeague) -> Result<Vec<(&'static str, String)>, String> {
     use wraex_core::trade::api::Transport;
 
@@ -66,11 +71,11 @@ mod tests {
         poe1.queue_selected(Some(&league), true);
         assert!(!poe1.initial_loading());
         assert_eq!(poe1.xchg_rate(), None);
-        assert!(fetch(&league).unwrap().is_empty());
+        assert_eq!(fetch(&league).unwrap(), Vec::new());
         let unlisted = Leagues::default().selected(Some("Standard"), "pc-ggg").unwrap();
         poe1.queue_selected(Some(&unlisted), true);
         assert_eq!(poe1.xchg_rate(), None, "a Standard recording exists, but an unlisted league skips it");
-        assert!(fetch(&unlisted).unwrap().is_empty());
+        assert_eq!(fetch(&unlisted).unwrap(), Vec::new());
 
         let check = crate::poe1::price_check::PriceCheck::with_mode_league(
             &crate::corpus("adv-rare-ring-mirrored-catalyst"),

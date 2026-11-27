@@ -4,8 +4,8 @@
 use rune::{El, col, row, text};
 use wraex_core::GameId;
 
-use crate::settings::hotkey::{self, Recording, hotkey_input};
-use crate::settings::pages::hotkeys::single_row;
+use crate::settings::hotkey::{self, HotkeyInput, Recording, hotkey_input};
+use crate::settings::pages::hotkeys::{SingleRow, single_row};
 use crate::settings::pages::{is_english, page, tr};
 use crate::settings::{Field, Project, Settings};
 use crate::theme::{self, text as type_};
@@ -24,7 +24,11 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
         if key == "item-check-craft-of-exile" && !is_english(settings) {
             continue;
         }
-        rows = rows.child(single_row(settings, key, &tr(settings, label_key), field, false, project));
+        rows = rows.child(single_row(
+            settings,
+            SingleRow { key, label: &tr(settings, label_key), field, required: false },
+            project,
+        ));
     }
 
     // EE2: `item.find_same_price` — a label, the kind select and the hotkey.
@@ -50,11 +54,13 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
                         .grow(1.0),
                 )
                 .child(ui::select::select(
-                    "item-check-same-price-select",
-                    &kinds,
-                    &kind,
-                    settings.select_open == Some("item-check-same-price-select"),
-                    theme::rem(8.0),
+                    &ui::select::SelectProps {
+                        key: "item-check-same-price-select",
+                        choices: &kinds,
+                        value: &kind,
+                        open: settings.select_open == Some("item-check-same-price-select"),
+                        width: theme::rem(8.0),
+                    },
                     move |s: &mut S| {
                         let settings = project(s);
                         settings.select_open = (settings.select_open != Some("item-check-same-price-select"))
@@ -67,11 +73,13 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
                     },
                 ))
                 .child(hotkey_input(
-                    "item-check-same-price-hotkey",
-                    value.as_deref(),
-                    hotkey::WIDE,
-                    &hotkey::no_key(settings.game),
-                    super::hotkeys::is_recording(settings, field),
+                    HotkeyInput {
+                        key: "item-check-same-price-hotkey",
+                        value: value.as_deref(),
+                        width: hotkey::WIDE,
+                        placeholder: &hotkey::no_key(settings.game),
+                        recording: super::hotkeys::is_recording(settings, field),
+                    },
                     move |s: &mut S| {
                         let settings = project(s);
                         settings.recording = Some(Recording { field, required: false, no_mod_keys: false });

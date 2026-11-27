@@ -96,18 +96,22 @@ impl Log {
     /// shell's is `AppHandle::wake`, so the next poll applies it.
     ///
     /// The worker lives for the process: `readClientLog` off/on only switches the watcher.
+    #[expect(
+        clippy::expect_used,
+        reason = "a worker thread that cannot start leaves no log reader at all, and the process cannot run without one"
+    )]
     pub fn spawn(on_change: impl Fn() + Send + 'static) -> Self {
         let log = Self {
             wanted: Arc::new(Mutex::new(Wanted::default())),
             rereads: Arc::new(AtomicU64::new(0)),
             latest: Arc::new(Mutex::new(None)),
         };
-        let wanted = log.wanted.clone();
-        let rereads = log.rereads.clone();
-        let latest = log.latest.clone();
+        let wanted = Arc::clone(&log.wanted);
+        let rereads = Arc::clone(&log.rereads);
+        let latest = Arc::clone(&log.latest);
         std::thread::Builder::new()
             .name("wraex-client-log".to_owned())
-            .spawn(move || run(wanted, rereads, latest, on_change))
+            .spawn(move || run(&wanted, &rereads, &latest, on_change))
             .expect("start the client-log worker");
         log
     }
@@ -131,7 +135,8 @@ impl Log {
 }
 
 /// The worker loop: apply config changes, read new lines, publish changed snapshots.
-fn run(wanted: Arc<Mutex<Wanted>>, rereads: Arc<AtomicU64>, latest: Arc<Mutex<Option<State>>>, on_change: impl Fn()) {
+#[expect(clippy::infinite_loop, reason = "the worker lives for the process, as EE2's `GameLogWatcher` does")]
+fn run(wanted: &Mutex<Wanted>, rereads: &AtomicU64, latest: &Mutex<Option<State>>, on_change: impl Fn()) {
     let mut applied = Wanted::default();
     let mut opened: Option<(LogWatcher, ClientLog)> = None;
     let mut attempted = false;
@@ -169,7 +174,7 @@ fn run(wanted: Arc<Mutex<Wanted>>, rereads: Arc<AtomicU64>, latest: Arc<Mutex<Op
                     }
                     let state = State::from_log(&log);
                     last = Some(state.clone());
-                    publish(&latest, state, &on_change);
+                    publish(latest, state, &on_change);
                     opened = Some((watcher, log));
                 }
                 Err(message) => wraex_platform::log!("wraex: {message}"),
@@ -188,7 +193,7 @@ fn run(wanted: Arc<Mutex<Wanted>>, rereads: Arc<AtomicU64>, latest: Arc<Mutex<Op
                     let state = State::from_log(log);
                     if last.as_ref() != Some(&state) {
                         last = Some(state.clone());
-                        publish(&latest, state, &on_change);
+                        publish(latest, state, &on_change);
                     }
                 }
                 Err(error) => {
@@ -240,7 +245,7 @@ mod tests {
     /// A log file whose watcher starts watching, then lines appended by the test.
     fn temp_log(name: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!("wraex-client-log-{}-{name}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
+        drop(std::fs::remove_dir_all(&dir));
         std::fs::create_dir_all(&dir).unwrap();
         dir.join("Client.txt")
     }
@@ -259,7 +264,7 @@ mod tests {
         append(&path, "2026/04/26 09:00:00 1 a1b2c3d4 [INFO Client 1] : Old line before watching\n");
 
         let changes = Arc::new(AtomicUsize::new(0));
-        let woke = changes.clone();
+        let woke = Arc::clone(&changes);
         let log = Log::spawn(move || {
             woke.fetch_add(1, Ordering::SeqCst);
         });
@@ -279,12 +284,13 @@ mod tests {
             ),
         );
 
-        let deadline = std::time::Instant::now() + Duration::from_secs(10);
+        let deadline = std::time::Instant::now().checked_add(Duration::from_secs(10)).unwrap();
         let mut state = None;
         while std::time::Instant::now() < deadline {
             if let Some(next) = log.take() {
                 state = Some(next);
-                if state.as_ref().is_some_and(|state| state.player_level == 72.0) {
+                // The level is a parsed integer, so the exact comparison is what is meant.
+                if state.as_ref().is_some_and(|state| (state.player_level - 72.0).abs() <= f64::EPSILON) {
                     break;
                 }
             }
@@ -300,7 +306,7 @@ mod tests {
     }
 
     fn wait_for(log: &Log) -> Option<State> {
-        let deadline = std::time::Instant::now() + Duration::from_secs(10);
+        let deadline = std::time::Instant::now().checked_add(Duration::from_secs(10)).unwrap();
         while std::time::Instant::now() < deadline {
             if let Some(state) = log.take() {
                 return Some(state);

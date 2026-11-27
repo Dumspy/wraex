@@ -84,16 +84,25 @@ struct Combination {
     values: Vec<PlaceholderValue>,
 }
 
+#[expect(
+    clippy::expect_used,
+    reason = "a literal pattern from the reference: a compile failure is a bug, not an input"
+)]
 fn value_regex() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"(?<value>(?<!\d|\))[+-]?\d+(?:\.\d+)?)(?:\((?<min>.[^)-]*)(?:-(?<max>[^)]+))?\))?", "gm").unwrap()
+        Regex::new(r"(?<value>(?<!\d|\))[+-]?\d+(?:\.\d+)?)(?:\((?<min>.[^)-]*)(?:-(?<max>[^)]+))?\))?", "gm")
+            .expect("valid pattern")
     })
 }
 
+#[expect(
+    clippy::expect_used,
+    reason = "a literal pattern from the reference: a compile failure is a bug, not an input"
+)]
 fn hash_regex() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new("#", "gm").unwrap())
+    RE.get_or_init(|| Regex::new("#", "gm").expect("valid pattern"))
 }
 
 /// `_statPlaceholderGenerator`: the stat text with subsets of its numbers turned
@@ -103,7 +112,8 @@ fn stat_placeholder_combinations(stat: &str) -> Vec<Combination> {
     // "()" when GGG didn't provide an advanced description.
     let with_placeholders = stat.replace("()", "");
     let with_placeholders = value_regex().replace_all(&with_placeholders, |caps| {
-        let roll = caps.get(1).unwrap();
+        // Group 1 is the value the whole match is built around.
+        let roll = caps.get(1).unwrap_or_default();
         let min = caps.get(2);
         // Sextant "# uses remaining", legacy rolls: `(min)` without a max.
         let max = if min.is_some() && caps.get(3).is_none() { min } else { caps.get(3) };
@@ -126,12 +136,15 @@ fn stat_placeholder_combinations(stat: &str) -> Vec<Combination> {
 
     let mut out = Vec::new();
     if let Some(map) = PLACEHOLDER_MAP.get(matches.len()) {
-        for replacements in map.iter() {
-            let mut idx: isize = -1;
+        for replacements in *map {
+            let mut idx: usize = 0;
             let replaced = hash_regex().replace_all(&with_placeholders, |_| {
-                idx += 1;
-                let i = idx as usize;
-                if replacements.contains(&i) { matches[i].roll_str.clone() } else { "#".to_owned() }
+                let i = idx;
+                idx = idx.saturating_add(1);
+                match matches.get(i) {
+                    Some(m) if replacements.contains(&i) => m.roll_str.clone(),
+                    _ => "#".to_owned(),
+                }
             });
             let values =
                 matches.iter().enumerate().filter(|(i, _)| !replacements.contains(i)).map(|(_, v)| v.clone()).collect();
@@ -163,7 +176,7 @@ pub fn try_parse_translation(d: &Data, stat: &StatString, mod_type: ModifierType
             }
             continue;
         }
-        let (found_stat, matcher) = found.unwrap();
+        let Some((found_stat, matcher)) = found else { continue };
         let roll = parse_roll(&found_stat, &matcher, combination, stat)?;
         return Ok(Some(ParsedStat { stat: found_stat, translation: matcher, roll, from_added_augment: None }));
     }
@@ -246,10 +259,15 @@ fn parse_roll(
 
 /// `getRollOrMinmaxAvg`: the average of four or two values, otherwise the first.
 pub fn get_roll_or_minmax_avg(values: &[f64]) -> f64 {
-    match values.len() {
-        4 => (values[0] + values[1] + values[2] + values[3]) / 4.0,
-        2 => (values[0] + values[1]) / 2.0,
-        _ => values.first().copied().unwrap_or(f64::NAN),
+    #[expect(
+        clippy::manual_midpoint,
+        reason = "JS computes `(a + b) / 2` with those roundings; `f64::midpoint` need not match"
+    )]
+    match *values {
+        [a, b, c, d] => (a + b + c + d) / 4.0,
+        [a, b] => (a + b) / 2.0,
+        [first, ..] => first,
+        [] => f64::NAN,
     }
 }
 

@@ -26,8 +26,13 @@ fn try_find_and_resolve_by_ref(
         StatOrGroup::Stat(stat) => Some(stat),
         StatOrGroup::Group(group) => match (&group.resolve, hint) {
             (StatGroupResolver::Select { .. } | StatGroupResolver::TrivialMerge, _) => {
-                resolve_translation(group, "", mod_type, item_category, None)
-                    .map_err(|_| FilterError(format!("Unexpected stat shape: {name}")))?
+                #[expect(
+                    clippy::map_err_ignore,
+                    reason = "upstream throws `Unexpected stat shape: {name}`; its error is not part of the message"
+                )]
+                let stat = resolve_translation(group, "", mod_type, item_category, None)
+                    .map_err(|_| FilterError(format!("Unexpected stat shape: {name}")))?;
+                stat
             }
             (StatGroupResolver::PercentMerge { kind }, Some(ResolveHint::PercentMerge { pick })) => {
                 // NOTE (upstream): the 'value' stat can actually be a flag
@@ -56,14 +61,28 @@ pub fn find_and_resolve_by_ref(
         .ok_or_else(|| FilterError(format!("Unexpected stat shape: {name}")))
 }
 
+/// `statToNotFilter`'s options.
+#[derive(Debug, Clone, Copy)]
+pub struct NotFilterOptions<'a> {
+    pub stat: &'a Stat,
+    pub kind: ModifierType,
+    pub negate_string: bool,
+    pub disabled: bool,
+}
+
 /// `statToNotFilter`
-pub fn stat_to_not_filter(stat: &Stat, kind: ModifierType, negate_string: bool, disabled: bool) -> StatFilter {
-    let matcher = stat.matchers.iter().find(|m| m.negate.unwrap_or(false) == negate_string).or(stat.matchers.first());
+pub fn stat_to_not_filter(opts: NotFilterOptions<'_>) -> StatFilter {
+    let matcher = opts
+        .stat
+        .matchers
+        .iter()
+        .find(|m| m.negate.unwrap_or(false) == opts.negate_string)
+        .or_else(|| opts.stat.matchers.first());
     StatFilter {
-        trade_id: stat.trade.ids.get(kind.as_str()).cloned(),
-        stat_ref: stat.stat_ref.clone(),
+        trade_id: opts.stat.trade.ids.get(opts.kind.as_str()).cloned(),
+        stat_ref: opts.stat.stat_ref.clone(),
         text: matcher.map(|m| m.string.clone()).unwrap_or_default(),
-        tag: FilterTag::Type(kind),
+        tag: FilterTag::Type(opts.kind),
         oils: None,
         mercenary: None,
         reminder_text: None,
@@ -72,7 +91,7 @@ pub fn stat_to_not_filter(stat: &Stat, kind: ModifierType, negate_string: bool, 
         roll: None,
         option: None,
         hidden: None,
-        disabled,
+        disabled: opts.disabled,
     }
 }
 

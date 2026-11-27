@@ -52,7 +52,7 @@ fn rune_key(key: &str) -> Option<&'static str> {
 
 /// Letters, digits and the function keys: `A` → `a`, `7` → `7`, `F5` → `f5`.
 fn other_key(key: &str) -> Option<&'static str> {
-    if key.len() == 1 && key.as_bytes()[0].is_ascii_alphanumeric() {
+    if key.len() == 1 && key.as_bytes().first().is_some_and(u8::is_ascii_alphanumeric) {
         // `Shortcut::parse` lowercases its parts, so a static name is not needed for these.
         return Some(match key {
             "0" => "0",
@@ -68,13 +68,15 @@ fn other_key(key: &str) -> Option<&'static str> {
             _ => LETTERS.iter().copied().find(|name| name.eq_ignore_ascii_case(key))?,
         });
     }
-    const FUNCTIONS: [&str; 24] = [
-        "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14", "f15", "f16", "f17",
-        "f18", "f19", "f20", "f21", "f22", "f23", "f24",
-    ];
     let number: u32 = key.strip_prefix(['F', 'f'])?.parse().ok()?;
     FUNCTIONS.get(usize::try_from(number).ok()?.checked_sub(1)?).copied()
 }
+
+/// The function keys, so `F5` maps to a `'static` name.
+const FUNCTIONS: [&str; 24] = [
+    "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14", "f15", "f16", "f17",
+    "f18", "f19", "f20", "f21", "f22", "f23", "f24",
+];
 
 /// The alphabet, so a letter maps to a `'static` name.
 const LETTERS: [&str; 26] = [

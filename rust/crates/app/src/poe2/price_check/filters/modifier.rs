@@ -1,6 +1,8 @@
-//! `FilterModifier.vue`: one stat row — checkbox, text, tags, tiers, the roll fields and
-//! the roll slider — with `FilterModifierTiers.vue` and `FilterModifierItemIsElemental.vue`
-//! folded in (EE2 keeps them as separate components, but they only exist for a row).
+//! `FilterModifier.vue`: one stat row — checkbox, text, tags, tiers, the roll fields and the
+//! roll slider.
+//!
+//! `FilterModifierTiers.vue` and `FilterModifierItemIsElemental.vue` are folded in (EE2 keeps
+//! them as separate components, but they only exist for a row).
 
 use rune::{Color, El, col, el, row, text};
 use wraex_poe2::filters::{FilterTag, StatFilter};
@@ -14,8 +16,8 @@ use crate::theme::{self, text as type_};
 use crate::ui::icon;
 
 use super::{
-    FieldStyle, INPUTS_WIDTH, ROLL_WIDTH, elemental_options, modifier_text, number_field, shows_quality, shows_tag,
-    slider, stat_text, tag_badge, tag_label,
+    FieldStyle, INPUTS_WIDTH, NumberField, ROLL_WIDTH, elemental_options, modifier_text, number_field, shows_quality,
+    shows_tag, slider, stat_text, tag_badge, tag_label,
 };
 
 /// `FilterModifier.vue`'s `alwaysShowTier` is `false` in the reference's config.
@@ -60,53 +62,31 @@ pub fn view<S: 'static>(check: &PriceCheck, filter: &StatFilter, item: &Item, in
                 .gap(1.0)
                 .child(number_field(
                     check,
-                    min_field,
-                    ROLL_WIDTH,
-                    &i18n::t("min"),
-                    [theme::ROUNDED, 0.0, 0.0, theme::ROUNDED],
-                    FieldStyle::Roll,
+                    &NumberField {
+                        field: min_field,
+                        width: ROLL_WIDTH,
+                        placeholder: &i18n::t("min"),
+                        corners: [theme::ROUNDED, 0.0, 0.0, theme::ROUNDED],
+                        style: FieldStyle::Roll,
+                    },
                     project,
                 ))
                 .child(number_field(
                     check,
-                    max_field,
-                    ROLL_WIDTH,
-                    &i18n::t("max"),
-                    [0.0, theme::ROUNDED, theme::ROUNDED, 0.0],
-                    FieldStyle::Roll,
+                    &NumberField {
+                        field: max_field,
+                        width: ROLL_WIDTH,
+                        placeholder: &i18n::t("max"),
+                        corners: [0.0, theme::ROUNDED, theme::ROUNDED, 0.0],
+                        style: FieldStyle::Roll,
+                    },
                     project,
                 )),
         );
     }
     first = first.child(right);
 
-    // The second line: the hidden marker's gutter, the tags and tiers (and the elemental
-    // buttons), then the roll slider and the space the inputs above take.
-    let mut second = row().key(format!("stat-{index}-meta")).w_full().items_start();
-    let mut gutter = row().w(theme::rem(1.25)).items_start();
-    if filter.hidden.is_some() {
-        gutter = gutter.child(icon::eye_slash(theme::rem(0.75), theme::gray(600)).mt(theme::rem(0.125)));
-    }
-    second = second.child(gutter);
-    let mut body = col().key(format!("stat-{index}-tags")).grow(1.0).min_w(0.0).gap(theme::rem(0.25));
-    let mut tags = row().w_full().items_start().gap(theme::rem(0.5));
-    if shows_tag(filter, item) {
-        tags = tags.child(tag_badge(&tag_label(filter), filter.tag));
-    }
-    if let Some(tiers) = tiers(filter, item, index) {
-        tags = tags.child(tiers);
-    }
-    if let Some(options) = elemental_options(filter, index, project) {
-        tags = tags.child(options);
-    }
-    body = body.child(tags);
-    second = second.child(body);
-    if let Some(roll) = &filter.roll
-        && let Some(bounds) = roll.bounds
-    {
-        second = second.child(slider::view(index, roll.value, roll.min, roll.max, bounds));
-    }
-    second = second.child(el().key(format!("stat-{index}-spacer")).w(INPUTS_WIDTH).shrink());
+    let second = meta_row(filter, item, index, project);
 
     let mut root = row()
         .key(format!("stat-{index}"))
@@ -132,6 +112,36 @@ pub fn view<S: 'static>(check: &PriceCheck, filter: &StatFilter, item: &Item, in
         root = root.child(anointment);
     }
     root
+}
+
+/// The row's second line: the hidden marker's gutter, the tags and tiers (and the elemental
+/// buttons), then the roll slider and the space the inputs above take.
+fn meta_row<S: 'static>(filter: &StatFilter, item: &Item, index: usize, project: Project<S>) -> El {
+    let mut second = row().key(format!("stat-{index}-meta")).w_full().items_start();
+    let mut gutter = row().w(theme::rem(1.25)).items_start();
+    if filter.hidden.is_some() {
+        gutter = gutter.child(icon::eye_slash(theme::rem(0.75), theme::gray(600)).mt(theme::rem(0.125)));
+    }
+    second = second.child(gutter);
+    let mut body = col().key(format!("stat-{index}-tags")).grow(1.0).min_w(0.0).gap(theme::rem(0.25));
+    let mut tags = row().w_full().items_start().gap(theme::rem(0.5));
+    if shows_tag(filter, item) {
+        tags = tags.child(tag_badge(&tag_label(filter), filter.tag));
+    }
+    if let Some(tiers) = tiers(filter, item, index) {
+        tags = tags.child(tiers);
+    }
+    if let Some(options) = elemental_options(filter, index, project) {
+        tags = tags.child(options);
+    }
+    body = body.child(tags);
+    second = second.child(body);
+    if let Some(roll) = &filter.roll
+        && let Some(bounds) = roll.bounds
+    {
+        second = second.child(slider::view(index, roll.value, roll.min, roll.max, bounds));
+    }
+    second.child(el().key(format!("stat-{index}-spacer")).w(INPUTS_WIDTH).shrink())
 }
 
 /// The row's checkbox: `far fa-square text-gray-500` / `fas fa-check-square`. `#price-window`
@@ -167,6 +177,10 @@ fn label<S: 'static>(filter: &StatFilter, index: usize, project: Project<S>) -> 
 }
 
 /// `FilterModifierTiers.vue`: the tier badges a modifier's sources carry.
+#[expect(
+    clippy::float_cmp,
+    reason = "`info.tier === 1` / `=== 2`: tiers are integral in the trade data and compared exactly, as upstream does"
+)]
 fn tiers(filter: &StatFilter, item: &Item, index: usize) -> Option<El> {
     if matches!(item.category, Some(ItemCategory::Map | ItemCategory::Tablet)) {
         return None;
@@ -222,7 +236,7 @@ fn tier_badge(index: usize, kind: &'static str, label: &str) -> El {
                 .border(1.0, theme::yellow(500))
                 .border_layout()
                 .my(-1.0)
-                .child(icon::badge_text(label, theme::yellow(500)).key(format!("tier-{kind}-{index}-text")))
+                .child(icon::badge_text(label, theme::yellow(500)).key(format!("tier-{kind}-{index}-text")));
         }
         "not-tier-1" => {
             badge = badge
@@ -230,7 +244,7 @@ fn tier_badge(index: usize, kind: &'static str, label: &str) -> El {
                 .border(1.0, Color::BLACK)
                 .border_layout()
                 .my(-1.0)
-                .child(icon::badge_text(label, Color::BLACK).key(format!("tier-{kind}-{index}-text")))
+                .child(icon::badge_text(label, Color::BLACK).key(format!("tier-{kind}-{index}-text")));
         }
         _ => badge = badge.fill(theme::gray(700)).child(text),
     }

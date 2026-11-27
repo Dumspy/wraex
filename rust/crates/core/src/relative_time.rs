@@ -10,7 +10,8 @@
 pub type EpochMillis = i64;
 
 /// Days since 1970-01-01 of a civil date (Howard Hinnant's algorithm).
-fn days_from_civil(y: i64, m: i64, d: i64) -> i64 {
+#[expect(clippy::arithmetic_side_effects, reason = "civil-date arithmetic on epoch years stays far inside i64")]
+const fn days_from_civil(y: i64, m: i64, d: i64) -> i64 {
     let y = if m <= 2 { y - 1 } else { y };
     let era = if y >= 0 { y } else { y - 399 } / 400;
     let yoe = y - era * 400;
@@ -21,7 +22,8 @@ fn days_from_civil(y: i64, m: i64, d: i64) -> i64 {
 }
 
 /// The civil date of a day since 1970-01-01.
-fn civil_from_days(z: i64) -> (i64, i64, i64) {
+#[expect(clippy::arithmetic_side_effects, reason = "civil-date arithmetic on epoch years stays far inside i64")]
+const fn civil_from_days(z: i64) -> (i64, i64, i64) {
     let z = z + 719_468;
     let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
     let doe = z - era * 146_097;
@@ -34,13 +36,15 @@ fn civil_from_days(z: i64) -> (i64, i64, i64) {
     (if m <= 2 { y + 1 } else { y }, m, d)
 }
 
-fn days_in_month(y: i64, m: i64) -> i64 {
+#[expect(clippy::arithmetic_side_effects, reason = "civil-date arithmetic on epoch years stays far inside i64")]
+const fn days_in_month(y: i64, m: i64) -> i64 {
     days_from_civil(if m == 12 { y + 1 } else { y }, if m == 12 { 1 } else { m + 1 }, 1) - days_from_civil(y, m, 1)
 }
 
 const DAY: i64 = 86_400_000;
 
 /// `ms` plus `months` calendar months, the day clamped to the month's length.
+#[expect(clippy::arithmetic_side_effects, reason = "month arithmetic on epoch timestamps stays far inside i64")]
 fn plus_months(ms: EpochMillis, months: i64) -> EpochMillis {
     let days = ms.div_euclid(DAY);
     let time = ms.rem_euclid(DAY);
@@ -59,7 +63,7 @@ pub fn parse_iso(text: &str) -> Option<EpochMillis> {
     // Luxon allows a compact offset on an extended calendar date. Parsing the
     // two pieces separately lets each use its own ISO representation.
     let (_, clock) = text.split_once('T')?;
-    let zone = clock.find(['+', '-', 'Z']).map(|at| text.len() - clock.len() + at);
+    let zone = clock.find(['+', '-', 'Z']).map(|at| text.len().saturating_sub(clock.len()).saturating_add(at));
     let (local, offset) = match zone {
         Some(at) => {
             let (local, zone) = text.split_at(at);
@@ -72,6 +76,7 @@ pub fn parse_iso(text: &str) -> Option<EpochMillis> {
 }
 
 /// Whole calendar steps of `months` from `start` to `end` (`end >= start`).
+#[expect(clippy::arithmetic_side_effects, reason = "month arithmetic on epoch timestamps stays far inside i64")]
 fn whole_months(start: EpochMillis, end: EpochMillis, step: i64) -> i64 {
     let mut n = 0;
     while plus_months(start, (n + 1) * step) <= end {
@@ -101,7 +106,7 @@ fn group(n: i64) -> String {
     let digits = n.to_string();
     let mut out = String::new();
     for (i, c) in digits.chars().enumerate() {
-        if i > 0 && (digits.len() - i).is_multiple_of(3) {
+        if i > 0 && digits.len().saturating_sub(i).is_multiple_of(3) {
             out.push(',');
         }
         out.push(c);
@@ -122,10 +127,10 @@ pub fn to_relative_short(time: EpochMillis, now: EpochMillis) -> String {
     if months >= 1 {
         return format(months, negative, "months");
     }
-    let ms = end - start;
+    let ms = end.saturating_sub(start);
     for (unit, size) in [("days", DAY), ("hours", 3_600_000), ("minutes", 60_000), ("seconds", 1000)] {
         if ms >= size {
-            return format(ms / size, negative, unit);
+            return format(ms.div_euclid(size), negative, unit);
         }
     }
     // `format(start > end ? -0 : 0, 'seconds')`: "0 sec. ago" or "in 0 sec."

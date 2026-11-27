@@ -81,16 +81,19 @@ struct Combination {
     values: Vec<PlaceholderValue>,
 }
 
+#[expect(clippy::expect_used, reason = "a literal pattern, compiled by the tests below")]
 fn value_regex() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"(?<value>(?<!\d|\))[+-]?\d+(?:\.\d+)?)(?:\((?<min>.[^)-]*)(?:-(?<max>[^)]+))?\))?", "g").unwrap()
+        Regex::new(r"(?<value>(?<!\d|\))[+-]?\d+(?:\.\d+)?)(?:\((?<min>.[^)-]*)(?:-(?<max>[^)]+))?\))?", "g")
+            .expect("valid pattern")
     })
 }
 
+#[expect(clippy::expect_used, reason = "a literal pattern, compiled by the tests below")]
 fn hash_regex() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new("#", "gm").unwrap())
+    RE.get_or_init(|| Regex::new("#", "gm").expect("valid pattern"))
 }
 
 /// `_statPlaceholderGenerator`: the stat text with every subset of its numbers
@@ -99,7 +102,7 @@ fn stat_placeholder_combinations(stat: &str) -> Vec<Combination> {
     let mut matches: Vec<PlaceholderValue> = Vec::new();
     let with_placeholders = stat.replace("()", "").replace("(...)", "");
     let with_placeholders = value_regex().replace_all(&with_placeholders, |caps| {
-        let roll = caps.get(1).unwrap();
+        let Some(roll) = caps.get(1) else { return String::new() };
         let min = caps.get(2);
         // Sextant "# uses remaining", legacy rolls: `(min)` without a max.
         let max = if min.is_some() && caps.get(3).is_none() { min } else { caps.get(3) };
@@ -122,12 +125,15 @@ fn stat_placeholder_combinations(stat: &str) -> Vec<Combination> {
 
     let mut out = Vec::new();
     if let Some(map) = PLACEHOLDER_MAP.get(matches.len()) {
-        for replacements in map.iter() {
-            let mut idx: isize = -1;
+        for replacements in *map {
+            let mut seen = 0_usize;
             let replaced = hash_regex().replace_all(&with_placeholders, |_| {
-                idx += 1;
-                let i = idx as usize;
-                if replacements.contains(&i) { matches[i].roll_str.clone() } else { "#".to_owned() }
+                let i = seen;
+                seen = seen.saturating_add(1);
+                match matches.get(i) {
+                    Some(m) if replacements.contains(&i) => m.roll_str.clone(),
+                    _ => "#".to_owned(),
+                }
             });
             let values =
                 matches.iter().enumerate().filter(|(i, _)| !replacements.contains(i)).map(|(_, v)| v.clone()).collect();
@@ -147,7 +153,10 @@ pub fn try_parse_translation(
     item_category: Option<&ItemCategory>,
 ) -> Result<Option<ParsedStat>, Fail> {
     for mut combination in stat_placeholder_combinations(&stat.string) {
-        let roll = (combination.values.len() == 1).then(|| combination.values[0].roll);
+        let roll = match combination.values.as_slice() {
+            [value] => Some(value.roll),
+            _ => None,
+        };
         let found = find_and_resolve_translation(d, &combination.stat, mod_type, item_category, roll)?;
         let Some((found_stat, matcher)) = found else { continue };
         if !found_stat.trade.ids.contains_key(mod_type.as_str()) {
@@ -215,7 +224,10 @@ pub fn try_parse_translation(
 
 /// `getRollOrMinmaxAvg`: the average of two values, otherwise the first.
 pub fn get_roll_or_minmax_avg(values: &[f64]) -> f64 {
-    if values.len() == 2 { (values[0] + values[1]) / 2.0 } else { values.first().copied().unwrap_or(f64::NAN) }
+    match values {
+        [a, b] => (a + b) / 2.0,
+        _ => values.first().copied().unwrap_or(f64::NAN),
+    }
 }
 
 fn has_matcher(stat: &Stat, match_str: &str) -> bool {
@@ -263,37 +275,45 @@ pub(crate) fn resolve_translation(
         return Ok(idx.and_then(|i| stats.get(i).cloned()));
     }
 
-    let on_trade: Vec<usize> =
-        (0..stats.len()).filter(|&i| stats[i].trade.ids.contains_key(mod_type.as_str())).collect();
-    if on_trade.len() == 1 {
-        return Ok(Some(stats.swap_remove(on_trade[0])));
+    let on_trade: Vec<usize> = stats
+        .iter()
+        .enumerate()
+        .filter(|(_, stat)| stat.trade.ids.contains_key(mod_type.as_str()))
+        .map(|(i, _)| i)
+        .collect();
+    if let [index] = on_trade.as_slice() {
+        return Ok(Some(stats.swap_remove(*index)));
     }
 
     match &resolve {
-        StatGroupResolver::Select { .. } => unreachable!(),
+        // Handled above.
+        StatGroupResolver::Select { .. } => Ok(None),
         StatGroupResolver::TrivialMerge => {
             let with_match_str: Vec<usize> = if match_str.is_empty() {
                 on_trade
             } else {
-                on_trade.into_iter().filter(|&i| has_matcher(&stats[i], match_str)).collect()
+                on_trade.into_iter().filter(|&i| stats.get(i).is_some_and(|s| has_matcher(s, match_str))).collect()
             };
             let Some((&first, rest)) = with_match_str.split_first() else { return Ok(None) };
-            let mut merged = stats[first].clone();
+            let mut merged = stats.get(first).cloned().ok_or(Fail::THROW)?;
             for &i in rest {
-                merge_trade_ids_into(&mut merged, &stats[i], None);
+                let Some(stat) = stats.get(i) else { continue };
+                merge_trade_ids_into(&mut merged, stat, None);
             }
             Ok(Some(merged))
         }
         StatGroupResolver::PercentMerge { kind } => {
             let pct = kind_index(kind, MergeKind::Percent)?;
-            let roll100 = stats[pct]
+            let roll100 = stats
+                .get(pct)
+                .ok_or(Fail::THROW)?
                 .matchers
                 .iter()
                 .find(|m| m.string == match_str || m.advanced.as_deref() == Some(match_str))
                 .is_some_and(|m| m.value == Some(100.0));
             if roll100 {
-                let other = stats[kind_index(kind, MergeKind::Value)?].clone();
-                let flag = other.matchers.len() == 1 && !other.matchers[0].string.contains('#');
+                let other = stats.get(kind_index(kind, MergeKind::Value)?).cloned().ok_or(Fail::THROW)?;
+                let flag = matches!(other.matchers.as_slice(), [m] if !m.string.contains('#'));
                 let mut pct_stat = stats.swap_remove(pct);
                 merge_trade_ids_into(&mut pct_stat, &other, Some(if flag { "{empty_if_100}" } else { "{div_by_100}" }));
                 return Ok(Some(pct_stat));
@@ -303,7 +323,7 @@ pub(crate) fn resolve_translation(
         StatGroupResolver::FlagMerge { kind } => {
             let Some(roll) = roll else { return Ok(None) };
             let val = kind_index(kind, MergeKind::Value)?;
-            let flag_stat = stats[kind_index(kind, MergeKind::Flag)?].clone();
+            let flag_stat = stats.get(kind_index(kind, MergeKind::Flag)?).cloned().ok_or(Fail::THROW)?;
             let flag_roll = flag_stat.matchers.first().ok_or(Fail::THROW)?.value;
             let mut val_stat = stats.swap_remove(val);
             if flag_roll == Some(roll) {

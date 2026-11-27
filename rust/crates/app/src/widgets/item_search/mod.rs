@@ -51,10 +51,10 @@ impl Tab {
     /// `typeFilter.value`.
     pub const fn as_str(self) -> &'static str {
         match self {
-            Tab::Gem => "gem",
-            Tab::Replica => "replica",
-            Tab::Unique => "unique",
-            Tab::BaseItem => "base_item",
+            Self::Gem => "gem",
+            Self::Replica => "replica",
+            Self::Unique => "unique",
+            Self::BaseItem => "base_item",
         }
     }
 
@@ -62,16 +62,16 @@ impl Tab {
     /// prefixes with `item_search.`.
     pub const fn label_key(self) -> &'static str {
         match self {
-            Tab::Gem => "item_search.target_gem",
-            Tab::Replica => "item_search.target_replica",
-            Tab::Unique => "item_search.target_unique",
-            Tab::BaseItem => "item_search.target_base_item",
+            Self::Gem => "item_search.target_gem",
+            Self::Replica => "item_search.target_replica",
+            Self::Unique => "item_search.target_unique",
+            Self::BaseItem => "item_search.target_base_item",
         }
     }
 }
 
 /// The tabs a game's widget draws, in the template's order.
-pub fn tabs(game: GameId) -> &'static [Tab] {
+pub const fn tabs(game: GameId) -> &'static [Tab] {
     match game {
         GameId::Poe2 => &[Tab::Gem, Tab::Unique, Tab::BaseItem],
         GameId::Poe1 => &[Tab::Gem, Tab::Replica],
@@ -79,7 +79,7 @@ pub fn tabs(game: GameId) -> &'static [Tab] {
 }
 
 /// `typeFilter`'s initial value: APT's `'gem'`, EE2's `'base_item'`.
-pub fn default_tab(game: GameId) -> Tab {
+pub const fn default_tab(game: GameId) -> Tab {
     match game {
         GameId::Poe2 => Tab::BaseItem,
         GameId::Poe1 => Tab::Gem,
@@ -98,40 +98,40 @@ impl Record {
     /// `info.name`; empty for the nameless uniques EE2 ships (upstream renders `undefined`).
     pub fn name(&self) -> &str {
         match self {
-            Record::Poe1(info) => &info.name,
-            Record::Poe2(info) => info.name.as_deref().unwrap_or_default(),
+            Self::Poe1(info) => &info.name,
+            Self::Poe2(info) => info.name.as_deref().unwrap_or_default(),
         }
     }
 
     /// `info.refName`: what a price query searches by.
     pub fn ref_name(&self) -> &str {
         match self {
-            Record::Poe1(info) => &info.ref_name,
-            Record::Poe2(info) => info.ref_name.as_deref().unwrap_or_default(),
+            Self::Poe1(info) => &info.ref_name,
+            Self::Poe2(info) => info.ref_name.as_deref().unwrap_or_default(),
         }
     }
 
     /// `info.icon`: the CDN URL.
     pub fn icon(&self) -> &str {
         match self {
-            Record::Poe1(info) => &info.icon,
-            Record::Poe2(info) => &info.icon,
+            Self::Poe1(info) => &info.icon,
+            Self::Poe2(info) => &info.icon,
         }
     }
 
     /// `info.namespace`, as a price query's `ns`.
-    pub fn namespace(&self) -> &'static str {
+    pub const fn namespace(&self) -> &'static str {
         match self {
-            Record::Poe1(info) => info.namespace.as_str(),
-            Record::Poe2(info) => info.namespace.as_str(),
+            Self::Poe1(info) => info.namespace.as_str(),
+            Self::Poe2(info) => info.namespace.as_str(),
         }
     }
 
     /// `info.unique.base`: a price query's variant.
     pub fn unique_base(&self) -> Option<&str> {
         match self {
-            Record::Poe1(info) => info.unique.as_ref().map(|unique| unique.base.as_str()),
-            Record::Poe2(info) => info.unique.as_ref().map(|unique| unique.base.as_str()),
+            Self::Poe1(info) => info.unique.as_ref().map(|unique| unique.base.as_str()),
+            Self::Poe2(info) => info.unique.as_ref().map(|unique| unique.base.as_str()),
         }
     }
 
@@ -146,11 +146,11 @@ impl Record {
     /// `createVirtualItem`'s props for this record: the gem/unique/base-item constructor.
     fn virtual_item(&self) -> Picked {
         match self {
-            Record::Poe1(info) if self.is_gem() => Picked::Poe1(Box::new(Poe1Item::virtual_gem(info.clone()))),
-            Record::Poe1(info) => Picked::Poe1(Box::new(Poe1Item::virtual_unique(info.clone()))),
-            Record::Poe2(info) if self.is_gem() => Picked::Poe2(Box::new(Poe2Item::virtual_gem(info.clone()))),
-            Record::Poe2(info) if self.is_unique() => Picked::Poe2(Box::new(Poe2Item::virtual_unique(info.clone()))),
-            Record::Poe2(info) => Picked::Poe2(Box::new(Poe2Item::virtual_normal(info.clone()))),
+            Self::Poe1(info) if self.is_gem() => Picked::Poe1(Box::new(Poe1Item::virtual_gem(info.clone()))),
+            Self::Poe1(info) => Picked::Poe1(Box::new(Poe1Item::virtual_unique(info.clone()))),
+            Self::Poe2(info) if self.is_gem() => Picked::Poe2(Box::new(Poe2Item::virtual_gem(info.clone()))),
+            Self::Poe2(info) if self.is_unique() => Picked::Poe2(Box::new(Poe2Item::virtual_unique(info.clone()))),
+            Self::Poe2(info) => Picked::Poe2(Box::new(Poe2Item::virtual_normal(info.clone()))),
         }
     }
 }
@@ -167,8 +167,8 @@ impl Results {
     /// The matches, when the query found any.
     pub fn items(&self) -> &[Record] {
         match self {
-            Results::TooMany => &[],
-            Results::Found(items) => items,
+            Self::TooMany => &[],
+            Self::Found(items) => items,
         }
     }
 }
@@ -210,8 +210,8 @@ enum Prices {
 impl std::fmt::Debug for Prices {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Prices::Poe1(prices) => f.debug_tuple("Poe1").field(prices).finish(),
-            Prices::Poe2(prices) => f.debug_tuple("Poe2").field(&prices.xchg_rate).finish(),
+            Self::Poe1(prices) => f.debug_tuple("Poe1").field(prices).finish(),
+            Self::Poe2(prices) => f.debug_tuple("Poe2").field(&prices.xchg_rate).finish(),
         }
     }
 }
@@ -245,10 +245,16 @@ impl std::fmt::Debug for State {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("State")
             .field("game", &self.game)
+            .field("search", &self.search)
+            .field("query", &self.query)
             .field("tab", &self.tab)
             .field("results", &self.results)
             .field("selected", &self.selected)
             .field("active", &self.active)
+            .field("user_editing", &self.user_editing)
+            .field("prices", &self.prices)
+            .field("market", &self.market)
+            .field("mode", &self.mode)
             .finish()
     }
 }
@@ -287,7 +293,7 @@ impl State {
 
     /// `v-model="searchValue"`: the query, then the `computed` results.
     pub fn set_query(&mut self, query: &str) {
-        self.query = query.to_owned();
+        query.clone_into(&mut self.query);
         self.search.replace_text(query);
         self.recompute();
     }
@@ -308,7 +314,7 @@ impl State {
     }
 
     /// `on_input_key`: a key reached the field, so the change that follows is the user's.
-    pub fn edited_on_key(&mut self) {
+    pub const fn edited_on_key(&mut self) {
         self.user_editing = true;
     }
 
@@ -552,6 +558,10 @@ fn price_line(game: GameId, record: &Record, price: Option<Price>) -> El {
 }
 
 /// `searchWrapper`: the input row, the tab row and the results, on gray-800.
+#[expect(
+    clippy::expect_used,
+    reason = "the card is only drawn for an overlay whose item-search state `Overlay::ensure_state` built"
+)]
 fn search_half<S: 'static>(state: &State, project: Project<S>) -> El {
     let game = state.game;
     let placeholder = crate::settings::t(game, "item_search.input");
@@ -608,7 +618,32 @@ fn search_half<S: 'static>(state: &State, project: Project<S>) -> El {
         );
 
     // `<span>{{ t(':heist_target') }}</span>` and one button per tab.
-    let mut tabs = row().key("item-search-tabs").gap(theme::rem(0.5)).px(theme::rem(0.5)).py(theme::rem(0.25)).child(
+    let tabs = tabs_row(state, project);
+
+    let results = results_list(state, project);
+
+    col()
+        .key("item-search-search")
+        .w_full()
+        .radius(theme::ROUNDED)
+        .fill(theme::gray(800))
+        .child(
+            row()
+                .key("item-search-input-row")
+                .w_full()
+                .padding(theme::rem(0.25))
+                .gap(theme::rem(0.25))
+                .child(input)
+                .child(reset),
+        )
+        .child(tabs)
+        .child(results)
+}
+
+/// The tabs row: the `Heist target:` label and one button per tab of the game's widget.
+fn tabs_row<S: 'static>(state: &State, project: Project<S>) -> El {
+    let game = state.game;
+    let tabs = row().key("item-search-tabs").gap(theme::rem(0.5)).px(theme::rem(0.5)).py(theme::rem(0.25)).child(
         text(crate::settings::t(game, "item_search.heist_target")).key("item-search-tabs-label").font(type_::SM),
     );
     let mut buttons = row().key("item-search-tab-buttons").gap(theme::rem(0.25));
@@ -636,8 +671,12 @@ fn search_half<S: 'static>(state: &State, project: Project<S>) -> El {
                 .child(tab_label(game, *tab, &format!("{key}-label"))),
         );
     }
-    tabs = tabs.child(buttons);
+    tabs.child(buttons)
+}
 
+/// The results list: the note, or one row per match of the tab's name search.
+fn results_list<S: 'static>(state: &State, project: Project<S>) -> El {
+    let game = state.game;
     let mut results = col().key("item-search-results").w_full();
     match &state.results {
         Results::TooMany => {
@@ -655,23 +694,7 @@ fn search_half<S: 'static>(state: &State, project: Project<S>) -> El {
             }
         }
     }
-
-    col()
-        .key("item-search-search")
-        .w_full()
-        .radius(theme::ROUNDED)
-        .fill(theme::gray(800))
-        .child(
-            row()
-                .key("item-search-input-row")
-                .w_full()
-                .padding(theme::rem(0.25))
-                .gap(theme::rem(0.25))
-                .child(input)
-                .child(reset),
-        )
-        .child(tabs)
-        .child(results)
+    results
 }
 
 /// The message rows' glyph: `fa-exclamation-triangle` (`fa-search` is not among the ported
@@ -681,7 +704,7 @@ fn message_glyph() -> El {
     icon::warning(theme::rem(0.875), theme::gray(400))
 }
 
-fn tabs_for(game: GameId) -> &'static [Tab] {
+const fn tabs_for(game: GameId) -> &'static [Tab] {
     tabs(game)
 }
 
@@ -697,7 +720,7 @@ fn tab_text(game: GameId, tab: Tab) -> String {
 fn tab_label(game: GameId, tab: Tab, key: &str) -> El {
     let text_value = tab_text(game, tab);
     if game == GameId::Poe1 && tab == Tab::Replica {
-        let start = text_value.len() - "Base items".len();
+        let start = text_value.len().saturating_sub("Base items".len());
         return rune::rich(text_value.clone(), vec![rune::Span::new(start, text_value.len()).color(theme::gray(600))])
             .key(key)
             .font(type_::SM)
@@ -791,6 +814,7 @@ fn open_selected(overlay: &mut Overlay, index: usize) {
 mod tests {
     use super::*;
     use crate::widgets::Kind;
+    use wraex_core::num::usize_to_f64;
 
     fn state(game: GameId) -> State {
         State::new(game, Mode::Replay)
@@ -882,7 +906,7 @@ mod tests {
         }
         let mut widget = state(GameId::Poe2);
         for index in 0..7 {
-            widget.add(Selected { record: record(index), discr: None, value: Some(index as f64), price: None });
+            widget.add(Selected { record: record(index), discr: None, value: Some(usize_to_f64(index)), price: None });
         }
         // Seven picks: the sixth is the fifth-plus-one, so it replaces the strip; the seventh
         // then sits beside it, most valuable first.
@@ -894,7 +918,7 @@ mod tests {
         widget.add(duplicate);
         assert_eq!(widget.selected.len(), 2);
         widget.clear_selected();
-        assert!(widget.selected.is_empty());
+        assert_eq!(widget.selected, Vec::new());
     }
 
     /// A strip press dispatches the virtual item `createVirtualItem` builds for the record.

@@ -10,7 +10,7 @@ use serde_json::Value;
 
 /// `WhiteSpace` and `LineTerminator` from the ECMAScript spec: what `trim()`
 /// strips and `Number()` ignores around the number.
-pub fn is_whitespace(c: char) -> bool {
+pub const fn is_whitespace(c: char) -> bool {
     matches!(
         c,
         '\t' | '\n' | '\u{b}' | '\u{c}' | '\r' | ' ' | '\u{a0}' | '\u{1680}' | '\u{2000}'
@@ -44,15 +44,14 @@ pub fn split_whitespace(s: &str) -> Vec<&str> {
             out.push(rest);
             return out;
         };
-        out.push(&rest[..at]);
-        let after = &rest[at..];
-        match after.find(|c: char| !is_whitespace(c)) {
-            Some(next) => rest = &after[next..],
-            None => {
-                out.push("");
-                return out;
-            }
-        }
+        // `find` returns a char boundary.
+        let (head, after) = rest.split_at(at);
+        out.push(head);
+        let Some(next) = after.find(|c: char| !is_whitespace(c)) else {
+            out.push("");
+            return out;
+        };
+        rest = after.split_at(next).1;
     }
 }
 
@@ -70,18 +69,21 @@ pub fn truthy(x: f64) -> bool {
 /// (`1`, `1.5`, `.5`, `1.`, `1e5`), as a byte length.
 fn decimal_prefix(s: &str) -> usize {
     let b = s.as_bytes();
-    let digits = |mut i: usize| {
-        while i < b.len() && b[i].is_ascii_digit() {
-            i += 1;
+    // The end of the run of ASCII digits starting at `from`.
+    let digits = |from: usize| {
+        let mut i = from;
+        while b.get(i).is_some_and(u8::is_ascii_digit) {
+            i = i.saturating_add(1);
         }
         i
     };
     let int_end = digits(0);
     let mut end = int_end;
     let mut mantissa = int_end > 0;
-    if end < b.len() && b[end] == b'.' {
-        let frac_end = digits(end + 1);
-        if frac_end > end + 1 || mantissa {
+    if b.get(end) == Some(&b'.') {
+        let frac_start = end.saturating_add(1);
+        let frac_end = digits(frac_start);
+        if frac_end > frac_start || mantissa {
             mantissa = true;
             end = frac_end;
         }
@@ -89,13 +91,11 @@ fn decimal_prefix(s: &str) -> usize {
     if !mantissa {
         return 0;
     }
-    if end < b.len() && (b[end] == b'e' || b[end] == b'E') {
-        let mut i = end + 1;
-        if i < b.len() && (b[i] == b'+' || b[i] == b'-') {
-            i += 1;
-        }
-        let exp_end = digits(i);
-        if exp_end > i {
+    if matches!(b.get(end), Some(&b'e' | &b'E')) {
+        let exponent = end.saturating_add(1);
+        let start = if matches!(b.get(exponent), Some(&b'+' | &b'-')) { exponent.saturating_add(1) } else { exponent };
+        let exp_end = digits(start);
+        if exp_end > start {
             end = exp_end;
         }
     }
@@ -103,11 +103,7 @@ fn decimal_prefix(s: &str) -> usize {
 }
 
 fn signed(s: &str) -> (f64, &str) {
-    match s.as_bytes().first() {
-        Some(b'-') => (-1.0, &s[1..]),
-        Some(b'+') => (1.0, &s[1..]),
-        _ => (1.0, s),
-    }
+    s.strip_prefix('-').map_or_else(|| (1.0, s.strip_prefix('+').unwrap_or(s)), |rest| (-1.0, rest))
 }
 
 /// `Number(s)` for a string.
@@ -118,10 +114,18 @@ pub fn number(s: &str) -> f64 {
     }
     for (prefix, radix) in [("0x", 16), ("0X", 16), ("0o", 8), ("0O", 8), ("0b", 2), ("0B", 2)] {
         if let Some(rest) = s.strip_prefix(prefix) {
-            if rest.is_empty() || !rest.chars().all(|c| c.is_digit(radix)) {
+            if rest.is_empty() {
                 return f64::NAN;
             }
-            return rest.chars().fold(0.0, |acc, c| acc * f64::from(radix) + f64::from(c.to_digit(radix).unwrap()));
+            let mut acc = 0.0;
+            #[expect(clippy::suboptimal_flops, reason = "JS rounds `acc * radix` and the addition separately")]
+            for c in rest.chars() {
+                let Some(digit) = c.to_digit(radix) else {
+                    return f64::NAN;
+                };
+                acc = acc * f64::from(radix) + f64::from(digit);
+            }
+            return acc;
         }
     }
     let (sign, rest) = signed(s);
@@ -131,7 +135,8 @@ pub fn number(s: &str) -> f64 {
     if rest.is_empty() || decimal_prefix(rest) != rest.len() {
         return f64::NAN;
     }
-    sign * rest.parse::<f64>().expect("validated decimal literal")
+    // The prefix check above leaves a decimal literal that always parses.
+    rest.parse::<f64>().map_or(f64::NAN, |value| sign * value)
 }
 
 /// `parseFloat(s)`
@@ -140,10 +145,15 @@ pub fn parse_float(s: &str) -> f64 {
     if rest.starts_with("Infinity") {
         return sign * f64::INFINITY;
     }
-    match decimal_prefix(rest) {
-        0 => f64::NAN,
-        end => sign * rest[..end].parse::<f64>().expect("validated decimal literal"),
+    let end = decimal_prefix(rest);
+    if end == 0 {
+        return f64::NAN;
     }
+    // `decimal_prefix` only spans a prefix of the string.
+    let Some(prefix) = rest.get(..end) else {
+        return f64::NAN;
+    };
+    prefix.parse::<f64>().map_or(f64::NAN, |value| sign * value)
 }
 
 /// `parseInt(s, 10)`
@@ -154,7 +164,10 @@ pub fn parse_int(s: &str) -> f64 {
         return f64::NAN;
     }
     // Same rounding as JavaScript for long digit strings: parse as a decimal.
-    sign * rest[..end].parse::<f64>().expect("ASCII digits")
+    let Some(digits) = rest.get(..end) else {
+        return f64::NAN;
+    };
+    digits.parse::<f64>().map_or(f64::NAN, |value| sign * value)
 }
 
 /// `Number.prototype.toString()` (and `String(x)`, template literals): the
@@ -171,21 +184,24 @@ pub fn number_to_string(x: f64) -> String {
     }
     // `{:e}` gives the shortest round-trip digits: "1.2345e3".
     let sci = format!("{:e}", x.abs());
-    let (mantissa, exp) = sci.split_once('e').expect("`{:e}` has an exponent");
+    // `{:e}` always writes an exponent; keep the whole string if it does not.
+    let (mantissa, exp) = sci.split_once('e').unwrap_or((sci.as_str(), "0"));
     let digits: String = mantissa.chars().filter(|c| *c != '.').collect();
-    let k = digits.len() as i32;
-    let n = exp.parse::<i32>().expect("integer exponent") + 1;
+    let k = i32::try_from(digits.len()).unwrap_or(i32::MAX);
+    let n = exp.parse::<i32>().unwrap_or(0).saturating_add(1);
     let body = if k <= n && n <= 21 {
-        format!("{digits}{}", "0".repeat((n - k) as usize))
+        format!("{digits}{}", "0".repeat(usize::try_from(n.saturating_sub(k)).unwrap_or(0)))
     } else if 0 < n && n <= 21 {
-        format!("{}.{}", &digits[..n as usize], &digits[n as usize..])
+        // `n < k` here, so both halves are inside `digits`.
+        let at = usize::try_from(n).unwrap_or(0);
+        format!("{}.{}", digits.get(..at).unwrap_or_default(), digits.get(at..).unwrap_or_default())
     } else if -6 < n && n <= 0 {
-        format!("0.{}{digits}", "0".repeat((-n) as usize))
+        format!("0.{}{digits}", "0".repeat(usize::try_from(n.unsigned_abs()).unwrap_or(0)))
     } else {
-        let e = n - 1;
+        let e = n.saturating_sub(1);
         let sign = if e < 0 { '-' } else { '+' };
-        let rest = if k > 1 { format!(".{}", &digits[1..]) } else { String::new() };
-        format!("{}{rest}e{sign}{}", &digits[..1], e.abs())
+        let rest = if k > 1 { format!(".{}", digits.get(1..).unwrap_or_default()) } else { String::new() };
+        format!("{}{rest}e{sign}{}", digits.get(..1).unwrap_or_default(), e.unsigned_abs())
     };
     if x < 0.0 { format!("-{body}") } else { body }
 }
@@ -196,12 +212,19 @@ pub fn encode_uri_component(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     for byte in text.bytes() {
         if byte.is_ascii_alphanumeric() || b"-_.!~*'()".contains(&byte) {
-            out.push(byte as char);
+            out.push(char::from(byte));
         } else {
-            out.push_str(&format!("%{byte:02X}"));
+            out.push('%');
+            out.push(hex_digit(byte.div_euclid(16)));
+            out.push(hex_digit(byte.rem_euclid(16)));
         }
     }
     out
+}
+
+/// The upper-case hex digit of a nibble (`0x4B` → `'B'`).
+pub(crate) fn hex_digit(nibble: u8) -> char {
+    char::from_digit(u32::from(nibble), 16).unwrap_or_default().to_ascii_uppercase()
 }
 
 /// `x.toFixed(digits)`: rounds the exact binary value, ties away from zero
@@ -215,28 +238,35 @@ pub fn to_fixed(x: f64, digits: usize) -> String {
     }
     // The exact decimal expansion: an f64 has at most 1074 fractional digits.
     let exact = format!("{:.1100}", x.abs());
-    let (int_part, frac) = exact.split_once('.').expect("a fraction was asked for");
-    let mut digits_vec: Vec<u8> = int_part.bytes().chain(frac.bytes().take(digits)).map(|b| b - b'0').collect();
-    let rest = &frac[digits..];
+    // A precision of 1100 always writes a fraction.
+    let Some((int_part, frac)) = exact.split_once('.') else {
+        return number_to_string(x);
+    };
+    let mut digits_vec: Vec<u8> =
+        int_part.bytes().chain(frac.bytes().take(digits)).map(|b| b.wrapping_sub(b'0')).collect();
+    // `frac` has 1100 digits, more than any caller asks for.
+    let rest = frac.get(digits..).unwrap_or_default();
     let round_up = rest.as_bytes().first().is_some_and(|&b| b >= b'5');
     if round_up {
-        let mut i = digits_vec.len();
-        loop {
-            if i == 0 {
-                digits_vec.insert(0, 1);
-                break;
-            }
-            i -= 1;
-            if digits_vec[i] == 9 {
-                digits_vec[i] = 0;
+        // Ties away from zero: increment the last digit that is not a 9 and zero
+        // the 9s after it, or prepend a 1 if every digit was a 9.
+        let mut carry = true;
+        for digit in digits_vec.iter_mut().rev() {
+            if *digit == 9 {
+                *digit = 0;
             } else {
-                digits_vec[i] += 1;
+                *digit = digit.wrapping_add(1);
+                carry = false;
                 break;
             }
         }
+        if carry {
+            digits_vec.insert(0, 1);
+        }
     }
-    let text: String = digits_vec.iter().map(|d| char::from(b'0' + d)).collect();
-    let (int_digits, frac_digits) = text.split_at(text.len() - digits);
+    let text: String = digits_vec.iter().map(|digit| char::from(digit.wrapping_add(b'0'))).collect();
+    let cut = text.len().saturating_sub(digits);
+    let (int_digits, frac_digits) = text.split_at_checked(cut).unwrap_or((text.as_str(), ""));
     let body = if digits == 0 { int_digits.to_owned() } else { format!("{int_digits}.{frac_digits}") };
     // `(-0.04).toFixed(1)` is `"-0.0"`: the sign stays.
     if x.is_sign_negative() && x != 0.0 { format!("-{body}") } else { body }
@@ -250,23 +280,28 @@ pub fn normalize_nfkd(text: &str) -> String {
 
 /// `JSON.stringify(text)` for a string: quoted, with JSON escapes.
 pub fn json_string(text: &str) -> String {
-    serde_json::to_string(text).expect("strings serialise")
+    // A string always serialises.
+    serde_json::to_string(text).unwrap_or_default()
 }
 
-/// `JSON.stringify(value)`: compact JSON, keys in the order the value built them,
-/// numbers as JavaScript writes them (integral doubles without a fraction). This is
-/// what the trade site receives from the reference, and the screenshot recordings
-/// key on a hash of those exact bytes.
+/// `JSON.stringify(value)`.
+///
+/// Compact JSON, keys in the order the value built them, numbers as JavaScript
+/// writes them (integral doubles without a fraction). This is what the trade site
+/// receives from the reference, and the screenshot recordings key on a hash of
+/// those exact bytes.
 pub fn stringify<T: Serialize + ?Sized>(value: &T) -> String {
     let value = json_value(value);
-    serde_json::to_string(&value).expect("JSON values always serialise")
+    // A `Value` always serialises.
+    serde_json::to_string(&value).unwrap_or_default()
 }
 
 /// Serialises `value` and rewrites its numbers the way `JSON.stringify` writes
 /// them: integral doubles without a fraction (`9`, not `9.0`), `-0` as `0`,
 /// non-finite as `null`.
 pub fn json_value<T: Serialize + ?Sized>(value: &T) -> Value {
-    let mut value = serde_json::to_value(value).expect("ported values serialise");
+    // Ported values always serialise; `null` is the stand-in if one does not.
+    let mut value = serde_json::to_value(value).unwrap_or(Value::Null);
     normalize_numbers(&mut value);
     value
 }
@@ -274,10 +309,12 @@ pub fn json_value<T: Serialize + ?Sized>(value: &T) -> Value {
 fn normalize_numbers(value: &mut Value) {
     match value {
         Value::Number(n) if n.is_f64() => {
-            let f = n.as_f64().unwrap();
+            let Some(f) = n.as_f64() else {
+                return;
+            };
             // Integral doubles below 1e21 print without exponent or fraction.
             if f.fract() == 0.0 && f.abs() < 9.007_199_254_740_992e15 {
-                *value = Value::from(f as i64);
+                *value = Value::from(crate::num::f64_to_i64(f));
             }
         }
         Value::Array(items) => items.iter_mut().for_each(normalize_numbers),
@@ -287,9 +324,11 @@ fn normalize_numbers(value: &mut Value) {
 }
 
 #[cfg(test)]
+#[expect(clippy::disallowed_macros, reason = "expected JSON written as literals")]
 mod tests {
     use super::*;
 
+    #[expect(clippy::float_cmp, reason = "JS `===` on numbers")]
     fn same(a: f64, b: f64) -> bool {
         (a.is_nan() && b.is_nan()) || a == b
     }
@@ -360,11 +399,11 @@ mod tests {
             (1.5, "1.5"),
             (-0.0, "0"),
             (0.1 + 0.2, "0.30000000000000004"),
-            (123456789.0, "123456789"),
+            (123_456_789.0, "123456789"),
             (1e21, "1e+21"),
             (1.5e21, "1.5e+21"),
             (1e20, "100000000000000000000"),
-            (0.000001, "0.000001"),
+            (0.000_001, "0.000001"),
             (1e-7, "1e-7"),
             (-2.5e-8, "-2.5e-8"),
             (f64::NAN, "NaN"),

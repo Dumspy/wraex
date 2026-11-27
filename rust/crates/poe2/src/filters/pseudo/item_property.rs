@@ -29,7 +29,7 @@ pub struct Prop {
 }
 
 impl Prop {
-    pub fn new(stat_ref: &'static str, trade_id: &'static str, roll: StatRoll, sources: Vec<StatSource>) -> Self {
+    pub const fn new(stat_ref: &'static str, trade_id: &'static str, roll: StatRoll, sources: Vec<StatSource>) -> Self {
         Self { stat_ref, trade_id, roll, sources, dp: false, disabled: None, hidden: None, option: None }
     }
 }
@@ -136,6 +136,10 @@ fn times(a: StatRoll, b: StatRoll) -> StatRoll {
     StatRoll { value: a.value * b.value, min: a.min * b.min, max: a.max * b.max, option: None }
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "line-for-line port of upstream `weaponProps` (filters/pseudo/item-property.ts)"
+)]
 fn weapon_props(ctx: &mut Ctx) -> R<()> {
     let item = ctx.item;
 
@@ -167,8 +171,9 @@ fn weapon_props(ctx: &mut Ctx) -> R<()> {
     if truthy(item.weapon_elemental).is_some() {
         let mut elemental_info = IndexMap::new();
         for (i, roll) in [(13, fire_dps), (14, cold_dps), (15, lightning_dps)] {
+            let Some(&trade_id) = INTERNAL_TRADE_IDS.get(i) else { continue };
             if roll.value != 0.0 {
-                elemental_info.insert(INTERNAL_TRADE_IDS[i], short_roll_to_filter(roll, ctx.search_in_range, item));
+                elemental_info.insert(trade_id, short_roll_to_filter(roll, ctx.search_in_range, item));
             }
         }
 
@@ -182,7 +187,7 @@ fn weapon_props(ctx: &mut Ctx) -> R<()> {
         let prop = Prop {
             disabled: Some(minor),
             hidden: minor.then_some("filters.hide_ele_dps"),
-            option: Some(FilterOption { value: Some(f64::from(ItemIsElementalModifier::Any as u8)) }),
+            option: Some(FilterOption { value: Some(f64::from(ItemIsElementalModifier::Any.value())) }),
             ..Prop::new("Elemental DPS: #", "item.elemental_dps", edps, ele_dmg.sources)
         };
         let mut elemental_filter = prop_to_filter(prop, ctx)?;
@@ -258,10 +263,13 @@ fn weapon_props(ctx: &mut Ctx) -> R<()> {
     Ok(())
 }
 
+/// One row of `mapProps`: the roll, its stat text, its trade id and its hidden text.
+type MapProp = (Option<f64>, &'static str, &'static str, Option<&'static str>);
+
 fn map_props(ctx: &mut Ctx) -> R<()> {
     let item = ctx.item;
     let none = PropStats { flat: &[], incr: &[] };
-    let props: [(Option<f64>, &'static str, &'static str, Option<&'static str>); 9] = [
+    let props: [MapProp; 9] = [
         (item.map_revives, "Revives Available: #", "item.map_revives", Some("filters.hide_revives")),
         (item.map_pack_size, "Monster Pack Size: #", "item.map_pack_size", None),
         // Not in 0.5.2.
@@ -288,7 +296,7 @@ fn map_props(ctx: &mut Ctx) -> R<()> {
 }
 
 /// `isPdpsImportant`
-fn is_pdps_important(item: &Item) -> bool {
+const fn is_pdps_important(item: &Item) -> bool {
     use ItemCategory as C;
     matches!(
         item.category,
@@ -340,7 +348,7 @@ pub fn prop_to_filter(prop: Prop, ctx: &Ctx) -> R<StatFilter> {
     let source = StatSource {
         modifier: ParsedModifier { info: ModifierInfo::new(ModifierType::Pseudo), stats: Vec::new() },
         stat: ParsedStat {
-            translation: stat.matchers[0].clone(),
+            translation: stat.matchers.first().cloned().ok_or_else(|| missing("prop matcher"))?,
             stat: stat.clone(),
             roll: Some(StatRollInfo {
                 unscalable: false,

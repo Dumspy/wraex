@@ -26,20 +26,20 @@ pub enum TrayAction {
 }
 
 impl TrayAction {
-    pub const ALL: [TrayAction; 3] = [TrayAction::ShowSettingsHint, TrayAction::OpenConfigFolder, TrayAction::Quit];
+    pub const ALL: [Self; 3] = [Self::ShowSettingsHint, Self::OpenConfigFolder, Self::Quit];
 
     /// Stable id for the native menu item; it survives a menu rebuild.
     pub const fn menu_id(self) -> &'static str {
         match self {
-            TrayAction::ShowSettingsHint => "settings-league",
-            TrayAction::OpenConfigFolder => "open-config-folder",
-            TrayAction::Quit => "quit",
+            Self::ShowSettingsHint => "settings-league",
+            Self::OpenConfigFolder => "open-config-folder",
+            Self::Quit => "quit",
         }
     }
 
     /// The action behind a [`MenuEvent`] id, if it is one of ours.
-    pub fn from_menu_id(id: &str) -> Option<TrayAction> {
-        TrayAction::ALL.into_iter().find(|a| a.menu_id() == id)
+    pub fn from_menu_id(id: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|a| a.menu_id() == id)
     }
 }
 
@@ -80,10 +80,10 @@ pub fn settings_hint(game: GameId, overlay_key: &str) -> String {
 /// The native tray. Keep it alive for as long as the icon should be visible;
 /// dropping it removes the icon.
 pub struct Tray {
-    tray: TrayIcon,
+    icon: TrayIcon,
     overlay_key: String,
     /// Dropping a menu item removes it from the native menu, so the builders'
-    /// output has to outlive [`Self::tray`].
+    /// output has to outlive [`Self::icon`].
     items: Vec<Box<dyn IsMenuItem>>,
 }
 
@@ -96,16 +96,16 @@ impl std::fmt::Debug for Tray {
 impl Tray {
     /// Creates the icon and its menu. `icon_rgba` is `width * height` RGBA
     /// pixels; macOS wants a small icon (22x22, `AppTray.ts:22`).
-    pub fn new(version: &str, overlay_key: &str, icon_rgba: Vec<u8>, width: u32, height: u32) -> Result<Tray, String> {
+    pub fn new(version: &str, overlay_key: &str, icon_rgba: Vec<u8>, width: u32, height: u32) -> Result<Self, String> {
         let icon = Icon::from_rgba(icon_rgba, width, height).map_err(|e| format!("tray icon: {e}"))?;
         let (menu, items) = native_menu()?;
-        let tray = TrayIconBuilder::new()
+        let native = TrayIconBuilder::new()
             .with_tooltip(tooltip(version))
             .with_icon(icon)
             .with_menu(Box::new(menu))
             .build()
             .map_err(|e| format!("tray: {e}"))?;
-        Ok(Tray { tray, overlay_key: overlay_key.to_owned(), items })
+        Ok(Self { icon: native, overlay_key: overlay_key.to_owned(), items })
     }
 
     /// The key the settings hint quotes.
@@ -119,7 +119,7 @@ impl Tray {
     pub fn set_overlay_key(&mut self, key: impl Into<String>) -> Result<(), String> {
         self.overlay_key = key.into();
         let (menu, items) = native_menu()?;
-        self.tray.set_menu(Some(Box::new(menu)));
+        self.icon.set_menu(Some(Box::new(menu)));
         self.items = items;
         Ok(())
     }
@@ -136,9 +136,10 @@ impl Tray {
     }
 }
 
-/// Deliver every menu click to `f` instead of leaving it in the queue. The platform runs `f`
-/// on its own event thread; an app forwards it to its UI thread (Rune's `AppHandle::update`)
-/// rather than polling. Replaces an earlier handler.
+/// Deliver every menu click to `f` instead of leaving it in the queue.
+///
+/// The platform runs `f` on its own event thread; an app forwards it to its UI thread
+/// (Rune's `AppHandle::update`) rather than polling. Replaces an earlier handler.
 pub fn set_menu_handler(f: impl Fn(TrayAction) + Send + Sync + 'static) {
     MenuEvent::set_event_handler(Some(move |event: MenuEvent| {
         if let Some(action) = TrayAction::from_menu_id(event.id.as_ref()) {
@@ -147,18 +148,21 @@ pub fn set_menu_handler(f: impl Fn(TrayAction) + Send + Sync + 'static) {
     }));
 }
 
+/// The native menu, and its items, which must outlive it.
+type NativeMenu = (Menu, Vec<Box<dyn IsMenuItem>>);
+
 /// The native menu, and the items backing it.
-fn native_menu() -> Result<(Menu, Vec<Box<dyn IsMenuItem>>), String> {
+fn native_menu() -> Result<NativeMenu, String> {
     let items: Vec<Box<dyn IsMenuItem>> = menu_items()
         .into_iter()
-        .map(|entry| match entry {
-            MenuEntry::Item { label, action } => {
-                Box::new(MenuItem::with_id(action.menu_id(), label, true, None)) as Box<dyn IsMenuItem>
+        .map(|entry| -> Box<dyn IsMenuItem> {
+            match entry {
+                MenuEntry::Item { label, action } => Box::new(MenuItem::with_id(action.menu_id(), label, true, None)),
+                MenuEntry::Separator => Box::new(PredefinedMenuItem::separator()),
             }
-            MenuEntry::Separator => Box::new(PredefinedMenuItem::separator()),
         })
         .collect();
-    let refs: Vec<&dyn IsMenuItem> = items.iter().map(|item| item.as_ref()).collect();
+    let refs: Vec<&dyn IsMenuItem> = items.iter().map(AsRef::as_ref).collect();
     let menu = Menu::with_items(&refs).map_err(|e| format!("tray menu: {e}"))?;
     Ok((menu, items))
 }

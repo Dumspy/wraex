@@ -4,6 +4,7 @@
 
 use rune::text::TextSystem;
 use rune::{Env, Runtime};
+use serde::Deserialize;
 
 use super::*;
 use crate::App;
@@ -53,7 +54,7 @@ fn has_text(runtime: &Runtime<App>, text: &str) -> bool {
 }
 
 fn text_of(runtime: &Runtime<App>, key: &str) -> Option<String> {
-    runtime.elements().into_iter().find(|element| element.key.as_deref() == Some(key))?.text.clone()
+    runtime.elements().into_iter().find(|element| element.key.as_deref() == Some(key))?.text
 }
 
 fn click(runtime: &mut Runtime<App>, key: &str) {
@@ -104,7 +105,7 @@ fn every_settings_page_shows_its_labels() {
         assert!(has_text(&hotkeys, "You can clear hotkey"), "{game:?}: hotkeys banner");
         assert!(has_text(&hotkeys, "Auto-hide Mode"), "{game:?}: price check hotkey row");
         assert!(hotkeys.find("hotkeys-overlay-input").is_some(), "{game:?}: overlay key field");
-        assert!(text_of(&hotkeys, "hotkeys-price-check-ctrl-label").as_deref() == Some("Ctrl"));
+        assert_eq!(text_of(&hotkeys, "hotkeys-price-check-ctrl-label").as_deref(), Some("Ctrl"));
         assert!(has_text(&hotkeys, "Stash tab scrolling"), "{game:?}: stash scroll");
 
         let chat = scene(game, Page::Chat);
@@ -151,12 +152,12 @@ fn toggling_a_setting_changes_the_working_copy() {
     let mut runtime = scene(GameId::Poe1, Page::General);
     let settings = runtime.state.settings.as_ref().expect("the settings window");
     assert!(!settings.bool(Field::Root("restoreClipboard")));
-    assert!(!settings.saved["restoreClipboard"].as_bool().unwrap());
+    assert_eq!(settings.saved["restoreClipboard"], serde_json::Value::Bool(false));
 
     click(&mut runtime, "general-restore-clipboard");
     let settings = runtime.state.settings.as_ref().expect("the settings window");
     assert!(settings.bool(Field::Root("restoreClipboard")));
-    assert!(!settings.saved["restoreClipboard"].as_bool().unwrap(), "not saved yet");
+    assert_eq!(settings.saved["restoreClipboard"], serde_json::Value::Bool(false), "not saved yet");
 
     click(&mut runtime, "general-restore-clipboard");
     assert!(!runtime.state.settings.as_ref().unwrap().bool(Field::Root("restoreClipboard")));
@@ -214,15 +215,10 @@ fn recording_a_hotkey_produces_upstreams_string() {
     // Backspace clears a field that isn't required.
     click(&mut runtime, "hotkeys-delve-grid-input");
     release_named(&mut runtime, "Backspace");
-    assert!(
-        runtime.state.settings.as_ref().unwrap().config["widgets"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .find(|w| w["wmType"] == "delve-grid")
-            .unwrap()["toggleKey"]
-            .is_null()
-    );
+    let settings = runtime.state.settings.as_ref().unwrap();
+    let delve = crate::settings::widget(&settings.config, "delve-grid").expect("the delve grid");
+    let delve = wraex_poe1::config::DelveGridWidget::deserialize(delve).expect("a delve grid widget");
+    assert!(delve.toggle_key.is_none());
     // The Overlay key is required: Backspace leaves it alone (and keeps capturing).
     click(&mut runtime, "hotkeys-overlay-input");
     release_named(&mut runtime, "Backspace");
@@ -279,11 +275,11 @@ fn the_chat_commands_are_added_and_removed() {
 
     click(&mut runtime, "chat-command-0-remove");
     assert_eq!(runtime.state.settings.as_ref().unwrap().commands().len(), count);
-    assert_eq!(runtime.state.settings.as_ref().unwrap().commands()[0]["text"].as_str(), Some("/exit"));
+    assert_eq!(runtime.state.settings.as_ref().unwrap().command(0).text(), "/exit");
 
     // A command's send toggle writes the command's `send`.
     click(&mut runtime, "chat-command-0-send");
-    assert!(!runtime.state.settings.as_ref().unwrap().commands()[0]["send"].as_bool().unwrap());
+    assert!(!runtime.state.settings.as_ref().unwrap().command(0).send());
 }
 
 /// `save()` writes the compact JSON `saveConfig` sends, and `config::load` reads it back
@@ -352,17 +348,10 @@ fn a_map_stat_takes_a_decision() {
 
     // The default config's first decided stat is a warning for profile 1.
     let selected = |runtime: &Runtime<App>, matcher: &str| -> Option<String> {
-        runtime.state.settings.as_ref().unwrap().config["widgets"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .find(|w| w["wmType"] == "item-check")
-            .unwrap()["maps"]["selectedStats"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .find(|stat| stat["matcher"] == matcher)
-            .map(|stat| stat["decision"].as_str().unwrap().to_owned())
+        let settings = runtime.state.settings.as_ref().unwrap();
+        let widget = crate::settings::widget(&settings.config, "item-check")?;
+        let item_check = wraex_poe1::config::ItemCheckWidget::deserialize(widget).ok()?;
+        item_check.maps.selected_stats.iter().find(|stat| stat.matcher == matcher).map(|stat| stat.decision.clone())
     };
     let matcher = "Players have #% to all maximum Resistances";
     assert_eq!(selected(&runtime, matcher).as_deref(), Some("w--"));
@@ -423,7 +412,8 @@ fn save_through_the_window_writes_the_working_copy() {
     let written = std::fs::read_to_string(store.path()).expect("the scene's temp store holds the save");
     let loaded = load(GameId::Poe1, Some(&written));
     assert_eq!(loaded.config["restoreClipboard"], serde_json::json!(true));
-    std::fs::remove_file(store.path()).ok();
+    // Best effort: other scene tests share this temp path and may have removed it already.
+    drop(std::fs::remove_file(store.path()));
 }
 
 /// `settings-patrons`: upstream's sidebar is as wide as its "Support development on" block;

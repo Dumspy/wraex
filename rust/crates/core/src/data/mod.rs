@@ -54,7 +54,8 @@ pub trait DataSource: Send + Sync + fmt::Debug {
     fn read(&self, path: &str) -> Result<Vec<u8>, DataError>;
 
     fn read_string(&self, path: &str) -> Result<String, DataError> {
-        String::from_utf8(self.read(path)?).map_err(|_| DataError::Utf8 { path: path.to_owned() })
+        // `Utf8` reports the path; the byte details are not part of the message.
+        String::from_utf8(self.read(path)?).map_err(|_invalid| DataError::Utf8 { path: path.to_owned() })
     }
 }
 
@@ -108,6 +109,7 @@ pub fn json_eq(a: &serde_json::Value, b: &serde_json::Value) -> bool {
 }
 
 #[cfg(test)]
+#[expect(clippy::disallowed_macros, reason = "expected JSON written as literals")]
 mod tests {
     use super::*;
 

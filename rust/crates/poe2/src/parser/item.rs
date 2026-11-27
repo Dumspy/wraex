@@ -61,6 +61,16 @@ pub enum IncursionRoom {
     Obstructed = 2,
 }
 
+impl IncursionRoom {
+    /// The enum's number, which the room's pseudo stat carries.
+    pub const fn value(self) -> u8 {
+        match self {
+            Self::Open => 1,
+            Self::Obstructed => 2,
+        }
+    }
+}
+
 /// `EditorItem`: an augment in a socket, as the item editor shows it.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -132,7 +142,7 @@ pub struct Trials {
     pub ultimatum_hint: Option<&'static str>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UnknownModifier {
     pub text: String,
     #[serde(rename = "type")]
@@ -272,7 +282,8 @@ pub struct Item {
 
 impl Item {
     /// The item's `info`, which every parser after `findInDatabase` may read.
-    pub fn info(&self) -> &BaseType {
+    #[expect(clippy::expect_used, reason = "`findInDatabase` sets `info` before any later parser reads it")]
+    pub const fn info(&self) -> &BaseType {
         self.info.as_ref().expect("info is set by findInDatabase")
     }
 
@@ -289,7 +300,7 @@ impl Item {
             && self.is_sanctified != Some(true)
     }
 
-    pub(crate) fn empty(name: String, base_type: Option<String>) -> Self {
+    pub(crate) const fn empty(name: String, base_type: Option<String>) -> Self {
         Self {
             rarity: None,
             item_level: None,
@@ -366,7 +377,7 @@ impl Item {
     fn virtual_item(info: BaseType) -> Self {
         let mut item = Self::empty(String::new(), None);
         item.info = Some(info);
-        item.raw_text = "VIRTUAL_ITEM".to_owned();
+        "VIRTUAL_ITEM".clone_into(&mut item.raw_text);
         item
     }
 

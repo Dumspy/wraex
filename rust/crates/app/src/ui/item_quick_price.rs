@@ -37,6 +37,11 @@ impl std::fmt::Debug for ItemQuickPrice {
             .field("price", &self.price)
             .field("fraction", &self.fraction)
             .field("currency_text", &self.currency_text)
+            .field("slot", &self.slot.is_some())
+            .field("item_img", &self.item_img)
+            .field("icon_w", &self.icon_w)
+            .field("icon_h", &self.icon_h)
+            .field("color", &self.color)
             .finish()
     }
 }
@@ -59,6 +64,7 @@ impl ItemQuickPrice {
 
     /// `itemImg`: the item's art (`item.info.icon` on the CDN, or one of the reference's
     /// `/images` files). Without it the reference's default, `wisdom.png`, is drawn.
+    #[must_use]
     pub fn item_img(mut self, picture: Picture) -> Self {
         self.item_img = Some(picture);
         self
@@ -66,31 +72,36 @@ impl ItemQuickPrice {
 
     /// The price's colour. Popped over the white tippy frame the window's inherited
     /// `text-gray-200` would be invisible (`PriceCheckWindow.vue`'s exchange-rate popover).
-    pub fn color(mut self, color: rune::Color) -> Self {
+    #[must_use]
+    pub const fn color(mut self, color: rune::Color) -> Self {
         self.color = Some(color);
         self
     }
 
     /// `fraction`: `1⁄2` instead of `0.5` (`filters.stackSize != null` in the trend row).
-    pub fn fraction(mut self, fraction: bool) -> Self {
+    #[must_use]
+    pub const fn fraction(mut self, fraction: bool) -> Self {
         self.fraction = fraction;
         self
     }
 
     /// `currency-text`: the price's currency as text, with no `×` and no image
     /// (`PriceTrend.vue`'s fallback row).
-    pub fn currency_text(mut self) -> Self {
+    #[must_use]
+    pub const fn currency_text(mut self) -> Self {
         self.currency_text = true;
         self
     }
 
     /// Replace the item image with something else (`PriceTrend.vue`'s "Base item").
+    #[must_use]
     pub fn slot(mut self, slot: El) -> Self {
         self.slot = Some(slot);
         self
     }
 
     /// `itemBase`'s footprint, for an item whose image is not square.
+    #[must_use]
     pub fn item_size(mut self, w: Option<u32>, h: Option<u32>) -> Self {
         match (w.unwrap_or(1), h.unwrap_or(1)) {
             // `h-10 -my-1` and `w-12`: the image grows into the row without moving it.
@@ -143,10 +154,7 @@ impl ItemQuickPrice {
         }
         if !currency_text {
             // `<span class="font-sans"> ×</span>`, then the chaos or divine icon.
-            let span = match color {
-                Some(color) => Span::new(0, 3).mono().color(color),
-                None => Span::new(0, 3).mono(),
-            };
+            let span = color.map_or_else(|| Span::new(0, 3).mono(), |color| Span::new(0, 3).mono().color(color));
             label = label.child(rich(" \u{d7}", vec![span]).key(format!("{key}-times")).font(type_::BASE));
         } else if let Some(price) = price {
             // `&nbsp;{{ price.currency }}`

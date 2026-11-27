@@ -22,7 +22,7 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     // Awakened PoE Trade, the jeweler in EE2 (`w-12 h-12`).
     let icon = match settings.game {
         GameId::Poe2 => "jeweler.png",
-        _ => "TransferOrb.png",
+        GameId::Poe1 => "TransferOrb.png",
     };
     let mut page = col().key("page-about").w_full().h_full().padding(theme::rem(0.5)).items_center();
     let mut heading = col().key("about-heading").items_center().padding(theme::rem(0.5)).mb(theme::rem(1.0));
@@ -40,7 +40,7 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     page = page.child(heading);
 
     // The update box: `border border-gray-600 rounded p-2 whitespace-nowrap min-w-min w-72`.
-    let (str1, str2, action) = update_state(settings);
+    let UpdateState { first, second, action } = update_state(settings);
     let mut box_ = col()
         .key("about-update")
         .w(theme::rem(18.0))
@@ -48,9 +48,9 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
         .radius(theme::ROUNDED)
         .border(1.0, theme::gray(600))
         .border_layout();
-    box_ = box_.child(text(str1).key("about-update-name").font(type_::SM));
-    box_ = box_.child(text(str2).key("about-update-state").font(type_::SM));
-    if let Some((key, label, action)) = action {
+    box_ = box_.child(text(first).key("about-update-name").font(type_::SM));
+    box_ = box_.child(text(second).key("about-update-state").font(type_::SM));
+    if let Some(UpdateAction { key, label, run }) = action {
         box_ = box_.child(
             row()
                 .key("about-update-action")
@@ -64,7 +64,7 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
                 .focusable(true)
                 .role("button")
                 .label(label.clone())
-                .on_press_tx(move |s: &mut S, tx: &mut rune::Tx| action(project(s), tx))
+                .on_press_tx(move |s: &mut S, tx: &mut rune::Tx| run(project(s), tx))
                 .child(text(label).key(key).font(theme::leading_none(type_::SM)).color(theme::gray(300))),
         );
     }
@@ -77,7 +77,7 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     footer = footer.child(text(t_key(settings, "app.contact_me")).key("about-contact-text").font(type_::SM));
     let handle = match settings.game {
         GameId::Poe2 => "<@340233612064718851>",
-        _ => "<@295216259795124225>",
+        GameId::Poe1 => "<@295216259795124225>",
     };
     footer = footer.child(
         text(handle).key("about-contact-handle").font(type_::SM.family(theme::FAMILY_EXO2)).color(theme::gray(500)),
@@ -99,7 +99,7 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
                 "pathofexile",
                 "https://discord.gg/pathofexile",
             )),
-        _ => communities
+        GameId::Poe1 => communities
             .child(community::<S>(
                 settings,
                 "about-forbidden-trove",
@@ -121,41 +121,71 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
 /// The action a state's button runs.
 type Action = fn(&mut Settings, &mut rune::Tx);
 
+/// The update box's two lines and the button under them (`about.vue`'s computed).
+struct UpdateState {
+    /// `updates.maybe_outdated` / `updates.latest` / `updates.available`.
+    first: String,
+    /// The check's state line.
+    second: String,
+    /// The button, when the state offers one.
+    action: Option<UpdateAction>,
+}
+
+/// The update box's button: its element key, its label and what a press runs.
+struct UpdateAction {
+    key: &'static str,
+    label: String,
+    run: Action,
+}
+
 /// `info`: the two lines and the optional action (`about.vue`'s computed).
-fn update_state(settings: &Settings) -> (String, String, Option<(&'static str, String, Action)>) {
+fn update_state(settings: &Settings) -> UpdateState {
     let check = t_key(settings, "updates.check_now");
     let downloads = t_key(settings, "updates.downloads_page");
-    let check_action: Option<(&'static str, String, Action)> =
-        Some(("about-check-now-label", check, check_now as Action));
+    let check_action = Some(UpdateAction { key: "about-check-now-label", label: check, run: check_now });
     match &settings.update {
-        UpdateInfo::Initial => {
-            (t_key(settings, "updates.maybe_outdated"), t_key(settings, "updates.never_checked"), check_action)
-        }
-        UpdateInfo::CheckingForUpdate => (t_key(settings, "updates.checking"), t_key(settings, "please_wait"), None),
+        UpdateInfo::Initial => UpdateState {
+            first: t_key(settings, "updates.maybe_outdated"),
+            second: t_key(settings, "updates.never_checked"),
+            action: check_action,
+        },
+        UpdateInfo::CheckingForUpdate => UpdateState {
+            first: t_key(settings, "updates.checking"),
+            second: t_key(settings, "please_wait"),
+            action: None,
+        },
         UpdateInfo::UpdateNotAvailable { checked_at } => {
             let now = crate::trade::now(settings.mode);
-            let when = wraex_core::relative_time::to_relative_short(*checked_at as i64, now as i64);
-            (t_key(settings, "updates.latest"), tr_fmt(settings, "updates.last_checked", &[&when]), check_action)
+            let when = wraex_core::relative_time::to_relative_short(checked_at.cast_signed(), now.cast_signed());
+            UpdateState {
+                first: t_key(settings, "updates.latest"),
+                second: tr_fmt(settings, "updates.last_checked", &[&when]),
+                action: check_action,
+            }
         }
-        UpdateInfo::Error { .. } => (
-            t_key(settings, "updates.maybe_outdated"),
-            t_key(settings, "updates.error"),
-            Some(("about-downloads-label", downloads, open_downloads as Action)),
-        ),
-        UpdateInfo::UpdateDownloaded { version } => (
-            tr_fmt(settings, "updates.available", &[version]),
-            t_key(settings, "updates.installed_on_exit"),
-            Some(("about-install-label", t_key(settings, "updates.install_now"), open_downloads as Action)),
-        ),
-        UpdateInfo::UpdateAvailable { version, no_download_reason } => (
-            tr_fmt(settings, "updates.available", &[version]),
-            match no_download_reason {
+        UpdateInfo::Error { .. } => UpdateState {
+            first: t_key(settings, "updates.maybe_outdated"),
+            second: t_key(settings, "updates.error"),
+            action: Some(UpdateAction { key: "about-downloads-label", label: downloads, run: open_downloads }),
+        },
+        UpdateInfo::UpdateDownloaded { version } => UpdateState {
+            first: tr_fmt(settings, "updates.available", &[version]),
+            second: t_key(settings, "updates.installed_on_exit"),
+            action: Some(UpdateAction {
+                key: "about-install-label",
+                label: t_key(settings, "updates.install_now"),
+                run: open_downloads,
+            }),
+        },
+        UpdateInfo::UpdateAvailable { version, no_download_reason } => UpdateState {
+            first: tr_fmt(settings, "updates.available", &[version]),
+            second: match no_download_reason {
                 Some(NoDownloadReason::NotSupported) => t_key(settings, "updates.download_manually"),
                 Some(NoDownloadReason::DisabledByFlag) => t_key(settings, "updates.download_disabled"),
                 None => t_key(settings, "updates.downloading"),
             },
-            Some(("about-downloads-label", downloads, open_downloads as Action)),
-        ),
+            action: Some(UpdateAction { key: "about-downloads-label", label: downloads, run: open_downloads }),
+        },
     }
 }
 
@@ -167,7 +197,9 @@ fn check_now(settings: &mut Settings, _tx: &mut rune::Tx) {
 
 /// `openDownloadPage`: the Wraex releases page (the app is notify-only, see `core::updates`).
 fn open_downloads(_settings: &mut Settings, tx: &mut rune::Tx) {
-    let _ = tx.open_url(RELEASES);
+    if let Err(error) = tx.open_url(RELEASES) {
+        wraex_platform::log!("could not open {RELEASES}: {error}");
+    }
 }
 
 /// An underlined link (`border-b`), opened by pressing it.
@@ -180,7 +212,9 @@ fn link<S: 'static>(key: &str, label: &str, url: &'static str) -> El {
         .role("link")
         .label(label.to_owned())
         .on_press_tx(move |_s: &mut S, tx: &mut rune::Tx| {
-            let _ = tx.open_url(url);
+            if let Err(error) = tx.open_url(url) {
+                wraex_platform::log!("could not open {url}: {error}");
+            }
         })
         .child(text(label.to_owned()).key(format!("{key}-label")).font(type_::SM))
 }

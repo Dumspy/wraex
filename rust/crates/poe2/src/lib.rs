@@ -40,8 +40,63 @@ impl Game for Poe2 {
 }
 
 #[cfg(test)]
+#[expect(clippy::disallowed_macros, reason = "expected JSON written as literals")]
 mod tests {
+    use serde::Deserialize;
+    use serde_json::{Value, json};
+
     use super::*;
+
+    /// One fixture case's recorded options (`options.json`).
+    #[derive(Deserialize)]
+    struct CaseOptions {
+        lang: String,
+        #[serde(default)]
+        options: Value,
+        #[serde(default)]
+        have: Vec<String>,
+        #[serde(default)]
+        config: CaseConfig,
+    }
+
+    /// `options.json`'s `config`: the settings the reference used.
+    #[derive(Deserialize, Default)]
+    struct CaseConfig {
+        #[serde(default)]
+        language: Option<String>,
+    }
+
+    /// `saves.json`: a recorded `CLIENT->MAIN::save-config` event.
+    #[derive(Deserialize)]
+    struct SaveEvent {
+        payload: SavePayload,
+    }
+
+    /// `saveConfig({ ... })`'s payload.
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct SavePayload {
+        contents: String,
+        is_temporary: bool,
+    }
+
+    /// EE2's recorded fetch answer (`specs/docs/fetchResponses.json`).
+    #[derive(Deserialize)]
+    struct FetchAnswer {
+        result: Vec<Value>,
+    }
+
+    /// The `id` the display-item fixture keys a `result` entry on.
+    #[derive(Deserialize)]
+    struct FetchResultId {
+        #[serde(default)]
+        id: Value,
+    }
+
+    /// `case.options`, typed.
+    fn options(case: &wraex_golden::Case) -> CaseOptions {
+        serde_json::from_value(case.options.clone()).unwrap()
+    }
 
     #[test]
     fn reports_the_ported_game() {
@@ -89,13 +144,13 @@ mod tests {
         let cases = wraex_golden::cases(GameId::Poe2);
         assert!(!cases.is_empty());
         for case in &cases {
-            let lang = case.options["lang"].as_str().unwrap().to_owned();
+            let lang = options(case).lang;
             let data = langs.entry(lang.clone()).or_insert_with(|| {
                 data::Data::load(&data::reference_source(), &lang, Some(data::reference_trade_data())).unwrap()
             });
             let actual = match Poe2.parse_clipboard(data, &case.input) {
                 Ok(item) => wraex_core::js::json_value(&item),
-                Err(ParseError::Rejected { key }) => serde_json::json!({ "error": key }),
+                Err(ParseError::Rejected { key }) => json!({ "error": key }),
             };
             if let Some(diff) = wraex_golden::diff(&case.parsed, &actual) {
                 failures.push(format!("{}: {diff}", case.slug));
@@ -119,15 +174,16 @@ mod tests {
         let mut compared = 0;
         for case in &cases {
             let Some(expected) = &case.presets else { continue };
-            let lang = case.options["lang"].as_str().unwrap().to_owned();
+            let options = options(case);
+            let lang = options.lang;
             let data = langs.entry(lang.clone()).or_insert_with(|| {
                 data::Data::load(&data::reference_source(), &lang, Some(data::reference_trade_data())).unwrap()
             });
             let item = parser::parse_clipboard(data, &case.input).unwrap();
-            let opts: filters::CreatePresetsOptions = serde_json::from_value(case.options["options"].clone()).unwrap();
+            let opts: filters::CreatePresetsOptions = serde_json::from_value(options.options).unwrap();
             let actual = match filters::create_presets(data, &item, &opts) {
                 Ok(presets) => wraex_core::js::json_value(&presets),
-                Err(e) => serde_json::json!({ "error": e.to_string() }),
+                Err(e) => json!({ "error": e.to_string() }),
             };
             compared += 1;
             if let Some(diff) = wraex_golden::diff(expected, &actual) {
@@ -146,7 +202,7 @@ mod tests {
             "Divine Orb" => &["exalted", "chaos"],
             _ => &["divine", "exalted", "chaos"],
         };
-        have.iter().map(|s| s.to_string()).collect()
+        have.iter().map(ToString::to_string).collect()
     }
 
     /// Each preset's `{ api, request }` equals `trade/<id>.json`.
@@ -159,14 +215,15 @@ mod tests {
             if case.presets.is_none() {
                 continue;
             }
-            let lang = case.options["lang"].as_str().unwrap().to_owned();
+            let options = options(case);
+            let lang = options.lang;
+            let have = options.have;
             let data = langs.entry(lang.clone()).or_insert_with(|| {
                 data::Data::load(&data::reference_source(), &lang, Some(data::reference_trade_data())).unwrap()
             });
             let item = parser::parse_clipboard(data, &case.input).unwrap();
-            let opts: filters::CreatePresetsOptions = serde_json::from_value(case.options["options"].clone()).unwrap();
+            let opts: filters::CreatePresetsOptions = serde_json::from_value(options.options).unwrap();
             let presets = filters::create_presets(data, &item, &opts).unwrap();
-            let have: Vec<String> = serde_json::from_value(case.options["have"].clone()).unwrap();
             assert_eq!(presets.presets.len(), case.trade.len(), "{}", case.slug);
             for preset in &presets.presets {
                 let api = trade::api_to_satisfy_search(&item, &preset.stats, &preset.filters);
@@ -182,10 +239,10 @@ mod tests {
                     trade::Api::Trade => match trade::create_trade_request(data, &preset.filters, &preset.stats, &item)
                     {
                         Ok(r) => wraex_core::js::json_value(&r),
-                        Err(e) => serde_json::json!({ "error": e.to_string() }),
+                        Err(e) => json!({ "error": e.to_string() }),
                     },
                 };
-                let actual = serde_json::json!({ "api": api, "request": request });
+                let actual = json!({ "api": api, "request": request });
                 let expected = &case.trade.iter().find(|(id, _)| id == &preset.id).unwrap().1;
                 compared += 1;
                 if let Some(diff) = wraex_golden::diff(expected, &actual) {
@@ -228,11 +285,11 @@ mod tests {
         let mut compared = 0;
         for case in &wraex_golden::cases(GameId::Poe2) {
             let Some(expected) = &case.item_check else { continue };
-            let language = case.options["config"]["language"].as_str().unwrap();
+            let language = options(case).config.language.unwrap();
             let item = parser::parse_clipboard(&data, &case.input).unwrap();
-            let mut actual = serde_json::json!({
+            let mut actual = json!({
                 "wiki": item_check::open_wiki(&item),
-                "poedb": item_check::open_poedb(&item, language),
+                "poedb": item_check::open_poedb(&item, &language),
                 "craftOfExile": item_check::open_coe(&item),
                 "similar": item_check::find_similar_items(&item),
             });
@@ -255,14 +312,16 @@ mod tests {
     fn display_items_match_the_fixtures() {
         let data = data::Data::load(&data::reference_source(), "en", Some(data::reference_trade_data())).unwrap();
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../ref/ee2/renderer/specs/docs/fetchResponses.json");
-        let answer: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
-        let actual: Vec<serde_json::Value> = answer["result"]
-            .as_array()
-            .unwrap()
+        let answer: FetchAnswer = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let actual: Vec<serde_json::Value> = answer
+            .result
             .iter()
-            .map(|result| match results::parse_fetch_result(&data, result) {
-                Ok(item) => serde_json::json!({ "id": result["id"], "displayItem": item }),
-                Err(e) => serde_json::json!({ "id": result["id"], "error": e.0 }),
+            .map(|result| {
+                let id = serde_json::from_value::<FetchResultId>(result.clone()).unwrap().id;
+                match results::parse_fetch_result(&data, result) {
+                    Ok(item) => json!({ "id": id, "displayItem": item }),
+                    Err(e) => json!({ "id": id, "error": e.0 }),
+                }
             })
             .collect();
         let expected = wraex_golden::listing_fixture(GameId::Poe2, "display-items.json");
@@ -294,22 +353,21 @@ mod tests {
             // the contents are compared as JSON.
             let saves: Vec<serde_json::Value> = case
                 .saves
-                .as_ref()
-                .and_then(|s| s.as_array().cloned())
+                .clone()
+                .and_then(|saves| serde_json::from_value::<Vec<SaveEvent>>(saves).ok())
                 .unwrap_or_default()
                 .iter()
-                .map(|s| {
-                    let contents: serde_json::Value =
-                        serde_json::from_str(s["payload"]["contents"].as_str().unwrap()).unwrap();
-                    serde_json::json!({ "contents": contents, "isTemporary": s["payload"]["isTemporary"] })
+                .map(|event| {
+                    let contents: serde_json::Value = serde_json::from_str(&event.payload.contents).unwrap();
+                    json!({ "contents": contents, "isTemporary": event.payload.is_temporary })
                 })
                 .collect();
             let ours: Vec<serde_json::Value> = if loaded.save_temporary {
-                vec![serde_json::json!({ "contents": loaded.config, "isTemporary": true })]
+                vec![json!({ "contents": loaded.config, "isTemporary": true })]
             } else {
                 Vec::new()
             };
-            check(format!("{} saves", case.slug), &serde_json::json!(saves), &serde_json::json!(ours));
+            check(format!("{} saves", case.slug), &json!(saves), &json!(ours));
         }
         assert!(failures.is_empty(), "{}", failures.join("\n\n"));
     }

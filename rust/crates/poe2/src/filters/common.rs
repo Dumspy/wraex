@@ -8,7 +8,7 @@ use crate::parser::meta::ItemCategory;
 use crate::parser::modifiers::{EXPLICIT_MOD_TYPES, ModifierType};
 
 /// `maxUsefulItemLevel`
-pub fn max_useful_item_level(category: Option<&ItemCategory>) -> f64 {
+pub const fn max_useful_item_level(category: Option<&ItemCategory>) -> f64 {
     match category {
         Some(ItemCategory::Wand | ItemCategory::Staff) => 81.0,
         Some(ItemCategory::Relic) => 80.0,
@@ -62,5 +62,5 @@ pub fn explicit_modifier_count(item: &Item) -> ModifierCount {
     let random_mods: Vec<_> = item.new_mods.iter().filter(|m| EXPLICIT_MOD_TYPES.contains(&m.info.kind)).collect();
     let count = |g: Generation| random_mods.iter().filter(|m| m.info.generation == Some(g)).count();
     let (prefixes, suffixes) = (count(Generation::Prefix), count(Generation::Suffix));
-    ModifierCount { prefixes, suffixes, total: prefixes + suffixes }
+    ModifierCount { prefixes, suffixes, total: prefixes.saturating_add(suffixes) }
 }

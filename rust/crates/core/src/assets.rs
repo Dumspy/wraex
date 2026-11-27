@@ -55,10 +55,10 @@ impl Origin {
     /// A short name for the startup log.
     pub const fn as_str(self) -> &'static str {
         match self {
-            Origin::Environment => "WRAEX_ASSETS",
-            Origin::Executable => "next to the executable",
-            Origin::MacBundle => "the app bundle",
-            Origin::Development => "development",
+            Self::Environment => "WRAEX_ASSETS",
+            Self::Executable => "next to the executable",
+            Self::MacBundle => "the app bundle",
+            Self::Development => "development",
         }
     }
 }
@@ -94,12 +94,12 @@ impl Assets {
     /// The running process's root: `WRAEX_ASSETS`, else next to the executable, else the
     /// app bundle, else [`Origin::Development`]. Resolved on first use and kept for the
     /// process's lifetime.
-    pub fn get() -> &'static Assets {
+    pub fn get() -> &'static Self {
         static ASSETS: OnceLock<Assets> = OnceLock::new();
         ASSETS.get_or_init(|| {
             let env_root = std::env::var_os(ENV).map(PathBuf::from);
             let exe = std::env::current_exe().ok();
-            Assets::resolve(exe.as_deref(), env_root.as_deref())
+            Self::resolve(exe.as_deref(), env_root.as_deref())
         })
     }
 
@@ -109,7 +109,7 @@ impl Assets {
     }
 
     /// How [`Assets::get`] found it.
-    pub fn origin(&self) -> Origin {
+    pub const fn origin(&self) -> Origin {
         self.origin
     }
 
@@ -121,19 +121,21 @@ impl Assets {
 
     /// The startup log's one line: where the assets are, or that this is a development build.
     pub fn summary(&self) -> String {
-        match &self.root {
-            Some(root) => format!("{} (from {})", root.display(), self.origin.as_str()),
-            None => format!(
-                "the source tree (no `assets` next to the executable; set {ENV} or run tools/package/package.py)"
-            ),
-        }
+        self.root.as_deref().map_or_else(
+            || {
+                format!(
+                    "the source tree (no `assets` next to the executable; set {ENV} or run tools/package/package.py)"
+                )
+            },
+            |root| format!("{} (from {})", root.display(), self.origin.as_str()),
+        )
     }
 
-    fn at(root: PathBuf, origin: Origin) -> Self {
+    const fn at(root: PathBuf, origin: Origin) -> Self {
         Self { root: Some(root), origin }
     }
 
-    fn development() -> Self {
+    const fn development() -> Self {
         Self { root: None, origin: Origin::Development }
     }
 }
@@ -156,7 +158,7 @@ mod tests {
     impl Dir {
         fn new(name: &str) -> Self {
             let path = std::env::temp_dir().join(format!("wraex-assets-{name}-{}", std::process::id()));
-            let _ = std::fs::remove_dir_all(&path);
+            drop(std::fs::remove_dir_all(&path));
             std::fs::create_dir_all(&path).unwrap();
             Self(path)
         }
@@ -174,7 +176,7 @@ mod tests {
 
     impl Drop for Dir {
         fn drop(&mut self) {
-            let _ = std::fs::remove_dir_all(&self.0);
+            drop(std::fs::remove_dir_all(&self.0));
         }
     }
 

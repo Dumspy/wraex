@@ -26,7 +26,7 @@ fn has_useful_quality(category: &ItemCategory) -> bool {
 }
 
 /// `CATEGORY_TO_TRADE_ID` (`web/price-check/trade/pathofexile-trade.ts`)
-pub fn category_to_trade_id(category: &ItemCategory) -> Option<&'static str> {
+pub const fn category_to_trade_id(category: &ItemCategory) -> Option<&'static str> {
     Some(match category {
         C::Map => "map",
         C::AbyssJewel => "jewel.abyss",
@@ -84,7 +84,7 @@ pub fn category_to_trade_id(category: &ItemCategory) -> Option<&'static str> {
 }
 
 /// `CreateOptions`
-#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateOptions {
     pub league: String,
@@ -123,6 +123,10 @@ fn area_level(item: &Item) -> R<f64> {
 }
 
 /// `createFilters`
+#[expect(
+    clippy::too_many_lines,
+    reason = "line-for-line port of upstream `createFilters` (filters/create-item-filters.ts)"
+)]
 pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilters> {
     let info = item.info();
     let rarity = item.rarity;
@@ -198,13 +202,12 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
 
     // "Endgame" (map-like) items, uniques too.
     if is(C::Map) {
-        match (&info.unique, rarity) {
-            (Some(unique), Some(Rarity::Unique)) => unique_search(&mut filters, &unique.base)?,
-            _ => {
-                filters.search_exact = base_type(opts, info);
-                filters.search_relaxed =
-                    Some(SearchFilter { category: item.category.clone(), disabled: Some(false), ..Default::default() });
-            }
+        if let (Some(unique), Some(Rarity::Unique)) = (&info.unique, rarity) {
+            unique_search(&mut filters, &unique.base)?;
+        } else {
+            filters.search_exact = base_type(opts, info);
+            filters.search_relaxed =
+                Some(SearchFilter { category: item.category.clone(), disabled: Some(false), ..Default::default() });
         }
 
         if let Some(blighted) = item.map_blighted {
@@ -329,6 +332,7 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
 
     if let Some(level) = truthy(item.item_level) {
         let max_useful = max_useful_item_level(item.category.as_ref());
+        #[expect(clippy::float_cmp, reason = "JS `!==` on the item level")]
         if max_useful != 1.0
             && rarity != Some(Rarity::Unique)
             && !is(C::Map)
@@ -388,7 +392,9 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
                 .filter(|c| c.kind == ModifierType::Veiled)
                 .map(|c| c.stat.stat_ref.clone())
                 .collect(),
-            veiled_count: item.new_mods.iter().filter(|m| m.info.kind == ModifierType::Veiled).count() as f64,
+            veiled_count: wraex_core::num::usize_to_f64(
+                item.new_mods.iter().filter(|m| m.info.kind == ModifierType::Veiled).count(),
+            ),
             disabled: rarity != Some(Rarity::Unique),
         });
 
@@ -410,14 +416,14 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
 fn create_gem_filters(d: &Data, item: &Item, mut filters: ItemFilters, opts: &CreateOptions) -> R<ItemFilters> {
     let info = item.info();
     let gem = info.gem.as_ref().ok_or_else(|| missing("info.gem"))?;
-    if gem.transfigured != Some(true) {
-        filters.search_exact = base_type(opts, info);
-    } else {
+    if gem.transfigured == Some(true) {
         let normal_variant = gem.normal_variant.as_deref().ok_or_else(|| missing("gem.normalVariant"))?;
         let normal_gem = first_item(d, Namespace::Gem, normal_variant)?;
         filters.search_exact =
             SearchFilter { base_type: info.name.clone(), base_type_trade: t(opts, &normal_gem), ..Default::default() };
         filters.discriminator = Some(Discriminator { value: None, trade: info.trade_disc.clone() });
+    } else {
+        filters.search_exact = base_type(opts, info);
     }
 
     filters.corrupted = Some(CorruptedFilter { value: item.is_corrupted, exact: None });
@@ -523,6 +529,7 @@ pub fn area_level_by_ascendancy_points(ref_name: &str, points: f64) -> Option<f6
         return Some(75.0);
     }
 
+    #[expect(clippy::float_cmp, reason = "JS `===` on the requested point count")]
     levels.iter().find(|&&(p, _)| f64::from(p) == points).map(|&(_, level)| level)
 }
 

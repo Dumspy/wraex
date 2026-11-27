@@ -9,6 +9,7 @@
 
 use rune::{Align, Color, Cx, El, Shape, Side, canvas, col, el, rich, row, text};
 use wraex_core::js::number_to_string;
+use wraex_core::num::{f64_to_f32, usize_to_f32};
 use wraex_game::ParseError;
 use wraex_poe1::filters::create_item_filters::category_to_trade_id;
 use wraex_poe1::filters::{ItemFilters, SearchFilter};
@@ -94,8 +95,12 @@ fn exchange_popover(check: &PriceCheck) -> El {
             .build(),
     );
     for tenth in 1..=9 {
-        let divine = tenth as f64 / 10.0;
+        let divine = f64::from(tenth) / 10.0;
         // `Math.round(stableOrbCost * i / 10)`
+        #[expect(
+            clippy::suboptimal_flops,
+            reason = "`rate * divine + 0.5` is the reference's arithmetic; `mul_add` would round differently"
+        )]
         let chaos = (rate * divine + 0.5).floor();
         content = content.child(
             row().key(format!("exchange-row-{tenth}")).pl(theme::rem(0.25)).child(
@@ -335,7 +340,9 @@ fn trend_change<S: 'static>(change: &TrendChange, url: &str) -> El {
     if !unavailable.is_empty() {
         // `openNinja`: the item's poe.ninja page.
         button = button.on_press_tx(move |_s: &mut S, tx: &mut rune::Tx| {
-            let _ = tx.open_url(&unavailable);
+            if let Err(error) = tx.open_url(&unavailable) {
+                wraex_platform::log!("could not open {unavailable}: {error}");
+            }
         });
     }
 
@@ -377,12 +384,14 @@ fn sparkline(change: &TrendChange) -> El {
     const W: f32 = 48.0;
     const H: f32 = 16.0;
     let span = (change.draw_max - change.draw_min).max(f64::MIN_POSITIVE);
-    let last = change.points.len().saturating_sub(1).max(1) as f32;
+    let last = usize_to_f32(change.points.len().saturating_sub(1).max(1));
     let points: Vec<[f32; 2]> = change
         .points
         .iter()
         .enumerate()
-        .map(|(index, value)| [index as f32 * W / last, ((change.draw_max - value) / span * f64::from(H)) as f32])
+        .map(|(index, value)| {
+            [usize_to_f32(index) * W / last, f64_to_f32((change.draw_max - value) / span * f64::from(H))]
+        })
         .collect();
     let mut area = points.clone();
     area.push([W, H]);
@@ -531,9 +540,9 @@ fn grouped(value: f64) -> String {
     let negative = value < 0.0;
     let text = number_to_string(value.abs().trunc());
     let (whole, fraction) = text.split_once('.').unwrap_or((text.as_str(), ""));
-    let mut out = String::with_capacity(whole.len() + whole.len() / 3);
+    let mut out = String::with_capacity(whole.len().saturating_add(whole.len() / 3));
     for (index, digit) in whole.chars().enumerate() {
-        if index > 0 && (whole.len() - index).is_multiple_of(3) {
+        if index > 0 && whole.len().saturating_sub(index).is_multiple_of(3) {
             out.push(',');
         }
         out.push(digit);

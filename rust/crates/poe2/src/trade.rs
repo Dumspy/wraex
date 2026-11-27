@@ -1,11 +1,14 @@
 //! `ref/ee2/renderer/src/web/price-check/trade`: which API a preset searches
-//! with (`common.ts`) and the search request for it (`pathofexile-trade.ts`
-//! `createTradeRequest`; the bulk request is `wraex_core::trade`). Sending
-//! requests comes with the services (PLAN phase 4).
+//! with (`common.ts`), and the search request for it.
+//!
+//! The search request is `createTradeRequest` (`pathofexile-trade.ts`; the
+//! bulk one is `wraex_core::trade`). Sending requests comes with the services
+//! (PLAN phase 4).
 
 use serde::Serialize;
-use serde_json::{Map, Value, json};
+use serde_json::{Map, Value};
 use wraex_core::Rarity;
+use wraex_core::num::{f64_to_usize, usize_to_f64};
 use wraex_core::trade::{BulkRequest, bulk_request, prop_set};
 
 use crate::data::Data;
@@ -61,15 +64,16 @@ pub struct TradeRequest {
     pub sort: Sort,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Sort {
     pub price: &'static str,
 }
 
-/// The query, in the order `createTradeRequest` writes its keys: the literal
-/// starts with `status`, `stats` and `filters`, and `name`/`type` are assigned
-/// afterwards, so they come last. `JSON.stringify` keeps that order, and the
-/// recorded searches are keyed on it.
+/// The query, in the order `createTradeRequest` writes its keys.
+///
+/// The literal starts with `status`, `stats` and `filters`, and `name`/`type`
+/// are assigned afterwards, so they come last. `JSON.stringify` keeps that
+/// order, and the recorded searches are keyed on it.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Query {
     pub status: Status,
@@ -82,13 +86,13 @@ pub struct Query {
     pub kind: Option<NameQuery>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Status {
     pub option: String,
 }
 
 /// `nameToQuery`
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(untagged)]
 pub enum NameQuery {
     Name(String),
@@ -100,15 +104,17 @@ pub enum NameQuery {
 }
 
 fn name_to_query(name: &str, filters: &ItemFilters) -> NameQuery {
-    match &filters.discriminator {
-        None => NameQuery::Name(name.to_owned()),
-        Some(d) => NameQuery::Discriminated { discriminator: d.trade.clone(), option: name.to_owned() },
-    }
+    filters.discriminator.as_ref().map_or_else(
+        || NameQuery::Name(name.to_owned()),
+        |d| NameQuery::Discriminated { discriminator: d.trade.clone(), option: name.to_owned() },
+    )
 }
 
-/// A `stats[]` entry. Its keys are written in the order upstream's object
-/// literal has them (`type`, `value`, `disabled`, `filters`); the Mageblood
-/// helper assigns `value` after `filters`, hence [`StatGroup::value_after_filters`].
+/// A `stats[]` entry, keyed like upstream's object literal.
+///
+/// `type`, `value`, `disabled` and `filters` are written in that order; the
+/// Mageblood helper assigns `value` after `filters`, hence
+/// [`StatGroup::value_after_filters`].
 #[derive(Debug, Clone, PartialEq)]
 pub struct StatGroup {
     pub kind: &'static str,
@@ -121,20 +127,20 @@ pub struct StatGroup {
 }
 
 impl Serialize for StatGroup {
-    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeMap;
 
         let value = self.value.map(|range| {
             let mut out = Map::new();
             if let Some(min) = range.min {
-                out.insert("min".to_owned(), json!(min));
+                out.insert("min".to_owned(), Value::from(min));
             }
             if let Some(max) = range.max {
-                out.insert("max".to_owned(), json!(max));
+                out.insert("max".to_owned(), Value::from(max));
             }
             Value::Object(out)
         });
-        let mut map = s.serialize_map(None)?;
+        let mut map = serializer.serialize_map(None)?;
         map.serialize_entry("type", self.kind)?;
         if !self.value_after_filters
             && let Some(value) = &value
@@ -171,7 +177,7 @@ pub struct StatQuery {
     pub disabled: Option<bool>,
 }
 
-fn group(kind: &'static str, value: Option<Range>, filters: Vec<StatQuery>, disabled: Option<bool>) -> StatGroup {
+const fn group(kind: &'static str, value: Option<Range>, filters: Vec<StatQuery>, disabled: Option<bool>) -> StatGroup {
     StatGroup { kind, value, disabled, filters, value_after_filters: false }
 }
 
@@ -196,6 +202,10 @@ fn stat_trade_id(d: &Data, stat_ref: &str, kind: &str) -> R<String> {
 }
 
 /// `createTradeRequest`
+#[expect(
+    clippy::too_many_lines,
+    reason = "line-for-line port of `createTradeRequest` (web/price-check/trade/pathofexile-trade.ts)"
+)]
 pub fn create_trade_request(d: &Data, filters: &ItemFilters, stats: &[StatFilter], item: &Item) -> R<TradeRequest> {
     let trade = &filters.trade;
     // Online-in-league listings don't exist for trade.
@@ -209,18 +219,18 @@ pub fn create_trade_request(d: &Data, filters: &ItemFilters, stats: &[StatFilter
     };
     let f = &mut q.filters;
     let set = |f: &mut Map<String, Value>, path: &str, value: Value| prop_set(f, path, Some(value));
-    let text = |b: bool| json!(b.to_string());
+    let text = |b: bool| Value::from(b.to_string());
     let enabled = |n: &Option<FilterNumeric>| n.as_ref().filter(|n| !n.disabled).cloned();
     let truthy = |x: Option<f64>| x.filter(|v| *v != 0.0 && !v.is_nan());
 
     if let Some(currency) = trade.currency.as_deref().filter(|c| !c.is_empty()) {
-        set(f, "trade_filters.filters.price.option", json!(currency));
+        set(f, "trade_filters.filters.price.option", Value::from(currency));
     }
     if trade.collapse_listings == "api" {
         set(f, "trade_filters.filters.collapse.option", text(true));
     }
     if let Some(listed) = trade.listed.as_deref().filter(|l| !l.is_empty()) {
-        set(f, "trade_filters.filters.indexed.option", json!(listed));
+        set(f, "trade_filters.filters.indexed.option", Value::from(listed));
     }
 
     // Search by category, not base type?
@@ -240,70 +250,70 @@ pub fn create_trade_request(d: &Data, filters: &ItemFilters, stats: &[StatFilter
     if let Some(category) = &active.category {
         let id = category_to_trade_id(category)
             .ok_or_else(|| FilterError(format!("Invalid category: {}", category.as_str())))?;
-        set(f, "type_filters.filters.category.option", json!(id));
+        set(f, "type_filters.filters.category.option", Value::from(id));
     }
 
     if filters.foil.as_ref().is_some_and(|x| !x.disabled) {
-        set(f, "type_filters.filters.rarity.option", json!("uniquefoil"));
+        set(f, "type_filters.filters.rarity.option", Value::from("uniquefoil"));
     } else if let Some(rarity) = &filters.rarity {
-        set(f, "type_filters.filters.rarity.option", json!(rarity.value));
+        set(f, "type_filters.filters.rarity.option", Value::from(rarity.value));
     }
 
     if let Some(n) = enabled(&filters.item_level) {
-        set(f, "type_filters.filters.ilvl.min", json!(n.value));
+        set(f, "type_filters.filters.ilvl.min", Value::from(n.value));
         if let Some(max) = truthy(n.max) {
-            set(f, "type_filters.filters.ilvl.max", json!(max));
+            set(f, "type_filters.filters.ilvl.max", Value::from(max));
         }
     }
 
     if let Some(level) = filters.requires.as_ref().and_then(|r| r.level.as_ref()).filter(|l| !l.disabled) {
-        set(f, "req_filters.filters.lvl.max", json!(level.value));
+        set(f, "req_filters.filters.lvl.max", Value::from(level.value));
     }
 
     if let Some(n) = enabled(&filters.quality) {
-        set(f, "type_filters.filters.quality.min", json!(n.value));
+        set(f, "type_filters.filters.quality.min", Value::from(n.value));
     }
 
     // Equipment filters
     if let Some(n) = enabled(&filters.augment_sockets) {
-        set(f, "equipment_filters.filters.rune_sockets.min", json!(n.value));
+        set(f, "equipment_filters.filters.rune_sockets.min", Value::from(n.value));
     }
 
     // Map (waystone) filters
     if let Some(n) = enabled(&filters.map_tier) {
-        set(f, "map_filters.filters.map_tier.min", json!(n.value));
-        set(f, "map_filters.filters.map_tier.max", json!(n.value));
+        set(f, "map_filters.filters.map_tier.min", Value::from(n.value));
+        set(f, "map_filters.filters.map_tier.max", Value::from(n.value));
     }
     if let Some(hint) = filters.ultimatum_hint.as_ref().filter(|h| !h.disabled) {
-        set(f, "map_filters.filters.ultimatum_hint.option", json!(hint.value));
+        set(f, "map_filters.filters.ultimatum_hint.option", Value::from(hint.value));
     }
 
     // Misc filters
     if let Some(n) = enabled(&filters.gem_level) {
-        set(f, "misc_filters.filters.gem_level.min", json!(n.value));
+        set(f, "misc_filters.filters.gem_level.min", Value::from(n.value));
         if let Some(max) = truthy(n.max) {
-            set(f, "misc_filters.filters.gem_level.max", json!(max));
+            set(f, "misc_filters.filters.gem_level.max", Value::from(max));
         }
     }
     if let Some(n) = enabled(&filters.socket_number) {
-        set(f, "misc_filters.filters.gem_sockets.min", json!(n.value));
+        set(f, "misc_filters.filters.gem_sockets.min", Value::from(n.value));
     }
     if let Some(n) = enabled(&filters.area_level) {
         // With ascendancy points a lower area level is worth more: exclude
         // the worse (higher) ones.
         let bound = if filters.awarded_ascendancy_points.is_some() { "max" } else { "min" };
-        set(f, &format!("misc_filters.filters.area_level.{bound}"), json!(n.value));
+        set(f, &format!("misc_filters.filters.area_level.{bound}"), Value::from(n.value));
     }
     if let Some(points) = enabled(&filters.awarded_ascendancy_points) {
         let ref_name = item.info().ref_name.as_deref().unwrap_or("undefined");
-        let level = area_level_by_ascendancy_points(ref_name, points.value).map(|l| json!(l));
+        let level = area_level_by_ascendancy_points(ref_name, points.value).map(Value::from);
         prop_set(f, "misc_filters.filters.area_level.min", level);
     }
     if filters.unidentified.as_ref().is_some_and(|u| !u.disabled) {
         set(f, "misc_filters.filters.identified.option", text(false));
     }
     if let Some(tier) = filters.unidentified_tier.as_ref().filter(|t| !t.disabled) {
-        set(f, "misc_filters.filters.unidentified_tier.min", json!(tier.value));
+        set(f, "misc_filters.filters.unidentified_tier.min", Value::from(tier.value));
     }
 
     let sanctified_off = filters.sanctified.as_ref().is_none_or(|s| s.disabled);
@@ -345,7 +355,7 @@ pub fn create_trade_request(d: &Data, filters: &ItemFilters, stats: &[StatFilter
             let option = stat
                 .option
                 .and_then(|o| o.value)
-                .and_then(|v| EMPTY_MODIFIERS.get(v as usize))
+                .and_then(|v| EMPTY_MODIFIERS.get(f64_to_usize(v)))
                 .ok_or_else(|| FilterError("bad empty modifier option".to_owned()))?;
             let empty_id = stat_trade_id(d, option, "pseudo")?;
             let (min, max) = get_min_max(Some(roll(stat)?));
@@ -402,23 +412,27 @@ pub fn create_trade_request(d: &Data, filters: &ItemFilters, stats: &[StatFilter
 
         if let Some(path) = range_path {
             let input = roll(stat)?;
-            prop_set(&mut q.filters, &format!("{path}.min"), input.min.map(|m| json!(m)));
-            prop_set(&mut q.filters, &format!("{path}.max"), input.max.map(|m| json!(m)));
+            prop_set(&mut q.filters, &format!("{path}.min"), input.min.map(Value::from));
+            prop_set(&mut q.filters, &format!("{path}.max"), input.max.map(Value::from));
             if id == Some("item.elemental_dps") {
                 apply_elemental_damage_logical_filter(d, stat, &mut q.stats)?;
             }
         } else if let Some(path) = min_path {
             let input = roll(stat)?;
-            prop_set(&mut q.filters, &format!("{path}.min"), input.min.map(|m| json!(m)));
+            prop_set(&mut q.filters, &format!("{path}.min"), input.min.map(Value::from));
         } else if id == Some("item.rarity_magic") {
-            set(&mut q.filters, "type_filters.filters.rarity.option", json!("magic"));
+            set(&mut q.filters, "type_filters.filters.rarity.option", Value::from("magic"));
         } else if id == Some("item.duplicates") {
             if !item.ref_name_is("Mageblood") {
                 return Err(FilterError("Duplicates filter applied to non-mageblood".to_owned()));
             }
             // A count of the legacies; the ones on this item are disabled.
             let legacies: Vec<&StatFilter> = stats.iter().filter(|s| s.stat_ref.starts_with("Legacy of")).collect();
-            if let Some(filter) = build_mage_blood_not_filter(stat, &legacies, &mut q.stats[0].filters)? {
+            let filter = {
+                let and_group = q.stats.first_mut().ok_or_else(|| FilterError("no and group".to_owned()))?;
+                build_mage_blood_not_filter(stat, &legacies, &mut and_group.filters)?
+            };
+            if let Some(filter) = filter {
                 q.stats.push(filter);
             }
         }
@@ -437,22 +451,25 @@ pub fn create_trade_request(d: &Data, filters: &ItemFilters, stats: &[StatFilter
             let count = meta.bounds.ok_or_else(|| FilterError("no bounds".to_owned()))?.max;
             let current = meta.min;
             let base = first_id(stat)?.unwrap_or("undefined");
-            let filters = (0..count.max(0.0) as usize)
+            let filters = (1..=f64_to_usize(count.max(0.0)))
                 .map(|index| StatQuery {
-                    id: format!("{base}|{}", index + 1),
+                    id: format!("{base}|{index}"),
                     value: None,
-                    disabled: Some(Some((index + 1) as f64) != current),
+                    disabled: Some(Some(usize_to_f64(index)) != current),
                 })
                 .collect();
             q.stats.push(group("count", Some(Range { min: Some(1.0), max: None }), filters, Some(stat.disabled)));
             continue;
         }
-        let ids = trade_ids(stat)?;
-        if ids.len() == 1 {
-            q.stats[0].filters.push(trade_id_to_query(&ids[0], stat));
-        } else {
-            let filters = ids.iter().map(|id| trade_id_to_query(id, stat)).collect();
-            q.stats.push(group("count", Some(Range { min: Some(1.0), max: None }), filters, Some(stat.disabled)));
+        match trade_ids(stat)? {
+            [id] => {
+                let and_group = q.stats.first_mut().ok_or_else(|| FilterError("no and group".to_owned()))?;
+                and_group.filters.push(trade_id_to_query(id, stat));
+            }
+            ids => {
+                let filters = ids.iter().map(|id| trade_id_to_query(id, stat)).collect();
+                q.stats.push(group("count", Some(Range { min: Some(1.0), max: None }), filters, Some(stat.disabled)));
+            }
         }
     }
 
@@ -476,7 +493,8 @@ pub fn create_trade_request(d: &Data, filters: &ItemFilters, stats: &[StatFilter
             stat_ref: "# Unrevealed Modifiers".to_owned(),
             ..StatFilter::plain(id, "Unrevealed Modifiers", crate::filters::FilterTag::PSEUDO, false)
         };
-        q.stats[0].filters.push(trade_id_to_query(id, &pseudo));
+        let and_group = q.stats.first_mut().ok_or_else(|| FilterError("no and group".to_owned()))?;
+        and_group.filters.push(trade_id_to_query(id, &pseudo));
     }
 
     Ok(TradeRequest { query: q, sort: Sort { price: "asc" } })
@@ -490,7 +508,7 @@ fn apply_elemental_damage_logical_filter(d: &Data, stat: &StatFilter, all: &mut 
         Ok(ids.into_values().flatten().map(|id| StatQuery { id, value: None, disabled: None }).collect())
     };
     let selected = stat.option.and_then(|o| o.value);
-    let is = |m: ItemIsElementalModifier| selected == Some(f64::from(m as u8));
+    let is = |m: ItemIsElementalModifier| selected == Some(f64::from(m.value()));
     let (fire, cold, lightning) =
         ("Adds # to # Fire Damage", "Adds # to # Cold Damage", "Adds # to # Lightning Damage");
     let others: &[&str] = if is(ItemIsElementalModifier::Fire) {
@@ -524,13 +542,14 @@ fn get_min_max(roll: Option<&FilterRoll>) -> (Option<f64>, Option<f64>) {
 
 /// `tradeIdToQuery`: an option goes into the id (`id|option`).
 fn trade_id_to_query(id: &str, stat: &StatFilter) -> StatQuery {
-    let id = match &stat.option {
-        Some(option) => match option.value {
-            Some(v) => format!("{id}|{}", wraex_core::js::number_to_string(v)),
-            None => format!("{id}|undefined"),
+    let id = stat.option.as_ref().map_or_else(
+        || id.to_owned(),
+        |option| {
+            option
+                .value
+                .map_or_else(|| format!("{id}|undefined"), |v| format!("{id}|{}", wraex_core::js::number_to_string(v)))
         },
-        None => id.to_owned(),
-    };
+    );
     let (min, max) = get_min_max(stat.roll.as_ref());
     StatQuery { id, value: Some(Range { min, max }), disabled: Some(stat.disabled) }
 }
@@ -557,6 +576,7 @@ fn build_filter_with_value(filter: &StatFilter, roll: Option<(f64, Option<f64>)>
 }
 
 /// `EASY_LEGACY_DUPLICATE_TO_FILTER`: `(count, values)` per duplicate count.
+#[expect(clippy::float_cmp, reason = "JS `===` on the duplicate count, an integer stored as f64")]
 fn easy_legacy_duplicate(dup_count: f64) -> Option<(f64, Vec<Range>)> {
     let min = |m: f64| Range { min: Some(m), max: None };
     if dup_count == 3.0 {
@@ -572,6 +592,7 @@ fn easy_legacy_duplicate(dup_count: f64) -> Option<(f64, Vec<Range>)> {
 
 /// `buildMageBloodNotFilter`: the item's legacies go into the `and` group; a
 /// count group covers the duplicates.
+#[expect(clippy::float_cmp, reason = "JS `===` on the duplicate counts, integers stored as f64")]
 fn build_mage_blood_not_filter(
     duplicate_stat: &StatFilter,
     legacies: &[&StatFilter],
@@ -587,7 +608,7 @@ fn build_mage_blood_not_filter(
         Ok(())
     };
 
-    let known_count = legacies.iter().filter(|s| !s.disabled).count() as f64;
+    let known_count = usize_to_f64(legacies.iter().filter(|s| !s.disabled).count());
     let dup_roll = roll(duplicate_stat)?;
     let dup_count = dup_roll.min.unwrap_or(dup_roll.value);
     if dup_count + known_count > 4.0 {
@@ -608,7 +629,8 @@ fn build_mage_blood_not_filter(
         }
         if dup_count == 2.0 || dup_count == 1.0 {
             push_all(q_and, None)?;
-            let (count, values) = easy_legacy_duplicate(dup_count).expect("1 or 2");
+            let (count, values) =
+                easy_legacy_duplicate(dup_count).ok_or_else(|| FilterError("unexpected duplicate count".to_owned()))?;
             count_filter.value = Some(Range { min: Some(count), max: None });
             for s in legacies {
                 let leg = build_filter_with_value(s, None)?;
@@ -626,17 +648,6 @@ fn build_mage_blood_not_filter(
     let some_legacy = legacies.first().ok_or_else(|| FilterError("no legacy".to_owned()))?;
     let trade_id = first_id(some_legacy)?.unwrap_or("undefined").split('|').next().unwrap_or_default().to_owned();
     let source = some_legacy.sources.first().ok_or_else(|| FilterError("no legacy source".to_owned()))?;
-    let legacy_ids: Vec<String> = source
-        .stat
-        .stat
-        .matchers
-        .iter()
-        .map(|m| match m.value {
-            Some(v) => format!("{trade_id}|{}", wraex_core::js::number_to_string(v)),
-            None => format!("{trade_id}|undefined"),
-        })
-        .collect();
-
     count_filter.value = Some(Range { min: Some(1.0), max: None });
     let min = if dup_count == 1.0 {
         Some(2.0)
@@ -646,8 +657,11 @@ fn build_mage_blood_not_filter(
         None
     };
     if let Some(min) = min {
-        count_filter.filters.extend(legacy_ids.into_iter().map(|id| StatQuery {
-            id,
+        count_filter.filters.extend(source.stat.stat.matchers.iter().map(|m| StatQuery {
+            id: m.value.map_or_else(
+                || format!("{trade_id}|undefined"),
+                |v| format!("{trade_id}|{}", wraex_core::js::number_to_string(v)),
+            ),
             value: Some(Range { min: Some(min), max: None }),
             disabled: None,
         }));

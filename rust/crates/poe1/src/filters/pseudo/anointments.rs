@@ -3,6 +3,7 @@
 use super::super::StatFilter;
 use crate::parser::item::Item;
 use crate::parser::modifiers::{ModifierType, StatCalculated};
+use wraex_core::num::f64_to_usize;
 
 const OILS: [&str; 14] = [
     "Prismatic Oil",
@@ -30,7 +31,7 @@ pub fn decode_oils(calc: &StatCalculated) -> Option<Vec<Option<&'static str>>> {
 
     let anointments = calc.stat.anointments.as_ref()?;
     let encoded = if anointments.len() == 1 {
-        Some(&anointments[0].oils)
+        anointments.first().map(|a| &a.oils)
     } else {
         let roll = calc.sources.first().and_then(|s| s.stat.roll.as_ref()).map(|r| r.value);
         anointments.iter().find(|a| Some(a.roll) == roll).map(|a| &a.oils)
@@ -43,7 +44,7 @@ pub fn decode_oils(calc: &StatCalculated) -> Option<Vec<Option<&'static str>>> {
     Some(
         indexes
             .into_iter()
-            .map(|i| if i.fract() == 0.0 && i >= 0.0 { OILS.get(i as usize).copied() } else { None })
+            .map(|i| if i.fract() == 0.0 && i >= 0.0 { OILS.get(f64_to_usize(i)).copied() } else { None })
             .collect(),
     )
 }

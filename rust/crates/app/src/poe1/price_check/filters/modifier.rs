@@ -17,8 +17,8 @@ use crate::ui::art;
 use crate::ui::icon;
 
 use super::{
-    FieldStyle, ROLL_WIDTH, is_mini, modifier_text, number_field, shows_quality, shows_tag, stat_text, tag_badge,
-    tag_label,
+    FieldStyle, NumberField, ROLL_WIDTH, is_mini, modifier_text, number_field, shows_quality, shows_tag, stat_text,
+    tag_badge, tag_label,
 };
 
 /// `FilterModifier.vue`.
@@ -29,6 +29,10 @@ use super::{
 #[expect(
     clippy::too_many_arguments,
     reason = "one argument per prop FilterModifier.vue takes, plus the view's state projection"
+)]
+#[expect(
+    clippy::too_many_lines,
+    reason = "line-for-line port of `FilterModifier.vue`'s template (ref/apt/renderer/src/web/price-check/filters/FilterModifier.vue)"
 )]
 pub fn view<S: 'static>(
     check: &PriceCheck,
@@ -52,11 +56,7 @@ pub fn view<S: 'static>(
     label_area = label_area.child(checkbox(filter, path, project));
     label_area = label_area.child(label(filter, mini, path, project));
     if let Some(open) = expanded {
-        let group = match path {
-            StatPath::Meta(group) => group,
-            StatPath::Top(index) => index,
-            StatPath::Child(group, _) => group,
-        };
+        let group = super::path_group(path);
         label_area = label_area.child(
             row()
                 .key(format!("stat-{key}-expand"))
@@ -184,7 +184,7 @@ fn label<S: 'static>(filter: &StatFilter, mini: bool, path: StatPath, project: P
         .on_press(move |s: &mut S| project(s).smart_toggle_stat(path));
     if let Some(icon) = filter.mercenary.as_ref().and_then(|mercenary| mercenary.icon.as_deref()) {
         // `<img v-if="filter.mercenary?.icon" :src="filter.mercenary.icon">`
-        button = button.child(super::image(art::Picture::cdn(icon), theme::rem(1.0)).mr(theme::rem(0.25)));
+        button = button.child(super::image(&art::Picture::cdn(icon), theme::rem(1.0)).mr(theme::rem(0.25)));
     }
     if filter.not == Some(true) && mini {
         button = button.child(tag_badge(&i18n::t("filters.tag_not"), FilterTag::PSEUDO).mr(theme::rem(0.25)));
@@ -194,6 +194,10 @@ fn label<S: 'static>(filter: &StatFilter, mini: bool, path: StatPath, project: P
 }
 
 /// `FilterModifierTiers.vue`: the tier badges a modifier's sources carry.
+#[expect(
+    clippy::float_cmp,
+    reason = "the tier is an integer-valued f64; `===` is what `FilterModifierTiers.vue` compares"
+)]
 fn tiers(filter: &StatFilter, item: &Item, path: StatPath) -> El {
     let mut tags: Vec<(&'static str, f64)> = Vec::new();
     if let Some(mercenary) = &filter.mercenary
@@ -244,8 +248,10 @@ fn tier_badge(index: usize, kind: &'static str, label: &str) -> El {
     match kind {
         "tier-1" => badge = badge.fill(theme::yellow(500)).child(icon::badge_text(label, Color::BLACK)),
         "tier-2" => {
-            badge =
-                badge.border(1.0, theme::yellow(500)).border_layout().child(icon::badge_text(label, theme::yellow(500)))
+            badge = badge
+                .border(1.0, theme::yellow(500))
+                .border_layout()
+                .child(icon::badge_text(label, theme::yellow(500)));
         }
         "merc-gilded" => badge = badge.fill(theme::yellow(700)).child(icon::badge_text(label, theme::yellow(100))),
         _ => badge = badge.fill(theme::gray(700)).child(icon::badge_text(label, Color::BLACK)),
@@ -338,10 +344,10 @@ fn inputs<S: 'static>(check: &PriceCheck, filter: &StatFilter, item: &Item, path
         // `FilterModifier.vue`'s `rollTags`: `/images/VolatileVaalOrb.png` or
         // `/images/ReflectingMist.png`.
         let name = if volatile { "VolatileVaalOrb.png" } else { "ReflectingMist.png" };
-        block = block.child(super::image(art::Picture::local(name), theme::rem(1.25)));
+        block = block.child(super::image(&art::Picture::local(name), theme::rem(1.25)));
     }
     if increased {
-        block = block.child(super::image(art::Picture::local("increased.png"), theme::rem(1.25)));
+        block = block.child(super::image(&art::Picture::local("increased.png"), theme::rem(1.25)));
     }
     let min_field = InputField::Stat(path, NumericPart::Min);
     let max_field = InputField::Stat(path, NumericPart::Max);
@@ -351,20 +357,24 @@ fn inputs<S: 'static>(check: &PriceCheck, filter: &StatFilter, item: &Item, path
             .gap(1.0)
             .child(number_field(
                 check,
-                min_field,
-                ROLL_WIDTH,
-                "min",
-                [theme::ROUNDED, 0.0, 0.0, theme::ROUNDED],
-                FieldStyle::Roll,
+                NumberField {
+                    field: min_field,
+                    width: ROLL_WIDTH,
+                    placeholder: "min",
+                    corners: [theme::ROUNDED, 0.0, 0.0, theme::ROUNDED],
+                    style: FieldStyle::Roll,
+                },
                 project,
             ))
             .child(number_field(
                 check,
-                max_field,
-                ROLL_WIDTH,
-                "max",
-                [0.0, theme::ROUNDED, theme::ROUNDED, 0.0],
-                FieldStyle::Roll,
+                NumberField {
+                    field: max_field,
+                    width: ROLL_WIDTH,
+                    placeholder: "max",
+                    corners: [0.0, theme::ROUNDED, theme::ROUNDED, 0.0],
+                    style: FieldStyle::Roll,
+                },
                 project,
             )),
     )

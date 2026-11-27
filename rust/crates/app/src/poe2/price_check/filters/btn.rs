@@ -9,7 +9,7 @@ use crate::theme::{self, text as type_};
 use crate::ui::art;
 use crate::ui::icon;
 
-use super::{FieldStyle, LINE, number_field, number_width};
+use super::{FieldStyle, LINE, NumberField, number_field, number_width};
 
 /// `FilterBtnNumeric.vue`: the label toggles the filter, the min/max fields edit it.
 pub fn numeric<S: 'static>(check: &PriceCheck, which: NumericFilter, project: Project<S>) -> El {
@@ -47,34 +47,47 @@ pub fn numeric<S: 'static>(check: &PriceCheck, which: NumericFilter, project: Pr
                         .color(theme::gray(200)),
                 ),
         )
-        .child(number_field(check, min_field, min_width, "", corners, FieldStyle::Chip, project));
+        .child(number_field(
+            check,
+            &NumberField { field: min_field, width: min_width, placeholder: "", corners, style: FieldStyle::Chip },
+            project,
+        ));
     if has_max {
         let max_field = InputField::Numeric(which, NumericPart::Max);
         let max_width = number_width(check.input(&max_field.key()).map_or("", |edit| edit.text.as_str()));
         chip = chip.child(text("–").font(type_::SM).color(theme::gray(400))).child(number_field(
             check,
-            max_field,
-            max_width,
-            "…",
-            [0.0, theme::ROUNDED, theme::ROUNDED, 0.0],
-            FieldStyle::Chip,
+            &NumberField {
+                field: max_field,
+                width: max_width,
+                placeholder: "…",
+                corners: [0.0, theme::ROUNDED, theme::ROUNDED, 0.0],
+                style: FieldStyle::Chip,
+            },
             project,
         ));
     }
     chip
 }
 
-/// `FilterBtnLogical.vue`: one boolean chip. `active` overrides the filter's own state for
-/// the chips that are always on (Mirrored, Sanctified), `readonly` chips do nothing. `image`
-/// is the chip's `img` prop (an influence badge).
-pub fn logical<S: 'static>(
-    key: &str,
-    label: &str,
-    active: Option<bool>,
-    collapse: Option<bool>,
-    image: Option<art::Picture>,
-    on_press: impl Fn(&mut S) + 'static,
-) -> El {
+/// `FilterBtnLogical.vue`'s optional props.
+///
+/// `active` overrides the filter's own state for the chips that are always on (Mirrored,
+/// Sanctified); `collapse` draws the chevron of the stats chip; `image` is the chip's `img`
+/// (an influence badge).
+#[derive(Debug, Default)]
+pub struct Chip {
+    pub active: Option<bool>,
+    pub collapse: Option<bool>,
+    pub image: Option<art::Picture>,
+}
+
+/// `FilterBtnLogical.vue`: one boolean chip.
+///
+/// `props.active` overrides the filter's own state for the chips that are always on, and a
+/// `readonly` chip does nothing (`btn::readonly`).
+pub fn logical<S: 'static>(key: &str, label: &str, chip: Chip, on_press: impl Fn(&mut S) + 'static) -> El {
+    let Chip { active, collapse, image } = chip;
     let mut chip = row()
         .key(format!("btn-{key}"))
         .h(LINE)
@@ -90,7 +103,7 @@ pub fn logical<S: 'static>(
         .label(label)
         .on_press(on_press);
     if let Some(image) = image {
-        chip = chip.child(super::image(image, theme::rem(1.25)));
+        chip = chip.child(super::image(&image, theme::rem(1.25)));
     }
     chip = chip.child(
         text(label).key(format!("btn-{key}-label")).font(type_::SM).color(theme::gray(200)).pl(theme::rem(0.25)),
@@ -111,7 +124,7 @@ pub fn logical<S: 'static>(
 /// A read-only chip: `:readonly` and `:filter="{ disabled: false }"` in `FiltersBlock.vue`,
 /// so it is drawn as active and a press does nothing.
 pub fn readonly<S: 'static>(key: &str, label: &str) -> El {
-    logical::<S>(key, label, Some(true), None, None, |_: &mut S| {})
+    logical::<S>(key, label, Chip { active: Some(true), ..Chip::default() }, |_: &mut S| {})
 }
 
 /// `t('item.item_level')` without its `{0}`: the value is the chip's own field.

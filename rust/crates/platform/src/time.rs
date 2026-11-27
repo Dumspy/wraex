@@ -21,17 +21,20 @@ pub fn local_utc_offset_seconds() -> i32 {
 #[cfg(unix)]
 mod imp {
     /// `localtime_r` of the current time, then its `tm_gmtoff` (seconds east of UTC).
+    #[expect(unsafe_code, reason = "`libc`'s C time calls have no safe wrapper in this crate")]
     pub fn local_utc_offset_seconds() -> i32 {
-        // SAFETY: `time` and `localtime_r` take plain C values; `now` and `tm` are owned by
-        // this function and don't outlive the call.
-        unsafe {
-            let now = libc::time(std::ptr::null_mut());
-            let mut tm: libc::tm = std::mem::zeroed();
-            if libc::localtime_r(&now, &mut tm).is_null() {
-                return 0;
-            }
-            tm.tm_gmtoff as i32
+        // SAFETY: `time` takes a plain `time_t` pointer; null asks for the current time, which
+        // is always a valid request.
+        let now = unsafe { libc::time(std::ptr::null_mut()) };
+        // SAFETY: `libc::tm` is plain old data whose all-zero bit pattern is valid.
+        let mut tm: libc::tm = unsafe { std::mem::zeroed() };
+        // SAFETY: `now` and `tm` are live locals of this call, and `localtime_r` writes only
+        // into the structure it is given.
+        if unsafe { libc::localtime_r(&raw const now, &raw mut tm) }.is_null() {
+            return 0;
         }
+        // A real zone is within ±14 h of UTC, so its offset cannot truncate.
+        i32::try_from(tm.tm_gmtoff).unwrap_or(0)
     }
 }
 
@@ -45,13 +48,20 @@ mod imp {
 
     /// `Bias` is minutes *west* of UTC; the daylight bias applies while daylight time is in
     /// force.
+    #[expect(
+        unsafe_code,
+        reason = "`GetTimeZoneInformation` fills a Win32 structure and has no safe wrapper in this crate"
+    )]
     pub fn local_utc_offset_seconds() -> i32 {
         let mut zone = TIME_ZONE_INFORMATION::default();
         // SAFETY: the call fills the structure this function owns.
-        let state = unsafe { GetTimeZoneInformation(&mut zone) };
-        let bias =
-            if state == TIME_ZONE_ID_DAYLIGHT { zone.Bias + zone.DaylightBias } else { zone.Bias + zone.StandardBias };
-        -(bias * 60)
+        let state = unsafe { GetTimeZoneInformation(&raw mut zone) };
+        let bias = if state == TIME_ZONE_ID_DAYLIGHT {
+            zone.Bias.saturating_add(zone.DaylightBias)
+        } else {
+            zone.Bias.saturating_add(zone.StandardBias)
+        };
+        bias.saturating_mul(60).saturating_neg()
     }
 }
 

@@ -14,6 +14,10 @@ too-many-lines-threshold = 100
 cognitive-complexity-threshold = 25
 type-complexity-threshold = 200
 
+# Proper nouns in doc comments, not code: the games (Path of Exile 1 and 2), Craft
+# of Exile, and the charting library and font the UI names. `..` keeps clippy's list.
+doc-valid-idents = ["PoE", "PoE1", "PoE2", "CoE", "ApexCharts", "DejaVu", ".."]
+
 disallowed-macros = [
   { path = "serde_json::json", reason = "build JSON from a #[derive(Serialize)] type; tests may expect this lint" },
 ]

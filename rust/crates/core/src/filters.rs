@@ -9,10 +9,10 @@ pub enum Rounding {
 }
 
 impl Rounding {
-    fn apply(self, x: f64) -> f64 {
+    const fn apply(self, x: f64) -> f64 {
         match self {
-            Rounding::Floor => x.floor(),
-            Rounding::Ceil => x.ceil(),
+            Self::Floor => x.floor(),
+            Self::Ceil => x.ceil(),
         }
     }
 }
@@ -51,8 +51,12 @@ pub fn percent_roll_delta(value: f64, delta: f64, p: f64, method: Rounding, dp: 
 
 /// `floorToBracket`: the largest bracket not above `value`, or the first.
 pub fn floor_to_bracket(value: f64, brackets: &[f64]) -> f64 {
-    let mut prev = brackets[0];
-    for &num in brackets {
+    // Callers pass a fixed, non-empty ladder; an empty one returns `value`.
+    let Some((&first, rest)) = brackets.split_first() else {
+        return value;
+    };
+    let mut prev = first;
+    for &num in rest {
         if num > value {
             return prev;
         }
@@ -63,8 +67,12 @@ pub fn floor_to_bracket(value: f64, brackets: &[f64]) -> f64 {
 
 /// `ceilToBracket`: brackets descend; the smallest not below `value`.
 pub fn ceil_to_bracket(value: f64, brackets: &[f64]) -> f64 {
-    let mut prev = brackets[0];
-    for &num in brackets {
+    // Callers pass a fixed, non-empty ladder; an empty one returns `value`.
+    let Some((&first, rest)) = brackets.split_first() else {
+        return value;
+    };
+    let mut prev = first;
+    for &num in rest {
         if num < value {
             return prev;
         }

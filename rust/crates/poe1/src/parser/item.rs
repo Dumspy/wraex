@@ -25,12 +25,12 @@ impl ItemInfluence {
     /// The value, as the trade site and `influence-<value>.png` spell it.
     pub const fn as_str(self) -> &'static str {
         match self {
-            ItemInfluence::Crusader => "Crusader",
-            ItemInfluence::Elder => "Elder",
-            ItemInfluence::Hunter => "Hunter",
-            ItemInfluence::Redeemer => "Redeemer",
-            ItemInfluence::Shaper => "Shaper",
-            ItemInfluence::Warlord => "Warlord",
+            Self::Crusader => "Crusader",
+            Self::Elder => "Elder",
+            Self::Hunter => "Hunter",
+            Self::Redeemer => "Redeemer",
+            Self::Shaper => "Shaper",
+            Self::Warlord => "Warlord",
         }
     }
 }
@@ -40,6 +40,16 @@ impl ItemInfluence {
 pub enum IncursionRoom {
     Open = 1,
     Obstructed = 2,
+}
+
+impl IncursionRoom {
+    /// The room's value, which is also the option's `value` on the trade site.
+    pub const fn as_value(self) -> f64 {
+        match self {
+            Self::Open => 1.0,
+            Self::Obstructed => 2.0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize)]
@@ -82,13 +92,13 @@ pub struct StackSize {
     pub max: Option<f64>,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
 pub struct Corrupted {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub twice: Option<bool>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UnknownModifier {
     pub text: String,
     #[serde(rename = "type")]
@@ -229,7 +239,11 @@ pub struct Item {
 
 impl Item {
     /// The item's `info`, which every parser after `findInDatabase` may read.
-    pub fn info(&self) -> &BaseType {
+    #[expect(
+        clippy::expect_used,
+        reason = "`findInDatabase` sets `info` before any parser reads it (upstream's `item.info!`)"
+    )]
+    pub const fn info(&self) -> &BaseType {
         self.info.as_ref().expect("info is set by findInDatabase")
     }
 
@@ -243,7 +257,7 @@ impl Item {
         self.base_type.as_deref().filter(|b| !b.is_empty()).unwrap_or(&self.name)
     }
 
-    pub(crate) fn empty(name: String, base_type: Option<String>) -> Self {
+    pub(crate) const fn empty(name: String, base_type: Option<String>) -> Self {
         Self {
             rarity: None,
             item_level: None,
@@ -319,7 +333,7 @@ impl Item {
     fn virtual_item(info: BaseType) -> Self {
         let mut item = Self::empty(String::new(), None);
         item.info = Some(info);
-        item.raw_text = "VIRTUAL_ITEM".to_owned();
+        "VIRTUAL_ITEM".clone_into(&mut item.raw_text);
         item
     }
 

@@ -20,19 +20,22 @@ pub fn distance(a: &str, b: &str) -> usize {
     }
 
     // `prev[j]` is the distance between `a[..i]` and `b[..j]`; each row only
-    // needs the one above it, and `prev_diag` carries the cell up-left of the
-    // current one.
+    // needs the one above it. Walking `b` alongside `prev` and `prev[1..]` gives
+    // the cells up-left and above; `left` is the cell just written. Distances
+    // never exceed `a.len()`, so the additions cannot overflow.
     let mut prev: Vec<usize> = (0..=b.len()).collect();
-    let mut row = vec![0usize; b.len() + 1];
     for (i, &ca) in a.iter().enumerate() {
-        row[0] = i + 1;
-        for (j, &cb) in b.iter().enumerate() {
+        let mut left = i.saturating_add(1);
+        let mut row = Vec::with_capacity(prev.len());
+        row.push(left);
+        for ((&cb, &above_left), &above) in b.iter().zip(&prev).zip(prev.iter().skip(1)) {
             let cost = usize::from(ca != cb);
-            row[j + 1] = (prev[j + 1] + 1).min(row[j] + 1).min(prev[j] + cost);
+            left = above.saturating_add(1).min(left.saturating_add(1)).min(above_left.saturating_add(cost));
+            row.push(left);
         }
-        std::mem::swap(&mut prev, &mut row);
+        prev = row;
     }
-    prev[b.len()]
+    prev.last().copied().unwrap_or_default()
 }
 
 fn as_utf16(text: &str) -> Vec<u16> {

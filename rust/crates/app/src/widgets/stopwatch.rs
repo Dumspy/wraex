@@ -17,6 +17,7 @@
 
 use rune::tok::TextStyle;
 use rune::{Color, El, col, row, text};
+use wraex_core::num::f64_to_u64;
 
 use crate::theme::{self, text as type_};
 use crate::widgets::{Overlay, Project, Widget, icon};
@@ -36,13 +37,13 @@ pub struct Timer {
 
 impl Timer {
     /// `start()`: run from `now`.
-    pub fn start(&mut self, now_ms: f64) {
+    pub const fn start(&mut self, now_ms: f64) {
         self.running = true;
         self.prev_tick = now_ms;
     }
 
     /// `reset()`: zero it, or restart at one second while running (`(isRunning) ? 1000 : 0`).
-    pub fn reset(&mut self, now_ms: f64) {
+    pub const fn reset(&mut self, now_ms: f64) {
         self.prev_tick = now_ms;
         self.millis = if self.running { 1000.0 } else { 0.0 };
     }
@@ -65,7 +66,7 @@ impl Timer {
 
     /// The whole seconds counted, `Duration.fromMillis(millis)`'s `h * 3600 + m * 60 + s`.
     fn seconds(&self) -> u64 {
-        (self.millis / 1000.0).floor().max(0.0) as u64
+        f64_to_u64((self.millis / 1000.0).floor().max(0.0))
     }
 
     /// `formatted`: `(hours, minutes, seconds)`, each `String(...).padStart(2, '0')` (the seconds
@@ -88,11 +89,7 @@ pub fn view<S: 'static>(overlay: &Overlay, widget: &Widget, project: Project<S>)
     // `.timer`: `font-size: 2rem; line-height: 1; @apply font-mono; text-shadow`.
     //
     // `font-mono` is the platform's monospaced face, so every glyph — the two colons included —
-    // advances one cell. Each character is centred in a cell as wide as the reference's advance
-    // (19.27 pt at 32 pt, Menlo's), so the clock keeps the reference's width whatever face the
-    // platform resolves.
-    const DIGITS: f32 = 38.53;
-    const COLON: f32 = 19.27;
+    // advances one cell ([`DIGITS`]/[`COLON`]).
     let time = TextStyle::new(32.0, 400.0).lh(32.0).family(theme::FAMILY_SYSTEM_MONO);
     let digits = |key: &str, value: String| {
         text(value).key(key.to_owned()).w(DIGITS).align(rune::Align::Center).font(time).color(Color::WHITE)
@@ -143,6 +140,13 @@ pub fn view<S: 'static>(overlay: &Overlay, widget: &Widget, project: Project<S>)
     card
 }
 
+/// `.timer`'s digit advance at 32 pt: each character is centred in a cell as wide as the
+/// reference's (19.27 pt, Menlo's), so the clock keeps its width whatever face the platform
+/// resolves.
+const DIGITS: f32 = 38.53;
+/// `.timer`'s colon advance at 32 pt.
+const COLON: f32 = 19.27;
+
 /// `.controls`: the play/pause and reset buttons, 2 × 2 rem, centred over the timer.
 fn controls<S: 'static>(overlay: &Overlay, id: u32, running: bool, project: Project<S>) -> El {
     /// `button`: `_button_`'s `background: rgba(29, 29, 29, 0.863)`, 2 × 2 rem, `mx-1`.
@@ -152,7 +156,8 @@ fn controls<S: 'static>(overlay: &Overlay, id: u32, running: bool, project: Proj
             .size(theme::rem(2.0), theme::rem(2.0))
             .mx(theme::rem(0.25))
             .radius(theme::ROUNDED)
-            .fill(rune::color::hex("#1d1d1d").expect("#1d1d1d").alpha(0.863))
+            // `hex` reads a literal of its own format; the fallback cannot be taken.
+            .fill(rune::color::hex("#1d1d1d").unwrap_or(Color::BLACK).alpha(0.863))
             .center()
             .focusable(true)
             .role("button")

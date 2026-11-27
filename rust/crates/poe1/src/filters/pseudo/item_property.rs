@@ -4,7 +4,7 @@
 use indexmap::IndexMap;
 
 use super::super::create_stat_filters::{Ctx, calculated_stat_to_filter};
-use super::super::{FilterSource, FilterTag, R, StatFilter};
+use super::super::{FilterSource, FilterTag, R, StatFilter, missing};
 use crate::data::{Stat, StatMatcher, StatTrade, stat_better};
 use crate::parser::advanced_mod_desc::{ModifierInfo, ParsedModifier};
 use crate::parser::calc_q20::{PropStats, calc_prop_bounds, prop_at_20_quality, quality_stats};
@@ -28,13 +28,13 @@ pub struct Prop {
 }
 
 impl Prop {
-    pub fn new(stat_ref: &'static str, trade_id: &'static str, roll: Option<StatRoll>) -> Self {
+    pub const fn new(stat_ref: &'static str, trade_id: &'static str, roll: Option<StatRoll>) -> Self {
         Self { stat_ref, trade_id, roll, sources: Vec::new(), dp: false, disabled: None, hidden: None }
     }
 }
 
 /// A roll from 0 to `max`.
-pub fn up_to(value: f64, max: f64) -> Option<StatRoll> {
+pub const fn up_to(value: f64, max: f64) -> Option<StatRoll> {
     Some(StatRoll { value, min: 0.0, max })
 }
 
@@ -95,7 +95,7 @@ fn is_armour_stat(stat_ref: &str) -> bool {
 
 fn armour_props(ctx: &mut Ctx) {
     let item = ctx.item;
-    let base_info = item.unique_base.as_ref().unwrap_or(item.info());
+    let base_info = item.unique_base.as_ref().unwrap_or_else(|| item.info());
     let bounds = |b: Option<[u32; 2]>| b.map(|[min, max]| [f64::from(min), f64::from(max)]);
     let armour = base_info.armour.as_ref();
     let single = is_single_attr_armour(item);
@@ -240,7 +240,7 @@ fn is_single_attr_armour(item: &Item) -> bool {
 }
 
 /// `isPdpsImportant`
-fn is_pdps_important(item: &Item) -> bool {
+const fn is_pdps_important(item: &Item) -> bool {
     use ItemCategory as C;
     matches!(
         item.category,
@@ -266,12 +266,14 @@ pub fn prop_to_filter(prop: Prop, item: &Item, search_in_range: f64) -> StatFilt
         trade: StatTrade { inverted: None, option: None, ids },
     };
     let sources = prop.sources;
-    let mut filter = no_source_pseudo_to_filter(
-        NoSourcePseudo { pseudo: stat, roll: prop.roll, dp: prop.dp, disabled: prop.disabled, hidden: prop.hidden },
-        item,
-        search_in_range,
-    )
-    .expect("a stat without a trade option converts");
+    let opts =
+        NoSourcePseudo { pseudo: stat, roll: prop.roll, dp: prop.dp, disabled: prop.disabled, hidden: prop.hidden };
+    #[expect(
+        clippy::expect_used,
+        reason = "a prop's stat has no `trade.option`, the only input `calculatedStatToFilter` fails on (`propToFilter`'s `!`)"
+    )]
+    let mut filter =
+        no_source_pseudo_to_filter(opts, item, search_in_range).expect("a stat without a trade option converts");
     filter.tag = FilterTag::Property;
     filter.sources = sources;
     filter
@@ -297,9 +299,10 @@ pub fn no_source_pseudo_to_filter(opts: NoSourcePseudo, item: &Item, search_in_r
         min: r.min,
         max: r.max,
     });
+    let translation = opts.pseudo.matchers.first().cloned().ok_or_else(|| missing("matchers[0]"))?;
     let source = StatSource {
         modifier: ParsedModifier { info: ModifierInfo::new(ModifierType::Pseudo), stats: Vec::new() },
-        stat: ParsedStat { stat: opts.pseudo.clone(), translation: opts.pseudo.matchers[0].clone(), roll },
+        stat: ParsedStat { stat: opts.pseudo.clone(), translation, roll },
         contributes: opts.roll,
     };
     let calc = StatCalculated { stat: opts.pseudo, kind: ModifierType::Pseudo, sources: vec![source] };

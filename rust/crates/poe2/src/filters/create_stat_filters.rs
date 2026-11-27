@@ -40,15 +40,15 @@ pub struct StatOptions {
     pub default_all_selected: bool,
 }
 
-fn is(item: &Item, category: ItemCategory) -> bool {
-    item.category.as_ref() == Some(&category)
+fn is(item: &Item, category: &ItemCategory) -> bool {
+    item.category.as_ref() == Some(category)
 }
 
-fn js_max(a: f64, b: f64) -> f64 {
+const fn js_max(a: f64, b: f64) -> f64 {
     if a.is_nan() || b.is_nan() { f64::NAN } else { a.max(b) }
 }
 
-fn js_min(a: f64, b: f64) -> f64 {
+const fn js_min(a: f64, b: f64) -> f64 {
     if a.is_nan() || b.is_nan() { f64::NAN } else { a.min(b) }
 }
 
@@ -59,18 +59,19 @@ pub(crate) fn roll_mut(filter: &mut StatFilter) -> R<&mut FilterRoll> {
 }
 
 /// `createExactStatFilters`
+#[expect(
+    clippy::too_many_lines,
+    reason = "line-for-line port of upstream `createExactStatFilters` (filters/create-stat-filters.ts)"
+)]
 pub fn create_exact_stat_filters(
     d: &Data,
     item: &Item,
     stats_by_type: &[StatCalculated],
     opts: StatOptions,
 ) -> R<Vec<StatFilter>> {
-    let mut search_in_range = opts.search_stat_range.min(2.0);
-    if is(item, C::Tablet) {
-        search_in_range = 0.0;
-    }
+    let search_in_range = if is(item, &C::Tablet) { 0.0 } else { opts.search_stat_range.min(2.0) };
 
-    if item.map_blighted.is_some() || is(item, C::Invitation) {
+    if item.map_blighted.is_some() || is(item, &C::Invitation) {
         return Ok(Vec::new());
     }
     if item.is_unidentified && item.rarity == Some(Rarity::Unique) && item.is_synthesised != Some(true) {
@@ -95,7 +96,7 @@ pub fn create_exact_stat_filters(
         ModifierType::Skill,
     ];
 
-    if item.influences.is_empty() && item.is_fractured != Some(true) && !is(item, C::Tincture) {
+    if item.influences.is_empty() && item.is_fractured != Some(true) && !is(item, &C::Tincture) {
         keep_by_type.push(ModifierType::Implicit);
     }
 
@@ -106,7 +107,7 @@ pub fn create_exact_stat_filters(
         keep_by_type.push(ModifierType::Explicit);
     }
 
-    if is(item, C::Flask) {
+    if is(item, &C::Flask) {
         keep_by_type.push(ModifierType::Crafted);
     }
 
@@ -119,7 +120,7 @@ pub fn create_exact_stat_filters(
     };
 
     // "uses remaining" pseudo for tablets.
-    if is(item, C::Tablet) {
+    if is(item, &C::Tablet) {
         filter_pseudo(&mut ctx)?;
     }
 
@@ -144,12 +145,12 @@ pub fn create_exact_stat_filters(
 
         // Only fractured explicits; no implicits on tablets.
         if (fractured && filter.tag == FilterTag::EXPLICIT)
-            || (is(item, C::Tablet) && filter.tag == FilterTag::IMPLICIT)
+            || (is(item, &C::Tablet) && filter.tag == FilterTag::IMPLICIT)
         {
             continue;
         }
 
-        if is(item, C::Tablet) {
+        if is(item, &C::Tablet) {
             filter.disabled = false;
         } else if filter.tag == FilterTag::EXPLICIT {
             let top_tier = filter.sources.iter().any(|s| s.modifier.info.tier.is_some_and(|t| t <= 2.0));
@@ -179,11 +180,11 @@ pub fn create_exact_stat_filters(
         ctx.filters.push(empty_modifier_filter(empty, false, None));
     }
 
-    if is(item, C::ClusterJewel) {
+    if is(item, &C::ClusterJewel) {
         apply_cluster_jewel_rules(&mut ctx.filters)?;
-    } else if is(item, C::Flask) {
+    } else if is(item, &C::Flask) {
         apply_flask_rules(&mut ctx.filters);
-    } else if is(item, C::MemoryLine) || is(item, C::SanctumRelic) || is(item, C::Charm) || is(item, C::Relic) {
+    } else if is(item, &C::MemoryLine) || is(item, &C::SanctumRelic) || is(item, &C::Charm) || is(item, &C::Relic) {
         enable_all_filters(&mut ctx.filters);
     }
 
@@ -196,9 +197,9 @@ pub fn create_exact_stat_filters(
 
 /// The `# Empty Modifier` filter.
 fn empty_modifier_filter(empty: EmptyModifier, disabled: bool, hidden: Option<&'static str>) -> StatFilter {
-    let roll = empty.counts.0[empty.empty as usize];
+    let roll = empty.counts.0.get(empty.empty.value()).copied().unwrap_or(0.0);
     StatFilter {
-        option: Some(FilterOption { value: Some(f64::from(empty.empty as u8)) }),
+        option: Some(FilterOption { value: Some(wraex_core::num::usize_to_f64(empty.empty.value())) }),
         additional_info: Some(AdditionalInfo { elemental_info: None, empty_modifier_info: Some(empty.counts) }),
         roll: Some(FilterRoll {
             value: roll,
@@ -300,6 +301,7 @@ pub fn short_roll_to_filter(roll: StatRoll, percent: f64, item: &Item) -> Filter
     default.min = js_max(default.min, bounds.min);
     default.max = js_min(default.max, bounds.max);
 
+    #[expect(clippy::float_cmp, reason = "JS `!==` on the rolled values")]
     let mut filter_roll = FilterRoll {
         value: round_roll(roll.value, dp),
         min: None,
@@ -316,6 +318,10 @@ pub fn short_roll_to_filter(roll: StatRoll, percent: f64, item: &Item) -> Filter
 }
 
 /// `calculatedStatToFilter`
+#[expect(
+    clippy::too_many_lines,
+    reason = "line-for-line port of upstream `calculatedStatToFilter` (filters/create-stat-filters.ts)"
+)]
 pub fn calculated_stat_to_filter(
     d: &Data,
     calc: &StatCalculated,
@@ -419,6 +425,7 @@ pub fn calculated_stat_to_filter(
     {
         let mut goodness = None;
         if stat.better != stat_better::NOT_COMPARABLE {
+            #[expect(clippy::float_cmp, reason = "JS `===` on the rolled values")]
             if roll.min == roll.max {
                 goodness = Some(1.0);
             } else {
@@ -435,7 +442,7 @@ pub fn calculated_stat_to_filter(
         {
             percent = 0.0;
         } else if item.rarity == Some(Rarity::Unique)
-            || (item.rarity == Some(Rarity::Magic) && (is(item, C::Jewel) || is(item, C::Tablet)))
+            || (item.rarity == Some(Rarity::Magic) && (is(item, &C::Jewel) || is(item, &C::Tablet)))
             || sources
                 .iter()
                 .any(|s| s.modifier.info.tier == Some(1.0) && s.modifier.info.kind == ModifierType::Fractured)
@@ -480,6 +487,7 @@ pub fn calculated_stat_to_filter(
         default.min = js_max(default.min, bounds.min);
         default.max = js_min(default.max, bounds.max);
 
+        #[expect(clippy::float_cmp, reason = "JS `!==` on the rolled values")]
         let mut filter_roll = FilterRoll {
             value: round_roll(roll.value, dp),
             min: None,
@@ -495,7 +503,7 @@ pub fn calculated_stat_to_filter(
             goodness,
         };
 
-        let reload = ids.get("pseudo").is_some_and(|p| p.len() == 1 && p[0] == "item.reload_time");
+        let reload = ids.get("pseudo").is_some_and(|p| matches!(p.as_slice(), [id] if id == "item.reload_time"));
         let used_better = if reload { stat_better::NEGATIVE_ROLL } else { stat.better };
         filter_fill_min_max(&mut filter_roll, used_better);
 
@@ -515,7 +523,7 @@ fn hide_not_variable_stat(filter: &mut StatFilter, item: &Item) {
     if item.rarity != Some(Rarity::Unique) {
         return;
     }
-    if filter.tag == FilterTag::IMPLICIT && is(item, C::Jewel) {
+    if filter.tag == FilterTag::IMPLICIT && is(item, &C::Jewel) {
         return;
     }
     let tag = filter.tag;
@@ -541,7 +549,7 @@ fn hide_not_variable_stat(filter: &mut StatFilter, item: &Item) {
 }
 
 /// `filterFillMinMax`
-fn filter_fill_min_max(roll: &mut FilterRoll, better: i8) {
+const fn filter_fill_min_max(roll: &mut FilterRoll, better: i8) {
     match better {
         stat_better::POSITIVE_ROLL => roll.min = Some(roll.default.min),
         stat_better::NEGATIVE_ROLL => roll.max = Some(roll.default.max),
@@ -576,9 +584,9 @@ fn filter_adjustment_for_negate(roll: &mut FilterRoll) {
 pub fn final_filter_tweaks(ctx: &mut Ctx) -> R<()> {
     let item = ctx.item;
 
-    if is(item, C::ClusterJewel) && item.rarity != Some(Rarity::Unique) {
+    if is(item, &C::ClusterJewel) && item.rarity != Some(Rarity::Unique) {
         apply_cluster_jewel_rules(&mut ctx.filters)?;
-    } else if is(item, C::Flask) {
+    } else if is(item, &C::Flask) {
         apply_flask_rules(&mut ctx.filters);
     }
 
@@ -593,15 +601,15 @@ pub fn final_filter_tweaks(ctx: &mut Ctx) -> R<()> {
         ctx.filters.push(empty_modifier_filter(empty, true, Some("filters.hide_empty_mod")));
     }
 
-    if is(item, C::Amulet) || is(item, C::Ring) {
+    if is(item, &C::Amulet) || is(item, &C::Ring) {
         apply_anointment_rules(&mut ctx.filters, item);
     }
 
     let possible_catalyst = item.quality_type.as_ref().filter(|q| !q.is_empty()).and_then(|quality_type| {
         let catalysts = &ctx.d.catalyst_types();
-        let group = if is(item, C::Jewel) {
+        let group = if is(item, &C::Jewel) {
             Some(&catalysts.refined)
-        } else if is(item, C::Ring) || is(item, C::Amulet) {
+        } else if is(item, &C::Ring) || is(item, &C::Amulet) {
             Some(&catalysts.normal)
         } else {
             None
@@ -631,12 +639,12 @@ pub fn final_filter_tweaks(ctx: &mut Ctx) -> R<()> {
                 filter.hidden = Some("filters.hide_not_max_level");
             }
         }
-        if is(item, C::Map) && filter.tag != FilterTag::Property && filter.tag != FilterTag::DESECRATED {
+        if is(item, &C::Map) && filter.tag != FilterTag::Property && filter.tag != FilterTag::DESECRATED {
             filter.disabled = true;
             filter.hidden = Some("filters.hide_for_map");
         }
         // Never hide uses remaining on tablets, even unique ones.
-        if is(item, C::Tablet) && filter.stat_ref == "# uses remaining" {
+        if is(item, &C::Tablet) && filter.stat_ref == "# uses remaining" {
             filter.hidden = None;
         }
         if let Some(added) = filter.sources.iter().find_map(|s| s.stat.from_added_augment.as_ref()) {
@@ -660,7 +668,7 @@ pub fn final_filter_tweaks(ctx: &mut Ctx) -> R<()> {
         });
     }
 
-    if item.rarity == Some(Rarity::Unique) || is(item, C::Relic) {
+    if item.rarity == Some(Rarity::Unique) || is(item, &C::Relic) {
         let count_visible = ctx.filters.iter().filter(|f| f.hidden.is_none()).count();
         if count_visible <= 3 {
             enable_all_filters(&mut ctx.filters);
@@ -682,6 +690,7 @@ fn apply_cluster_jewel_rules(filters: &mut [StatFilter]) -> R<()> {
             filter.disabled = false;
             let roll = roll_mut(filter)?;
             let value = roll.value;
+            #[expect(clippy::float_cmp, reason = "JS `===` on the rolled value")]
             if value == 4.0 {
                 // 4 is [_, 5]
                 roll.max = Some(5.0);
@@ -733,7 +742,7 @@ struct EmptyModifier {
 /// `showHasEmptyModifier`
 fn show_has_empty_modifier(ctx: &Ctx) -> Option<EmptyModifier> {
     let item = ctx.item;
-    if !item.is_modifiable() || is(item, C::Map) {
+    if !item.is_modifiable() || is(item, &C::Map) {
         return None;
     }
     if item.rarity != Some(Rarity::Rare) && item.rarity != Some(Rarity::Magic) {
@@ -741,10 +750,15 @@ fn show_has_empty_modifier(ctx: &Ctx) -> Option<EmptyModifier> {
     }
 
     let count = explicit_modifier_count(item);
-    let (prefixes, suffixes, total) = (count.prefixes as f64, count.suffixes as f64, count.total as f64);
+    let (prefixes, suffixes, total) = (
+        wraex_core::num::usize_to_f64(count.prefixes),
+        wraex_core::num::usize_to_f64(count.suffixes),
+        wraex_core::num::usize_to_f64(count.total),
+    );
     let max = item_max_modifiers_by_slot(item, &ctx.filters);
     let [any, max_prefix, max_suffix] = max;
 
+    #[expect(clippy::float_cmp, reason = "JS `!==` on the modifier counts and rolls")]
     if total != any && total != 0.0 {
         let empty = if suffixes == max_suffix {
             ItemHasEmptyModifier::Prefix
@@ -769,7 +783,7 @@ pub(crate) fn enable_all_filters(filters: &mut [StatFilter]) {
 }
 
 /// `itemBaseMaxModifiersOfType`
-fn item_base_max_modifiers_of_type(category: Option<&ItemCategory>, rarity: Option<Rarity>) -> f64 {
+const fn item_base_max_modifiers_of_type(category: Option<&ItemCategory>, rarity: Option<Rarity>) -> f64 {
     match rarity {
         Some(Rarity::Normal) => 0.0,
         Some(Rarity::Magic) => 1.0,
@@ -788,19 +802,28 @@ fn item_max_modifiers_by_slot(item: &Item, filters: &[StatFilter]) -> [f64; 3] {
     for filter in filters {
         let value = filter.roll.as_ref().map_or(0.0, |r| r.value);
         if filter.stat_ref == "# Prefix Modifier allowed" {
-            max[ItemHasEmptyModifier::Prefix as usize] += value;
-        } else if filter.stat_ref == "# Suffix Modifier allowed" {
-            max[ItemHasEmptyModifier::Suffix as usize] += value;
+            if let Some(slot) = max.get_mut(ItemHasEmptyModifier::Prefix.value()) {
+                *slot += value;
+            }
+        } else if filter.stat_ref == "# Suffix Modifier allowed"
+            && let Some(slot) = max.get_mut(ItemHasEmptyModifier::Suffix.value())
+        {
+            *slot += value;
         }
     }
 
     for slot in [ItemHasEmptyModifier::Prefix, ItemHasEmptyModifier::Suffix] {
-        if max[slot as usize] < 0.0 {
-            max[slot as usize] = 0.0;
+        if let Some(value) = max.get_mut(slot.value())
+            && *value < 0.0
+        {
+            *value = 0.0;
         }
     }
-    max[ItemHasEmptyModifier::Any as usize] =
-        max[ItemHasEmptyModifier::Prefix as usize] + max[ItemHasEmptyModifier::Suffix as usize];
+    let prefix = max.get(ItemHasEmptyModifier::Prefix.value()).copied().unwrap_or(0.0);
+    let suffix = max.get(ItemHasEmptyModifier::Suffix.value()).copied().unwrap_or(0.0);
+    if let Some(any) = max.get_mut(ItemHasEmptyModifier::Any.value()) {
+        *any = prefix + suffix;
+    }
     max
 }
 
@@ -842,7 +865,10 @@ mod tests {
     /// `specs/web/price-check/filters/create-stat-filters.test.ts` (`item mod count
     /// tests`): stats that allow more (or fewer) prefixes and suffixes.
     #[test]
-    #[allow(clippy::type_complexity)]
+    #[expect(
+        clippy::type_complexity,
+        reason = "one row per `create-stat-filters.test.ts` case: rarity, allowed-modifier stats, expected prefix and suffix counts"
+    )]
     fn max_modifiers_by_slot_reads_the_allowed_modifier_stats() {
         let cases: [(Rarity, &[(&str, f64)], f64, f64); 20] = [
             (Rarity::Rare, &[], 3.0, 3.0),

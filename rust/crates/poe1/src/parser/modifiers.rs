@@ -73,7 +73,7 @@ pub fn stat_sources_total(sources: &[StatSource], mode: TotalMode) -> Option<Sta
         return None;
     }
     if sources.len() == 1 {
-        return sources[0].contributes;
+        return sources.first().and_then(|s| s.contributes);
     }
     let f = |a: f64, b: f64| match mode {
         TotalMode::Sum => a + b,
@@ -103,23 +103,26 @@ pub struct StatTranslation {
 /// `translateStatWithRoll`: the translation to display a summed stat with.
 pub fn translate_stat_with_roll(calc: &StatCalculated, roll: Option<&StatRoll>) -> StatTranslation {
     let matchers = &calc.stat.matchers;
-    let translation: &StatMatcher = match roll {
-        None => matchers.iter().find(|m| m.value.is_none()).or(matchers.first()).expect("stats have matchers"),
-        Some(roll) => matchers
-            .iter()
-            .find(|m| m.value == Some(roll.value))
-            .or_else(|| {
-                // TODO (upstream): for some stats reduced is better (m.negate === true)
-                let same_sign = js_sign(roll.min) == js_sign(roll.max);
-                if same_sign {
-                    matchers.iter().find(|m| m.value.is_none() && m.negate.unwrap_or(false) == (roll.value < 0.0))
-                } else {
-                    matchers.iter().find(|m| m.value.is_none() && !m.negate.unwrap_or(false))
-                }
-            })
-            .or_else(|| matchers.iter().find(|m| m.value.is_none()))
-            .expect("never"),
-    };
+    // A stat without any matcher (`undefined` upstream, a `TypeError` there) reads
+    // as an empty translation.
+    let translation: Option<&StatMatcher> = roll.map_or_else(
+        || matchers.iter().find(|m| m.value.is_none()).or_else(|| matchers.first()),
+        |roll| {
+            matchers
+                .iter()
+                .find(|m| m.value == Some(roll.value))
+                .or_else(|| {
+                    // TODO (upstream): for some stats reduced is better (m.negate === true)
+                    let same_sign = js_sign(roll.min) == js_sign(roll.max);
+                    if same_sign {
+                        matchers.iter().find(|m| m.value.is_none() && m.negate.unwrap_or(false) == (roll.value < 0.0))
+                    } else {
+                        matchers.iter().find(|m| m.value.is_none() && !m.negate.unwrap_or(false))
+                    }
+                })
+                .or_else(|| matchers.iter().find(|m| m.value.is_none()))
+        },
+    );
     let dp = roll.map(|_| {
         calc.stat.dp == Some(true)
             || calc
@@ -127,7 +130,9 @@ pub fn translate_stat_with_roll(calc: &StatCalculated, roll: Option<&StatRoll>) 
                 .iter()
                 .any(|s| s.stat.stat.stat_ref == calc.stat.stat_ref && s.stat.roll.as_ref().is_some_and(|r| r.dp))
     });
-    StatTranslation { string: translation.string.clone(), negate: translation.negate.unwrap_or(false), dp }
+    let (string, negate) =
+        translation.map_or((String::new(), false), |m| (m.string.clone(), m.negate.unwrap_or(false)));
+    StatTranslation { string, negate, dp }
 }
 
 /// `Math.sign`, compared with `===` (so `NaN` never equals).
@@ -162,16 +167,16 @@ impl ModifierType {
     /// The value, which is also the key in `stat.trade.ids`.
     pub const fn as_str(self) -> &'static str {
         match self {
-            ModifierType::Pseudo => "pseudo",
-            ModifierType::Explicit => "explicit",
-            ModifierType::Implicit => "implicit",
-            ModifierType::Crafted => "crafted",
-            ModifierType::Enchant => "enchant",
-            ModifierType::Scourge => "scourge",
-            ModifierType::Necropolis => "necropolis",
-            ModifierType::Veiled => "veiled",
-            ModifierType::Fractured => "fractured",
-            ModifierType::Imbued => "imbued",
+            Self::Pseudo => "pseudo",
+            Self::Explicit => "explicit",
+            Self::Implicit => "implicit",
+            Self::Crafted => "crafted",
+            Self::Enchant => "enchant",
+            Self::Scourge => "scourge",
+            Self::Necropolis => "necropolis",
+            Self::Veiled => "veiled",
+            Self::Fractured => "fractured",
+            Self::Imbued => "imbued",
         }
     }
 }
@@ -218,23 +223,23 @@ impl ModifierMechanic {
     /// The value, as the tag's `filters.tag_<tag>` key spells it.
     pub const fn as_str(self) -> &'static str {
         match self {
-            ModifierMechanic::Synthesised => "synthesised",
-            ModifierMechanic::Corruption => "corrupted",
-            ModifierMechanic::Eldritch => "eldritch",
-            ModifierMechanic::Foulborn => "foulborn",
-            ModifierMechanic::Vestigial => "vestigial",
-            ModifierMechanic::RareOnly => "explicit-rareonly",
-            ModifierMechanic::Shaper => "explicit-shaper",
-            ModifierMechanic::Elder => "explicit-elder",
-            ModifierMechanic::Crusader => "explicit-crusader",
-            ModifierMechanic::Hunter => "explicit-hunter",
-            ModifierMechanic::Redeemer => "explicit-redeemer",
-            ModifierMechanic::Warlord => "explicit-warlord",
-            ModifierMechanic::Delve => "explicit-delve",
-            ModifierMechanic::Unveiled => "explicit-veiled",
-            ModifierMechanic::Incursion => "explicit-incursion",
-            ModifierMechanic::Infamous => "explicit-infamous",
-            ModifierMechanic::Essence => "explicit-essence",
+            Self::Synthesised => "synthesised",
+            Self::Corruption => "corrupted",
+            Self::Eldritch => "eldritch",
+            Self::Foulborn => "foulborn",
+            Self::Vestigial => "vestigial",
+            Self::RareOnly => "explicit-rareonly",
+            Self::Shaper => "explicit-shaper",
+            Self::Elder => "explicit-elder",
+            Self::Crusader => "explicit-crusader",
+            Self::Hunter => "explicit-hunter",
+            Self::Redeemer => "explicit-redeemer",
+            Self::Warlord => "explicit-warlord",
+            Self::Delve => "explicit-delve",
+            Self::Unveiled => "explicit-veiled",
+            Self::Incursion => "explicit-incursion",
+            Self::Infamous => "explicit-infamous",
+            Self::Essence => "explicit-essence",
         }
     }
 }

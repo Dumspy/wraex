@@ -36,6 +36,10 @@ pub struct Grouped {
 
 /// `groupedResults`: listings by the same seller at the same price (or one of the last
 /// two rows) fold into one, adding up stacks when they have them.
+#[expect(
+    clippy::float_cmp,
+    reason = "`priceAmount === priceAmount`: prices are the JSON numbers the trade site sent and compared exactly, as upstream does"
+)]
 pub fn grouped(rows: &[PricingResult]) -> Vec<Grouped> {
     let mut out: Vec<Grouped> = Vec::new();
     for result in rows {
@@ -49,24 +53,33 @@ pub fn grouped(rows: &[PricingResult]) -> Vec<Grouped> {
                 && added.result.price_currency == result.price_currency
                 && added.result.price_amount == result.price_amount)
                 // `out.length - idx <= 2`: the last row or the one before it.
-                || (added.result.account_name == result.account_name && last - index <= 2)
+                || (added.result.account_name == result.account_name && last.saturating_sub(index) <= 2)
         });
         match found {
             Some(index) => {
-                let existing = &mut out[index];
-                let stack = existing.result.stack_size.as_ref().and_then(|stack| stack.as_f64()).filter(|v| *v != 0.0);
+                let Some(existing) = out.get_mut(index) else { continue };
+                let stack = existing.result.stack_size.as_ref().and_then(json_number).filter(|v| *v != 0.0);
                 match stack {
                     Some(stack) => {
-                        let added = result.stack_size.as_ref().and_then(|size| size.as_f64()).unwrap_or(0.0);
+                        let added = result.stack_size.as_ref().and_then(json_number).unwrap_or(0.0);
                         existing.result.stack_size = Some(serde_json::Value::from(stack + added));
                     }
-                    None => existing.listed_times += 1,
+                    None => existing.listed_times = existing.listed_times.saturating_add(1),
                 }
             }
             None => out.push(Grouped { result: result.clone(), listed_times: 1 }),
         }
     }
     out
+}
+
+/// A JSON number as a double (`Value::as_f64`, which the workspace forbids walking a
+/// [`serde_json::Value`] with); anything else has no number.
+fn json_number(value: &serde_json::Value) -> Option<f64> {
+    match value {
+        serde_json::Value::Number(number) => number.as_f64(),
+        _ => None,
+    }
 }
 
 /// `TradeListing.vue`: an error box, or the matched row and the table.
@@ -107,6 +120,10 @@ fn matched<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
 
 /// The listings table: a heading row, the rows, then empty rows up to
 /// [`SHOW_RESULTS`].
+#[expect(
+    clippy::suboptimal_flops,
+    reason = "the price column's width is `chars * 6.9 + 10` measured off the reference screenshots; `mul_add` rounds differently"
+)]
 fn table(check: &PriceCheck) -> El {
     let item = check.item();
     let filters = check.filters();
@@ -125,7 +142,7 @@ fn table(check: &PriceCheck) -> El {
         .iter()
         .map(|entry| price_label(&entry.result))
         .chain([i18n::t("trade_result.price")])
-        .map(|label| label.chars().count() as f32 * 6.9 + 10.0)
+        .map(|label| wraex_core::num::usize_to_f32(label.chars().count()) * 6.9 + 10.0)
         .fold(PRICE_WIDTH, f32::max);
 
     // Template order: price, stock, iLvl, gem level, gem sockets, quality, listed.
@@ -227,7 +244,11 @@ fn price_label(result: &PricingResult) -> String {
         .zip(result.normalized_price.as_ref())
         .filter(|(currency, _)| result.price_currency != currency.id && result.price_currency != "divine");
     if let Some((currency, normalized)) = converted {
-        label.push_str(&format!(" ({normalized} {})", currency.abbrev));
+        label.push_str(" (");
+        label.push_str(normalized);
+        label.push(' ');
+        label.push_str(currency.abbrev);
+        label.push(')');
     }
     label
 }
@@ -260,6 +281,7 @@ fn price_cell(index: usize, result: &PricingResult, listed_times: u32, width: f3
     cell
 }
 
+#[derive(Debug, Clone, Copy)]
 enum Cell {
     Stock,
     ItemLevel,
@@ -281,7 +303,7 @@ fn number_cell(index: usize, result: &PricingResult, cell: Cell, width: f32) -> 
     let (key, value, blue) = match cell {
         Cell::Stock => (
             format!("listing-{index}-stock"),
-            result.stack_size.as_ref().and_then(|size| size.as_f64()).map(js::number_to_string),
+            result.stack_size.as_ref().and_then(json_number).map(js::number_to_string),
             false,
         ),
         Cell::ItemLevel => (format!("listing-{index}-ilvl"), Some(result.item_level.clone()), false),
@@ -344,6 +366,6 @@ pub(super) fn mine_badge(index: usize) -> El {
 }
 
 /// Which currency a bulk table's selected side asks for in its trade link.
-pub(super) fn have_for(selected: super::BulkCurrency) -> &'static str {
+pub(super) const fn have_for(selected: super::BulkCurrency) -> &'static str {
     selected.have()
 }

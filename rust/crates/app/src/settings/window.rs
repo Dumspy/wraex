@@ -100,7 +100,7 @@ fn menu<S: 'static>(settings: &Settings, project: Project<S>) -> El {
                     ),
             );
         }
-        if group + 1 < groups.len() {
+        if group.saturating_add(1) < groups.len() {
             // `<div class="border-b mx-2 border-gray-800" />`
             column = column.child(
                 row().key(format!("settings-menu-separator-{group}")).h(1.0).mx(theme::rem(0.5)).fill(theme::gray(800)),

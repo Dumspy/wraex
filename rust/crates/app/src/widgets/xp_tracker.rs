@@ -19,7 +19,9 @@
 //! state (`--scene poe2-widget-xp-tracker`).
 
 use rune::{Align, El, col, row, text, text_input};
+use serde::Deserialize;
 
+use super::lenient;
 use crate::client_log::State;
 use crate::theme::{self, text as type_};
 use crate::widgets::{Overlay, Project, Widget};
@@ -43,7 +45,9 @@ pub fn get_over_ideal(player_level: f64, monster_level: f64) -> f64 {
 }
 
 /// `getExpPenalty(playerLevel, monsterLevel)`: the percentage of a monster's experience the
-/// player still receives. The safe zone only applies when the monster is above the player
+/// player still receives.
+///
+/// The safe zone only applies when the monster is above the player
 /// (`monsterLevel > playerLevel`), so being under-levelled has no safe band.
 pub fn get_exp_penalty(player_level: f64, monster_level: f64) -> f64 {
     let safe_zone = if monster_level > player_level { calc_base_safe_zone(player_level) } else { 0.0 };
@@ -69,10 +73,26 @@ pub fn scene_state() -> State {
     State { area_level: 80.0, player_level: 72.0, zone: "g1_9".to_owned(), character: "Wraex".to_owned() }
 }
 
+/// The widget's config fields this module reads.
+#[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TrackerView {
+    #[serde(default, deserialize_with = "lenient")]
+    show_exp: Option<bool>,
+}
+
+/// `config.showExp`, on unless the config says otherwise.
+fn show_exp(widget: &Widget) -> bool {
+    TrackerView::deserialize(&widget.config).unwrap_or_default().show_exp.unwrap_or(true)
+}
+
 /// The widget's card: the level input, `Exp: n%` and `Over: n`.
+// The green band is `over === 0 || over === 1`: an exact comparison of the whole number
+// `getOverIdeal` produces, as the Vue component's `===` is.
+#[expect(clippy::float_cmp, reason = "`getOverIdeal` compares the exact whole-number result, as the Vue `===` does")]
 pub fn view<S: 'static>(overlay: &Overlay, widget: &Widget, project: Project<S>) -> El {
     let state = &overlay.xp;
-    let show_exp = widget.config.get("showExp").and_then(serde_json::Value::as_bool).unwrap_or(true);
+    let show_exp = show_exp(widget);
     let over = get_over_ideal(state.player_level, state.area_level);
     let penalty = exp_penalty_text(state.player_level, state.area_level);
 

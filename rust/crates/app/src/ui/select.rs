@@ -5,6 +5,8 @@
 //! box: a white tippy-style frame around a `bg-gray-800` column, as the price check's popovers
 //! are drawn.
 
+use std::rc::Rc;
+
 use rune::{Align, Color, El, Side, row, text};
 
 use crate::theme::{self, text as type_};
@@ -23,18 +25,30 @@ impl Choice {
     }
 }
 
-/// The closed select: `p-1 rounded bg-gray-700 w-24`, with the selected option's label. `open`
-/// draws the list under it; `toggle` opens and closes it, `pick` takes an option's value.
+/// One [`select`]'s content: its key, the options, the picked value and whether it is open.
+#[derive(Debug)]
+pub struct SelectProps<'a> {
+    /// The select's element key; the box is `key`, the list `{key}-list`.
+    pub key: &'a str,
+    /// The options, in order.
+    pub choices: &'a [Choice],
+    /// The picked option's value (or a value with no option, shown as is).
+    pub value: &'a str,
+    /// Whether the list is drawn under the box.
+    pub open: bool,
+    /// The closed box's width (`w-24`).
+    pub width: f32,
+}
+
+/// The closed select: `p-1 rounded bg-gray-700 w-24`, with the selected option's label. `toggle`
+/// opens and closes it, `pick` takes an option's value.
 pub fn select<S: 'static>(
-    key: &str,
-    choices: &[Choice],
-    value: &str,
-    open: bool,
-    width: f32,
+    props: &SelectProps<'_>,
     toggle: impl Fn(&mut S) + 'static,
     pick: impl Fn(&mut S, String) + 'static,
 ) -> El {
-    let pick = std::rc::Rc::new(pick);
+    let SelectProps { key, choices, value, open, width } = *props;
+    let pick = Rc::new(pick);
     let current = choices
         .iter()
         .find(|choice| choice.value == value)
@@ -62,7 +76,7 @@ pub fn select<S: 'static>(
         let selected = choice.value == value;
         let chosen = choice.value.clone();
         let label = choice.label.clone();
-        let pick = pick.clone();
+        let pick = Rc::clone(&pick);
         list = list.child(
             row()
                 .key(format!("{key}-option-{}", choice.value))

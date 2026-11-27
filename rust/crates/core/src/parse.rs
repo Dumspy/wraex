@@ -1,6 +1,7 @@
-//! Item-text helpers that are the same in both references' `renderer/src/parser`
-//! (PLAN.md, phase 3: byte-identical helpers live in core). If one reference
-//! changes one of these, the copy moves into that game's crate.
+//! Item-text helpers that are the same in both references' `renderer/src/parser`.
+//!
+//! PLAN.md, phase 3: byte-identical helpers live in core. If one reference changes
+//! one of these, the copy moves into that game's crate.
 
 use std::sync::OnceLock;
 
@@ -18,22 +19,24 @@ pub fn item_text_to_sections(text: &str) -> Vec<Vec<String>> {
     for line in lines {
         if line == "--------" {
             sections.push(Vec::new());
-        } else {
-            sections.last_mut().unwrap().push(line.to_owned());
+        } else if let Some(section) = sections.last_mut() {
+            section.push(line.to_owned());
         }
     }
     sections.retain(|s| !s.is_empty());
     sections
 }
 
+#[expect(clippy::expect_used, reason = "a literal pattern, compiled by the tests below")]
 fn set_regex() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new("<<set:.+?>>", "g").unwrap())
+    RE.get_or_init(|| Regex::new("<<set:.+?>>", "g").expect("valid pattern"))
 }
 
+#[expect(clippy::expect_used, reason = "a literal pattern, compiled by the tests below")]
 fn condition_regex() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new("<(if:.+?|elif:.+?|else)>{(.+?)}", "g").unwrap())
+    RE.get_or_init(|| Regex::new("<(if:.+?|elif:.+?|else)>{(.+?)}", "g").expect("valid pattern"))
 }
 
 /// `markupConditionParser` (`Parser.ts`): ignores `<<set:__>>` state and always
@@ -64,8 +67,8 @@ pub fn group_lines_by_mod(lines: &[String]) -> Vec<(String, Vec<String>)> {
     for line in lines {
         if is_mod_info_line(line) {
             out.push((line.clone(), Vec::new()));
-        } else {
-            out.last_mut().expect("first line is a mod line").1.push(line.clone());
+        } else if let Some(last) = out.last_mut() {
+            last.1.push(line.clone());
         }
     }
     out
@@ -97,10 +100,11 @@ fn paren_right(line: &str) -> bool {
     t.ends_with(')') || t.ends_with('）')
 }
 
-/// `linesToStatStrings` (`stat-translations.ts`). The reference is a generator
-/// the caller answers with whether each candidate parsed; here `try_parse` gives
-/// that answer. Reminder text in parentheses is skipped. Returns the lines no
-/// candidate covered, without empty ones.
+/// `linesToStatStrings` (`stat-translations.ts`).
+///
+/// The reference is a generator the caller answers with whether each candidate
+/// parsed; here `try_parse` gives that answer. Reminder text in parentheses is
+/// skipped. Returns the lines no candidate covered, without empty ones.
 pub fn lines_to_stat_strings<E>(
     lines: &[String],
     unscalable_value: &str,
@@ -109,25 +113,25 @@ pub fn lines_to_stat_strings<E>(
     let mut not_parsed = Vec::new();
     let mut reminder_string = false;
     let mut start = 0;
-    'outer: while start < lines.len() {
-        if paren_left(&lines[start]) {
+    while let Some(line) = lines.get(start) {
+        if paren_left(line) {
             reminder_string = true;
         }
-        if reminder_string && paren_right(&lines[start]) {
+        if reminder_string && paren_right(line) {
             reminder_string = false;
-            start += 1;
+            start = start.saturating_add(1);
             continue;
         }
         if reminder_string {
-            start += 1;
+            start = start.saturating_add(1);
             continue;
         }
         let mut parsed_until = None;
         for end in start..lines.len() {
-            let mut string = lines[start..=end].join("\n");
+            let mut string = lines.get(start..=end).unwrap_or_default().join("\n");
             let unscalable = string.ends_with(unscalable_value);
             if unscalable {
-                string.truncate(string.len() - unscalable_value.len());
+                string.truncate(string.len().saturating_sub(unscalable_value.len()));
             }
             if try_parse(&StatString { string, unscalable })? {
                 parsed_until = Some(end);
@@ -135,11 +139,11 @@ pub fn lines_to_stat_strings<E>(
             }
         }
         if let Some(end) = parsed_until {
-            start = end + 1;
-            continue 'outer;
+            start = end.saturating_add(1);
+            continue;
         }
-        not_parsed.push(lines[start].clone());
-        start += 1;
+        not_parsed.push(line.clone());
+        start = start.saturating_add(1);
     }
     Ok(not_parsed.into_iter().filter(|l| !l.is_empty()).collect())
 }
@@ -152,7 +156,7 @@ mod tests {
     fn splits_sections() {
         let sections = item_text_to_sections("a\r\nb\n--------\n--------\nc\n");
         assert_eq!(sections, vec![vec!["a".to_owned(), "b".to_owned()], vec!["c".to_owned()]]);
-        assert!(item_text_to_sections("").is_empty());
+        assert_eq!(item_text_to_sections("").len(), 0);
     }
 
     #[test]
@@ -171,7 +175,7 @@ mod tests {
             group_lines_by_mod(&lines),
             vec![("{ a }".into(), vec!["x".into(), "y".into()]), ("{ b }".into(), vec![])]
         );
-        assert!(group_lines_by_mod(&lines[1..]).is_empty());
+        assert_eq!(group_lines_by_mod(&lines[1..]).len(), 0);
     }
 
     #[test]
@@ -182,7 +186,7 @@ mod tests {
     }
 
     fn stat_strings(lines: &[&str], parses: &[&str]) -> (Vec<String>, Vec<String>) {
-        let lines: Vec<String> = lines.iter().map(|s| s.to_string()).collect();
+        let lines: Vec<String> = lines.iter().map(std::string::ToString::to_string).collect();
         let mut tried = Vec::new();
         let rest = lines_to_stat_strings::<()>(&lines, " — Unscalable Value", |s| {
             tried.push(s.string.clone());
@@ -198,6 +202,6 @@ mod tests {
         assert_eq!(tried, ["a", "a\nb", "c"]);
         assert_eq!(rest, ["c"]);
         let (_, rest) = stat_strings(&["x — Unscalable Value", ""], &["x"]);
-        assert!(rest.is_empty());
+        assert_eq!(rest.len(), 0);
     }
 }

@@ -53,7 +53,7 @@ pub fn is_map_like(item: &Item) -> bool {
 }
 
 /// `MapCheckConfig`
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MapCheckConfig {
     pub profile: u32,
@@ -62,7 +62,7 @@ pub struct MapCheckConfig {
 }
 
 /// `MapCheckStat`: a stat text and its decisions, one character per profile.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MapCheckStat {
     pub matcher: String,
     pub decision: String,
@@ -80,7 +80,7 @@ pub enum StatTag {
 /// `d` deadly, `w` warning, `g` good, `s` seen.
 pub fn decision_has_color(decision_set: &str, profile: u32) -> bool {
     // `undefined !== '-'`: a missing profile counts as colored.
-    let d = profile.checked_sub(1).and_then(|i| decision_set.chars().nth(i as usize));
+    let d = profile.checked_sub(1).and_then(|i| usize::try_from(i).ok()).and_then(|i| decision_set.chars().nth(i));
     d != Some('-') && d != Some('s')
 }
 
@@ -97,13 +97,15 @@ pub fn next_decision(current: &str) -> &'static str {
 /// `decisionCreate`: `update_set` with one profile's decision replaced.
 pub fn decision_create(value: &str, profile: u32, update_set: &str) -> String {
     let mut split: Vec<String> = update_set.chars().map(String::from).collect();
-    let idx = profile.saturating_sub(1) as usize;
+    let idx = usize::try_from(profile.saturating_sub(1)).unwrap_or(usize::MAX);
     // Assigning past the end of a JavaScript array leaves holes, which `join`
     // writes as empty strings.
     if split.len() <= idx {
-        split.resize(idx + 1, String::new());
+        split.resize(idx.saturating_add(1), String::new());
     }
-    split[idx] = value.to_owned();
+    if let Some(slot) = split.get_mut(idx) {
+        value.clone_into(slot);
+    }
     split.concat()
 }
 

@@ -5,9 +5,11 @@
 //! handle and a `Panel` but no window — because every overlay bug that reached a Windows run
 //! came from the shell asking `App` about a live state it had taken out of `App::live`.
 
+#![expect(clippy::disallowed_macros, reason = "expected JSON written as literals")]
+
 use super::*;
 use crate::settings::Page;
-use wraex_platform::overlay::{OverlayEvent, OverlayHandle, OverlayInput};
+use wraex_platform::overlay::{Modifiers, OverlayEvent, OverlayHandle, OverlayInput};
 use wraex_platform::shortcuts::InputEvent;
 
 /// One [`OverlayHandle`] call, recorded; the same shape the platform crate's tests use, which
@@ -56,6 +58,9 @@ impl OverlayHandle for FakeOverlay {
 /// The game's client area the tests place the overlay over, in physical pixels.
 const BOUNDS: Bounds = Bounds { x: 0.0, y: 0.0, width: 1600.0, height: 1200.0 };
 
+/// The screen the placement helpers read: [`BOUNDS`] at a 100 % DPI scale.
+const SCREEN: Screen = Screen { bounds: BOUNDS, scale: 1.0 };
+
 /// The shell's overlay side without Rune: the game window, the overlay state machine and the
 /// fake window, driven in the order `Live::press` and `Live::poll` drive them.
 struct Harness {
@@ -90,10 +95,10 @@ impl Harness {
         // `assert_overlay_active`: the game keeps the focus.
         self.handle.show();
         self.handle.set_click_through(true);
-        let size =
-            overlay_widget_size(GameId::Poe1, &Shown::PriceCheck, BOUNDS, scale).expect("the price check has a size");
-        let offset = widget_offset(Some(Placement::Cursor(cursor)), size, BOUNDS, scale);
-        let area = track_area(offset, size, BOUNDS, scale, cursor, price_check_hold_key(&config()));
+        let size = overlay_widget_size(GameId::Poe1, &Shown::PriceCheck, Screen { bounds: BOUNDS, scale })
+            .expect("the price check has a size");
+        let offset = widget_offset(Some(Placement::Cursor(cursor)), size, Screen { bounds: BOUNDS, scale });
+        let area = track_area(offset, size, Screen { bounds: BOUNDS, scale }, cursor, price_check_hold_key(&config()));
         self.overlay.on_track_area(area);
     }
 
@@ -101,7 +106,7 @@ impl Harness {
     fn mouse(&mut self, event: MouseEvent) {
         match event {
             MouseEvent::Move { point, ctrl, alt } => {
-                self.overlay.on_mouse_move(point, ctrl, alt, &mut self.window, &mut self.handle);
+                self.overlay.on_mouse_move(point, Modifiers { ctrl, alt }, &mut self.window, &mut self.handle);
             }
             MouseEvent::Down { point } => self.overlay.on_mouse_down(point, &mut self.window, &mut self.handle),
             MouseEvent::Wheel { .. } => {}
@@ -141,7 +146,10 @@ fn the_overlay_key_shows_the_widget_menu() {
     let shown = app.shown_in(true);
     assert_eq!(shown, Shown::Widget(widgets::Kind::Menu.wm_type().to_owned()));
     assert!(is_overlay(&shown), "the menu is drawn in the overlay window");
-    assert!(!hides_window(&shown, true, true), "the window stays on screen over the game");
+    assert!(
+        !hides_window(&shown, Visibility { following_game: true, in_front: true }),
+        "the window stays on screen over the game"
+    );
     assert_eq!(window_size(GameId::Poe1, &shown), Some(widgets::scene_size(GameId::Poe1, widgets::Kind::Menu)));
 }
 
@@ -159,7 +167,7 @@ fn widget_id(app: &crate::App, wm_type: &str) -> u32 {
 
 /// The menu's card offset, from the config's `anchor: { pos: 'tl', x: 5, y: 5 }`.
 fn menu_offset() -> (f32, f32) {
-    anchored_offset("tl", (5.0, 5.0), widgets::scene_size(GameId::Poe1, widgets::Kind::Menu), BOUNDS, 1.0)
+    anchored_offset("tl", (5.0, 5.0), widgets::scene_size(GameId::Poe1, widgets::Kind::Menu), SCREEN)
 }
 
 /// `OverlayWindow.vue` draws every widget whose `wmWants` is `show`, each at its own anchor
@@ -169,7 +177,7 @@ fn menu_offset() -> (f32, f32) {
 fn the_overlay_draws_every_shown_widget_at_its_own_anchor() {
     let mut app = overlay_app();
     let menu = widget_id(&app, widgets::menu::WM_TYPE);
-    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    let cards = app.cards_for(true, SCREEN, None);
     assert_eq!(cards.len(), 1, "the config's other widgets are hidden");
     assert_eq!(cards[0].shown, Shown::Widget(widgets::menu::WM_TYPE.to_owned()));
     assert_eq!(cards[0].wm_id, Some(menu));
@@ -181,12 +189,12 @@ fn the_overlay_draws_every_shown_widget_at_its_own_anchor() {
     // above the `auto` ones.
     let stash = widget_id(&app, widgets::Kind::StashSearch.wm_type());
     app.widgets.as_mut().expect("the overlay").show(stash);
-    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    let cards = app.cards_for(true, SCREEN, None);
     assert_eq!(cards.len(), 2, "the menu and the stash search");
     assert_eq!(cards[0].wm_id, Some(stash), "the `auto` card paints first");
     assert_eq!(cards[1].wm_id, Some(menu), "the menu paints above it");
     let size = widgets::scene_size(GameId::Poe1, widgets::Kind::StashSearch);
-    assert_eq!(cards[0].offset, anchored_offset("tl", (35.0, 46.0), size, BOUNDS, 1.0));
+    assert_eq!(cards[0].offset, anchored_offset("tl", (35.0, 46.0), size, SCREEN));
     assert_eq!(cards[1].offset, menu_offset(), "the menu keeps its own anchor");
 
     // The window's `shown` is still the menu (the focused widget), so the native window and the
@@ -204,17 +212,17 @@ fn save_returns_to_the_menu_at_its_own_anchor() {
     app.settings = Some(crate::settings::Settings::scene(GameId::Poe1, Page::Hotkeys));
     // `App::open_settings` asks for a centred window; over the game the settings card covers the
     // overlay whatever the placement says.
-    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred));
+    let cards = app.cards_for(true, SCREEN, Some(Placement::Centred));
     assert_eq!(cards.len(), 1, "the exclusive settings window hides the menu");
     assert_eq!(cards[0].shown, Shown::Settings);
     assert_eq!(cards[0].offset, (0.0, 0.0));
-    assert_eq!(cards[0].width, Some(BOUNDS.width as f32));
-    assert_eq!(cards[0].height, Some(BOUNDS.height as f32));
+    assert_eq!(cards[0].width, Some(f64_to_f32(BOUNDS.width)));
+    assert_eq!(cards[0].height, Some(f64_to_f32(BOUNDS.height)));
 
     // Save: the working copy is written and the window closes, as `Live::poll` runs after it.
     app.settings.as_mut().expect("the settings window").save().expect("the scene's temp store");
     app.hide_settings_widget();
-    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred));
+    let cards = app.cards_for(true, SCREEN, Some(Placement::Centred));
     assert_eq!(cards.len(), 1);
     assert_eq!(cards[0].shown, Shown::Widget(widgets::menu::WM_TYPE.to_owned()));
     assert_eq!(cards[0].offset, menu_offset(), "the menu is at 5 %/5 %, not where the settings was");
@@ -223,7 +231,7 @@ fn save_returns_to_the_menu_at_its_own_anchor() {
     app.settings = Some(crate::settings::Settings::scene(GameId::Poe1, Page::General));
     app.settings.as_mut().expect("the settings window").cancel();
     app.hide_settings_widget();
-    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred));
+    let cards = app.cards_for(true, SCREEN, Some(Placement::Centred));
     assert_eq!(cards[0].shown, Shown::Widget(widgets::menu::WM_TYPE.to_owned()));
     assert_eq!(cards[0].offset, menu_offset());
 }
@@ -236,7 +244,7 @@ fn the_settings_widget_card_needs_the_settings_window() {
     let mut app = overlay_app();
     let settings = widget_id(&app, widgets::SETTINGS);
     app.widgets.as_mut().expect("the overlay").show(settings);
-    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    let cards = app.cards_for(true, SCREEN, None);
     assert!(
         cards.iter().all(|card| card.shown != Shown::Settings && card.wm_id != Some(settings)),
         "the settings widget is drawn by the settings window"
@@ -253,12 +261,12 @@ fn the_price_check_draws_alone() {
     app.widgets.as_mut().expect("the overlay").show(stash);
     app.price_check.open = true;
     let cursor = Point { x: 400.0, y: 300.0 };
-    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Cursor(cursor)));
+    let cards = app.cards_for(true, SCREEN, Some(Placement::Cursor(cursor)));
     assert_eq!(cards.len(), 1, "an exclusive widget hides the rest");
     assert_eq!(cards[0].shown, Shown::PriceCheck);
-    let size = (crate::poe1::price_check::WIDTH, BOUNDS.height as f32);
+    let size = (crate::poe1::price_check::WIDTH, f64_to_f32(BOUNDS.height));
     assert_eq!(cards[0].size(), Some(size), "`#price-window` is `h-full`");
-    assert_eq!(cards[0].offset, widget_offset(Some(Placement::Cursor(cursor)), size, BOUNDS, 1.0));
+    assert_eq!(cards[0].offset, widget_offset(Some(Placement::Cursor(cursor)), size, SCREEN));
     assert_eq!(app.shown_in(true), Shown::PriceCheck);
 }
 
@@ -267,16 +275,16 @@ fn the_price_check_draws_alone() {
 #[test]
 fn hidden_widgets_are_not_drawn() {
     let mut app = overlay_app();
-    assert!(app.cards_for(false, BOUNDS, 1.0, None).is_empty(), "the menu is `invisible-on-blur`");
+    assert!(app.cards_for(false, SCREEN, None).is_empty(), "the menu is `invisible-on-blur`");
 
     let timer = app.widgets.as_mut().expect("the overlay").create(widgets::Kind::Stopwatch.wm_type());
     app.widgets.as_mut().expect("the overlay").timer_start(timer, 0.0);
-    let cards = app.cards_for(false, BOUNDS, 1.0, None);
+    let cards = app.cards_for(false, SCREEN, None);
     assert_eq!(cards.len(), 1, "the running stopwatch is the only card off-overlay");
     assert_eq!(cards[0].wm_id, Some(timer));
     // The timer's own anchor is the centre (`cc`), which its card is shifted by.
     let size = widgets::scene_size(GameId::Poe1, widgets::Kind::Stopwatch);
-    assert_eq!(cards[0].offset, anchored_offset("cc", (50.0, 50.0), size, BOUNDS, 1.0));
+    assert_eq!(cards[0].offset, anchored_offset("cc", (50.0, 50.0), size, SCREEN));
     assert_eq!(app.shown_in(false), Shown::Widget(widgets::Kind::Stopwatch.wm_type().to_owned()));
 }
 
@@ -285,10 +293,11 @@ fn hidden_widgets_are_not_drawn() {
 /// top. Its box takes the clicks — below the window too — so a click anywhere inside it never
 /// reaches the overlay's background layer (the bug where the settings closed on its first click).
 #[test]
+#[expect(clippy::float_cmp_const, reason = "the drawn rect is exactly the window size it was laid out at")]
 fn the_settings_window_covers_the_overlay_and_takes_its_clicks() {
     let mut app = overlay_app();
     app.settings = Some(crate::settings::Settings::scene(GameId::Poe1, Page::Hotkeys));
-    let size = (BOUNDS.width as f32, BOUNDS.height as f32);
+    let size = (f64_to_f32(BOUNDS.width), f64_to_f32(BOUNDS.height));
     let text = rune::text::TextSystem::new(crate::theme::FONTS, crate::theme::FAMILIES);
     let mut runtime = rune::Runtime::with_text(app, game_overlay, size, rune::Env::new(true, 1.0), text);
     runtime.frame(0.0);
@@ -304,7 +313,7 @@ fn the_settings_window_covers_the_overlay_and_takes_its_clicks() {
     let picked = runtime.element_at(100.0, 1000.0).and_then(|picked| picked.key().map(str::to_owned));
     assert_ne!(picked.as_deref(), Some("overlay-background"), "a click inside the settings window is the widget's");
     assert!(
-        matches!(picked.as_deref(), Some("settings") | Some("card-settings")),
+        matches!(picked.as_deref(), Some("settings" | "card-settings")),
         "the settings card's own box takes it: {picked:?}"
     );
 }
@@ -321,14 +330,14 @@ fn the_windows_runs_sequence_keeps_every_card_in_place() {
     let settings = widget_id(&app, widgets::SETTINGS);
 
     // The overlay key: the menu, at 5 %/5 %.
-    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    let cards = app.cards_for(true, SCREEN, None);
     assert_eq!(cards.len(), 1);
     assert_eq!(cards[0].wm_id, Some(menu));
     assert_eq!(cards[0].offset, menu_offset());
 
     // "Map rolling": the menu's button is `wm.toggle`, which shows the stash search.
     app.widgets.as_mut().expect("the overlay").toggle(stash);
-    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    let cards = app.cards_for(true, SCREEN, None);
     assert_eq!(cards.len(), 2, "both cards: the image strip must not hide the menu");
     assert!(cards.iter().any(|card| card.wm_id == Some(menu) && card.offset == menu_offset()));
     assert!(cards.iter().any(|card| card.wm_id == Some(stash)));
@@ -337,24 +346,21 @@ fn the_windows_runs_sequence_keeps_every_card_in_place() {
     // only card, covering the overlay.
     app.widgets.as_mut().expect("the overlay").toggle(settings);
     app.settings = Some(crate::settings::Settings::scene(GameId::Poe1, Page::Hotkeys));
-    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred));
+    let cards = app.cards_for(true, SCREEN, Some(Placement::Centred));
     assert_eq!(cards.len(), 1);
     assert_eq!(cards[0].shown, Shown::Settings);
 
     // Save: the settings widget goes back to `hide`, and the menu is where it belongs.
     app.settings.as_mut().expect("the settings window").save().expect("the scene's temp store");
     app.hide_settings_widget();
-    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred));
+    let cards = app.cards_for(true, SCREEN, Some(Placement::Centred));
     let menu_card = cards.iter().find(|card| card.wm_id == Some(menu)).expect("the menu is back");
     assert_eq!(menu_card.offset, menu_offset(), "the menu, not the settings window's placement");
     assert!(cards.iter().any(|card| card.wm_id == Some(stash)), "the stash search stayed up");
 
     // The background click: the game gets the focus back, and the overlay draws nothing.
-    apply_overlay_event(&OverlayEvent::FocusChange { game: true, overlay: false, using_hotkey: false }, &mut app);
-    assert!(
-        app.cards_for(false, BOUNDS, 1.0, None).is_empty(),
-        "the menu and the stash search are `invisible-on-blur`"
-    );
+    apply_overlay_event(OverlayEvent::FocusChange { game: true, overlay: false, using_hotkey: false }, &mut app);
+    assert!(app.cards_for(false, SCREEN, None).is_empty(), "the menu and the stash search are `invisible-on-blur`");
     assert_eq!(app.shown_in(false), Shown::None);
 }
 
@@ -362,7 +368,7 @@ fn the_windows_runs_sequence_keeps_every_card_in_place() {
 /// in one window (`OverlayWindow.vue`'s `visibilityState`). The live shell places the same cards
 /// (`App::cards_for`); this renders them from the app's own state, as a `--snap` of a scene does.
 fn game_overlay(app: &App, cx: &mut rune::Cx<App>) -> El {
-    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    let cards = app.cards_for(true, SCREEN, None);
     crate::shell::overlay_root(cards, true, |card| crate::card_at(app, cx, card))
 }
 
@@ -387,7 +393,7 @@ fn the_menu_and_a_stash_search_draw_together() {
     let stash = widget_id(&app, widgets::Kind::StashSearch.wm_type());
     app.widgets.as_mut().expect("the overlay").toggle(stash);
 
-    let size = (BOUNDS.width as f32, BOUNDS.height as f32);
+    let size = (f64_to_f32(BOUNDS.width), f64_to_f32(BOUNDS.height));
     let text = rune::text::TextSystem::new(crate::theme::FONTS, crate::theme::FAMILIES);
     let mut runtime = rune::Runtime::with_text(app, game_overlay, size, rune::Env::new(true, 1.0), text);
     runtime.frame(0.0);
@@ -416,11 +422,14 @@ fn the_game_taking_the_focus_hides_the_widget_menu() {
     let mut app = overlay_app();
     assert_eq!(app.shown_in(true), Shown::Widget(widgets::Kind::Menu.wm_type().to_owned()));
 
-    apply_overlay_event(&OverlayEvent::FocusChange { game: true, overlay: false, using_hotkey: false }, &mut app);
+    apply_overlay_event(OverlayEvent::FocusChange { game: true, overlay: false, using_hotkey: false }, &mut app);
 
     let shown = app.shown_in(false);
     assert_eq!(shown, Shown::None);
-    assert!(hides_window(&shown, true, true), "nothing to draw, so the window hides even with the game in front");
+    assert!(
+        hides_window(&shown, Visibility { following_game: true, in_front: true }),
+        "nothing to draw, so the window hides even with the game in front"
+    );
     assert_eq!(app.shown_in(true), Shown::Widget(widgets::Kind::Menu.wm_type().to_owned()));
 }
 
@@ -433,7 +442,7 @@ fn the_overlay_key_with_a_price_check_open_keeps_the_card() {
     app.price_check.open = true;
     assert_eq!(app.shown_in(true), Shown::PriceCheck, "an exclusive widget wins over the menu");
 
-    apply_overlay_event(&OverlayEvent::FocusChange { game: true, overlay: false, using_hotkey: false }, &mut app);
+    apply_overlay_event(OverlayEvent::FocusChange { game: true, overlay: false, using_hotkey: false }, &mut app);
     assert!(!app.price_check.open, "`hide-on-blur`");
     assert_eq!(app.shown_in(false), Shown::None);
 }
@@ -477,14 +486,14 @@ fn closing_settings_lists_it_in_the_menu_again() {
 fn a_widgets_anchor_places_it_in_the_overlay() {
     let bounds = Bounds { x: 0.0, y: 0.0, width: 1600.0, height: 1200.0 };
     let size = widgets::scene_size(GameId::Poe1, widgets::Kind::Menu);
-    assert_eq!(anchored_offset("tl", (5.0, 5.0), size, bounds, 1.0), (80.0, 60.0));
+    assert_eq!(anchored_offset("tl", (5.0, 5.0), size, Screen { bounds, ..SCREEN }), (80.0, 60.0));
     // `tc` centres the card on its x, `br` puts its bottom-right corner on the anchor.
-    assert_eq!(anchored_offset("tc", (50.0, 10.0), (200.0, 100.0), bounds, 1.0), (700.0, 120.0));
-    assert_eq!(anchored_offset("br", (100.0, 100.0), (200.0, 100.0), bounds, 1.0), (1400.0, 1100.0));
+    assert_eq!(anchored_offset("tc", (50.0, 10.0), (200.0, 100.0), Screen { bounds, ..SCREEN }), (700.0, 120.0));
+    assert_eq!(anchored_offset("br", (100.0, 100.0), (200.0, 100.0), Screen { bounds, ..SCREEN }), (1400.0, 1100.0));
     // A 150 % window: the anchor is a percentage of the game in points, not physical pixels.
     assert_eq!(
-        anchored_offset("tl", (5.0, 5.0), size, bounds, 1.5),
-        ((1600.0 / 1.5 * 0.05) as f32, (1200.0 / 1.5 * 0.05) as f32)
+        anchored_offset("tl", (5.0, 5.0), size, Screen { bounds, scale: 1.5 }),
+        (f64_to_f32(1600.0 / 1.5 * 0.05), f64_to_f32(1200.0 / 1.5 * 0.05))
     );
 }
 
@@ -496,7 +505,7 @@ fn every_anchor_pos_puts_its_named_corner_on_the_anchor() {
     let size = (200.0, 100.0);
     let anchor = (30.0, 40.0);
     let (x, y) = (480.0, 480.0);
-    let card = |pos: &str| anchored_offset(pos, anchor, size, bounds, 1.0);
+    let card = |pos: &str| anchored_offset(pos, anchor, size, Screen { bounds, ..SCREEN });
     // `tl` = no translate, `tc` = half the card to the left, `br` = all of it, ...
     assert_eq!(card("tl"), (x, y));
     assert_eq!(card("tc"), (x - 100.0, y));
@@ -511,10 +520,10 @@ fn every_anchor_pos_puts_its_named_corner_on_the_anchor() {
     // And the pointer that wrote the anchor puts the same named corner under the cursor: the
     // percentages a drag saves are the ones this placement reads back.
     let pointer = (480.0, 480.0);
-    let written = widgets::pointer_percent([pointer.0, pointer.1], (1600.0, 1200.0));
+    let written = widgets::pointer_percent(pointer.into(), (1600.0, 1200.0));
     assert!((written.0 - anchor.0).abs() < 1e-4 && (written.1 - anchor.1).abs() < 1e-4, "{written:?}");
     for pos in ["tl", "tc", "tr", "cr", "br", "bc", "bl", "cl", "cc"] {
-        let (left, top) = anchored_offset(pos, written, size, bounds, 1.0);
+        let (left, top) = anchored_offset(pos, written, size, Screen { bounds, ..SCREEN });
         let mut axis = pos.chars();
         let corner_y = match axis.next() {
             Some('t') => top,
@@ -541,10 +550,10 @@ fn a_card_stays_inside_the_overlay_at_every_edge() {
     let size = (200.0, 100.0);
     for pos in ["tl", "tc", "tr", "cr", "br", "bc", "bl", "cl", "cc"] {
         for anchor in [(0.0, 0.0), (100.0, 100.0), (0.0, 100.0), (100.0, 0.0), (50.0, 50.0)] {
-            let (left, top) = anchored_offset(pos, anchor, size, bounds, 1.0);
+            let (left, top) = anchored_offset(pos, anchor, size, Screen { bounds, ..SCREEN });
             assert!(left >= 0.0 && top >= 0.0, "{pos} at {anchor:?}: {left},{top}");
-            assert!(left + size.0 <= bounds.width as f32 + 0.01, "{pos} at {anchor:?}: {left}");
-            assert!(top + size.1 <= bounds.height as f32 + 0.01, "{pos} at {anchor:?}: {top}");
+            assert!(left + size.0 <= f64_to_f32(bounds.width) + 0.01, "{pos} at {anchor:?}: {left}");
+            assert!(top + size.1 <= f64_to_f32(bounds.height) + 0.01, "{pos} at {anchor:?}: {top}");
         }
     }
 }
@@ -628,21 +637,30 @@ fn the_widget_is_placed_inside_the_game_in_points() {
     let size = (400.0, 300.0);
 
     // 12 px below and right of the cursor, relative to the game's client area.
-    assert_eq!(widget_offset(Some(Placement::Cursor(Point { x: 300.0, y: 250.0 })), size, bounds, 1.0), (212.0, 212.0));
+    assert_eq!(
+        widget_offset(Some(Placement::Cursor(Point { x: 300.0, y: 250.0 })), size, Screen { bounds, ..SCREEN }),
+        (212.0, 212.0)
+    );
     // At 150 % the game is 1600 physical px wide but the widget is laid out in points.
-    assert_eq!(widget_offset(Some(Placement::Cursor(Point { x: 400.0, y: 350.0 })), size, bounds, 1.5), (212.0, 212.0));
+    assert_eq!(
+        widget_offset(Some(Placement::Cursor(Point { x: 400.0, y: 350.0 })), size, Screen { bounds, scale: 1.5 }),
+        (212.0, 212.0)
+    );
     // A cursor near the bottom right corner: the card is pulled back inside the game.
     assert_eq!(
-        widget_offset(Some(Placement::Cursor(Point { x: 1690.0, y: 1240.0 })), size, bounds, 1.0),
+        widget_offset(Some(Placement::Cursor(Point { x: 1690.0, y: 1240.0 })), size, Screen { bounds, ..SCREEN }),
         (1200.0, 900.0)
     );
     // Above and left of the game: still inside it.
-    assert_eq!(widget_offset(Some(Placement::Cursor(Point { x: 0.0, y: 0.0 })), size, bounds, 1.0), (0.0, 0.0));
+    assert_eq!(
+        widget_offset(Some(Placement::Cursor(Point { x: 0.0, y: 0.0 })), size, Screen { bounds, ..SCREEN }),
+        (0.0, 0.0)
+    );
     // Centred for a window the tray opened.
-    assert_eq!(widget_offset(Some(Placement::Centred), size, bounds, 1.0), (600.0, 450.0));
-    assert_eq!(widget_offset(None, size, bounds, 1.0), (600.0, 450.0));
+    assert_eq!(widget_offset(Some(Placement::Centred), size, Screen { bounds, ..SCREEN }), (600.0, 450.0));
+    assert_eq!(widget_offset(None, size, Screen { bounds, ..SCREEN }), (600.0, 450.0));
     // A card taller than the game starts at the top rather than at a negative offset.
-    assert_eq!(widget_offset(None, (400.0, 1500.0), bounds, 1.0), (600.0, 0.0));
+    assert_eq!(widget_offset(None, (400.0, 1500.0), Screen { bounds, ..SCREEN }), (600.0, 0.0));
 }
 
 /// The live window is the overlay on Windows and the port's ordinary window elsewhere.
@@ -663,6 +681,7 @@ fn the_windows_window_is_the_overlay() {
 /// The price check's width is the same in both games (`#price-window`'s 28.75 rem), so one
 /// window serves both.
 #[test]
+#[expect(clippy::float_cmp_const, reason = "both widths are the same `28.75 * REM` constant")]
 fn both_games_price_checks_are_the_same_width() {
     assert_eq!(crate::poe1::price_check::WIDTH, crate::poe2::price_check::WIDTH);
 }
@@ -684,13 +703,13 @@ fn a_scene_has_no_live_shell() {
 #[test]
 fn a_live_app_starts_idle() {
     let dir = std::env::temp_dir().join(format!("wraex-shell-idle-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
+    drop(std::fs::remove_dir_all(&dir));
     let startup = config::load(GameId::Poe1, &dir);
     // `Live` needs a Rune handle, which a unit test has no app for: the pieces the idle state
     // depends on are the config and the shown window, and `App::live` is exercised by the run.
     assert_eq!(startup.source, config::Source::Defaults);
     assert!(startup.folder().is_some());
-    let _ = std::fs::remove_dir_all(&dir);
+    drop(std::fs::remove_dir_all(&dir));
 }
 
 #[test]
@@ -704,7 +723,7 @@ fn the_leagues_default_is_upstreams() {
 #[test]
 fn a_broken_config_falls_back_to_an_empty_host_config() {
     let host = host_config(GameId::Poe1, &serde_json::json!({}));
-    assert!(host.shortcuts.is_empty());
+    assert_eq!(host.shortcuts, Vec::new());
     assert_eq!(host.overlay_key, "Shift + Space");
     assert_eq!(host.language, "en");
 }
@@ -718,7 +737,14 @@ fn the_price_check_hotkey_opens_the_window_on_the_item() {
     assert_eq!(app.shown(), Shown::None);
 
     let text = crate::corpus("currency-divine-orb");
-    app.open_price_check_for(GameId::Poe1, "Standard", Mode::Replay, &text, None, None);
+    app.open_price_check_for(PriceCheckRequest {
+        game: GameId::Poe1,
+        league: "Standard",
+        mode: Mode::Replay,
+        text: &text,
+        warm: None,
+        overviews: None,
+    });
     assert_eq!(app.shown(), Shown::PriceCheck);
     assert!(app.price_check.open);
     assert!(app.price_check.item.is_ok(), "the item parsed");
@@ -729,7 +755,14 @@ fn the_price_check_hotkey_opens_the_window_on_the_item() {
 
     // A league the recordings do not cover still opens the window, in that league.
     app.close_windows();
-    app.open_price_check_for(GameId::Poe1, "Covens", Mode::Replay, &text, None, None);
+    app.open_price_check_for(PriceCheckRequest {
+        game: GameId::Poe1,
+        league: "Covens",
+        mode: Mode::Replay,
+        text: &text,
+        warm: None,
+        overviews: None,
+    });
     assert_eq!(app.price_check.league, "Covens");
     assert!(app.price_check.stable_orb_cost().is_none(), "no prices for an unrecorded league");
 }
@@ -743,14 +776,14 @@ fn the_startup_prices_become_the_windows() {
 
     let mut app = App::replay("currency-divine-orb");
     app.close_windows();
-    app.open_price_check_for(
-        GameId::Poe1,
-        "Standard",
-        Mode::Replay,
-        &crate::corpus("currency-divine-orb"),
-        Some(warm),
-        None,
-    );
+    app.open_price_check_for(PriceCheckRequest {
+        game: GameId::Poe1,
+        league: "Standard",
+        mode: Mode::Replay,
+        text: &crate::corpus("currency-divine-orb"),
+        warm: Some(warm),
+        overviews: None,
+    });
     assert_eq!(app.price_check.stable_orb_cost(), Some(891.0));
 }
 
@@ -762,19 +795,37 @@ fn the_item_check_hotkey_opens_its_widget_and_page() {
     let mut app = App::replay("currency-divine-orb");
     app.close_windows();
 
-    app.open_item_check_for(GameId::Poe1, &config, Mode::Replay, &text, None);
+    app.open_item_check_for(&ItemCheckRequest {
+        game: GameId::Poe1,
+        config: &config,
+        mode: Mode::Replay,
+        text: &text,
+        action: None,
+    });
     assert_eq!(app.shown(), Shown::ItemCheck);
     assert!(app.item_check.as_ref().is_some_and(|check| check.open));
     assert!(app.item_check.as_ref().unwrap().actions.is_empty(), "a plain item is just shown");
 
-    app.open_item_check_for(GameId::Poe1, &config, Mode::Replay, &text, Some(ItemAction::Wiki));
+    app.open_item_check_for(&ItemCheckRequest {
+        game: GameId::Poe1,
+        config: &config,
+        mode: Mode::Replay,
+        text: &text,
+        action: Some(ItemAction::Wiki),
+    });
     let actions = &app.item_check.as_ref().unwrap().actions;
     assert!(matches!(&actions[0], crate::poe1::item_check::Action::Open(url) if url.contains("poewiki.net")));
 
     // A text that is not an item opens nothing.
     let mut app = App::replay("currency-divine-orb");
     app.close_windows();
-    app.open_item_check_for(GameId::Poe1, &config, Mode::Replay, "not an item", None);
+    app.open_item_check_for(&ItemCheckRequest {
+        game: GameId::Poe1,
+        config: &config,
+        mode: Mode::Replay,
+        text: "not an item",
+        action: None,
+    });
     assert_eq!(app.shown(), Shown::None);
 }
 
@@ -784,7 +835,14 @@ fn the_poe2_hotkey_opens_its_own_window() {
     let text = crate::corpus_poe2("currency-djinn-barya");
     let mut app = App::replay("currency-divine-orb");
     app.close_windows();
-    app.open_price_check_for(GameId::Poe2, "Dawn of the Hunt", Mode::Replay, &text, None, None);
+    app.open_price_check_for(PriceCheckRequest {
+        game: GameId::Poe2,
+        league: "Dawn of the Hunt",
+        mode: Mode::Replay,
+        text: &text,
+        warm: None,
+        overviews: None,
+    });
     assert_eq!(app.game, GameId::Poe2);
     assert_eq!(app.shown(), Shown::Poe2);
     assert_eq!(app.poe2.as_ref().unwrap().league, "Dawn of the Hunt");
@@ -833,7 +891,7 @@ fn the_mouse_onto_the_widget_activates_the_overlay() {
 
     // A focus change to the overlay alone does not close the card.
     let mut app = App::replay("currency-divine-orb");
-    apply_overlay_event(&OverlayEvent::FocusChange { game: false, overlay: true, using_hotkey: false }, &mut app);
+    apply_overlay_event(OverlayEvent::FocusChange { game: false, overlay: true, using_hotkey: false }, &mut app);
     assert_eq!(app.shown(), Shown::PriceCheck);
 }
 
@@ -853,7 +911,7 @@ fn moving_away_from_the_widget_closes_it() {
 
     let mut app = App::replay("currency-divine-orb");
     assert_eq!(app.shown(), Shown::PriceCheck);
-    apply_overlay_event(&events[0], &mut app);
+    apply_overlay_event(events[0], &mut app);
     assert_eq!(app.shown(), Shown::None);
 }
 
@@ -878,7 +936,7 @@ fn escape_closes_the_card_and_gives_the_game_its_focus() {
     let events = harness.overlay.take_events();
     assert_eq!(events, vec![OverlayEvent::FocusChange { game: true, overlay: false, using_hotkey: false }]);
     let mut app = App::replay("currency-divine-orb");
-    apply_overlay_event(&events[0], &mut app);
+    apply_overlay_event(events[0], &mut app);
     assert_eq!(app.shown(), Shown::None);
 }
 
@@ -899,7 +957,7 @@ fn the_game_taking_the_focus_back_closes_the_card() {
     let events = harness.overlay.take_events();
     assert_eq!(events, vec![OverlayEvent::FocusChange { game: true, overlay: false, using_hotkey: false }]);
     let mut app = App::replay("currency-divine-orb");
-    apply_overlay_event(&events[0], &mut app);
+    apply_overlay_event(events[0], &mut app);
     assert_eq!(app.shown(), Shown::None);
 }
 
@@ -908,20 +966,24 @@ fn the_game_taking_the_focus_back_closes_the_card() {
 #[test]
 fn the_track_area_is_the_card_in_screen_points() {
     let bounds = Bounds { x: 100.0, y: 50.0, width: 1600.0, height: 1200.0 };
-    let size = overlay_widget_size(GameId::Poe1, &Shown::PriceCheck, bounds, 2.0).expect("a size");
+    let screen = Screen { bounds, scale: 2.0 };
+    let size = overlay_widget_size(GameId::Poe1, &Shown::PriceCheck, screen).expect("a size");
     assert_eq!(size, (crate::poe1::price_check::WIDTH, 600.0), "the price check is h-full");
     assert_eq!(
-        overlay_widget_size(GameId::Poe1, &Shown::Widget(widgets::Kind::Menu.name().to_owned()), bounds, 2.0),
+        overlay_widget_size(GameId::Poe1, &Shown::Widget(widgets::Kind::Menu.name().to_owned()), screen),
         Some(widgets::scene_size(GameId::Poe1, widgets::Kind::Menu)),
         "other cards keep their own size"
     );
 
     let offset = (10.0, 20.0);
-    let area = track_area(offset, size, bounds, 2.0, Point { x: 300.0, y: 250.0 }, Some("Ctrl".to_owned()));
+    let area = track_area(offset, size, screen, Point { x: 300.0, y: 250.0 }, Some("Ctrl".to_owned()));
     assert_eq!(area.hold_key.as_deref(), Some("Ctrl"));
-    assert_eq!(area.close_threshold, 2.5 * crate::theme::REM as f64, "2.5 rem in points");
+    assert_eq!(area.close_threshold, 2.5 * f64::from(crate::theme::REM), "2.5 rem in points");
     assert_eq!(area.from, Point { x: 150.0, y: 125.0 }, "physical pixels to DIPs");
-    assert_eq!(area.area, Bounds { x: 60.0, y: 45.0, width: crate::poe1::price_check::WIDTH as f64, height: 600.0 });
+    assert_eq!(
+        area.area,
+        Bounds { x: 60.0, y: 45.0, width: f64::from(crate::poe1::price_check::WIDTH), height: 600.0 }
+    );
     assert_eq!(area.dpr, 2.0);
     // `TrackArea::into_screen_space` doubles it back on Windows, landing on the card's
     // physical rectangle.
@@ -966,7 +1028,7 @@ struct TestClock(std::cell::Cell<wraex_core::trade::rate_limit::Millis>);
 
 impl TestClock {
     fn advance(&self, millis: wraex_core::trade::rate_limit::Millis) {
-        self.0.set(self.0.get() + millis);
+        self.0.set(self.0.get().saturating_add(millis));
     }
 }
 
@@ -1029,7 +1091,7 @@ fn a_key_pressed_while_alt_is_held_ends_the_peek() {
     // The Alt release is a no-op then: the widget never went away.
     apply_key_event(controller, &shortcuts, KeyEvent::Up(InputEvent { alt: false, ..alt }), &clock);
     assert!(controller.is_visible());
-    assert!(controller.take_events().is_empty());
+    assert_eq!(controller.take_events(), Vec::new());
 }
 
 /// A shell a unit test drives the way Rune does: [`Live::for_tests`] gives it a real (never-run)
@@ -1043,7 +1105,7 @@ fn live_app(name: &str, clipboard: TestClipboard) -> App {
 /// A fresh temp folder for a test's `appData`, so the config a test saves can be read back.
 fn live_dir(name: &str) -> std::path::PathBuf {
     let dir = std::env::temp_dir().join(format!("wraex-shell-{name}-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
+    drop(std::fs::remove_dir_all(&dir));
     dir
 }
 
@@ -1064,7 +1126,7 @@ fn poll(app: &mut App) -> bool {
 /// overlay keeps the size [`Live::sync_window`] would read from the game.
 fn overlay_runtime(app: App) -> rune::Runtime<App> {
     let text = rune::text::TextSystem::new(crate::theme::FONTS, crate::theme::FAMILIES);
-    let size = (BOUNDS.width as f32, BOUNDS.height as f32);
+    let size = (f64_to_f32(BOUNDS.width), f64_to_f32(BOUNDS.height));
     let mut runtime = rune::Runtime::with_text(app, game_overlay, size, rune::Env::new(true, 1.0), text);
     runtime.frame(0.0);
     runtime
@@ -1072,7 +1134,7 @@ fn overlay_runtime(app: App) -> rune::Runtime<App> {
 
 /// The `wmId`s of the cards the overlay draws over the game, in paint order.
 fn card_ids(app: &App) -> Vec<Option<u32>> {
-    app.cards_for(true, BOUNDS, 1.0, None).iter().map(|card| card.wm_id).collect()
+    app.cards_for(true, SCREEN, None).iter().map(|card| card.wm_id).collect()
 }
 
 /// The saved config, read the way the next start reads it.
@@ -1083,13 +1145,26 @@ fn saved_config(dir: &std::path::Path) -> serde_json::Value {
 
 /// The saved widget object for `wm_id`.
 fn saved_widget(config: &serde_json::Value, wm_id: u32) -> serde_json::Value {
-    config["widgets"]
-        .as_array()
-        .expect("widgets")
-        .iter()
-        .find(|widget| widget["wmId"] == wm_id)
+    let saved = SavedWidgets::deserialize(config).unwrap_or_default();
+    saved
+        .widgets
+        .into_iter()
+        .find(|widget| SavedWidgetId::deserialize(widget).is_ok_and(|saved| saved.wm_id == wm_id))
         .unwrap_or_else(|| panic!("no saved widget {wm_id}"))
-        .clone()
+}
+
+/// A saved config's `widgets`, as the file has them.
+#[derive(Debug, Default, Deserialize)]
+struct SavedWidgets {
+    #[serde(default)]
+    widgets: Vec<serde_json::Value>,
+}
+
+/// One saved widget's `wmId`, for finding it in the config's `widgets`.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SavedWidgetId {
+    wm_id: u32,
 }
 
 /// The config's `toggle-overlay` hotkey (upstream's `overlayKey`, `Shift + Space`).
@@ -1137,7 +1212,7 @@ fn press(app: &mut App, of: fn(&App) -> ShortcutAction) {
 /// `Live::poll` drains.
 fn game_window(app: &mut App, event: window::GameWindowEvents) {
     let live = app.live.as_mut().expect("the live shell");
-    let mut panel = OverlayPanel::new(live.panel.clone());
+    let mut panel = OverlayPanel::new(Arc::clone(&live.panel));
     if let Some(change) = live.window.feed(event) {
         live.overlay.on_window_event(&change, &live.window, &mut panel);
     }
@@ -1167,12 +1242,12 @@ struct TestClipboard {
 impl TestClipboard {
     /// The item already on the clipboard: what the no-synthesis path prices.
     fn holding(item: &str) -> Self {
-        Self { text: item.to_owned(), copies: None, written: Default::default() }
+        Self { text: item.to_owned(), copies: None, written: Arc::default() }
     }
 
     /// An empty clipboard the game fills with `item` once the copy key clears it.
     fn copy_of(item: &str) -> Self {
-        Self { text: String::new(), copies: Some(item.to_owned()), written: Default::default() }
+        Self { text: String::new(), copies: Some(item.to_owned()), written: Arc::default() }
     }
 }
 
@@ -1212,8 +1287,11 @@ fn the_overlay_key_through_poll_with_draws_the_menu() {
         "the active overlay draws its menu"
     );
     assert!(window_visible(&app), "the overlay window stays on screen");
-    let shown = app.shown_state(true, false);
-    assert!(!hides_window(&shown, false, true), "nothing hides a window with a card to draw");
+    let shown = app.shown_state(OverlayMode::Active);
+    assert!(
+        !hides_window(&shown, Visibility { following_game: false, in_front: true }),
+        "nothing hides a window with a card to draw"
+    );
 
     // And the other side of the same read: the game takes the focus back, and the menu is
     // `invisible-on-blur`, so the overlay draws nothing and its window hides. A shell that
@@ -1258,7 +1336,7 @@ fn the_settings_focus_bounce_keeps_the_window_open() {
     poll(&mut app);
     let live = app.live.as_ref().expect("the live shell");
     assert!(app.settings.as_ref().is_some_and(|settings| settings.open), "the tray opened the settings");
-    assert!(!live.settings_armed, "the overlay's focus has not landed yet");
+    assert!(!live.settings_state.armed, "the overlay's focus has not landed yet");
 
     // The tray menu closing hands the foreground back to the game; the overlay then focuses.
     // The bounce is not the user going back to the game.
@@ -1272,7 +1350,7 @@ fn the_settings_focus_bounce_keeps_the_window_open() {
     // The overlay's focus lands (`AppSpec::on_focus`), and only now does a game focus count.
     let mut tx = Tx::default();
     app.on_focus(true, &mut tx);
-    assert!(app.live.as_ref().expect("the live shell").settings_armed, "the overlay held the focus");
+    assert!(app.live.as_ref().expect("the live shell").settings_state.armed, "the overlay held the focus");
     game_window(&mut app, window::GameWindowEvents::Blur);
     game_window(&mut app, window::GameWindowEvents::Focus);
     poll(&mut app);
@@ -1324,7 +1402,7 @@ fn a_chat_command_works_again_after_its_clipboard_restore() {
     let mut startup = config::load(GameId::Poe1, &dir);
     startup.config["restoreClipboard"] = serde_json::json!(true);
     let clipboard =
-        TestClipboard { text: "a password".to_owned(), written: written.clone(), ..TestClipboard::default() };
+        TestClipboard { text: "a password".to_owned(), written: Arc::clone(&written), ..TestClipboard::default() };
     let mut app = App::live(Live::for_tests(startup, Box::new(clipboard)));
     app.mode = Mode::Replay;
 
@@ -1368,7 +1446,7 @@ fn dragging_a_widgets_handle_moves_it_and_saves_the_anchor() {
     // percentages are of (`Live::sync_window` sets it from the game every frame).
     let overlay = app.widgets.as_mut().expect("the overlay");
     overlay.moving = Some(timer);
-    overlay.size = (BOUNDS.width as f32, BOUNDS.height as f32);
+    overlay.size = (f64_to_f32(BOUNDS.width), f64_to_f32(BOUNDS.height));
 
     let mut runtime = overlay_runtime(app);
     let size = widgets::scene_size(GameId::Poe1, widgets::Kind::Stopwatch);
@@ -1383,9 +1461,9 @@ fn dragging_a_widgets_handle_moves_it_and_saves_the_anchor() {
     runtime.pointer_move(400.0, 300.0);
     runtime.frame(1.0 / 60.0);
     assert_eq!(runtime.state.widgets.as_ref().unwrap().widget(timer).unwrap().anchor(), (25.0, 25.0));
-    let cards = runtime.state.cards_for(true, BOUNDS, 1.0, None);
+    let cards = runtime.state.cards_for(true, SCREEN, None);
     let card = cards.iter().find(|card| card.wm_id == Some(timer)).expect("the timer's card");
-    assert_eq!(card.offset, anchored_offset("cc", (25.0, 25.0), size, BOUNDS, 1.0));
+    assert_eq!(card.offset, anchored_offset("cc", (25.0, 25.0), size, SCREEN));
 
     runtime.pointer_up(400.0, 300.0);
     runtime.frame(1.0 / 60.0);
@@ -1406,8 +1484,8 @@ fn dragging_a_widgets_handle_moves_it_and_saves_the_anchor() {
     assert_eq!(widget.anchor(), (25.0, 25.0));
     assert_eq!(widget.zorder(), Some(2.0));
     assert_eq!(card_ids(&restarted), vec![Some(menu), Some(timer)], "the menu, then the stopwatch");
-    let cards = restarted.cards_for(true, BOUNDS, 1.0, None);
-    assert_eq!(cards[1].offset, anchored_offset("cc", (25.0, 25.0), size, BOUNDS, 1.0));
+    let cards = restarted.cards_for(true, SCREEN, None);
+    assert_eq!(cards[1].offset, anchored_offset("cc", (25.0, 25.0), size, SCREEN));
 }
 
 /// `Widget.vue`'s `@mousedown`: a press on a lower card raises it (`wm.bringToTop`) and the new
@@ -1468,17 +1546,31 @@ fn asking_the_app_about_the_shell_from_inside_poll_panics() {
 fn reopening_an_item_reuses_the_trade_policy_and_cached_rows() {
     let text = crate::corpus("adv-rare-ring-mirrored-catalyst");
     let mut app = App::with_mode("", Mode::Replay);
-    app.open_price_check_for(GameId::Poe1, "Standard", Mode::Replay, &text, None, None);
+    app.open_price_check_for(PriceCheckRequest {
+        game: GameId::Poe1,
+        league: "Standard",
+        mode: Mode::Replay,
+        text: &text,
+        warm: None,
+        overviews: None,
+    });
     app.price_check.start_search();
     assert_eq!(app.price_check.trade.rows.len(), 20);
-    let first = app.price_check.trade.client.clone();
+    let first = std::sync::Arc::clone(&app.price_check.trade.client);
     let policy = {
         let mut client = crate::trade::lock(&first);
         client.transport =
             crate::trade::TargetTransport::Replay(crate::replay::ReplayTransport::new("missing-recordings"));
         client.limits.search.clone()
     };
-    app.open_price_check_for(GameId::Poe1, "Standard", Mode::Replay, &text, None, None);
+    app.open_price_check_for(PriceCheckRequest {
+        game: GameId::Poe1,
+        league: "Standard",
+        mode: Mode::Replay,
+        text: &text,
+        warm: None,
+        overviews: None,
+    });
     assert!(std::sync::Arc::ptr_eq(&first, &app.price_check.trade.client));
     assert_eq!(crate::trade::lock(&app.price_check.trade.client).limits.search, policy);
     app.price_check.start_search();

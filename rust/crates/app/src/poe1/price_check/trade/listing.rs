@@ -34,6 +34,10 @@ pub struct Grouped {
 
 /// `groupedResults`: listings by the same seller at the same price (or one of the last
 /// two rows) fold into one, adding up stacks when they have them.
+#[expect(
+    clippy::float_cmp,
+    reason = "`===` on the price, as `groupedResults` does: the same listing price arrives as the same f64"
+)]
 pub fn grouped(rows: &[PricingResult], collapse_merchant: bool) -> Vec<Grouped> {
     let mut out: Vec<Grouped> = Vec::new();
     for result in rows {
@@ -47,14 +51,14 @@ pub fn grouped(rows: &[PricingResult], collapse_merchant: bool) -> Vec<Grouped> 
                 && added.result.price_currency == result.price_currency
                 && added.result.price_amount == result.price_amount)
                 // `out.length - idx <= 2`: the last row or the one before it.
-                || (added.result.account_name == result.account_name && last - index <= 2)
+                || (added.result.account_name == result.account_name && last.saturating_sub(index) <= 2)
         });
         match found {
             Some(index) => {
-                let existing = &mut out[index];
+                let Some(existing) = out.get_mut(index) else { continue };
                 match existing.result.stack_size.filter(|stack| *stack != 0.0) {
                     Some(stack) => existing.result.stack_size = Some(stack + result.stack_size.unwrap_or(0.0)),
-                    None => existing.listed_times += 1,
+                    None => existing.listed_times = existing.listed_times.saturating_add(1),
                 }
             }
             None => out.push(Grouped { result: result.clone(), listed_times: 1 }),
@@ -252,6 +256,7 @@ fn price_cell(index: usize, result: &PricingResult, listed_times: u32) -> El {
     cell
 }
 
+#[derive(Clone, Copy)]
 enum Cell {
     Stock,
     ItemLevel,
@@ -314,7 +319,7 @@ pub(super) fn mine_badge(index: usize) -> El {
 }
 
 /// Which currency a bulk table's selected side asks for in its trade link.
-pub(super) fn have_for(selected: super::BulkCurrency) -> &'static str {
+pub(super) const fn have_for(selected: super::BulkCurrency) -> &'static str {
     match selected {
         super::BulkCurrency::Chaos => "chaos",
         super::BulkCurrency::Stable => "divine",

@@ -13,6 +13,7 @@
 //! card's `overflow: hidden` crops.
 
 use rune::{Color, El, col, el, row};
+use wraex_core::num::usize_to_f32;
 
 use crate::theme;
 use crate::widgets::{Overlay, Project, Widget};
@@ -49,8 +50,13 @@ impl Metrics {
     /// `top`/`left` of the inner grid, `(anchor.height - anchor.cell * 9) / 2` and
     /// `(anchor.width - anchor.cell * 11) / 2`: negative when the cells overflow the box, which
     /// is how the reference crops them.
+    // `mul_add` would fuse the subtraction's rounding; the reference's CSS arithmetic rounds
+    // each operation on its own.
+    #[expect(clippy::suboptimal_flops, reason = "the reference's arithmetic is not fused")]
     pub fn offset(self) -> (f32, f32) {
-        ((self.width - self.cell * COLUMNS as f32) / 2.0, (self.height - self.cell * ROWS as f32) / 2.0)
+        let columns = usize_to_f32(COLUMNS);
+        let rows = usize_to_f32(ROWS);
+        ((self.width - self.cell * columns) / 2.0, (self.height - self.cell * rows) / 2.0)
     }
 }
 

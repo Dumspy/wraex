@@ -25,7 +25,7 @@ pub const SPECIAL_SUPPORT_GEM: [&str; 3] = ["Empower Support", "Enlighten Suppor
 pub const PERMANENT_SC: [&str; 2] = ["Standard", "標準模式"];
 
 /// `CATEGORY_TO_TRADE_ID` (`web/price-check/trade/pathofexile-trade.ts`)
-pub fn category_to_trade_id(category: &ItemCategory) -> Option<&'static str> {
+pub const fn category_to_trade_id(category: &ItemCategory) -> Option<&'static str> {
     Some(match category {
         C::Map => "map",
         C::AbyssJewel => "jewel.abyss",
@@ -77,8 +77,12 @@ pub fn category_to_trade_id(category: &ItemCategory) -> Option<&'static str> {
     })
 }
 
-/// `CreateOptions`
-#[derive(Debug, Clone, PartialEq, Deserialize)]
+/// `CreateOptions`, which the reference spells in `create-item-filters.ts`.
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "mirrors upstream `CreateOptions` (`create-item-filters.ts`) field for field"
+)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateOptions {
     pub league: String,
@@ -97,8 +101,8 @@ fn t(opts: &CreateOptions, info: &BaseType) -> String {
     if opts.use_en { info.ref_name.clone() } else { info.name.clone() }
 }
 
-fn is(item: &Item, category: ItemCategory) -> bool {
-    item.category.as_ref() == Some(&category)
+fn is(item: &Item, category: &ItemCategory) -> bool {
+    item.category.as_ref() == Some(category)
 }
 
 fn in_set(item: &Item, set: &[ItemCategory]) -> bool {
@@ -126,6 +130,7 @@ fn area_level(item: &Item) -> R<f64> {
 }
 
 /// `createFilters`
+#[expect(clippy::too_many_lines, reason = "line-for-line port of upstream `createFilters` (`create-item-filters.ts`)")]
 pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilters> {
     let info = item.info();
     let rarity = item.rarity;
@@ -168,7 +173,7 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
             online_in_league: false,
             // Divination Cards, and some items at the start of a league that
             // are on Currency Exchange but not yet in the site's Bulk section.
-            merchant_only: opts.merchant_only && !(info.exchangeable == Some(true) && !trade_tag),
+            merchant_only: opts.merchant_only && (info.exchangeable != Some(true) || trade_tag),
             listed: None,
             currency: opts.currency.clone(),
             league: opts.league.clone(),
@@ -186,10 +191,10 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
         }
     }
 
-    if is(item, C::Gem) {
+    if is(item, &C::Gem) {
         return create_gem_filters(d, item, filters, opts);
     }
-    if is(item, C::CapturedBeast) {
+    if is(item, &C::CapturedBeast) {
         filters.search_exact = base_type(opts, info);
         return Ok(filters);
     }
@@ -198,11 +203,11 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
         let disabled = !(item.stack_size.as_ref().is_some_and(|s| s.value > 1.0) && opts.activate_stock_filter);
         filters.stack_size = Some(FilterNumeric::new(value, disabled));
     }
-    if is(item, C::Invitation) {
+    if is(item, &C::Invitation) {
         filters.search_exact = base_type(opts, info);
         return Ok(filters);
     }
-    if is(item, C::MetamorphSample) {
+    if is(item, &C::MetamorphSample) {
         filters.search_exact = base_type(opts, info);
         let level = item.item_level.ok_or_else(|| missing("itemLevel"))?;
         filters.item_level = Some(FilterNumeric::new(level, false));
@@ -212,7 +217,7 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
         filters.search_exact = SearchFilter { sub: Some(map_area_sub(item)?), ..base_type(opts, info) };
         return Ok(filters);
     }
-    if is(item, C::DivinationCard) || is(item, C::Currency) || item.ref_name_is("Charged Compass") {
+    if is(item, &C::DivinationCard) || is(item, &C::Currency) || item.ref_name_is("Charged Compass") {
         filters.search_exact = base_type(opts, info);
         if item.ref_name_is("Chronicle of Atzoatl") {
             let value = floor_to_bracket(area_level(item)?, &[1.0, 68.0, 73.0, 75.0, 78.0, 80.0]);
@@ -238,7 +243,7 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
     }
 
     let unique_base = item.unique_base.as_ref();
-    if is(item, C::Map) {
+    if is(item, &C::Map) {
         if info.area.as_ref().is_some_and(|a| a.blighted == Some(true)) {
             let map = d
                 .item_by_ref(Namespace::Item, "Map")
@@ -286,7 +291,7 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
         filters.search_exact = base_type(opts, info);
         let value = floor_to_bracket(area_level(item)?, &[1.0, 68.0, 73.0, 78.0, 81.0, 83.0]);
         filters.area_level = Some(FilterNumeric::new(value, false));
-    } else if is(item, C::Chart) {
+    } else if is(item, &C::Chart) {
         filters.search_exact = base_type(opts, info);
         filters.search_relaxed = Some(SearchFilter {
             category: item.category.clone(),
@@ -325,7 +330,7 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
 
     if let Some(quality) = quality.filter(|q| *q >= 20.0)
         && !in_set(item, JEWELLERY)
-        && (is(item, C::Flask) || is(item, C::Tincture) || get_prop_quality(item) == 0.0 || opts.exact)
+        && (is(item, &C::Flask) || is(item, &C::Tincture) || get_prop_quality(item) == 0.0 || opts.exact)
     {
         // `|| opts.exact`: for weapons and armour
         filters.quality = Some(FilterNumeric::new(quality, quality <= 20.0));
@@ -336,7 +341,7 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
     }
 
     // Not `item.isCorrupted`: let the buyer corrupt.
-    let for_adorned_jewel = rarity == Some(Rarity::Magic) && (is(item, C::Jewel) || is(item, C::AbyssJewel));
+    let for_adorned_jewel = rarity == Some(Rarity::Magic) && (is(item, &C::Jewel) || is(item, &C::AbyssJewel));
 
     if item.is_unmodifiable != Some(true) && (craftable || is_unique) {
         filters.corrupted = Some(CorruptedFilter {
@@ -404,7 +409,7 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
             C::Idol,
         ];
         if !is_unique && !in_set(item, &excluded) && !item.ref_name_is("Expedition Logbook") {
-            if is(item, C::ClusterJewel) {
+            if is(item, &C::ClusterJewel) {
                 filters.item_level = Some(FilterNumeric {
                     value: floor_to_bracket(level, &[1.0, 50.0, 68.0, 75.0, 84.0]),
                     max: Some(ceil_to_bracket(level, &[100.0, 74.0, 67.0, 49.0])),
@@ -414,7 +419,7 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
                 // TODO (upstream): limit level by item type
                 filters.item_level = Some(FilterNumeric::new(
                     level.min(86.0),
-                    !opts.exact || is(item, C::Flask) || is(item, C::Tincture),
+                    !opts.exact || is(item, &C::Flask) || is(item, &C::Tincture),
                 ));
             }
         }
@@ -464,7 +469,7 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
         filters.vestigial = Some(ValueFilter { value: item.is_vestigial == Some(true) });
     }
 
-    if (is(item, C::HeistContract) || is(item, C::HeistBlueprint) || is(item, C::Chart)) && !is_unique {
+    if (is(item, &C::HeistContract) || is(item, &C::HeistBlueprint) || is(item, &C::Chart)) && !is_unique {
         filters.area_level = Some(FilterNumeric::new(area_level(item)?, false));
     }
 
@@ -475,9 +480,7 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
 fn create_gem_filters(d: &Data, item: &Item, mut filters: ItemFilters, opts: &CreateOptions) -> R<ItemFilters> {
     let info = item.info();
     let gem = info.gem.as_ref().ok_or_else(|| missing("info.gem"))?;
-    if gem.transfigured != Some(true) {
-        filters.search_exact = base_type(opts, info);
-    } else {
+    if gem.transfigured == Some(true) {
         let normal_variant = gem.normal_variant.as_deref().ok_or_else(|| missing("gem.normalVariant"))?;
         let normal_gem = d
             .item_by_ref(Namespace::Gem, normal_variant)
@@ -489,6 +492,8 @@ fn create_gem_filters(d: &Data, item: &Item, mut filters: ItemFilters, opts: &Cr
             discriminator_trade: info.trade_disc.clone(),
             ..Default::default()
         };
+    } else {
+        filters.search_exact = base_type(opts, info);
     }
 
     if let Some(vaal) = &item.vaal_gem {

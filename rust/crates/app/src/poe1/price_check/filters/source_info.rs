@@ -16,13 +16,19 @@ pub fn view(filter: &StatFilter, source: &StatSource) -> El {
     let info = &source.modifier.info;
     let mut mod_text = i18n::t(&format!("item.mod_{}", info.kind.as_str()));
     if let Some(name) = &info.name {
-        mod_text.push_str(&format!(" \"{name}\""));
+        mod_text.push_str(" \"");
+        mod_text.push_str(name);
+        mod_text.push('"');
     }
     if let Some(tier) = info.tier {
-        mod_text.push_str(&format!(" ({})", i18n::fmt("item.mod_tier", &[&js::number_to_string(tier)])));
+        mod_text.push_str(" (");
+        mod_text.push_str(&i18n::fmt("item.mod_tier", &[&js::number_to_string(tier)]));
+        mod_text.push(')');
     }
     if let Some(rank) = info.rank {
-        mod_text.push_str(&format!(" ({})", i18n::fmt("item.mod_rank", &[&js::number_to_string(rank)])));
+        mod_text.push_str(" (");
+        mod_text.push_str(&i18n::fmt("item.mod_rank", &[&js::number_to_string(rank)]));
+        mod_text.push(')');
     }
 
     let (dp, is_negated) = filter.roll.as_ref().map_or((false, false), |roll| (roll.dp, roll.is_negated));

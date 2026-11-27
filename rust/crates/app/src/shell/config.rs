@@ -29,7 +29,7 @@ pub enum Source {
 }
 
 /// What the shell needs to know about the settings it loaded.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Startup {
     pub game: GameId,
     pub store: ConfigStore,
@@ -95,11 +95,10 @@ pub fn load(game: GameId, app_data: &Path) -> Startup {
 
 /// [`load`] for the running process.
 pub fn startup(game: GameId) -> Startup {
-    match settings::app_data_dir() {
-        Some(app_data) => load(game, &app_data),
-        // No `appData` in the environment: keep the app usable with the defaults, in the temp
-        // dir the settings scenes already use.
-        None => {
+    settings::app_data_dir().map_or_else(
+        || {
+            // No `appData` in the environment: keep the app usable with the defaults, in the temp
+            // dir the settings scenes already use.
             let store = settings::temp_store(game);
             Startup {
                 game,
@@ -109,8 +108,9 @@ pub fn startup(game: GameId) -> Startup {
                 source: Source::Defaults,
                 upstream: None,
             }
-        }
-    }
+        },
+        |app_data| load(game, &app_data),
+    )
 }
 
 /// `ConfigStore.save`: the imported copy, compact JSON as `saveConfig` writes it.
@@ -128,7 +128,7 @@ mod tests {
     impl Dir {
         fn new(name: &str) -> Self {
             let path = std::env::temp_dir().join(format!("wraex-shell-config-{name}-{}", std::process::id()));
-            let _ = std::fs::remove_dir_all(&path);
+            drop(std::fs::remove_dir_all(&path));
             std::fs::create_dir_all(&path).unwrap();
             Self(path)
         }
@@ -140,7 +140,7 @@ mod tests {
 
     impl Drop for Dir {
         fn drop(&mut self) {
-            let _ = std::fs::remove_dir_all(&self.0);
+            drop(std::fs::remove_dir_all(&self.0));
         }
     }
 

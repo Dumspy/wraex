@@ -10,6 +10,7 @@
 //! scene or a test can check it without opening a browser or typing into the game.
 
 use rune::{Cx, El, col, el, row, text};
+use serde::Deserialize;
 use wraex_core::js::number_to_string;
 use wraex_game::ParseError;
 use wraex_poe2::item_check::{self, SamePricedType, UserAction};
@@ -56,22 +57,48 @@ pub struct ItemCheck {
     pub actions: Vec<Action>,
 }
 
+/// `AppConfig()`'s fields the item check reads (`WidgetItemCheck.vue`'s `AppConfig().language`).
+#[derive(Debug, Deserialize)]
+struct AppConfigView {
+    #[serde(default = "default_language")]
+    language: String,
+}
+
+/// `ItemCheckWidget`'s fields the item check reads.
+///
+/// Each is kept as a [`serde_json::Value`] so a malformed one falls back on its own, as the
+/// reference's optional chains did.
+#[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ItemCheckWidgetView {
+    #[serde(default)]
+    maps: serde_json::Value,
+    #[serde(default)]
+    same_priced_type: serde_json::Value,
+}
+
+/// `'en'` when the config has no language.
+fn default_language() -> String {
+    "en".to_owned()
+}
+
+/// `defaultConfig()`'s `item-check` maps, when the config has none.
+const fn empty_maps() -> MapCheckConfig {
+    MapCheckConfig { profile: 1, show_new_stats: false, selected_stats: Vec::new() }
+}
+
 /// The item-check widget's `maps`, the app's language and `samePricedType`, from a config: a
 /// scene reads `defaultConfig()`, a live window the config the shell loaded.
 fn widget_config_from(config: &serde_json::Value) -> (MapCheckConfig, String, SamePricedType) {
-    let language = config.get("language").and_then(|value| value.as_str()).unwrap_or("en").to_owned();
-    let widget = config
-        .get("widgets")
-        .and_then(|widgets| widgets.as_array())
-        .and_then(|widgets| widgets.iter().find(|widget| widget["wmType"] == "item-check"));
-    let maps = widget
-        .and_then(|widget| widget.get("maps"))
-        .and_then(|maps| serde_json::from_value(maps.clone()).ok())
-        .unwrap_or(MapCheckConfig { profile: 1, show_new_stats: false, selected_stats: Vec::new() });
-    let same_priced_type = widget
-        .and_then(|widget| widget.get("samePricedType"))
-        .and_then(|kind| serde_json::from_value(kind.clone()).ok())
-        .unwrap_or(SamePricedType::Both);
+    let language = AppConfigView::deserialize(config).map_or_else(|_| default_language(), |view| view.language);
+    let (maps, same_priced_type) = crate::settings::widget(config, "item-check")
+        .and_then(|widget| ItemCheckWidgetView::deserialize(widget).ok())
+        .map_or((empty_maps(), SamePricedType::Both), |view| {
+            (
+                MapCheckConfig::deserialize(&view.maps).unwrap_or_else(|_| empty_maps()),
+                SamePricedType::deserialize(&view.same_priced_type).unwrap_or(SamePricedType::Both),
+            )
+        });
     (maps, language, same_priced_type)
 }
 
@@ -185,7 +212,7 @@ fn item_info<S: 'static>(item: &Item, project: Project<S>) -> El {
         )
         .child(actions(item, project));
     if let Some(dps) = weapon_dps(item) {
-        card = card.child(dps_grid(dps));
+        card = card.child(dps_grid(&dps));
     }
     // The window is the app's, wider than the card: align the card at the top left.
     col().key("item-check-window").w_full().items_start().child(card)
@@ -272,7 +299,7 @@ const DPS_LABEL: f32 = 5.75 * theme::REM;
 const DPS_VALUE: f32 = 1.75 * theme::REM;
 
 /// `grid mx-auto gap-x-4 my-2`, two columns with the values right-aligned.
-fn dps_grid(dps: WeaponDps) -> El {
+fn dps_grid(dps: &WeaponDps) -> El {
     let mut grid = col().key("item-check-dps").self_center().my(theme::rem(0.5));
     for (index, (label, value)) in [
         (i18n::fmt("item.physical_dps", &[""]), dps.physical),

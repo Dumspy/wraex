@@ -77,6 +77,7 @@ pub fn radio(size: f32, checked: bool, color: Color) -> El {
 }
 
 /// `fas fa-check-circle`: a solid disc with its check cut out (`UiRadio.vue`'s checked state).
+///
 /// The cut-out is a hole in the glyph, so `ink` (what the page shows through) is only kept for
 /// the callers that pass it; `color` is the disc.
 pub fn check_circle(size: f32, color: Color, ink: Color) -> El {
@@ -90,7 +91,9 @@ pub fn external_link(size: f32, color: Color) -> El {
 }
 
 /// `fas fa-check-square` (`checked`) or `far fa-square`: the filter row's checkbox, `size`
-/// points. `ink` is the unchecked box's colour and `paper` the checked box's, which upstream
+/// points.
+///
+/// `ink` is the unchecked box's colour and `paper` the checked box's, which upstream
 /// takes from the row's text colour (`#price-window` is `text-gray-200`, the disabled filter
 /// `text-gray-500`); the check itself is a hole in the glyph.
 pub fn checkbox(size: f32, checked: bool, ink: Color, paper: Color) -> El {

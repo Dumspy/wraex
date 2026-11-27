@@ -7,7 +7,7 @@
 
 use rune::{El, row, text};
 
-use crate::settings::pages::{checkbox, label, page, text_field, tr};
+use crate::settings::pages::{TextField, checkbox, label, page, text_field, tr};
 use crate::settings::{Field, Project, Settings};
 use crate::theme::{self, text as type_};
 use crate::ui;
@@ -39,11 +39,7 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
             .child(label("leveling-client-log-label", &tr(settings, "settings.poe_log_file")))
             .child(text_field(
                 settings,
-                "leveling-client-log",
-                Field::Root("clientLog"),
-                Kind::Sans,
-                None,
-                placeholder,
+                TextField::new("leveling-client-log", Field::Root("clientLog"), Kind::Sans).placeholder(placeholder),
                 project,
             )),
     );

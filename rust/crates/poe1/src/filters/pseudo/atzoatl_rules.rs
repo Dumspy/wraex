@@ -1,7 +1,7 @@
 //! `filters/pseudo/atzoatl-rules.ts`: which Chronicle of Atzoatl rooms are
 //! worth searching for.
 
-use super::super::{R, StatFilter, missing};
+use super::super::{R, StatFilter, js_equal, missing};
 use crate::parser::item::IncursionRoom;
 
 const HIDDEN_GREEDY: &str = "filters.hide_greedy";
@@ -156,11 +156,11 @@ pub fn apply_rules(filters: &mut Vec<StatFilter>) -> R<()> {
         filter.disabled = true;
     }
 
-    let open = f64::from(IncursionRoom::Open as u8);
+    let open = IncursionRoom::Open.as_value();
     let mut has_explosives = false;
     'rules: for rule in RULES.iter().filter(|r| r.explosives_room) {
         for filter in filters.iter().filter(|f| f.stat_ref == rule.stat_ref) {
-            if option_value(filter)? == open {
+            if js_equal(option_value(filter)?, open) {
                 has_explosives = true;
                 break 'rules;
             }
@@ -170,13 +170,14 @@ pub fn apply_rules(filters: &mut Vec<StatFilter>) -> R<()> {
     for rule in &RULES {
         let Some(index) = filters.iter().position(|f| f.stat_ref == rule.stat_ref) else { continue };
 
-        let is_obstructed = option_value(&filters[index])? == f64::from(IncursionRoom::Obstructed as u8);
+        let Some(obstructed_filter) = filters.get(index) else { continue };
+        let is_obstructed = js_equal(option_value(obstructed_filter)?, IncursionRoom::Obstructed.as_value());
         if rule.remove || (is_obstructed && !has_explosives) {
             filters.remove(index);
             continue;
         }
 
-        let filter = &mut filters[index];
+        let Some(filter) = filters.get_mut(index) else { continue };
         if let Some(hidden) = rule.hidden {
             filter.hidden = Some(hidden);
         }

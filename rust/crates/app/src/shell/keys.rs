@@ -11,7 +11,7 @@
 //!   dropped, as they are for any tool that types for the user. Physical (US) key positions
 //!   are used, matching Rune's registration and the game's own hotkeys.
 //! - **Windows**: `SendInput` with `KEYBDINPUT`s, which needs no permission.
-//! - **Linux**: no implementation yet. XTest would need `libXtst` linked and an X11
+//! - **Linux**: no implementation yet. `XTest` would need `libXtst` linked and an X11
 //!   connection; Wayland has no portable injection. The sender logs and does nothing, so a
 //!   hotkey still opens the widget on the clipboard's item text when there is one
 //!   ([`crate::shell`]'s fallback) instead of failing.
@@ -60,7 +60,7 @@ impl OSSender {
     /// The shell started following the game's window (`wraex_platform::window::Watcher`):
     /// from here on a press can only happen while the game is focused, so synthesis no longer
     /// needs `WRAEX_KEY_SYNTHESIS`. See the module's note.
-    pub fn set_game_focus_tracking(&mut self) {
+    pub const fn set_game_focus_tracking(&mut self) {
         self.game_focus_tracking = true;
     }
 
@@ -110,7 +110,14 @@ impl KeySender for OSSender {
 
 #[cfg(target_os = "macos")]
 mod platform {
+    #![expect(
+        unsafe_code,
+        reason = "CoreGraphics and CoreFoundation are C frameworks: the event calls and the \
+                  display queries here are the platform's only way to post a key or read the cursor"
+    )]
+
     use super::OSSender;
+    use wraex_core::num::usize_to_f64;
 
     /// `CGEventFlags`: the bits `uiohook` sets for the modifiers it holds down.
     const SHIFT: u64 = 1 << 17;
@@ -263,17 +270,18 @@ mod platform {
 
     /// Post one key event at `flags` (`CGEventPost` into the HID tap).
     fn post(key: u16, down: bool, flags: u64) {
-        // SAFETY: the CoreGraphics calls own the event `CGEventCreate*` returns; it is
-        // released below and never used afterwards.
-        unsafe {
-            let event = CGEventCreateKeyboardEvent(std::ptr::null_mut(), key, down);
-            if event.is_null() {
-                return;
-            }
-            CGEventSetFlags(event, flags);
-            CGEventPost(HID_EVENT_TAP, event);
-            CFRelease(event.cast_const());
+        // SAFETY: `CGEventCreateKeyboardEvent` returns a newly created event the caller owns,
+        // or null.
+        let event = unsafe { CGEventCreateKeyboardEvent(std::ptr::null_mut(), key, down) };
+        if event.is_null() {
+            return;
         }
+        // SAFETY: `event` is the live event created above; CoreGraphics only reads it.
+        unsafe { CGEventSetFlags(event, flags) };
+        // SAFETY: the same live event, posted once into the HID tap.
+        unsafe { CGEventPost(HID_EVENT_TAP, event) };
+        // SAFETY: the event is not used after this release.
+        unsafe { CFRelease(event.cast_const()) };
     }
 
     pub(super) fn key(sender: &mut OSSender, name: &str, down: bool) {
@@ -294,17 +302,16 @@ mod platform {
     /// The cursor's position in points, from the top left of the main display: what
     /// `screen.getCursorScreenPoint()` is upstream. `None` when the system gives no event.
     pub fn cursor_position() -> Option<(f64, f64)> {
-        // SAFETY: `CGEventCreate` returns an event the caller releases; the location is read
-        // before the release.
-        unsafe {
-            let event = CGEventCreate(std::ptr::null_mut());
-            if event.is_null() {
-                return None;
-            }
-            let point = CGEventGetLocation(event);
-            CFRelease(event.cast_const());
-            Some((point.x, point.y))
+        // SAFETY: `CGEventCreate` returns a new event the caller owns, or null.
+        let event = unsafe { CGEventCreate(std::ptr::null_mut()) };
+        if event.is_null() {
+            return None;
         }
+        // SAFETY: `event` is the live event created above; the location is a value.
+        let point = unsafe { CGEventGetLocation(event) };
+        // SAFETY: the event is not used after this release.
+        unsafe { CFRelease(event.cast_const()) };
+        Some((point.x, point.y))
     }
 
     /// `CGPreflightPostEventAccess`: whether this process may post events into other
@@ -327,7 +334,6 @@ mod platform {
         #[derive(Clone, Copy, Default)]
         struct CGSize {
             width: f64,
-            #[allow(dead_code)]
             height: f64,
         }
         #[repr(C)]
@@ -344,21 +350,28 @@ mod platform {
             fn CGDisplayBounds(display: u32) -> CGRect;
         }
 
-        // SAFETY: these are plain CoreGraphics queries with no borrowed state.
-        unsafe {
-            let display = CGMainDisplayID();
-            let bounds = CGDisplayBounds(display);
-            let points = bounds.size.width;
-            if points <= 0.0 {
-                return 1.0;
-            }
-            CGDisplayPixelsWide(display) as f64 / points
+        // SAFETY: a plain CoreGraphics query with no borrowed state.
+        let display = unsafe { CGMainDisplayID() };
+        // SAFETY: the display id came from `CGMainDisplayID`; the bounds are a value.
+        let bounds = unsafe { CGDisplayBounds(display) };
+        let points = bounds.size.width;
+        if points <= 0.0 {
+            return 1.0;
         }
+        // SAFETY: the same display id, which CoreGraphics only reads.
+        let pixels = unsafe { CGDisplayPixelsWide(display) };
+        usize_to_f64(pixels) / points
     }
 }
 
 #[cfg(target_os = "windows")]
 mod platform {
+    #![expect(
+        unsafe_code,
+        reason = "`SendInput` and `GetCursorPos` are user32 calls: Win32 has no safe wrapper here, \
+                  and the structs are the SDK's `INPUT` layout"
+    )]
+
     use super::OSSender;
 
     #[repr(C)]
@@ -373,7 +386,6 @@ mod platform {
 
     #[repr(C)]
     #[derive(Clone, Copy)]
-    #[allow(dead_code)]
     struct MouseInput {
         dx: i32,
         dy: i32,
@@ -385,7 +397,6 @@ mod platform {
 
     #[repr(C)]
     #[derive(Clone, Copy)]
-    #[allow(dead_code)]
     struct HardwareInput {
         message: u32,
         param_low: u16,
@@ -395,14 +406,11 @@ mod platform {
     #[repr(C)]
     union InputUnion {
         key: KeybdInput,
-        #[allow(dead_code)]
         mouse: MouseInput,
-        #[allow(dead_code)]
         hardware: HardwareInput,
     }
 
     #[repr(C)]
-    #[allow(dead_code)]
     struct Input {
         kind: u32,
         data: InputUnion,
@@ -448,18 +456,17 @@ mod platform {
         Some((code, extended))
     }
 
-    fn send(virtual_key: u16, extended: bool, up: bool) {
-        let mut flags = if up { KEY_UP } else { 0 };
-        if extended {
-            flags |= EXTENDED;
-        }
+    /// One `SendInput` of a keyboard event with `flags` (`KEY_UP` for the release).
+    fn send(virtual_key: u16, flags: u32) {
         let input = Input {
             kind: INPUT_KEYBOARD,
             data: InputUnion { key: KeybdInput { virtual_key, scan_code: 0, flags, time: 0, extra_info: 0 } },
         };
+        // `INPUT` is 40 bytes at most: the fallback never happens.
+        let size = i32::try_from(std::mem::size_of::<Input>()).unwrap_or(i32::MAX);
         // SAFETY: `input` is a live, fully initialised `INPUT` of the size reported.
         unsafe {
-            SendInput(1, &input, std::mem::size_of::<Input>() as i32);
+            SendInput(1, &raw const input, size);
         }
     }
 
@@ -468,7 +475,11 @@ mod platform {
             wraex_platform::log!("wraex: cannot synthesize the key `{name}`");
             return;
         };
-        send(virtual_key, extended, !down);
+        let mut flags = if down { 0 } else { KEY_UP };
+        if extended {
+            flags |= EXTENDED;
+        }
+        send(virtual_key, flags);
     }
 
     /// `GetCursorPos`: the cursor in physical desktop pixels.
@@ -487,17 +498,17 @@ mod platform {
 
         let mut point = Point::default();
         // SAFETY: `point` is a live, writable `POINT`.
-        let ok = unsafe { GetCursorPos(&mut point) } != 0;
+        let ok = unsafe { GetCursorPos(&raw mut point) } != 0;
         ok.then(|| (f64::from(point.x), f64::from(point.y)))
     }
 
     /// `SendInput` needs no permission.
-    pub fn can_synthesize() -> bool {
+    pub const fn can_synthesize() -> bool {
         true
     }
 
     /// Windows reports physical pixels already.
-    pub fn main_display_scale() -> f64 {
+    pub const fn main_display_scale() -> f64 {
         1.0
     }
 }
@@ -520,18 +531,18 @@ mod platform {
         wraex_platform::log!("wraex: key {name} {action} (not synthesized)");
     }
 
-    /// No implementation yet (see the module's note): XTest would need `libXtst` and an X11
+    /// No implementation yet (see the module's note): `XTest` would need `libXtst` and an X11
     /// connection, and Wayland has no portable injection.
-    pub fn can_synthesize() -> bool {
+    pub const fn can_synthesize() -> bool {
         false
     }
 
     /// No portable cursor query without X11/Wayland dependencies yet.
-    pub fn cursor_position() -> Option<(f64, f64)> {
+    pub const fn cursor_position() -> Option<(f64, f64)> {
         None
     }
 
-    pub fn main_display_scale() -> f64 {
+    pub const fn main_display_scale() -> f64 {
         1.0
     }
 }
@@ -545,9 +556,10 @@ pub fn cursor_position() -> Option<(f64, f64)> {
     })
 }
 
-/// A key pressed in the overlay window, as `OverlayWindow.handleExtraCommands` reads it
-/// (Electron's `before-input-event` `input.code`, which [`OverlayInput::hotkey`] turns into a
-/// hotkey string). Only the keys that handler reacts to are mapped: Escape, Ctrl+W, and the
+/// A key pressed in the overlay window, as `OverlayWindow.handleExtraCommands` reads it.
+///
+/// It is Electron's `before-input-event` `input.code`, which [`OverlayInput::hotkey`] turns into
+/// a hotkey string. Only the keys that handler reacts to are mapped: Escape, Ctrl+W, and the
 /// overlay key, which is a letter or Space.
 ///
 /// Rune reports a letter with its primary modifier as `Key::Command` (Ctrl off macOS, ⌘ on

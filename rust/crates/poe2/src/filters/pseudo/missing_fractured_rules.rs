@@ -35,7 +35,7 @@ mod tests {
     fn does_nothing_without_explicit_stats() {
         let mut filters: Vec<StatFilter> = Vec::new();
         apply_rules(&mut filters, Vec::new());
-        assert!(filters.is_empty());
+        assert_eq!(filters, Vec::new());
     }
 
     /// `specs/web/price-check/filters/missing-fracture-rules.test.ts` (`Should do

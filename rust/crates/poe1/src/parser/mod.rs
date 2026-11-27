@@ -18,7 +18,7 @@ pub mod stat_translations;
 use wraex_core::js;
 use wraex_core::js_regex::Regex;
 use wraex_core::parse::{item_text_to_sections, lines_to_stat_strings, markup_condition_parser};
-use wraex_core::{Rarity, data::js_string};
+use wraex_core::{Rarity, data::js_string, num::usize_to_f64};
 
 use crate::data::{BaseType, Data, MercenaryBuildRef, Namespace};
 use advanced_mod_desc::{
@@ -39,8 +39,8 @@ pub struct Fail(pub &'static str);
 
 impl Fail {
     /// Anything the reference throws on, caught by `parseClipboard`.
-    pub const THROW: Fail = Fail("item.parse_error");
-    pub const UNKNOWN: Fail = Fail("item.unknown");
+    pub const THROW: Self = Self("item.parse_error");
+    pub const UNKNOWN: Self = Self("item.unknown");
 }
 
 type R<T> = Result<T, Fail>;
@@ -141,25 +141,25 @@ pub fn parse_clipboard(d: &Data, clipboard: &str) -> Result<Item, Fail> {
         first.append(next);
         *next = first;
     }
-    let mut item = parse_name_plate(d, &mut sections[0])?;
+    let mut item = parse_name_plate(d, sections.first_mut().ok_or(Fail::THROW)?)?;
     sections.remove(0);
-    item.raw_text = clipboard.to_owned();
+    clipboard.clone_into(&mut item.raw_text);
 
     for step in PARSERS {
         match step {
             V(parser) => parser(&mut item, d)?,
             S(parser) => {
                 let mut i = 0;
-                while i < sections.len() {
+                while let Some(section) = sections.get_mut(i) {
                     // Works around an upstream bug.
-                    parse_eldritch_item(d, &mut sections[i]);
-                    match parser(&sections[i], &mut item, d)? {
+                    parse_eldritch_item(d, section);
+                    match parser(section, &mut item, d)? {
                         Parsed => {
                             sections.remove(i);
                             break;
                         }
                         ParserSkipped => break,
-                        Skipped => i += 1,
+                        Skipped => i = i.saturating_add(1),
                     }
                 }
             }
@@ -199,7 +199,7 @@ fn normalize_name(item: &mut Item, d: &Data) -> R<()> {
             ("METAMORPH_LIVER", "Metamorph Liver"),
         ] {
             if d.re(key).is_match(&item.name) {
-                item.name = name.to_owned();
+                name.clone_into(&mut item.name);
                 break;
             }
         }
@@ -221,12 +221,12 @@ fn find_in_database(item: &mut Item, d: &Data) -> R<()> {
         _ => d.item_by_translated(Namespace::Item, &base_or_name),
     };
     let mut info = info.filter(|i| !i.is_empty()).ok_or(Fail::UNKNOWN)?;
-    if info[0].unique.is_some() {
+    if info.first().is_some_and(|i| i.unique.is_some()) {
         let base_types = d
             .item_by_translated(Namespace::Item, js_string(&item.base_type))
             .filter(|b| !b.is_empty())
             .ok_or(Fail::UNKNOWN)?;
-        let base_type_ref = &base_types[0].ref_name;
+        let base_type_ref = &base_types.first().ok_or(Fail::THROW)?.ref_name;
         info.retain(|i| i.unique.as_ref().is_some_and(|u| &u.base == base_type_ref));
     }
     // No variant left: `item.info` is undefined and the next read throws.
@@ -248,6 +248,7 @@ fn find_in_database(item: &mut Item, d: &Data) -> R<()> {
     Ok(())
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `VirtualParser`")]
 fn parse_map_tier(item: &mut Item, d: &Data) -> R<()> {
     let text = item.base_type_or_name().to_owned();
     let Some(caps) = d.re("MAP_TIER").captures(&text) else { return Ok(()) };
@@ -262,7 +263,7 @@ fn parse_map_tier(item: &mut Item, d: &Data) -> R<()> {
 
 /// The numbers after `prefix` (`parseInt(line.slice(prefix.length), 10)`).
 fn int_after(line: &str, prefix: &str) -> f64 {
-    js::parse_int(&line[prefix.len()..])
+    js::parse_int(line.get(prefix.len()..).unwrap_or_default())
 }
 
 fn parse_area_prop_nested(d: &Data, line: &str, item: &mut Item) -> bool {
@@ -325,6 +326,7 @@ fn parse_map(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     Ok(is_parsed)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `VirtualParser`")]
 fn parse_fractured(item: &mut Item, _: &Data) -> R<()> {
     if item.new_mods.iter().any(|m| m.info.kind == ModifierType::Fractured) {
         item.is_fractured = Some(true);
@@ -341,10 +343,8 @@ fn pick_correct_variant(item: &mut Item, d: &Data) -> R<()> {
     item.info = Some(info);
     if let Some(unique) = &item.info().unique {
         let base_variants = d.item_by_ref(Namespace::Item, &unique.base).ok_or(Fail::THROW)?;
-        let base = match pick_variant(&base_variants, item)? {
-            Some(v) => Some(v.clone()),
-            None => base_variants.first().cloned(),
-        };
+        let base =
+            pick_variant(&base_variants, item)?.map_or_else(|| base_variants.first().cloned(), |v| Some(v.clone()));
         item.unique_base = base;
     }
     Ok(())
@@ -417,8 +417,8 @@ fn parse_name_plate(d: &Data, section: &mut Vec<String>) -> R<Item> {
 
     line = lines.next();
     let mut rarity_text = None;
-    if let Some(l) = line.as_deref().filter(|l| l.starts_with(d.s("RARITY"))) {
-        rarity_text = Some(l[d.s("RARITY").len()..].to_owned());
+    if let Some(rest) = line.as_deref().and_then(|l| l.strip_prefix(d.s("RARITY"))) {
+        rarity_text = Some(rest.to_owned());
         line = lines.next();
     }
 
@@ -447,6 +447,7 @@ fn parse_name_plate(d: &Data, section: &mut Vec<String>) -> R<Item> {
     Ok(item)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_influence(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if section.len() <= 2 {
         let count_before = item.influences.len();
@@ -472,6 +473,7 @@ fn parse_influence(section: &[String], item: &mut Item, d: &Data) -> R<Section> 
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_corrupted(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if first_is(section, d.s("CORRUPTED")) {
         item.is_corrupted = Some(Corrupted::default());
@@ -488,6 +490,7 @@ fn parse_corrupted(section: &[String], item: &mut Item, d: &Data) -> R<Section> 
     }
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_foil(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if item.rarity != Some(Rarity::Unique) {
         return Ok(ParserSkipped);
@@ -499,6 +502,7 @@ fn parse_foil(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_unidentified(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if first_is(section, d.s("UNIDENTIFIED")) {
         item.is_unidentified = true;
@@ -507,6 +511,7 @@ fn parse_unidentified(section: &[String], item: &mut Item, d: &Data) -> R<Sectio
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_item_level(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     let prefix = if item.ref_name_is("Filled Coffin") { d.s("CORPSE_LEVEL") } else { d.s("ITEM_LEVEL") };
     for line in section {
@@ -526,12 +531,14 @@ fn parse_talisman_tier(section: &[String], item: &mut Item, d: &Data) -> R<Secti
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_vaal_gem(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if item.category != Some(ItemCategory::Gem) {
         return Ok(ParserSkipped);
     }
     if section.len() == 1
-        && let Some(gem) = d.item_by_translated(Namespace::Gem, &section[0])
+        && let Some(name) = section.first()
+        && let Some(gem) = d.item_by_translated(Namespace::Gem, name)
     {
         item.vaal_gem = gem.into_iter().next();
         return Ok(Parsed);
@@ -539,6 +546,7 @@ fn parse_vaal_gem(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_gem(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if item.category != Some(ItemCategory::Gem) {
         return Ok(ParserSkipped);
@@ -552,12 +560,15 @@ fn parse_gem(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_imbued_gem(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if item.category != Some(ItemCategory::Gem) {
         return Ok(ParserSkipped);
     }
     if section.len() == 1 {
-        let Some((stat, matcher)) = d.stat_by_match_str(&section[0]) else { return Ok(Skipped) };
+        let Some((stat, matcher)) = section.first().and_then(|line| d.stat_by_match_str(line)) else {
+            return Ok(Skipped);
+        };
         item.new_mods.push(ParsedModifier {
             info: ModifierInfo::new(ModifierType::Imbued),
             stats: vec![ParsedStat { stat, translation: matcher, roll: None }],
@@ -579,7 +590,7 @@ fn parse_stack_size(section: &[String], item: &mut Item, d: &Data) -> R<Section>
         // Portal Scroll "Stack Size: 2[localized separator]448/40"
         let digits: String = rest.chars().filter(|c| c.is_ascii_digit() || *c == '/').collect();
         let mut parts = digits.split('/').map(js::number);
-        item.stack_size = Some(StackSize { value: parts.next().unwrap(), max: parts.next() });
+        item.stack_size = Some(StackSize { value: parts.next().ok_or(Fail::THROW)?, max: parts.next() });
         return Ok(Parsed);
     }
     Ok(Skipped)
@@ -588,7 +599,7 @@ fn parse_stack_size(section: &[String], item: &mut Item, d: &Data) -> R<Section>
 fn parse_sockets(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if let Some(rest) = first(section)?.strip_prefix(d.s("SOCKETS")) {
         let sockets = js::trim_end(rest);
-        let white = sockets.matches('W').count() as f64;
+        let white = usize_to_f64(sockets.matches('W').count());
         let shape: String = sockets.chars().map(|c| if c == ' ' || c == '-' { c } else { '#' }).collect();
         let linked = match shape.as_str() {
             "#-#-#-#-#-#" => Some(6),
@@ -622,6 +633,7 @@ fn parse_memory_strands_nested(d: &Data, section: &[String], item: &mut Item) ->
     false
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_armour(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     let mut is_parsed = Skipped;
     for line in section {
@@ -652,6 +664,7 @@ fn damage_range(text: &str) -> f64 {
     stat_translations::get_roll_or_minmax_avg(&text.split('-').map(js::parse_int).collect::<Vec<_>>())
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_weapon(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     let mut is_parsed = Skipped;
     for line in section {
@@ -698,6 +711,7 @@ fn parse_accessory(section: &[String], item: &mut Item, d: &Data) -> R<Section> 
     Ok(is_parsed)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_viscera(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if !item.ref_name_is("Viscera") {
         return Ok(ParserSkipped);
@@ -710,7 +724,7 @@ fn parse_viscera(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
             ("VISCERA_TORSO", ItemCategory::TorsoViscera),
         ]
         .into_iter()
-        .find(|(key, _)| section[0] == d.s(key));
+        .find(|(key, _)| section.first().is_some_and(|line| line == d.s(key)));
         if let Some((_, category)) = category {
             item.category = Some(category);
         }
@@ -734,14 +748,16 @@ fn parse_logbook_area(section: &[String], item: &mut Item, d: &Data) -> R<Sectio
         return Ok(Skipped);
     }
     // Skip the Logbook Area line, parse the Faction.
-    let Some((stat, matcher)) =
-        d.stat_by_match_str(&section[1]).filter(|(s, _)| s.stat_ref.starts_with("Has Logbook Faction:"))
+    let Some((stat, matcher)) = section
+        .get(1)
+        .and_then(|line| d.stat_by_match_str(line))
+        .filter(|(s, _)| s.stat_ref.starts_with("Has Logbook Faction:"))
     else {
         return Ok(Skipped);
     };
     let mut area_mods = vec![plain_mod(ModifierType::Pseudo, stat, matcher)];
 
-    let (mod_type, lines) = parse_mod_type(&section[2..])?;
+    let (mod_type, lines) = parse_mod_type(section.get(2..).ok_or(Fail::THROW)?)?;
     for line in &lines {
         // Area contains an Expedition Boss (#)
         if let Some((stat, matcher)) = d.stat_by_match_str(line)
@@ -783,7 +799,7 @@ fn parse_mercenary_gems(section: &[String], item: &mut Item, d: &Data) -> R<Sect
     let Some(skill) = try_parse_translation(d, &skill, ModifierType::Pseudo, category)? else { return Ok(Skipped) };
 
     let mut group = vec![skill];
-    for line in &section[1..] {
+    for line in section.get(1..).ok_or(Fail::THROW)? {
         let support = try_parse_translation(
             d,
             &StatString { string: line.clone(), unscalable: true },
@@ -835,6 +851,7 @@ fn parse_modifiers(section: &[String], item: &mut Item, d: &Data) -> R<Section> 
     Ok(Parsed)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_mirrored(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if first_is(section, d.s("MIRRORED")) {
         item.is_mirrored = Some(true);
@@ -843,14 +860,16 @@ fn parse_mirrored(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_split(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
-    if section.len() == 1 && section[0] == d.s("SPLIT") {
+    if section.len() == 1 && section.first().is_some_and(|l| l == d.s("SPLIT")) {
         item.is_split = Some(true);
         return Ok(Parsed);
     }
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_flask(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if item.category != Some(ItemCategory::Flask) {
         return Ok(ParserSkipped);
@@ -863,6 +882,7 @@ fn parse_flask(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     Ok(Skipped)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_tincture(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if item.category != Some(ItemCategory::Tincture) {
         return Ok(ParserSkipped);
@@ -870,12 +890,16 @@ fn parse_tincture(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     Ok(if parse_quality_nested(d, section, item) { Parsed } else { Skipped })
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_sentinel_charge(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if item.category != Some(ItemCategory::Sentinel) {
         return Ok(ParserSkipped);
     }
-    if section.len() == 1 && section[0].starts_with(d.s("SENTINEL_CHARGE")) {
-        item.sentinel_charge = Some(int_after(&section[0], d.s("SENTINEL_CHARGE")));
+    if section.len() == 1
+        && let Some(line) = section.first()
+        && line.starts_with(d.s("SENTINEL_CHARGE"))
+    {
+        item.sentinel_charge = Some(int_after(line, d.s("SENTINEL_CHARGE")));
         return Ok(Parsed);
     }
     Ok(Skipped)
@@ -886,7 +910,7 @@ fn parse_scrying_orb(section: &[String], item: &mut Item, d: &Data) -> R<Section
         return Ok(ParserSkipped);
     }
     if section.len() == 1
-        && let Some(area_name) = section[0].strip_prefix(d.s("MAP_AREA"))
+        && let Some(area_name) = section.first().and_then(|line| line.strip_prefix(d.s("MAP_AREA")))
     {
         let area = d.item_by_translated(Namespace::Area, area_name).ok_or(Fail::THROW)?;
         item.map_area = area.into_iter().next();
@@ -910,7 +934,7 @@ fn exec_group1(re: &Regex, text: &str) -> R<String> {
 }
 
 fn parse_synthesised(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
-    if section.len() == 1 && section[0] == d.s("SECTION_SYNTHESISED") {
+    if section.len() == 1 && section.first().is_some_and(|l| l == d.s("SECTION_SYNTHESISED")) {
         item.is_synthesised = Some(true);
         let re = d.re("ITEM_SYNTHESISED");
         match &item.base_type {
@@ -958,6 +982,7 @@ fn parse_vestigial(item: &mut Item, d: &Data) -> R<()> {
     Ok(())
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_category_by_help_text(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if first_is(section, d.s("BEAST_HELP")) {
         item.category = Some(ItemCategory::CapturedBeast);
@@ -966,13 +991,14 @@ fn parse_category_by_help_text(section: &[String], item: &mut Item, d: &Data) ->
     } else if first_is(section, d.s("VOIDSTONE_HELP")) {
         item.category = Some(ItemCategory::Voidstone);
     } else if first_is(section, d.s("VISCERA_HELP")) {
-        item.name = "Viscera".to_owned();
+        "Viscera".clone_into(&mut item.name);
     } else {
         return Ok(Skipped);
     }
     Ok(Parsed)
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_heist_contract(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if item.category != Some(ItemCategory::HeistContract) {
         return Ok(ParserSkipped);
@@ -1035,7 +1061,7 @@ fn parse_heist_blueprint(section: &[String], item: &mut Item, d: &Data) -> R<Sec
             }
         } else if let Some(rest) = line.strip_prefix(d.s("HEIST_WINGS_REVEALED")) {
             let mut parts = rest.split('/');
-            blueprint.wings_revealed = Some(js::parse_int(parts.next().unwrap()));
+            blueprint.wings_revealed = Some(js::parse_int(parts.next().ok_or(Fail::THROW)?));
             blueprint.wings_total = Some(parts.next().map_or(f64::NAN, js::parse_int));
         }
     }
@@ -1072,6 +1098,7 @@ fn parse_area_level_nested(d: &Data, section: &[String], item: &mut Item) -> boo
     false
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `SectionParser`")]
 fn parse_area_level(section: &[String], item: &mut Item, d: &Data) -> R<Section> {
     if !["Chronicle of Atzoatl", "Expedition Logbook", "Mirrored Tablet", "Forbidden Tome"]
         .iter()
@@ -1090,7 +1117,7 @@ fn parse_atzoatl_rooms(section: &[String], item: &mut Item, d: &Data) -> R<Secti
         return Ok(Skipped);
     }
     let mut state = IncursionRoom::Open;
-    for line in &section[1..] {
+    for line in section.get(1..).ok_or(Fail::THROW)? {
         if line == d.s("INCURSION_OBSTRUCTED") {
             state = IncursionRoom::Obstructed;
             continue;
@@ -1101,7 +1128,7 @@ fn parse_atzoatl_rooms(section: &[String], item: &mut Item, d: &Data) -> R<Secti
                     IncursionRoom::Open => matcher.string,
                     IncursionRoom::Obstructed => format!("{} {}", d.s("INCURSION_OBSTRUCTED"), matcher.string),
                 };
-                let value = f64::from(state as u8);
+                let value = state.as_value();
                 item.new_mods.push(ParsedModifier {
                     info: ModifierInfo::new(ModifierType::Pseudo),
                     stats: vec![ParsedStat {
@@ -1135,7 +1162,8 @@ fn parse_mirrored_tablet(section: &[String], item: &mut Item, d: &Data) -> R<Sec
         let stat = StatString { string: line.clone(), unscalable: true };
         match try_parse_translation(d, &stat, ModifierType::Pseudo, None)? {
             Some(found) => {
-                item.new_mods.push(ParsedModifier { info: ModifierInfo::new(ModifierType::Pseudo), stats: vec![found] })
+                item.new_mods
+                    .push(ParsedModifier { info: ModifierInfo::new(ModifierType::Pseudo), stats: vec![found] });
             }
             None => item.unknown_modifiers.push(UnknownModifier { text: line.clone(), kind: ModifierType::Pseudo }),
         }
@@ -1185,6 +1213,7 @@ fn parse_stats_from_mod(d: &Data, lines: &[String], item: &mut Item, info: Modif
     Ok(())
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `VirtualParser`")]
 fn augment_modifiers(item: &mut Item, _: &Data) -> R<()> {
     let synthesised = item.is_synthesised == Some(true);
     let corrupted_unique = item.rarity == Some(Rarity::Unique) && item.is_corrupted.is_some();
@@ -1211,26 +1240,29 @@ fn augment_modifiers(item: &mut Item, _: &Data) -> R<()> {
 }
 
 /// `transformToLegacyModifiers` (deprecated upstream).
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `VirtualParser`")]
 fn transform_to_legacy_modifiers(item: &mut Item, _: &Data) -> R<()> {
     item.stats_by_type = sum_stats_by_mod_type(&item.new_mods);
     Ok(())
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `VirtualParser`")]
 fn calc_base_percentile(item: &mut Item, _: &Data) -> R<()> {
-    let Some(info) = item.unique_base.as_ref().and_then(|b| b.armour.as_ref()).or(item.info().armour.as_ref()) else {
+    let Some(info) = item.unique_base.as_ref().and_then(|b| b.armour.as_ref()).or_else(|| item.info().armour.as_ref())
+    else {
         return Ok(());
     };
     let bounds = |b: [u32; 2]| [f64::from(b[0]), f64::from(b[1])];
     // Base percentile is the same for all defences. AR/EV -> ES -> WARD order:
     // larger rolls give a more precise result.
-    let percentile = if let (true, Some(ar)) = (truthy(item.armour_ar), info.ar) {
-        calc_prop_percentile(item.armour_ar.unwrap(), bounds(ar), quality_stats::ARMOUR, item)
-    } else if let (true, Some(ev)) = (truthy(item.armour_ev), info.ev) {
-        calc_prop_percentile(item.armour_ev.unwrap(), bounds(ev), quality_stats::EVASION, item)
-    } else if let (true, Some(es)) = (truthy(item.armour_es), info.es) {
-        calc_prop_percentile(item.armour_es.unwrap(), bounds(es), quality_stats::ENERGY_SHIELD, item)
-    } else if let (true, Some(ward)) = (truthy(item.armour_ward), info.ward) {
-        calc_prop_percentile(item.armour_ward.unwrap(), bounds(ward), quality_stats::WARD, item)
+    let percentile = if let (Some(value), Some(ar)) = (item.armour_ar.filter(|v| js::truthy(*v)), info.ar) {
+        calc_prop_percentile(value, bounds(ar), quality_stats::ARMOUR, item)
+    } else if let (Some(value), Some(ev)) = (item.armour_ev.filter(|v| js::truthy(*v)), info.ev) {
+        calc_prop_percentile(value, bounds(ev), quality_stats::EVASION, item)
+    } else if let (Some(value), Some(es)) = (item.armour_es.filter(|v| js::truthy(*v)), info.es) {
+        calc_prop_percentile(value, bounds(es), quality_stats::ENERGY_SHIELD, item)
+    } else if let (Some(value), Some(ward)) = (item.armour_ward.filter(|v| js::truthy(*v)), info.ward) {
+        calc_prop_percentile(value, bounds(ward), quality_stats::WARD, item)
     } else {
         return Ok(());
     };
@@ -1238,18 +1270,25 @@ fn calc_base_percentile(item: &mut Item, _: &Data) -> R<()> {
     Ok(())
 }
 
+#[expect(clippy::unnecessary_wraps, reason = "`PARSERS` stores it as a fallible `VirtualParser`")]
 fn calc_disenchant_dust(item: &mut Item, _: &Data) -> R<()> {
     let Some(value) = item.info().unique.as_ref().and_then(|u| u.disenchant_value).filter(|v| js::truthy(*v)) else {
         return Ok(());
     };
     // +50% per influence type, +2% per 1% quality, +50% per corruption implicit.
-    let mut increase = item.influences.len() as f64 * 50.0;
+    let mut increase = usize_to_f64(item.influences.len()) * 50.0;
     if let Some(q) = item.quality.filter(|q| js::truthy(*q)) {
-        increase += q * 2.0;
+        #[expect(clippy::suboptimal_flops, reason = "upstream's `increase += q * 2`; mul_add rounds once")]
+        {
+            increase += q * 2.0;
+        }
     }
     if item.is_corrupted.is_some() {
-        increase += 50.0
-            * item.new_mods.iter().filter(|m| m.info.mechanic == Some(ModifierMechanic::Corruption)).count() as f64;
+        let corrupted = item.new_mods.iter().filter(|m| m.info.mechanic == Some(ModifierMechanic::Corruption)).count();
+        #[expect(clippy::suboptimal_flops, reason = "upstream's `increase += 50 * count`; mul_add rounds once")]
+        {
+            increase += 50.0 * usize_to_f64(corrupted);
+        }
     }
     let clamp = |x: f64, lo: f64, hi: f64| if x.is_nan() { f64::NAN } else { x.max(lo).min(hi) };
     let ilvl = item.item_level.unwrap_or(f64::NAN);

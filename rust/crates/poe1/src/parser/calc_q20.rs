@@ -79,11 +79,11 @@ pub fn get_prop_quality(item: &Item) -> f64 {
     item.quality.unwrap_or(0.0)
 }
 
-fn js_max(a: f64, b: f64) -> f64 {
+const fn js_max(a: f64, b: f64) -> f64 {
     if a.is_nan() || b.is_nan() { f64::NAN } else { a.max(b) }
 }
 
-fn js_min(a: f64, b: f64) -> f64 {
+const fn js_min(a: f64, b: f64) -> f64 {
     if a.is_nan() || b.is_nan() { f64::NAN } else { a.min(b) }
 }
 
@@ -101,14 +101,14 @@ pub fn prop_at_20_quality(total: f64, stats: PropStats, bounds: Option<[f64; 2]>
     let [base_min, base_max] = bounds.unwrap_or([flat_base, flat_base]);
     let quality = get_trade_max_quality(item);
     PropRoll {
-        roll: if !flat_base.is_nan() {
+        roll: if flat_base.is_nan() {
+            StatRoll { value: 0.0, min: 0.0, max: 0.0 }
+        } else {
             StatRoll {
                 value: calc_increased(flat_base + base.flat.value, base.incr.value, quality),
                 min: calc_increased(base_min + base.flat.min, base.incr.min, quality),
                 max: calc_increased(base_max + base.flat.max, base.incr.max, quality),
             }
-        } else {
-            StatRoll { value: 0.0, min: 0.0, max: 0.0 }
         },
         sources: base.sources.into_iter().map(|s| StatSource { contributes: None, ..s }).collect(),
     }
@@ -129,6 +129,10 @@ pub fn calc_prop_bounds(total: f64, stats: PropStats, item: &Item) -> PropRoll {
         base.sources
             .into_iter()
             .map(|s| {
+                #[expect(
+                    clippy::expect_used,
+                    reason = "upstream asserts `contributes!` on a stat it adds to a property (`calc-q20.ts` `calcPropBounds`)"
+                )]
                 let c = s.contributes.expect("increased stats have rolls");
                 StatSource {
                     contributes: Some(StatRoll {
@@ -221,6 +225,6 @@ mod tests {
         assert_eq!(js_round(2.5), 3.0);
         assert_eq!(js_round(-2.5), -2.0);
         assert_eq!(js_round(-0.4), -0.0);
-        assert_eq!(js_round(2.4999999999999996), 2.0);
+        assert_eq!(js_round(2.499_999_999_999_999_6), 2.0);
     }
 }

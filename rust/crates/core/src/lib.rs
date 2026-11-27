@@ -17,11 +17,13 @@ pub mod js_regex;
 pub mod keys;
 pub mod leagues;
 pub mod levenshtein;
+pub mod num;
 pub mod parse;
 pub mod rarity;
 pub mod relative_time;
 pub mod trade;
 pub mod updates;
+pub mod widget;
 
 use serde::{Deserialize, Serialize};
 
@@ -36,13 +38,13 @@ pub enum GameId {
 }
 
 impl GameId {
-    pub const ALL: [GameId; 2] = [GameId::Poe1, GameId::Poe2];
+    pub const ALL: [Self; 2] = [Self::Poe1, Self::Poe2];
 
     /// Stable directory/CLI name, e.g. `poe1` for `fixtures/poe1/`.
     pub const fn as_str(self) -> &'static str {
         match self {
-            GameId::Poe1 => "poe1",
-            GameId::Poe2 => "poe2",
+            Self::Poe1 => "poe1",
+            Self::Poe2 => "poe2",
         }
     }
 }

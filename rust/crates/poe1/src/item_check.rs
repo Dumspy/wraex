@@ -1,5 +1,6 @@
 //! `ref/apt/renderer/src/web/item-check/hotkeyable-actions.ts`: what the item
 //! check's hotkeys open (wiki, poedb, Craft of Exile) or send (a stash search).
+//!
 //! Opening the URL and sending the event is the app shell's job.
 
 use serde::Serialize;

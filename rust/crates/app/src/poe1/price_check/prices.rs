@@ -39,7 +39,7 @@ impl std::fmt::Debug for PriceList {
             .field("mode", &self.mode)
             .field("xchg_rate", &self.prices.xchg_rate)
             .field("empty", &self.prices.is_empty())
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
@@ -95,12 +95,12 @@ impl PriceList {
     }
 
     /// `xchgRate`: chaos per divine, once a price for one arrived.
-    pub fn xchg_rate(&self) -> Option<f64> {
+    pub const fn xchg_rate(&self) -> Option<f64> {
         self.prices.xchg_rate
     }
 
     /// `initialLoading`: a request is out and nothing is cached yet.
-    pub fn initial_loading(&self) -> bool {
+    pub const fn initial_loading(&self) -> bool {
         self.loading && self.prices.is_empty()
     }
 
@@ -110,7 +110,7 @@ impl PriceList {
     }
 
     /// The loaded prices, for the arithmetic built on them (`autoCurrency`, ...).
-    pub fn prices(&self) -> &Prices {
+    pub const fn prices(&self) -> &Prices {
         &self.prices
     }
 }

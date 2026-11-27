@@ -1,4 +1,5 @@
-//! What a PoE1 price check shows from the trade site's answers:
+//! What a PoE1 price check shows from the trade site's answers.
+//!
 //! `requestResults` (`pathofexile-trade.ts`) turns fetched listings into rows,
 //! `execBulkSearch` (`pathofexile-bulk.ts`) groups exchange offers by the
 //! currency asked for. The requests themselves are `wraex_core::trade::api`.
@@ -8,7 +9,7 @@ use wraex_core::relative_time::{EpochMillis, iso_to_relative_short};
 use wraex_core::trade::api::ExchangeResult;
 
 /// The account behind a listing (`Account`).
-#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Account {
     pub name: String,
@@ -20,7 +21,7 @@ pub struct Account {
     pub online: Option<Online>,
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct Online {
     #[serde(default)]
     pub status: Option<String>,
@@ -133,9 +134,8 @@ pub fn pricing_results(listings: &[FetchResult], account_name: &str, now: EpochM
             PricingResult {
                 id: result.id.clone(),
                 // `?? String(result.item.ilvl)`
-                item_level: property(item, PROP_CORPSE_LEVEL).unwrap_or_else(|| match item.ilvl {
-                    Some(ilvl) => wraex_core::js::number_to_string(ilvl),
-                    None => "undefined".to_owned(),
+                item_level: property(item, PROP_CORPSE_LEVEL).unwrap_or_else(|| {
+                    item.ilvl.map_or_else(|| "undefined".to_owned(), wraex_core::js::number_to_string)
                 }),
                 stack_size: item.stack_size,
                 corrupted: item.corrupted,
@@ -230,37 +230,40 @@ pub fn bulk_searches(
     account_name: &str,
     now: EpochMillis,
 ) -> Vec<Option<BulkSearch>> {
-    let results: Vec<&ExchangeListing> = query.result.values().filter(|r| r.listing.offers.len() == 1).collect();
-    let offer = |r: &ExchangeListing| r.listing.offers[0].clone();
+    // Only a listing with exactly one offer gives a rate (`offers[0]`).
+    let results: Vec<(&ExchangeListing, &Offer)> = query
+        .result
+        .values()
+        .filter_map(|listing| match listing.listing.offers.as_slice() {
+            [offer] => Some((listing, offer)),
+            _ => None,
+        })
+        .collect();
 
     have.iter()
         .map(|trade_tag| {
-            let mut tagged: Vec<&ExchangeListing> =
-                results.iter().copied().filter(|r| &offer(r).exchange.currency == trade_tag).collect();
+            let mut tagged: Vec<(&ExchangeListing, &Offer)> =
+                results.iter().copied().filter(|(_, offer)| &offer.exchange.currency == trade_tag).collect();
 
             let loaded_on_demand = trade_tag == "chaos" && tagged.len() < SHOW_RESULTS && query.total > API_FETCH_LIMIT;
             if loaded_on_demand {
                 return None;
             }
 
-            let ratio = |r: &ExchangeListing| {
-                let o = offer(r);
-                o.exchange.amount / o.item.amount
-            };
+            let ratio = |offer: &Offer| offer.exchange.amount / offer.item.amount;
             // Stable, like `Array.prototype.sort`.
-            tagged.sort_by(|a, b| ratio(a).partial_cmp(&ratio(b)).unwrap_or(std::cmp::Ordering::Equal));
+            tagged.sort_by(|(_, a), (_, b)| ratio(a).partial_cmp(&ratio(b)).unwrap_or(std::cmp::Ordering::Equal));
             let listed = tagged
                 .iter()
                 .take(SHOW_RESULTS)
-                .map(|r| {
-                    let o = offer(r);
-                    let account = &r.listing.account;
+                .map(|(listing, offer)| {
+                    let account = &listing.listing.account;
                     BulkPricingResult {
-                        id: r.id.clone(),
-                        relative_date: iso_to_relative_short(&r.listing.indexed, now).unwrap_or_default(),
-                        exchange_amount: o.exchange.amount,
-                        item_amount: o.item.amount,
-                        stock: o.item.stock,
+                        id: listing.id.clone(),
+                        relative_date: iso_to_relative_short(&listing.listing.indexed, now).unwrap_or_default(),
+                        exchange_amount: offer.exchange.amount,
+                        item_amount: offer.item.amount,
+                        stock: offer.item.stock,
                         account_status: account_status(account),
                         is_mine: account.name == account_name,
                         account_name: account.name.clone(),
@@ -269,16 +272,16 @@ pub fn bulk_searches(
                 })
                 .collect();
 
-            let others = (results.len() - tagged.len()) as f64;
+            let others = wraex_core::num::usize_to_f64(results.len().saturating_sub(tagged.len()));
             let chaos_is_loaded = trade_tag == "divine"
                 && tagged.len() < results.len()
-                && (others >= SHOW_RESULTS as f64 || query.total <= API_FETCH_LIMIT);
+                && (others >= wraex_core::num::usize_to_f64(SHOW_RESULTS) || query.total <= API_FETCH_LIMIT);
 
             Some(BulkSearch {
                 query_id: query.id.clone(),
                 have_tag: trade_tag.clone(),
                 // A best guess when asking with several `have` currencies.
-                total: if chaos_is_loaded { tagged.len() as f64 } else { query.total - others },
+                total: if chaos_is_loaded { wraex_core::num::usize_to_f64(tagged.len()) } else { query.total - others },
                 listed,
             })
         })

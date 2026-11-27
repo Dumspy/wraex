@@ -24,21 +24,23 @@ macro_rules! log {
     };
 }
 
-/// Start writing the log to `path` (its folder is created), keeping the previous file as
-/// `wraex.old.log` beside it, and log panics there too. Returns where it writes; a file that
-/// cannot be created leaves the log on stderr alone.
+/// Start writing the log to `path`, keeping the previous file as `wraex.old.log` beside it, and
+/// sending panics there too.
+///
+/// Its folder is created. Returns where it writes; a file that cannot be created leaves the log
+/// on stderr alone.
 pub fn init(path: &Path) -> Option<PathBuf> {
     START.get_or_init(Instant::now);
     if let Some(folder) = path.parent() {
-        let _ = std::fs::create_dir_all(folder);
+        _ = std::fs::create_dir_all(folder);
     }
     if path.exists() {
-        let _ = std::fs::rename(path, old_path(path));
+        _ = std::fs::rename(path, old_path(path));
     }
     let file = match File::create(path) {
         Ok(file) => file,
         Err(error) => {
-            eprintln!("wraex: cannot write the log file {}: {error}", path.display());
+            _ = writeln!(std::io::stderr(), "wraex: cannot write the log file {}: {error}", path.display());
             return None;
         }
     };
@@ -60,12 +62,13 @@ fn old_path(path: &Path) -> PathBuf {
 
 /// Write one line to stderr and, after [`init`], to the file with the seconds since start.
 pub fn write(args: fmt::Arguments<'_>) {
-    eprintln!("{args}");
+    // A failed write to stderr has nowhere left to go; the logger itself never panics.
+    _ = writeln!(std::io::stderr(), "{args}");
     let Some(file) = FILE.get() else { return };
     let seconds = START.get().map_or(0.0, |start| start.elapsed().as_secs_f64());
-    let mut file = file.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-    let _ = writeln!(file, "[{seconds:9.3}] {args}");
-    let _ = file.flush();
+    let mut file = file.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    _ = writeln!(file, "[{seconds:9.3}] {args}");
+    _ = file.flush();
 }
 
 #[cfg(test)]

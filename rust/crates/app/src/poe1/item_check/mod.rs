@@ -11,6 +11,9 @@
 //! of that file.
 
 use rune::{Cx, El, col, el, row, text};
+use serde::de::DeserializeOwned;
+use serde::{Deserialize, Deserializer};
+use serde_json::Value;
 use wraex_core::js::number_to_string;
 use wraex_game::ParseError;
 use wraex_poe1::item_check::{self, UserAction};
@@ -59,16 +62,55 @@ pub struct ItemCheck {
     pub actions: Vec<Action>,
 }
 
+/// The config fields the item check reads (`WidgetItemCheck.vue`'s `props.config.maps` and
+/// `AppConfig().language`).
+#[derive(Debug, Default, Deserialize)]
+struct ConfigView {
+    /// `AppConfig().language`: poedb's path segment.
+    #[serde(default, deserialize_with = "lenient")]
+    language: Option<String>,
+    /// `config.widgets`: each entry is deserialised into a [`WidgetView`], so one malformed
+    /// entry does not hide the `item-check` widget behind it.
+    #[serde(default, deserialize_with = "lenient")]
+    widgets: Vec<Value>,
+}
+
+/// The parts of a `config.widgets` entry the item check reads.
+#[derive(Debug, Default, Deserialize)]
+struct WidgetView {
+    /// `widget.wmType`.
+    #[serde(rename = "wmType", default, deserialize_with = "lenient")]
+    wm_type: Option<String>,
+    /// Left as a `Value`: a malformed `maps` only discards the map-check decisions, as the old
+    /// `serde_json::from_value(..).ok()` did.
+    #[serde(default)]
+    maps: Option<Value>,
+}
+
+/// Reads one field leniently: a value of the wrong shape falls back to `T`'s default, as the
+/// old `.and_then(Value::as_*)` chain did, instead of discarding the rest of the view.
+fn lenient<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Default + DeserializeOwned,
+{
+    let value = Value::deserialize(deserializer)?;
+    Ok(T::deserialize(&value).unwrap_or_default())
+}
+
 /// The item-check widget's `maps`, and the app's `language`, from a config: a scene reads
 /// `defaultConfig()`, a live window the config the shell loaded.
-fn widget_config_from(config: &serde_json::Value) -> (MapCheckConfig, String) {
-    let language = config.get("language").and_then(|value| value.as_str()).unwrap_or("en").to_owned();
-    let maps = config
-        .get("widgets")
-        .and_then(|widgets| widgets.as_array())
-        .and_then(|widgets| widgets.iter().find(|widget| widget["wmType"] == "item-check"))
-        .and_then(|widget| widget.get("maps"))
-        .and_then(|maps| serde_json::from_value(maps.clone()).ok())
+fn widget_config_from(config: &Value) -> (MapCheckConfig, String) {
+    let view = ConfigView::deserialize(config).unwrap_or_default();
+    let language = view.language.unwrap_or_else(|| "en".to_owned());
+    let window = view
+        .widgets
+        .iter()
+        .filter_map(|widget| WidgetView::deserialize(widget).ok())
+        .find(|widget| widget.wm_type.as_deref() == Some("item-check"));
+    let maps = window
+        .and_then(|widget| widget.maps)
+        .and_then(|maps| MapCheckConfig::deserialize(&maps).ok())
         .unwrap_or(MapCheckConfig { profile: 1, show_new_stats: false, selected_stats: Vec::new() });
     (maps, language)
 }
@@ -81,7 +123,7 @@ impl ItemCheck {
 
     /// The widget on `text` over the config the app loaded (`WidgetItemCheck.vue`'s
     /// `props.config.maps` and `AppConfig().language`).
-    pub fn from_config(text: &str, config: &serde_json::Value) -> Self {
+    pub fn from_config(text: &str, config: &Value) -> Self {
         let data = crate::poe1::price_check::data();
         let item = parse_clipboard(data, text).map_err(|fail| ParseError::Rejected { key: fail.0.into() });
         let (maps, language) = widget_config_from(config);
@@ -274,9 +316,9 @@ fn grouped(value: f64) -> String {
     let negative = value < 0.0;
     let text = number_to_string(value.abs().trunc());
     let (whole, fraction) = text.split_once('.').unwrap_or((text.as_str(), ""));
-    let mut out = String::with_capacity(whole.len() + whole.len() / 3);
+    let mut out = String::with_capacity(whole.len().saturating_add(whole.len() / 3));
     for (index, digit) in whole.chars().enumerate() {
-        if index > 0 && (whole.len() - index).is_multiple_of(3) {
+        if index > 0 && whole.len().saturating_sub(index).is_multiple_of(3) {
             out.push(',');
         }
         out.push(digit);

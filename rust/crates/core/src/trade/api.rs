@@ -1,6 +1,7 @@
-//! The trade site's HTTP API, as both references call it through their proxy
-//! (`requestTradeResultList`, `requestResults` and the exchange request in
-//! `pathofexile-trade.ts`/`pathofexile-bulk.ts`; `main/src/proxy.ts`).
+//! The trade site's HTTP API, as both references call it through their proxy.
+//!
+//! `requestTradeResultList`, `requestResults` and the exchange request in
+//! `pathofexile-trade.ts`/`pathofexile-bulk.ts`; `main/src/proxy.ts`.
 //!
 //! [`TradeClient`] does what those functions do around a request: refuse long
 //! queues, wait for the rate limits, send, sync the limits from the response
@@ -32,10 +33,10 @@ pub enum TradeSite {
 }
 
 impl TradeSite {
-    fn path(self) -> &'static str {
+    const fn path(self) -> &'static str {
         match self {
-            TradeSite::Trade => "trade",
-            TradeSite::Trade2 => "trade2",
+            Self::Trade => "trade",
+            Self::Trade2 => "trade2",
         }
     }
 }
@@ -60,10 +61,9 @@ pub fn poe2_web_api(language: &str, realm: &str, preferred_trade_site: &str) -> 
         return Some("www.pathofexile.com");
     }
     match language {
-        "en" => Some("www.pathofexile.com"),
-        "ru" => Some("ru.pathofexile.com"),
         "cmn-Hant" if realm == "pc-garena" => Some("pathofexile.tw"),
-        "cmn-Hant" => Some("www.pathofexile.com"),
+        "en" | "cmn-Hant" => Some("www.pathofexile.com"),
+        "ru" => Some("ru.pathofexile.com"),
         "ko" => Some("poe.kakaogames.com"),
         "ja" => Some("jp.pathofexile.com"),
         "de" => Some("de.pathofexile.com"),
@@ -92,7 +92,7 @@ pub enum Method {
 
 /// A request for the [`Transport`]: `url` is `https://` plus what upstream
 /// passes to `Host.proxy`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HttpRequest {
     pub method: Method,
     pub url: String,
@@ -100,7 +100,7 @@ pub struct HttpRequest {
     pub body: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct HttpResponse {
     pub status: u16,
     /// Header names in lower case.
@@ -126,7 +126,7 @@ pub trait Clock {
 }
 
 /// What a trade request can fail with.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TradeError {
     /// `preventQueueCreation`: try again later.
     RetryAfter(RetryAfter),
@@ -139,9 +139,9 @@ pub enum TradeError {
 impl std::fmt::Display for TradeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TradeError::RetryAfter(r) => r.fmt(f),
-            TradeError::Api { message, .. } => f.write_str(message),
-            TradeError::Transport(e) => f.write_str(e),
+            Self::RetryAfter(r) => r.fmt(f),
+            Self::Api { message, .. } => f.write_str(message),
+            Self::Transport(e) => f.write_str(e),
         }
     }
 }
@@ -196,9 +196,11 @@ fn encode_path(segment: &str) -> String {
     let mut out = String::with_capacity(segment.len());
     for byte in segment.bytes() {
         if byte <= 0x20 || byte >= 0x7f || b"\"#<>?`{}/".contains(&byte) {
-            out.push_str(&format!("%{byte:02X}"));
+            out.push('%');
+            out.push(crate::js::hex_digit(byte.div_euclid(16)));
+            out.push(crate::js::hex_digit(byte.rem_euclid(16)));
         } else {
-            out.push(byte as char);
+            out.push(char::from(byte));
         }
     }
     out
@@ -234,6 +236,11 @@ struct Cache {
     entries: HashMap<String, (Millis, String)>,
 }
 
+/// The cache key of a request: `JSON.stringify([kind, ...])`, as upstream builds it.
+fn cache_key(key: &impl Serialize) -> Result<String, TradeError> {
+    serde_json::to_string(key).map_err(|e| TradeError::Transport(e.to_string()))
+}
+
 impl Cache {
     fn get(&mut self, key: &str, now: Millis) -> Option<String> {
         self.entries.retain(|_, (expires, _)| *expires > now);
@@ -241,7 +248,8 @@ impl Cache {
     }
 
     fn set(&mut self, key: String, value: String, ttl_seconds: u64, now: Millis) {
-        self.entries.insert(key, (now + ttl_seconds * 1000, value));
+        let expires = now.saturating_add(ttl_seconds.saturating_mul(1_000));
+        self.entries.insert(key, (expires, value));
     }
 }
 
@@ -303,7 +311,7 @@ impl<T: Transport, C: Clock> TradeClient<T, C> {
     /// sees the reference's exact bytes, and the screenshot recordings key on them.
     pub fn search(&mut self, body: &impl Serialize, league: &str) -> Result<SearchResult, TradeError> {
         let body = crate::js::stringify(body);
-        let key = serde_json::json!(["search", body, league]).to_string();
+        let key = cache_key(&("search", &body, league))?;
         if let Some(cached) = self.cache.get(&key, self.clock.now()) {
             return parse_body(&cached, 200);
         }
@@ -329,7 +337,7 @@ impl<T: Transport, C: Clock> TradeClient<T, C> {
         }
         let listings = |f: Fetched<L>| f.result.into_iter().flatten().collect();
 
-        let key = serde_json::json!(["fetch", result_ids]).to_string();
+        let key = cache_key(&("fetch", result_ids))?;
         if let Some(cached) = self.cache.get(&key, self.clock.now()) {
             return parse_body(&cached, 200).map(listings);
         }
@@ -353,7 +361,7 @@ impl<T: Transport, C: Clock> TradeClient<T, C> {
         league: &str,
     ) -> Result<ExchangeResult<L>, TradeError> {
         let body = crate::js::stringify(body);
-        let key = serde_json::json!(["exchange", body, league]).to_string();
+        let key = cache_key(&("exchange", &body, league))?;
         if let Some(cached) = self.cache.get(&key, self.clock.now()) {
             return parse_body(&cached, 200);
         }
@@ -370,6 +378,7 @@ impl<T: Transport, C: Clock> TradeClient<T, C> {
 }
 
 #[cfg(test)]
+#[expect(clippy::disallowed_macros, reason = "expected JSON written as literals")]
 mod tests {
     use std::cell::{Cell, RefCell};
 
@@ -385,7 +394,7 @@ mod tests {
             self.0.get()
         }
         fn sleep(&self, millis: Millis) {
-            self.0.set(self.0.get() + millis);
+            self.0.set(self.0.get().saturating_add(millis));
         }
     }
 
@@ -408,7 +417,7 @@ mod tests {
         }
     }
 
-    fn site(body: serde_json::Value) -> FakeSite {
+    fn site(body: &serde_json::Value) -> FakeSite {
         FakeSite {
             body: body.to_string(),
             headers: vec![
@@ -422,7 +431,7 @@ mod tests {
 
     #[test]
     fn searches_post_to_the_site_and_cache_the_result() {
-        let site = site(json!({ "id": "abc", "result": ["1", "2"], "total": 2 }));
+        let site = site(&json!({ "id": "abc", "result": ["1", "2"], "total": 2 }));
         let clock = FakeClock::default();
         let mut client = TradeClient::new(&site, &clock, "www.pathofexile.com", TradeSite::Trade2, 2.0);
 
@@ -449,7 +458,7 @@ mod tests {
 
     #[test]
     fn a_full_limit_waits_and_a_long_queue_is_refused() {
-        let site = site(json!({ "id": "abc", "result": [], "total": 0 }));
+        let site = site(&json!({ "id": "abc", "result": [], "total": 0 }));
         let clock = FakeClock::default();
         let mut client = TradeClient::new(&site, &clock, "www.pathofexile.com", TradeSite::Trade, 0.0);
         client.limits.search = RateLimits::initial();
@@ -465,7 +474,7 @@ mod tests {
 
     #[test]
     fn a_short_wait_sleeps_until_the_limit_frees_up() {
-        let mut site = site(json!({ "result": [] }));
+        let mut site = site(&json!({ "result": [] }));
         site.headers =
             vec![("x-rate-limit-rules", "Ip"), ("x-rate-limit-ip", "1:1:60"), ("x-rate-limit-ip-state", "1:1:0")];
         let clock = FakeClock::default();
@@ -480,7 +489,7 @@ mod tests {
 
     #[test]
     fn fetches_drop_missing_listings() {
-        let site = site(json!({ "result": [{ "id": "1" }, null, { "id": "3" }] }));
+        let site = site(&json!({ "result": [{ "id": "1" }, null, { "id": "3" }] }));
         let clock = FakeClock::default();
         let mut client = TradeClient::new(&site, &clock, "www.pathofexile.com", TradeSite::Trade, 2.0);
         let ids = ["1".to_owned(), "2".to_owned(), "3".to_owned()];
@@ -491,7 +500,7 @@ mod tests {
 
     #[test]
     fn site_errors_become_api_errors() {
-        let site = site(json!({ "error": { "code": 2, "message": "Invalid query" } }));
+        let site = site(&json!({ "error": { "code": 2, "message": "Invalid query" } }));
         let clock = FakeClock::default();
         let mut client = TradeClient::new(&site, &clock, "www.pathofexile.com", TradeSite::Trade, 2.0);
         let err = client.exchange::<serde_json::Value>(&json!({}), "Standard").unwrap_err();

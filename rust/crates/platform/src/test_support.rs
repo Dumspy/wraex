@@ -25,7 +25,7 @@ impl FakeClock {
 
     /// Lets a test fire a timer (`setTimeout`) at the right moment.
     pub fn advance(&self, millis: Millis) {
-        self.0.set(self.0.get() + millis);
+        self.0.set(self.0.get().saturating_add(millis));
     }
 }
 
