@@ -17,6 +17,7 @@
 //! the cases).
 
 pub mod client_log;
+mod market_cache;
 pub mod poe1;
 pub mod poe2;
 pub mod replay;
@@ -409,18 +410,36 @@ impl App {
         {
             widget.set_wants(widgets::Wants::Hide);
         }
+        let market = self.shell().and_then(|live| live.market());
+        let league = self.live.as_ref().map(|live| live.league.as_str());
+        let config = self.live.as_ref().map(|live| &live.startup.config).unwrap_or(&serde_json::Value::Null);
         match picked {
             widgets::item_search::Picked::Poe1(item) => {
                 self.game = GameId::Poe1;
-                self.price_check = PriceCheck::with_item(*item, self.mode, self.price_check.trade.client.clone());
+                self.price_check = PriceCheck::with_item(
+                    *item,
+                    self.mode,
+                    league.unwrap_or(&self.price_check.league),
+                    self.price_check.trade.client.clone(),
+                    config,
+                );
+                self.price_check.prices.queue_selected(market.as_ref(), false);
                 if let Some(waker) = &self.waker {
                     self.price_check.set_waker(waker.clone());
                 }
             }
             widgets::item_search::Picked::Poe2(item) => {
                 self.game = GameId::Poe2;
-                self.poe2 =
-                    Some(poe2::price_check::PriceCheck::with_item(*item, self.mode, self.poe2_client(self.mode)));
+                self.poe2 = Some(poe2::price_check::PriceCheck::with_item(
+                    *item,
+                    self.mode,
+                    league.unwrap_or_else(|| {
+                        self.poe2.as_ref().map_or(poe2::price_check::DEFAULT_LEAGUE, |check| check.league.as_str())
+                    }),
+                    self.poe2_client(self.mode),
+                    config,
+                ));
+                self.poe2.as_mut().unwrap().market = market;
                 self.attach_waker();
             }
         }

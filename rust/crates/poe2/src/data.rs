@@ -485,7 +485,7 @@ pub struct Data {
     catalyst_types: CatalystTypes,
     catalyst_to_tag: IndexMap<String, Vec<String>>,
     tag_to_catalyst: IndexMap<String, String>,
-    trade: Option<TradeData>,
+    trade: std::sync::OnceLock<TradeData>,
 }
 
 impl Data {
@@ -565,7 +565,7 @@ impl Data {
             catalyst_types,
             catalyst_to_tag,
             tag_to_catalyst,
-            trade,
+            trade: trade.map(std::sync::OnceLock::from).unwrap_or_default(),
         })
     }
 
@@ -690,9 +690,14 @@ impl Data {
         self.tag_to_catalyst.get(tag).map(String::as_str)
     }
 
+    /// Publish both remote tables together after a successful background fetch.
+    pub fn install_trade_data(&self, trade: TradeData) {
+        let _ = self.trade.set(trade);
+    }
+
     /// The trade site's data, if it loaded.
     pub fn trade(&self) -> Option<&TradeData> {
-        self.trade.as_ref()
+        self.trade.get()
     }
 
     /// `TRADE_ITEM_BY_REF`: a stand-in `BaseType` for an item the trade site
@@ -700,7 +705,7 @@ impl Data {
     /// `loadTradeData` fails.
     pub fn trade_item_by_ref(&self, query: &TradeItemQuery<'_>, force_craftable: bool) -> Option<Vec<BaseType>> {
         use crate::parser::meta::{GEM, ItemCategory};
-        let trade = self.trade.as_ref()?;
+        let trade = self.trade.get()?;
         let stub = |name: &str, namespace| BaseType {
             name: Some(name.to_owned()),
             ref_name: Some(name.to_owned()),
@@ -754,12 +759,12 @@ impl Data {
 
     /// `TRADE_STAT_BY_STAT_ID`
     pub fn trade_stat_by_stat_id(&self, trade_id: &str) -> bool {
-        self.trade.as_ref().is_some_and(|t| t.stat_ids.contains(trade_id))
+        self.trade.get().is_some_and(|t| t.stat_ids.contains(trade_id))
     }
 
     /// `TRADE_STAT_BY_MATCH_STR`: modifier type to trade ids for a trade-site stat text.
     pub fn trade_stat_by_match_str(&self, text: &str) -> Option<&IndexMap<String, Vec<String>>> {
-        self.trade.as_ref()?.stats.get(text)
+        self.trade.get()?.stats.get(text)
     }
 
     /// The `DELAYED_STAT_VALIDATION` check `init` runs over every ref passed to

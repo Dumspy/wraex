@@ -718,7 +718,7 @@ fn the_price_check_hotkey_opens_the_window_on_the_item() {
     assert_eq!(app.shown(), Shown::None);
 
     let text = crate::corpus("currency-divine-orb");
-    app.open_price_check_for(GameId::Poe1, "Standard", Mode::Replay, &text, None, None);
+    app.open_price_check_for(GameId::Poe1, "Standard", &serde_json::Value::Null, &text, None, None);
     assert_eq!(app.shown(), Shown::PriceCheck);
     assert!(app.price_check.open);
     assert!(app.price_check.item.is_ok(), "the item parsed");
@@ -729,9 +729,25 @@ fn the_price_check_hotkey_opens_the_window_on_the_item() {
 
     // A league the recordings do not cover still opens the window, in that league.
     app.close_windows();
-    app.open_price_check_for(GameId::Poe1, "Covens", Mode::Replay, &text, None, None);
+    app.open_price_check_for(GameId::Poe1, "Covens", &serde_json::Value::Null, &text, None, None);
     assert_eq!(app.price_check.league, "Covens");
     assert!(app.price_check.stable_orb_cost().is_none(), "no prices for an unrecorded league");
+}
+
+#[test]
+fn late_startup_prices_cannot_restore_an_old_market() {
+    let mut app = live_app("late-startup-prices", TestClipboard::holding(""));
+    app.shell_mut().unwrap().league = "Guild (PL123)".into();
+    app.apply_startup(
+        "Standard",
+        "pc-ggg",
+        Leagues::default(),
+        Some("Standard".into()),
+        Some(vec![("Currency", String::new())]),
+    );
+    let live = app.shell().unwrap();
+    assert_eq!(live.league, "Guild (PL123)");
+    assert!(live.poe2_prices.is_none());
 }
 
 /// The warm prices the shell fetched at launch are the window's, not a second fetch.
@@ -746,7 +762,7 @@ fn the_startup_prices_become_the_windows() {
     app.open_price_check_for(
         GameId::Poe1,
         "Standard",
-        Mode::Replay,
+        &serde_json::Value::Null,
         &crate::corpus("currency-divine-orb"),
         Some(warm),
         None,
@@ -784,7 +800,7 @@ fn the_poe2_hotkey_opens_its_own_window() {
     let text = crate::corpus_poe2("currency-djinn-barya");
     let mut app = App::replay("currency-divine-orb");
     app.close_windows();
-    app.open_price_check_for(GameId::Poe2, "Dawn of the Hunt", Mode::Replay, &text, None, None);
+    app.open_price_check_for(GameId::Poe2, "Dawn of the Hunt", &serde_json::Value::Null, &text, None, None);
     assert_eq!(app.game, GameId::Poe2);
     assert_eq!(app.shown(), Shown::Poe2);
     assert_eq!(app.poe2.as_ref().unwrap().league, "Dawn of the Hunt");
@@ -1416,7 +1432,7 @@ fn asking_the_app_about_the_shell_from_inside_poll_panics() {
 fn reopening_an_item_reuses_the_trade_policy_and_cached_rows() {
     let text = crate::corpus("adv-rare-ring-mirrored-catalyst");
     let mut app = App::with_mode("", Mode::Replay);
-    app.open_price_check_for(GameId::Poe1, "Standard", Mode::Replay, &text, None, None);
+    app.open_price_check_for(GameId::Poe1, "Standard", &serde_json::Value::Null, &text, None, None);
     app.price_check.start_search();
     assert_eq!(app.price_check.trade.rows.len(), 20);
     let first = app.price_check.trade.client.clone();
@@ -1426,10 +1442,108 @@ fn reopening_an_item_reuses_the_trade_policy_and_cached_rows() {
             crate::trade::TargetTransport::Replay(crate::replay::ReplayTransport::new("missing-recordings"));
         client.limits.search.clone()
     };
-    app.open_price_check_for(GameId::Poe1, "Standard", Mode::Replay, &text, None, None);
+    app.open_price_check_for(GameId::Poe1, "Standard", &serde_json::Value::Null, &text, None, None);
     assert!(std::sync::Arc::ptr_eq(&first, &app.price_check.trade.client));
     assert_eq!(crate::trade::lock(&app.price_check.trade.client).limits.search, policy);
     app.price_check.start_search();
     assert_eq!(app.price_check.trade.rows.len(), 20);
     assert!(app.price_check.trade.error.is_none());
+}
+
+#[test]
+fn hotkeys_use_saved_price_check_settings_for_both_games() {
+    let config = serde_json::json!({"widgets":[{"wmType":"price-check","searchStatRange":0,
+        "activateStockFilter":true,"collapseListings":"app","apiLatencySeconds":4.5}]});
+    let mut app = App::with_mode("", Mode::Replay);
+    let text = crate::corpus("adv-rare-ring-mirrored-catalyst");
+    app.open_price_check_for(GameId::Poe1, "Standard", &config, &text, None, None);
+    assert_eq!(app.price_check.item_filters().unwrap().trade.collapse_listings, "app");
+    let rolls = serde_json::to_value(app.price_check.item_stats()).unwrap();
+    assert_eq!(rolls[0]["roll"]["min"].as_f64(), Some(94.));
+    app.price_check.start_search();
+    assert_eq!(crate::trade::lock(&app.price_check.trade.client).latency_seconds, 4.5);
+    let text = crate::corpus_poe2("ee2-rare-item");
+    app.open_price_check_for(GameId::Poe2, "Standard", &config, &text, None, None);
+    let check = app.poe2.as_mut().unwrap();
+    assert_eq!(check.filters().trade.collapse_listings, "app");
+    assert_eq!(check.item_stats()[0].roll.as_ref().unwrap().min, Some(173.));
+    check.start_search();
+    assert_eq!(crate::trade::lock(&check.trade.client).latency_seconds, 4.5);
+
+    let stack = crate::corpus("currency-divine-orb");
+    app.open_price_check_for(GameId::Poe1, "Standard", &config, &stack, None, None);
+    let check = &app.price_check;
+    let bulk = wraex_poe1::trade::create_bulk_request(check.item_filters().unwrap(), check.item().unwrap(), vec![]);
+    assert_eq!(bulk.query.minimum, Some(3.));
+
+    app.open_price_check_for(GameId::Poe2, "Standard", &config, &stack, None, None);
+    let check = app.poe2.as_ref().unwrap();
+    let bulk = wraex_poe2::trade::create_bulk_request(check.filters(), check.item().unwrap(), vec![]);
+    assert_eq!(bulk.query.minimum, Some(3.));
+}
+
+#[test]
+fn warm_overviews_reach_the_first_automatic_search() {
+    let text = crate::corpus_poe2("ee2-unique-item");
+    let mut app = App::with_mode("", Mode::Replay);
+    let body = r#"{"core":{"items":[],"rates":{"exalted":123},"primary":"divine","secondary":"exalted"},
+        "lines":[{"id":"exalted","primaryValue":1,"sparkline":{"totalChange":0,"data":[]}}],
+        "items":[{"id":"exalted","name":"Exalted Orb","category":"Currency","detailsId":"exalted-orb","image":""}]}"#;
+    app.open_price_check_for(
+        GameId::Poe2,
+        "Standard",
+        &serde_json::Value::Null,
+        &text,
+        None,
+        Some(vec![("Currency", body.into())]),
+    );
+    let check = app.poe2.as_mut().unwrap();
+    let first: Vec<_> = check.trade.rows.iter().map(|row| row.normalized_price.clone()).collect();
+    assert!(first.iter().any(Option::is_some));
+    check.start_search();
+    assert_eq!(first, check.trade.rows.iter().map(|row| row.normalized_price.clone()).collect::<Vec<_>>());
+    let late = body.replace("primaryValue\":1", "primaryValue\":2");
+    check.apply_price_overviews(&[("Currency", late)]);
+    let refreshed: Vec<_> = check.trade.rows.iter().map(|row| row.normalized_price.clone()).collect();
+    assert_ne!(first, refreshed);
+    check.start_search();
+    assert_eq!(refreshed, check.trade.rows.iter().map(|row| row.normalized_price.clone()).collect::<Vec<_>>());
+}
+
+#[test]
+fn picked_and_copied_items_use_the_same_league_and_trade_link() {
+    let mut app = App::with_mode("", Mode::Replay);
+    let league = "Covens";
+    app.open_price_check_for(
+        GameId::Poe1,
+        league,
+        &serde_json::Value::Null,
+        &crate::corpus("adv-rare-ring-mirrored-catalyst"),
+        None,
+        None,
+    );
+    let link = app.price_check.trade_link().unwrap();
+    let item = app.price_check.item().unwrap().clone();
+    app.open_picked_item(crate::widgets::item_search::Picked::Poe1(Box::new(item)));
+    assert_eq!(app.price_check.league, league);
+    assert_eq!(app.price_check.item_filters().unwrap().trade.league, league);
+    assert!(link.contains(league));
+    assert_eq!(app.price_check.trade_link().unwrap(), link);
+    app.open_price_check_for(
+        GameId::Poe2,
+        league,
+        &serde_json::Value::Null,
+        &crate::corpus_poe2("ee2-rare-item"),
+        None,
+        None,
+    );
+    let check = app.poe2.as_ref().unwrap();
+    let link = check.trade_link().unwrap();
+    let item = check.item().unwrap().clone();
+    app.open_picked_item(crate::widgets::item_search::Picked::Poe2(Box::new(item)));
+    let check = app.poe2.as_ref().unwrap();
+    assert_eq!(check.title(), league);
+    assert_eq!(check.filters().trade.league, league);
+    assert!(link.contains(league));
+    assert_eq!(check.trade_link().unwrap(), link);
 }

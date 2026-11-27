@@ -76,6 +76,7 @@ pub enum BulkCurrency {
 pub struct Trade {
     mode: Mode,
     pub(crate) client: Shared,
+    pub(super) latency: f64,
     latest: Latest<Answer>,
     generation: u64,
     /// `TradeListing.vue`'s / `TradeBulk.vue`'s `error`.
@@ -144,6 +145,7 @@ impl Trade {
         Self {
             mode,
             client,
+            latency: super::API_LATENCY_SECONDS,
             latest: Latest::default(),
             generation: 0,
             error: None,
@@ -172,6 +174,7 @@ impl Trade {
     pub fn begin(&mut self, query: Query) {
         self.generation += 1;
         let generation = self.generation;
+        let latency = self.latency;
         self.error = None;
         // A lazy load fills one currency of the table already on screen.
         if !matches!(query, Query::BulkLazy { .. }) {
@@ -183,13 +186,14 @@ impl Trade {
             // Scenes and tests: the answers are files, so land them now and the view
             // that follows the click already shows the table.
             Mode::Replay => {
-                let answer = execute(&self.client, generation, &query);
+                let answer = execute(&self.client, generation, &query, latency);
                 self.apply(answer);
             }
             Mode::Live => {
                 let client = Arc::clone(&self.client);
-                self.latest
-                    .request((generation, query), move |(generation, query)| execute(&client, generation, &query));
+                self.latest.request((generation, query), move |(generation, query)| {
+                    execute(&client, generation, &query, latency)
+                });
             }
         }
     }
@@ -288,13 +292,14 @@ impl LazyBulk {
 }
 
 /// Runs a query: on a worker in the app, on the caller's thread for a replay.
-fn execute(client: &Shared, generation: u64, query: &Query) -> Answer {
-    let outcome = run(client, query);
+fn execute(client: &Shared, generation: u64, query: &Query, latency: f64) -> Answer {
+    let outcome = run(client, query, latency);
     Answer { generation, outcome }
 }
 
-fn run(client: &Shared, query: &Query) -> Result<Outcome, String> {
+fn run(client: &Shared, query: &Query, latency: f64) -> Result<Outcome, String> {
     let mut client = trade::lock(client);
+    client.latency_seconds = latency;
     let now = client.clock.now() as EpochMillis;
     match query {
         Query::Trade { league, request, collapse_merchant } => {
@@ -487,6 +492,7 @@ mod tests {
             &client,
             1,
             &Query::Trade { league: "Standard".into(), request: Err("no trade id".into()), collapse_merchant: false },
+            2.0,
         );
         assert_eq!(answer.outcome.unwrap_err(), "no trade id");
     }

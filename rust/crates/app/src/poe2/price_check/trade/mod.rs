@@ -36,11 +36,11 @@ use crate::trade::{self, Mode, Shared};
 #[derive(Debug, Clone)]
 pub enum Query {
     /// `requestTradeResultList` + `requestResults`.
-    Trade { league: String, request: Result<TradeRequest, String>, prices: Prices },
+    Trade { league: String, request: Result<Box<TradeRequest>, String>, prices: Prices },
     /// `execBulkSearch` with the currencies the item trades for.
-    Bulk { league: String, request: BulkRequest, prices: Prices },
+    Bulk { league: String, request: BulkRequest },
     /// `TradeBulk.vue`'s lazy load of a currency the optimistic search left out.
-    BulkLazy { league: String, request: BulkRequest, prices: Prices },
+    BulkLazy { league: String, request: BulkRequest },
 }
 
 /// A finished search: `TradeListing.vue`'s `list` and `fetchResults`, or `TradeBulk.vue`'s
@@ -56,7 +56,6 @@ pub enum Outcome {
     /// guess of another one.
     BulkLazy {
         search: bulk::BulkSearch,
-        other: BulkCurrency,
     },
 }
 
@@ -112,6 +111,7 @@ impl BulkCurrency {
 pub struct Trade {
     mode: Mode,
     pub(crate) client: Shared,
+    pub(super) latency: f64,
     latest: Latest<Answer>,
     generation: u64,
     /// `TradeListing.vue`'s / `TradeBulk.vue`'s `error`.
@@ -154,6 +154,15 @@ impl BulkResults {
         }
     }
 
+    fn apply_lazy(&mut self, search: bulk::BulkSearch) {
+        let which = BulkCurrency::of_tag(&search.have_tag);
+        let other = if which == BulkCurrency::Divine { BulkCurrency::Exalted } else { BulkCurrency::Divine };
+        if let Some(group) = self.get_mut(other) {
+            group.total -= search.total;
+        }
+        self.set(which, search);
+    }
+
     fn set(&mut self, which: BulkCurrency, search: bulk::BulkSearch) {
         match which {
             BulkCurrency::Exalted => self.exalted = Some(search),
@@ -182,6 +191,7 @@ impl Trade {
         Self {
             mode,
             client,
+            latency: super::API_LATENCY_SECONDS,
             latest: Latest::default(),
             generation: 0,
             error: None,
@@ -209,6 +219,7 @@ impl Trade {
     pub fn begin(&mut self, query: Query) {
         self.generation += 1;
         let generation = self.generation;
+        let latency = self.latency;
         self.error = None;
         // A lazy load fills one currency of the table already on screen.
         if !matches!(query, Query::BulkLazy { .. }) {
@@ -220,14 +231,14 @@ impl Trade {
             // Scenes and tests: the answers are files, so land them now and the view
             // that follows the click already shows the table.
             Mode::Replay => {
-                let answer = execute(self.mode, &self.client, generation, &query);
+                let answer = execute(self.mode, &self.client, generation, &query, latency);
                 self.apply(answer);
             }
             Mode::Live => {
                 let client = Arc::clone(&self.client);
                 let mode = self.mode;
                 self.latest.request((generation, query), move |(generation, query)| {
-                    execute(mode, &client, generation, &query)
+                    execute(mode, &client, generation, &query, latency)
                 });
             }
         }
@@ -271,14 +282,9 @@ impl Trade {
                 self.list = None;
                 self.rows.clear();
             }
-            Ok(Outcome::BulkLazy { search, other }) => {
+            Ok(Outcome::BulkLazy { search }) => {
                 let Some(results) = self.bulk.as_mut() else { return };
-                let which = BulkCurrency::of_tag(&search.have_tag);
-                let total = search.total;
-                results.set(which, search);
-                if let Some(other) = results.get_mut(other) {
-                    other.total -= total;
-                }
+                results.apply_lazy(search);
             }
         }
     }
@@ -299,13 +305,8 @@ impl Trade {
     /// asked for on its own when its table is shown.
     pub fn load_missing(&mut self, which: BulkCurrency) {
         let missing = self.bulk.as_ref().is_some_and(|results| results.get(which).is_none());
-        let Some(request) = self.lazy_request.clone() else { return };
-        if missing {
-            self.begin(Query::BulkLazy {
-                league: request.league.clone(),
-                request: request.for_currency(which),
-                prices: request.prices.clone(),
-            });
+        if missing && let Some(request) = &self.lazy_request {
+            self.begin(Query::BulkLazy { league: request.league.clone(), request: request.for_currency(which) });
         }
     }
 }
@@ -317,7 +318,6 @@ pub struct LazyBulk {
     /// The filters and item, kept so a click can rebuild the request.
     pub filters: ItemFilters,
     pub item: Item,
-    pub prices: Prices,
 }
 
 impl LazyBulk {
@@ -327,28 +327,29 @@ impl LazyBulk {
 }
 
 /// Runs a query: on a worker in the app, on the caller's thread for a replay.
-fn execute(mode: Mode, client: &Shared, generation: u64, query: &Query) -> Answer {
-    let outcome = run(mode, client, query);
+fn execute(mode: Mode, client: &Shared, generation: u64, query: &Query, latency: f64) -> Answer {
+    let outcome = run(mode, client, query, latency);
     Answer { generation, outcome }
 }
 
-fn run(mode: Mode, client: &Shared, query: &Query) -> Result<Outcome, String> {
+fn run(mode: Mode, client: &Shared, query: &Query, latency: f64) -> Result<Outcome, String> {
     let data = crate::poe2::price_check::data(mode);
     let mut client = trade::lock(client);
+    client.latency_seconds = latency;
     let now = client.clock.now() as EpochMillis;
     match query {
         Query::Trade { league, request, prices } => {
-            let request = request.clone()?;
-            let list = client.search(&request, league).map_err(|error| error.to_string())?;
+            let request = request.as_ref().map_err(Clone::clone)?;
+            let list = client.search(request, league).map_err(|error| error.to_string())?;
             let rows = fetch_rows(&mut client, data, prices, &list, now)?;
             Ok(Outcome::Trade { list, rows })
         }
-        Query::Bulk { league, request, .. } => {
+        Query::Bulk { league, request } => {
             let answer =
                 client.exchange::<bulk::ExchangeListing>(request, league).map_err(|error| error.to_string())?;
             Ok(Outcome::Bulk(bulk::searches(&answer, &request.query.have, "", now)))
         }
-        Query::BulkLazy { league, request, .. } => {
+        Query::BulkLazy { league, request } => {
             let answer =
                 client.exchange::<bulk::ExchangeListing>(request, league).map_err(|error| error.to_string())?;
             let search = bulk::searches(&answer, &request.query.have, "", now)
@@ -356,12 +357,7 @@ fn run(mode: Mode, client: &Shared, query: &Query) -> Result<Outcome, String> {
                 .flatten()
                 .next()
                 .ok_or_else(|| "The exchange answer had no offers".to_owned())?;
-            let other = match search.have_tag.as_str() {
-                "exalted" => BulkCurrency::Chaos,
-                "divine" => BulkCurrency::Exalted,
-                _ => BulkCurrency::Exalted,
-            };
-            Ok(Outcome::BulkLazy { search, other })
+            Ok(Outcome::BulkLazy { search })
         }
     }
 }
@@ -457,6 +453,40 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
 mod tests {
     use super::*;
 
+    #[test]
+    fn lazy_results_adjust_only_the_matching_optimistic_total() {
+        let group = |tag: &str, total| bulk::BulkSearch {
+            have_tag: tag.into(),
+            query_id: String::new(),
+            total,
+            listed: vec![],
+        };
+        for (tag, expected) in [("exalted", [3., 20., 27.]), ("chaos", [10., 3., 27.]), ("divine", [7., 20., 3.])] {
+            let mut groups = BulkResults {
+                exalted: Some(group("exalted", 10.)),
+                chaos: Some(group("chaos", 20.)),
+                divine: Some(group("divine", 30.)),
+            };
+            groups.apply_lazy(group(tag, 3.));
+            assert_eq!(BulkCurrency::ALL.map(|which| groups.get(which).unwrap().total), expected);
+        }
+    }
+
+    #[test]
+    fn selecting_a_loaded_group_keeps_the_existing_search() {
+        let mut check = PriceCheck::with_mode(&crate::corpus_poe2("ee2-uncut-skill-gem"), Mode::Replay);
+        check.start_search();
+        assert!(check.trade.lazy_request.is_some());
+        let group =
+            bulk::BulkSearch { have_tag: "exalted".into(), query_id: "saved".into(), total: 7., listed: vec![] };
+        check.trade.bulk = Some(BulkResults { exalted: Some(group), ..Default::default() });
+        let generation = check.trade.generation;
+        check.trade.select_currency(BulkCurrency::Exalted);
+        assert_eq!(check.trade.generation, generation);
+        check.trade.select_currency(BulkCurrency::Divine);
+        assert_eq!(check.trade.generation, generation + 1);
+    }
+
     /// The searches the reference screenshots recorded are the searches this app sends.
     /// The replay keys on a hash of the body, so a difference here is a parity bug — and
     /// because EE2's key order is not the port's struct order, it is a byte comparison,
@@ -500,7 +530,11 @@ mod tests {
         .expect("a trade request");
         let client = crate::trade::shared_site(Mode::Replay, "www.pathofexile.com", crate::trade::Site::Poe2, 2.0);
         let mut trade = Trade::new(Mode::Live, client);
-        trade.begin(Query::Trade { league: "Standard".into(), request: Ok(request), prices: check.prices.clone() });
+        trade.begin(Query::Trade {
+            league: "Standard".into(),
+            request: Ok(Box::new(request)),
+            prices: check.prices.clone(),
+        });
 
         let mut landed = false;
         for _ in 0..300 {
@@ -524,6 +558,7 @@ mod tests {
             &client,
             1,
             &Query::Trade { league: "Standard".into(), request: Err("no trade id".into()), prices: Prices::default() },
+            2.0,
         );
         assert_eq!(answer.outcome.unwrap_err(), "no trade id");
     }
