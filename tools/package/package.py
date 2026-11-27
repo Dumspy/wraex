@@ -296,6 +296,21 @@ def windows_version(version: str) -> str:
     return ".".join((numbers + ["0"] * 4)[:4])
 
 
+def write_uninstall_list(stage: Path, output: Path) -> None:
+    """Emit literal deletes for the packaged files, followed by empty-directory removals."""
+    paths = sorted(path.relative_to(stage) for name in ("assets", "licences")
+                   for path in [stage / name, *(stage / name).rglob("*")])
+    commands = []
+    for path in reversed(paths):
+        # Reject NSIS wildcards and command delimiters even on a non-Windows build host.
+        if any(c in path.as_posix() for c in '*?"\r\n\\'):
+            raise ValueError(f"unsupported Windows package path: {path}")
+        name = str(path.as_posix()).replace("/", chr(92)).replace("$", "$$")
+        command = "RMDir" if (stage / path).is_dir() else "Delete"
+        commands.append(f'{command} "$INSTDIR\\{name}"')
+    output.write_text("\n".join(commands) + "\n", encoding="utf-8")
+
+
 def build_setup(stage: Path, version: str) -> Path:
     """`<stage>-setup.exe`: the NSIS install of `stage` (tools/package/installer.nsi)."""
     makensis = shutil.which("makensis")
@@ -309,6 +324,8 @@ def build_setup(stage: Path, version: str) -> Path:
     with tempfile.TemporaryDirectory(prefix="wraex-setup-") as temporary:
         icon = Path(temporary) / "wraex.ico"
         setup_icon(stage, icon)
+        uninstall_list = Path(temporary) / "remove-files.nsh"
+        write_uninstall_list(stage, uninstall_list)
         # `-D` with the raw value: makensis reads `/D` as a path on POSIX, and keeps
         # quotes as characters. Paths may contain spaces.
         command = [
@@ -317,6 +334,7 @@ def build_setup(stage: Path, version: str) -> Path:
             f"-DVI_VERSION={windows_version(version)}",
             f"-DSTAGE_DIR={stage}",
             f"-DICON_FILE={icon}",
+            f"-DREMOVE_FILES={uninstall_list}",
             f"-DOUT_FILE={setup}",
             str(ROOT / "tools" / "package" / "installer.nsi"),
         ]
