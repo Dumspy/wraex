@@ -40,12 +40,19 @@ pub struct Case {
 impl Case {
     /// The parser's error key (`item.unknown`, ...) when the reference rejected the text.
     pub fn parse_error(&self) -> Option<&str> {
-        self.parsed.get("error").and_then(Value::as_str)
+        let Value::Object(fields) = &self.parsed else {
+            return None;
+        };
+        match fields.get("error") {
+            Some(Value::String(error)) => Some(error),
+            _ => None,
+        }
     }
 }
 
 /// `fixtures/listings/<game>/<name>`: what the reference makes of a recorded
 /// trade site answer, with the path of that answer in the reference checkout.
+#[expect(clippy::panic, reason = "fixture loader: a missing or invalid listing fixture fails the calling test")]
 pub fn listing_fixture(game: GameId, name: &str) -> Value {
     let file = fixtures_dir().join("listings").join(game.as_str()).join(name);
     let text = fs::read_to_string(&file).unwrap_or_else(|e| panic!("{}: {e}", file.display()));
@@ -60,6 +67,7 @@ pub fn listing_fixture(game: GameId, name: &str) -> Value {
 /// the matched `BaseType` list or `false` (too short a query, or more than
 /// `MAX_RESULTS` matches); `fuzzy` is `[{ query, lang, result }]`, where `result`
 /// is `{ name, altQuality }` or `null` for the reference's `undefined`.
+#[expect(clippy::panic, reason = "fixture loader: a missing or invalid item search fixture fails the calling test")]
 pub fn item_search_fixture(game: GameId) -> Value {
     let file = fixtures_dir().join("item-search").join(format!("{}.json", game.as_str()));
     let text = fs::read_to_string(&file).unwrap_or_else(|e| panic!("{}: {e}", file.display()));
@@ -83,10 +91,23 @@ pub struct ConfigCase {
 }
 
 /// Every settings case for `game`, `default` first.
+#[expect(
+    clippy::expect_used,
+    clippy::panic,
+    reason = "fixture loader: an unreadable or invalid settings case fails the calling test"
+)]
 pub fn config_cases(game: GameId) -> Vec<ConfigCase> {
     let root = fixtures_dir().join("config").join(game.as_str());
     let mut slugs: Vec<String> = match fs::read_dir(&root) {
-        Ok(entries) => entries.map(|e| e.unwrap().file_name().into_string().unwrap()).collect(),
+        Ok(entries) => entries
+            .map(|entry| {
+                entry
+                    .expect("fixture case directory entry")
+                    .file_name()
+                    .into_string()
+                    .expect("fixture case name is UTF-8")
+            })
+            .collect(),
         Err(_) => return Vec::new(),
     };
     slugs.sort_by_key(|s| (s != "default", s.clone()));
@@ -111,16 +132,33 @@ pub fn config_cases(game: GameId) -> Vec<ConfigCase> {
 }
 
 /// Every case for `game`, sorted by slug.
+#[expect(
+    clippy::expect_used,
+    reason = "fixture loader: an unreadable case directory or a non-UTF-8 case name fails the calling test"
+)]
 pub fn cases(game: GameId) -> Vec<Case> {
     let root = fixtures_dir().join(game.as_str());
     let mut slugs: Vec<String> = match fs::read_dir(&root) {
-        Ok(entries) => entries.map(|e| e.unwrap().file_name().into_string().unwrap()).collect(),
+        Ok(entries) => entries
+            .map(|entry| {
+                entry
+                    .expect("fixture case directory entry")
+                    .file_name()
+                    .into_string()
+                    .expect("fixture case name is UTF-8")
+            })
+            .collect(),
         Err(_) => return Vec::new(),
     };
     slugs.sort();
     slugs.into_iter().map(|slug| load(game, slug)).collect()
 }
 
+#[expect(
+    clippy::expect_used,
+    clippy::panic,
+    reason = "fixture loader: a missing or invalid case file fails the calling test"
+)]
 fn load(game: GameId, slug: String) -> Case {
     let dir = fixtures_dir().join(game.as_str()).join(&slug);
     let read =
@@ -135,8 +173,9 @@ fn load(game: GameId, slug: String) -> Case {
     let mut trade = Vec::new();
     if let Ok(entries) = fs::read_dir(dir.join("trade")) {
         for entry in entries {
-            let name = entry.unwrap().file_name().into_string().unwrap();
-            let id = name.strip_suffix(".json").unwrap().to_owned();
+            let name =
+                entry.expect("trade directory entry").file_name().into_string().expect("trade request name is UTF-8");
+            let id = name.strip_suffix(".json").expect("trade requests are `.json`").to_owned();
             trade.push((id, json(&format!("trade/{name}"))));
         }
     }
@@ -162,6 +201,7 @@ fn load(game: GameId, slug: String) -> Case {
 /// `serde_json`'s map is a `BTreeMap`, which sorts like JavaScript's default sort
 /// for the ASCII keys the references use. Numbers keep `serde_json`'s formatting;
 /// the round-trip test over every fixture is what pins it to JavaScript's.
+#[expect(clippy::expect_used, reason = "a `serde_json::Value` always serialises; its non-finite floats are `null`")]
 pub fn canonical(value: &Value) -> String {
     let mut value = value.clone();
     sort_keys(&mut value);
@@ -198,13 +238,24 @@ pub fn diff(expected: &Value, actual: &Value) -> Option<String> {
         return None;
     }
     let (el, al): (Vec<_>, Vec<_>) = (e.lines().collect(), a.lines().collect());
-    let at = el.iter().zip(&al).position(|(x, y)| x != y).unwrap_or(el.len().min(al.len()));
+    let at = el.iter().zip(&al).position(|(x, y)| x != y).unwrap_or_else(|| el.len().min(al.len()));
     let from = at.saturating_sub(3);
-    let show = |lines: &[&str]| lines[from.min(lines.len())..(at + 4).min(lines.len())].join("\n");
-    Some(format!("first difference at line {}\n--- expected\n{}\n+++ actual\n{}", at + 1, show(&el), show(&al)))
+    let show = |lines: &[&str]| -> String {
+        let start = from.min(lines.len());
+        let end = at.saturating_add(4).min(lines.len());
+        // `start <= end` by construction: `from <= at` and `at <= lines.len()`.
+        lines.get(start..end).unwrap_or_default().join("\n")
+    };
+    Some(format!(
+        "first difference at line {}\n--- expected\n{}\n+++ actual\n{}",
+        at.saturating_add(1),
+        show(&el),
+        show(&al)
+    ))
 }
 
 #[cfg(test)]
+#[expect(clippy::disallowed_macros, reason = "expected JSON written as literals")]
 mod tests {
     use super::*;
 
@@ -217,6 +268,18 @@ mod tests {
                 out.push(path);
             }
         }
+    }
+
+    /// The parts of `presets.json` the case check reads.
+    #[derive(serde::Deserialize)]
+    struct Presets {
+        presets: Vec<Preset>,
+        active: String,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct Preset {
+        id: String,
     }
 
     /// The Rust canonical form must reproduce the TypeScript one byte for byte,
@@ -247,16 +310,16 @@ mod tests {
                     assert!(case.presets.is_none(), "{}: presets after a parse error", case.slug);
                     continue;
                 }
-                assert_eq!(case.parsed["rawText"].as_str(), Some(case.input.as_str()), "{}: rawText", case.slug);
-                let presets = case.presets.as_ref().expect("presets.json");
-                let ids: Vec<&str> =
-                    presets["presets"].as_array().unwrap().iter().map(|p| p["id"].as_str().unwrap()).collect();
+                assert_eq!(case.parsed["rawText"], Value::String(case.input.clone()), "{}: rawText", case.slug);
+                let presets: Presets =
+                    serde_json::from_value(case.presets.clone().expect("presets.json")).expect("presets.json shape");
+                let ids: Vec<&str> = presets.presets.iter().map(|preset| preset.id.as_str()).collect();
                 let mut trade_ids: Vec<&str> = case.trade.iter().map(|(id, _)| id.as_str()).collect();
                 let mut sorted = ids.clone();
-                sorted.sort();
-                trade_ids.sort();
+                sorted.sort_unstable();
+                trade_ids.sort_unstable();
                 assert_eq!(sorted, trade_ids, "{}: one trade request per preset", case.slug);
-                assert!(ids.contains(&presets["active"].as_str().unwrap()), "{}: active preset", case.slug);
+                assert!(ids.contains(&presets.active.as_str()), "{}: active preset", case.slug);
             }
         }
     }
