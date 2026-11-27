@@ -1,0 +1,33 @@
+# Test exemptions and limits for rust/Cargo.toml's workspace lints.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-indexing-slicing-in-tests = true
+allow-dbg-in-tests = true
+allow-print-in-tests = true
+allow-useless-vec-in-tests = true
+
+too-many-arguments-threshold = 5
+max-fn-params-bools = 1
+max-struct-bools = 3
+too-many-lines-threshold = 100
+cognitive-complexity-threshold = 25
+type-complexity-threshold = 200
+
+disallowed-macros = [
+  { path = "serde_json::json", reason = "build JSON from a #[derive(Serialize)] type; tests may expect this lint" },
+]
+
+disallowed-methods = [
+  { path = "serde_json::Value::get", reason = "deserialize into a typed structure instead of walking a Value" },
+  { path = "serde_json::Value::get_mut", reason = "deserialize into a typed structure instead of walking a Value" },
+  { path = "serde_json::Value::pointer", reason = "deserialize into a typed structure instead of walking a Value" },
+  { path = "serde_json::Value::as_object", reason = "deserialize into a typed structure instead of walking a Value" },
+  { path = "serde_json::Value::as_object_mut", reason = "deserialize into a typed structure instead of walking a Value" },
+  { path = "serde_json::Value::as_array", reason = "deserialize into a typed structure instead of walking a Value" },
+  { path = "serde_json::Value::as_str", reason = "deserialize into a typed structure instead of walking a Value" },
+  { path = "serde_json::Value::as_i64", reason = "deserialize into a typed structure instead of walking a Value" },
+  { path = "serde_json::Value::as_u64", reason = "deserialize into a typed structure instead of walking a Value" },
+  { path = "serde_json::Value::as_f64", reason = "deserialize into a typed structure instead of walking a Value" },
+  { path = "serde_json::Value::as_bool", reason = "deserialize into a typed structure instead of walking a Value" },
+]
