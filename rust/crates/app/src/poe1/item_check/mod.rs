@@ -17,9 +17,12 @@ use wraex_poe1::item_check::{self, UserAction};
 use wraex_poe1::map_check::MapCheckConfig;
 use wraex_poe1::parser::item::Item;
 use wraex_poe1::parser::parse_clipboard;
+use wraex_poe1::prices::Prices;
+use wraex_poe1::ultimatum_check::UltimatumCheckConfig;
 
 use crate::poe1::i18n;
 use crate::poe1::map_check;
+use crate::poe1::ultimatum_check;
 use crate::theme::{self, text as type_};
 use crate::ui::{self, art, icon};
 
@@ -52,6 +55,11 @@ pub struct ItemCheck {
     pub open: bool,
     /// `config.maps`: the item check widget's map-check decisions (`defaultConfig()`).
     pub maps: MapCheckConfig,
+    /// `config.ultimatum`: the Inscribed Ultimatum decisions, which share the map check's
+    /// profile. Old configs have no such key, so it defaults.
+    pub ultimatum: UltimatumCheckConfig,
+    /// poe.ninja prices for the Ultimatum's value line, from the app's price list.
+    pub prices: Prices,
     /// `AppConfig().language`: poedb's path segment.
     pub language: String,
     /// The actions the buttons asked for, oldest first. The app shell drains them
@@ -59,18 +67,23 @@ pub struct ItemCheck {
     pub actions: Vec<Action>,
 }
 
-/// The item-check widget's `maps`, and the app's `language`, from a config: a scene reads
-/// `defaultConfig()`, a live window the config the shell loaded.
-fn widget_config_from(config: &serde_json::Value) -> (MapCheckConfig, String) {
+/// The item-check widget's `maps` and `ultimatum`, and the app's `language`, from a config: a
+/// scene reads `defaultConfig()`, a live window the config the shell loaded.
+fn widget_config_from(config: &serde_json::Value) -> (MapCheckConfig, UltimatumCheckConfig, String) {
     let language = config.get("language").and_then(|value| value.as_str()).unwrap_or("en").to_owned();
-    let maps = config
+    let widget = config
         .get("widgets")
         .and_then(|widgets| widgets.as_array())
-        .and_then(|widgets| widgets.iter().find(|widget| widget["wmType"] == "item-check"))
+        .and_then(|widgets| widgets.iter().find(|widget| widget["wmType"] == "item-check"));
+    let maps = widget
         .and_then(|widget| widget.get("maps"))
         .and_then(|maps| serde_json::from_value(maps.clone()).ok())
         .unwrap_or(MapCheckConfig { profile: 1, show_new_stats: false, selected_stats: Vec::new() });
-    (maps, language)
+    let ultimatum = widget
+        .and_then(|widget| widget.get("ultimatum"))
+        .and_then(|ultimatum| serde_json::from_value(ultimatum.clone()).ok())
+        .unwrap_or_default();
+    (maps, ultimatum, language)
 }
 
 impl ItemCheck {
@@ -84,8 +97,17 @@ impl ItemCheck {
     pub fn from_config(text: &str, config: &serde_json::Value) -> Self {
         let data = crate::poe1::price_check::data();
         let item = parse_clipboard(data, text).map_err(|fail| ParseError::Rejected { key: fail.0.into() });
-        let (maps, language) = widget_config_from(config);
-        Self { text: text.to_owned(), open: item.is_ok(), item, maps, language, actions: Vec::new() }
+        let (maps, ultimatum, language) = widget_config_from(config);
+        Self {
+            text: text.to_owned(),
+            open: item.is_ok(),
+            item,
+            maps,
+            ultimatum,
+            prices: Prices::default(),
+            language,
+            actions: Vec::new(),
+        }
     }
 
     /// The parsed item, when the text was one.
@@ -136,6 +158,11 @@ pub fn view<S: 'static>(check: &ItemCheck, cx: &mut Cx<S>, project: Project<S>) 
     }
     // `text-gray-200` on the card, inherited by everything inside it.
     cx.foreground(theme::gray(200));
+    // The port's own Inscribed Ultimatum card, before the map check: `isMapLike` has no
+    // Ultimatum, so upstream shows only the item info for one.
+    if let Some(ultimatum) = wraex_poe1::ultimatum::parse(item, crate::poe1::price_check::data()) {
+        return ultimatum_check::view(&ultimatum, &check.ultimatum, check.maps.profile, &check.prices, project);
+    }
     if wraex_poe1::map_check::is_map_like(item) {
         return map_check::view(item, &check.maps, project);
     }
@@ -301,5 +328,23 @@ mod tests {
         assert_eq!(grouped(0.0), "0");
         assert_eq!(grouped(1000.0), "1,000");
         assert_eq!(grouped(-1234.0), "-1,234");
+    }
+
+    /// An old config has no `ultimatum` key: the widget still opens, with the defaults.
+    #[test]
+    fn a_config_without_ultimatum_gets_the_defaults() {
+        let config = serde_json::json!({
+            "language": "en",
+            "widgets": [{
+                "wmType": "item-check",
+                "maps": { "profile": 2, "showNewStats": true, "selectedStats": [] }
+            }]
+        });
+        let text = include_str!("../../../../poe1/testdata/ultimatum/survive-currency.txt");
+        let check = ItemCheck::from_config(text, &config);
+        assert!(check.open);
+        assert_eq!(check.maps.profile, 2, "the map check still reads its own key");
+        assert_eq!(check.ultimatum, wraex_poe1::ultimatum_check::UltimatumCheckConfig::default());
+        assert!(check.prices.is_empty(), "no prices until the app hands them over");
     }
 }

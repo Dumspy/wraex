@@ -325,6 +325,32 @@ impl App {
         }
     }
 
+    /// The Inscribed Ultimatum the port can price-check (`ULTIMATUM_SCENE`). Upstream has no
+    /// Ultimatum support, so there is no reference screenshot; the item text is the parser's
+    /// fixture, and the search row stays up because no trade answer was recorded for it.
+    pub fn ultimatum_scene() -> Self {
+        let mut app = Self::with_mode(ULTIMATUM_TEXT, Mode::Replay);
+        app.price_check.reset_search();
+        app
+    }
+
+    /// The port's Inscribed Ultimatum item check (`--scene ultimatum-check-<case>`): upstream has
+    /// no reference case, so the text is the parser's fixture and the decisions are the scene's
+    /// own. The value line reads the replay's poe.ninja blob, which the scene's price check loads.
+    pub fn ultimatum_check_scene(case: &str) -> Self {
+        let text = ULTIMATUM_CASES
+            .iter()
+            .find(|(slug, _)| *slug == case)
+            .map(|(_, text)| *text)
+            .unwrap_or_else(|| panic!("no Inscribed Ultimatum case `{case}`"));
+        let mut app = Self::with_mode(text, Mode::Replay);
+        app.price_check.reset_search();
+        let mut check = poe1::item_check::ItemCheck::from_config(text, &ultimatum_check_config(case));
+        check.prices = app.price_check.prices.prices().clone();
+        app.item_check = Some(check);
+        app
+    }
+
     /// The live shell, or `None` in a scene, a `--snap` render and a test.
     ///
     /// Panics in debug builds when the shell itself asks: [`App::with_live`] has taken it out of
@@ -561,6 +587,44 @@ fn card(app: &App, cx: &mut Cx<App>) -> El {
 /// A named state for `--scene` (`AppSpec::scenes`).
 pub type Scene = (&'static str, fn(&mut App));
 
+/// The port's Inscribed Ultimatum price check (`--scene ultimatum-survive-currency`): upstream
+/// has no Ultimatum support, so the fixture is the parser's own item text rather than a corpus
+/// case or a reference screenshot.
+pub const ULTIMATUM_SCENE: &str = "ultimatum-survive-currency";
+
+const ULTIMATUM_TEXT: &str = include_str!("../../poe1/testdata/ultimatum/survive-currency.txt");
+
+/// The Inscribed Ultimatum texts the item check scenes render.
+const ULTIMATUM_CASES: &[(&str, &str)] = &[
+    ("survive-currency", include_str!("../../poe1/testdata/ultimatum/survive-currency.txt")),
+    ("altar-currency", include_str!("../../poe1/testdata/ultimatum/altar-currency.txt")),
+];
+
+/// The item check widget's config a scene draws: the map profile both checks share, and the
+/// Ultimatum decisions. `survive-currency` marks `Stormcaller Runes` II and up deadly (its roll
+/// is tier II) and `Unlucky Criticals` a warning; `altar-currency` marks nothing and turns the
+/// unseen eye on.
+fn ultimatum_check_config(case: &str) -> serde_json::Value {
+    let (show_new_mods, selected_mods) = match case {
+        "altar-currency" => (true, serde_json::json!([])),
+        _ => (
+            false,
+            serde_json::json!([
+                { "name": "Stormcaller Runes", "tiers": ["---", "d--", "d--", "d--"] },
+                { "name": "Unlucky Criticals", "tiers": ["w--", "w--", "w--", "w--"] }
+            ]),
+        ),
+    };
+    serde_json::json!({
+        "language": "en",
+        "widgets": [{
+            "wmType": "item-check",
+            "maps": { "profile": 1, "showNewStats": false, "selectedStats": [] },
+            "ultimatum": { "showNewMods": show_new_mods, "selectedMods": selected_mods }
+        }]
+    })
+}
+
 /// The PoE1 corpus cases the reference screenshots render
 /// (`tools/golden/screens/cases.mjs`), plus a text that isn't an item and three cases that
 /// exercise the other kinds of filter row: a magic flask (explicit stats), a cluster jewel
@@ -576,6 +640,11 @@ pub const SCENES: &[Scene] = &[
     ("adv-magic-flask-charge-recovery", |app| app.load("adv-magic-flask-charge-recovery")),
     ("jewel-cluster-large", |app| app.load("jewel-cluster-large")),
     ("adv-rare-amulet-anointed", |app| app.load("adv-rare-amulet-anointed")),
+    // The port's own feature: an Inscribed Ultimatum, which upstream cannot price-check.
+    (ULTIMATUM_SCENE, |app| *app = App::ultimatum_scene()),
+    // The port's Inscribed Ultimatum check, the item check's other port-only card.
+    ("ultimatum-check-survive-currency", |app| *app = App::ultimatum_check_scene("survive-currency")),
+    ("ultimatum-check-altar-currency", |app| *app = App::ultimatum_check_scene("altar-currency")),
     // The item check (`WidgetItemCheck.vue`): the map check for every PoE1 map case, and the
     // item info for a rare, a unique, a gem and a weapon.
     ("map-check-real-map-rare-t16-max-res", |app| app.load_item_check("real-map-rare-t16-max-res")),
@@ -641,6 +710,15 @@ pub const SCENES: &[Scene] = &[
     ("settings-poe1-general", |app| app.settings_page(GameId::Poe1, Page::General)),
     ("settings-poe1-price-check", |app| app.settings_page(GameId::Poe1, Page::PriceCheck)),
     ("settings-poe1-maps", |app| app.settings_page(GameId::Poe1, Page::Maps)),
+    ("settings-poe1-ultimatum", |app| {
+        app.settings_page(GameId::Poe1, Page::Ultimatum);
+        // The page lists the decisions the item check's scenes mark, since no config ships any.
+        if let Some(settings) = app.settings.as_mut()
+            && let Some(widget) = crate::settings::widget_mut(&mut settings.config, "item-check")
+        {
+            widget["ultimatum"] = ultimatum_check_config("survive-currency")["widgets"][0]["ultimatum"].clone();
+        }
+    }),
     ("settings-poe1-item-check", |app| app.settings_page(GameId::Poe1, Page::ItemCheck)),
     ("settings-poe1-debug", |app| app.settings_page(GameId::Poe1, Page::Debug)),
     ("settings-poe1-about", |app| app.settings_page(GameId::Poe1, Page::About)),
@@ -825,8 +903,14 @@ mod tests {
         if let Some(case) = slug.strip_prefix("poe2-map-check-").or_else(|| slug.strip_prefix("poe2-item-check-")) {
             return runtime_app(App::item_check_scene(GameId::Poe2, case), size);
         }
+        if let Some(case) = slug.strip_prefix("ultimatum-check-") {
+            return runtime_app(App::ultimatum_check_scene(case), size);
+        }
         if let Some(case) = slug.strip_prefix("map-check-").or_else(|| slug.strip_prefix("item-check-")) {
             return runtime_app(App::item_check_scene(GameId::Poe1, case), size);
+        }
+        if slug == ULTIMATUM_SCENE {
+            return runtime_app(App::ultimatum_scene(), size);
         }
         match slug.strip_prefix("poe2-") {
             Some(case) => runtime_app(App::with_mode_poe2(&corpus_poe2(case), Mode::Replay), size),
@@ -834,9 +918,10 @@ mod tests {
         }
     }
 
-    /// A `map-check-<case>` / `item-check-<case>` scene (with either game's prefix).
+    /// A `map-check-<case>` / `item-check-<case>` / `ultimatum-check-<case>` scene (with either
+    /// game's prefix).
     fn is_item_check_scene(slug: &str) -> bool {
-        ["map-check-", "item-check-"].iter().any(|prefix| slug.starts_with(prefix))
+        ["map-check-", "item-check-", "ultimatum-check-"].iter().any(|prefix| slug.starts_with(prefix))
             || ["poe2-map-check-", "poe2-item-check-"].iter().any(|prefix| slug.starts_with(prefix))
     }
 
@@ -1157,6 +1242,44 @@ mod tests {
         let runtime = runtime("real-map-rare-t16-max-res");
         assert!(runtime.find("trend-price").is_none());
         assert!(runtime.find("trend").is_none());
+    }
+
+    /// An Inscribed Ultimatum, which upstream cannot price-check: one chip per filter, the
+    /// sacrifice-count note, the poe.ninja estimate, and no stat rows for its modifier lines.
+    #[test]
+    fn an_inscribed_ultimatum_shows_its_deal() {
+        let mut runtime = runtime(ULTIMATUM_SCENE);
+        assert_eq!(text_of(&runtime, "filter-name-text").as_deref(), Some("Inscribed Ultimatum"));
+        assert_eq!(text_of(&runtime, "btn-ultimatum-challenge-label").as_deref(), Some("Challenge: Survive"));
+        assert_eq!(text_of(&runtime, "btn-ultimatum-reward-label").as_deref(), Some("Reward: Currency"));
+        assert_eq!(text_of(&runtime, "btn-ultimatum-input-label").as_deref(), Some("Sacrifice: Vaal Orb"));
+        assert!(runtime.find("btn-ultimatum-output").is_none(), "a doubling reward pays no unique");
+        assert_eq!(text_of(&runtime, "ultimatum-note").as_deref(), Some("Listings mix sacrifice counts"));
+        // Vaal Orb is 4.35 chaos, so the twenty it demands are 87, and doubling pays 174.
+        assert_eq!(
+            text_of(&runtime, "ultimatum-value").as_deref(),
+            Some("Sacrifice worth 87c \u{b7} Reward worth 174c")
+        );
+        assert_eq!(text_of(&runtime, "ultimatum-profit").as_deref(), Some("Profit if you win: +87c"));
+        // The modifier lines are the encounter's: not stats, and not unknown modifiers either.
+        assert!(runtime.find("btn-stats").is_none());
+        assert!(runtime.find("filters-stats").is_none());
+        assert!(runtime.find("unknown-0").is_none());
+        assert!(runtime.find("search-label").is_some(), "the scene leaves the search row up");
+
+        // The challenge is off by default and searches once it is ticked.
+        let challenge = |runtime: &Runtime<App>| {
+            runtime
+                .state
+                .price_check
+                .item_filters()
+                .and_then(|filters| filters.ultimatum.as_ref())
+                .and_then(|ultimatum| ultimatum.challenge.as_ref())
+                .map(|filter| filter.disabled)
+        };
+        assert_eq!(challenge(&runtime), Some(true));
+        click(&mut runtime, "btn-ultimatum-challenge");
+        assert_eq!(challenge(&runtime), Some(false));
     }
 
     /// A map has no name to search by: `FilterName` shows its category.
@@ -1685,6 +1808,102 @@ mod tests {
         assert!(blighted.find("map-check-image").is_none());
         assert_eq!(text_of(&blighted, "stat-0-text").as_deref(), Some("Area is inhabited by ranged monsters"));
         assert_eq!(text_of(&blighted, "stat-2-text").as_deref(), Some("20% increased Magic Monsters"));
+    }
+
+    /// The port's Inscribed Ultimatum card (`ultimatum-check-survive-currency`): the verdict
+    /// badge, both sides of the deal, the value line and one row per rolled modifier.
+    #[test]
+    fn the_ultimatum_check_shows_the_deal_and_the_verdict() {
+        let runtime = runtime("ultimatum-check-survive-currency");
+        assert_eq!(text_of(&runtime, "ultimatum-check-name").as_deref(), Some("Inscribed Ultimatum"));
+        assert_eq!(text_of(&runtime, "ultimatum-check-challenge").as_deref(), Some("Challenge: Survive"));
+        assert_eq!(text_of(&runtime, "ultimatum-check-area-level").as_deref(), Some("Area Level 83"));
+        assert_eq!(text_of(&runtime, "ultimatum-check-sacrifice").as_deref(), Some("Sacrifice: Vaal Orb \u{d7}20"));
+        assert_eq!(text_of(&runtime, "ultimatum-check-reward").as_deref(), Some("Reward: Doubles sacrificed Currency"));
+        // Vaal Orb is 4.35 chaos: the twenty it demands are 87, and doubling pays 174.
+        assert_eq!(
+            text_of(&runtime, "ultimatum-check-value").as_deref(),
+            Some("Sacrifice worth 87c \u{b7} Reward worth 174c")
+        );
+        assert_eq!(text_of(&runtime, "ultimatum-check-profit").as_deref(), Some("Profit if you win: +87c"));
+        assert_eq!(text_of(&runtime, "ultimatum-check-verdict-text").as_deref(), Some("Don't run"));
+        assert_eq!(element(&runtime.elements(), "ultimatum-check-verdict").unwrap().fill, theme::red(700));
+
+        // Eight modifiers; the tier-II one carries its numeral, tier I does not.
+        for index in 0..8 {
+            assert!(runtime.find(&format!("ultimatum-mod-{index}")).is_some(), "row {index}");
+        }
+        assert!(runtime.find("ultimatum-mod-8").is_none(), "eight rows");
+        assert_eq!(text_of(&runtime, "ultimatum-mod-0-name-text").as_deref(), Some("Stormcaller Runes"));
+        assert_eq!(text_of(&runtime, "ultimatum-mod-0-tier").as_deref(), Some("II"));
+        assert!(runtime.find("ultimatum-mod-1-tier").is_none(), "tier I draws no numeral");
+        assert_eq!(
+            text_of(&runtime, "ultimatum-mod-0-description-0").as_deref(),
+            Some("Large runes will appear that will call deadly Lightning storms if you remain in them")
+        );
+        let elements = runtime.elements();
+        assert_eq!(element(&elements, "ultimatum-mod-0-cycle").unwrap().fill, theme::red(700));
+        assert_eq!(element(&elements, "ultimatum-mod-3-cycle").unwrap().fill, theme::orange(600));
+        assert_eq!(element(&elements, "ultimatum-mod-1-cycle").unwrap().fill, rune::Color::TRANSPARENT);
+        assert_eq!(
+            text_of(&runtime, "ultimatum-check-monsters-text").as_deref(),
+            Some("Monsters: 10% increased damage, 30% more life")
+        );
+        assert!(runtime.find("ultimatum-check-show-new-icon").is_some());
+    }
+
+    /// Clicking a modifier marks its tier and every higher one for the profile, and the badge
+    /// follows the marks.
+    #[test]
+    fn an_ultimatum_modifier_marks_its_tier_and_the_higher_ones() {
+        use wraex_poe1::ultimatum_check::decision;
+
+        let mut runtime = runtime("ultimatum-check-altar-currency");
+        assert!(runtime.find("ultimatum-check-verdict").is_none(), "nothing is marked: fine");
+
+        // `Deadly Monsters` is tier I (row 5): every tier is marked.
+        click(&mut runtime, "ultimatum-mod-5-cycle");
+        let config = &runtime.state.item_check.as_ref().unwrap().ultimatum;
+        for tier in 1..=4 {
+            assert_eq!(decision(config, 1, "Deadly Monsters", tier), Some('d'), "tier {tier}");
+        }
+
+        // `Razor Dance` is tier III (row 1): III and IV, not I and II.
+        click(&mut runtime, "ultimatum-mod-1-cycle");
+        let config = &runtime.state.item_check.as_ref().unwrap().ultimatum;
+        assert_eq!(decision(config, 1, "Razor Dance", 1), Some('-'));
+        assert_eq!(decision(config, 1, "Razor Dance", 2), Some('-'));
+        assert_eq!(decision(config, 1, "Razor Dance", 3), Some('d'));
+        assert_eq!(decision(config, 1, "Razor Dance", 4), Some('d'));
+
+        // A deadly mark on the rolled tier shows the badge.
+        assert_eq!(text_of(&runtime, "ultimatum-check-verdict-text").as_deref(), Some("Don't run"));
+    }
+
+    /// The profile buttons are the map check's: switching one switches both cards.
+    #[test]
+    fn the_ultimatum_check_shares_the_map_profile() {
+        let mut runtime = runtime("ultimatum-check-survive-currency");
+        click(&mut runtime, "ultimatum-check-profile-2");
+        let check = runtime.state.item_check.as_ref().unwrap();
+        assert_eq!(check.maps.profile, 2);
+        assert!(runtime.find("ultimatum-check-verdict").is_none(), "profile II has no marks");
+        assert!(runtime.find("ultimatum-check-profile-2-text").is_some());
+    }
+
+    /// The unseen eye, with `showNewMods` on: it marks only that modifier's tier as seen.
+    #[test]
+    fn the_ultimatum_eye_marks_a_modifier_seen() {
+        use wraex_poe1::ultimatum_check::decision;
+
+        let mut runtime = runtime("ultimatum-check-altar-currency");
+        assert!(runtime.find("ultimatum-mod-0-seen-icon").is_some(), "the eye for an unseen modifier");
+        click(&mut runtime, "ultimatum-mod-0-seen");
+        let config = &runtime.state.item_check.as_ref().unwrap().ultimatum;
+        assert_eq!(decision(config, 1, "Stalking Ruin", 1), Some('s'));
+        assert_eq!(decision(config, 1, "Razor Dance", 3), None, "another modifier keeps its own");
+        runtime.frame(1.0 / 60.0);
+        assert!(runtime.find("ultimatum-mod-0-seen-icon").is_none(), "seen, so the eye goes");
     }
 
     /// `ItemInfo.vue`: the item's name, the three buttons a mirrored rare gets, and the empty

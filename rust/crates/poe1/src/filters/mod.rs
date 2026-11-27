@@ -112,6 +112,9 @@ pub struct ItemFilters {
     pub map_blighted: Option<ValueFilter<MapBlighted>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub map_completion_reward: Option<MapCompletionReward>,
+    /// An Inscribed Ultimatum's four trade options, which upstream has no support for.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ultimatum: Option<UltimatumFilters>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub item_level: Option<FilterNumeric>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -188,6 +191,54 @@ impl Serialize for MapBlighted {
 pub struct MapCompletionReward {
     pub name: String,
     pub name_trade: String,
+}
+
+/// The `ultimatum_*` filters an Inscribed Ultimatum offers (`filters.ultimatum`). Upstream
+/// has no Ultimatum support, so this is the port's own shape; the trade request writes each
+/// enabled filter's `value` as its option.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct UltimatumFilters {
+    /// `ultimatum_challenge`: off by default, since the challenge is not what a buyer prices.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub challenge: Option<UltimatumFilter>,
+    /// `ultimatum_reward`: `DoubleCurrency`, `DoubleDivCards`, `MirrorRare` or `ExchangeUnique`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reward: Option<UltimatumFilter>,
+    /// `ultimatum_input`: the item the Ultimatum demands.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub input: Option<UltimatumFilter>,
+    /// `ultimatum_output`: the unique an `ExchangeUnique` reward pays out.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub output: Option<UltimatumFilter>,
+}
+
+/// One `ultimatum_*` filter: the trade site's option (a trade id, or an item's name) and the
+/// label its chip shows.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct UltimatumFilter {
+    pub value: String,
+    pub label: String,
+    pub disabled: bool,
+}
+
+impl UltimatumFilter {
+    fn new(value: impl Into<String>, label: impl Into<String>, disabled: bool) -> Self {
+        Self { value: value.into(), label: label.into(), disabled }
+    }
+}
+
+impl From<&crate::ultimatum::Ultimatum> for UltimatumFilters {
+    fn from(u: &crate::ultimatum::Ultimatum) -> Self {
+        let challenge = u.challenge.trade_id().map(|id| UltimatumFilter::new(id, u.challenge.label(), true));
+        let reward = u.reward.trade_id().map(|id| UltimatumFilter::new(id, u.reward.label(), false));
+        let input = (!u.sacrifice.name.is_empty())
+            .then(|| UltimatumFilter::new(u.sacrifice.name.as_str(), u.sacrifice.name.as_str(), false));
+        let output = match &u.reward {
+            crate::ultimatum::Reward::ExchangeUnique(name) => Some(UltimatumFilter::new(name, name, false)),
+            _ => None,
+        };
+        Self { challenge, reward, input, output }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]

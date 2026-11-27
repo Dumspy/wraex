@@ -389,6 +389,64 @@ fn a_map_stat_takes_a_decision() {
     assert_eq!(selected(&runtime, &text).as_deref(), Some("d--"));
 }
 
+/// The Ultimatum page: every decision the item check has an entry for, one chip per tier. A
+/// chip sets that tier alone (the item check's own click marks the higher ones too), and
+/// Remove forgets the modifier.
+#[test]
+fn an_ultimatum_modifier_sets_one_tier_at_a_time() {
+    let mut app = App::settings_scene(GameId::Poe1, Page::Ultimatum);
+    let settings = app.settings.as_mut().expect("the settings window");
+    crate::settings::widget_mut(&mut settings.config, "item-check").unwrap()["ultimatum"] = serde_json::json!({
+        "showNewMods": false,
+        "selectedMods": [{ "name": "Razor Dance", "tiers": ["---", "---", "---", "---"] }]
+    });
+    let mut runtime = page_runtime(app);
+    assert!(has_text(&runtime, "Razor Dance"), "{:?}", texts(&runtime));
+    assert!(runtime.find("ultimatum-empty").is_none());
+    assert_eq!(text_of(&runtime, "ultimatum-profile").as_deref(), Some("Profile I"));
+
+    let tiers = |runtime: &Runtime<App>| -> Vec<String> {
+        runtime.state.settings.as_ref().unwrap().config["widgets"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|widget| widget["wmType"] == "item-check")
+            .unwrap()["ultimatum"]["selectedMods"][0]["tiers"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|tier| tier.as_str().unwrap().to_owned())
+            .collect()
+    };
+    assert_eq!(tiers(&runtime), ["---", "---", "---", "---"]);
+
+    // Tier I cycles to deadly and the higher tiers stay undecided.
+    click(&mut runtime, "ultimatum-0-tier-1");
+    assert_eq!(tiers(&runtime), ["d--", "---", "---", "---"]);
+
+    // Tier III is its own chip.
+    click(&mut runtime, "ultimatum-0-tier-3");
+    assert_eq!(tiers(&runtime), ["d--", "---", "d--", "---"]);
+
+    // The chip cycles that tier's own decision: the second press is a warning.
+    click(&mut runtime, "ultimatum-0-tier-3");
+    assert_eq!(tiers(&runtime), ["d--", "---", "w--", "---"]);
+
+    click(&mut runtime, "ultimatum-0-remove");
+    assert!(
+        runtime.state.settings.as_ref().unwrap().config["widgets"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|widget| widget["wmType"] == "item-check")
+            .unwrap()["ultimatum"]["selectedMods"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    assert!(runtime.find("ultimatum-empty").is_some(), "the empty page explains itself");
+}
+
 /// `findAllAreaMods()` reads every area modifier from the game data.
 #[test]
 fn the_area_mods_load_from_the_game_data() {

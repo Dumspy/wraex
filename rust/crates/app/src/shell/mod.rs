@@ -514,6 +514,39 @@ impl std::fmt::Debug for Live {
     }
 }
 
+/// The item check's decisions as its config widget holds them: `maps` always, `ultimatum` for
+/// the PoE1 card (PoE2's item check has no Ultimatum key).
+struct ItemCheckValues {
+    maps: serde_json::Value,
+    ultimatum: Option<serde_json::Value>,
+}
+
+impl ItemCheckValues {
+    /// Write the decisions into a widget object; true when one of them changed.
+    fn write(&self, widget: &mut serde_json::Value) -> bool {
+        let Some(object) = widget.as_object_mut() else { return false };
+        let mut changed = set_config_value(object, "maps", &self.maps);
+        if let Some(ultimatum) = &self.ultimatum {
+            changed |= set_config_value(object, "ultimatum", ultimatum);
+        }
+        changed
+    }
+}
+
+/// `config[key] = value`, but only when it is a different value: the item check polls every
+/// frame, and a `saveConfig()` for an unchanged mark would rewrite the file each time.
+fn set_config_value(
+    object: &mut serde_json::Map<String, serde_json::Value>,
+    key: &str,
+    value: &serde_json::Value,
+) -> bool {
+    if object.get(key) == Some(value) {
+        return false;
+    }
+    object.insert(key.to_owned(), value.clone());
+    true
+}
+
 impl Live {
     /// The shell's state for a live run: the config, its host half, the idle OS traits and
     /// the prices the first price check will use. `panel` is the overlay's window, created
@@ -948,6 +981,53 @@ impl Live {
             self.register_hotkeys();
         }
         self.sync_client_log();
+    }
+
+    /// Write the item check's map and Ultimatum decisions back into its widget's config, as
+    /// `WidgetItemCheck.vue` mutates the reactive `props.config` its buttons are bound to and
+    /// `saveConfig()` persists it. The decisions are the app's own state (`app.item_check`), so
+    /// they have to reach both the overlay's `item-check` entry — whose whole widget list
+    /// [`Live::save_widget_config`] writes — and the shell's loaded config, which
+    /// [`crate::poe1::item_check::ItemCheck::from_config`] reads on the next press.
+    ///
+    /// Only a value that differs from the config marks the overlay dirty, so an item check left
+    /// on screen does not rewrite the file every frame. A closed check is left alone: opening
+    /// the settings window closes it, and the settings save has the newer decisions from the
+    /// file.
+    fn sync_item_check_config(&mut self, app: &mut App) {
+        let (maps, ultimatum) = match self.game {
+            GameId::Poe2 => {
+                let Some(check) = app.item_check_poe2.as_ref().filter(|check| check.open) else { return };
+                (serde_json::to_value(&check.maps), None)
+            }
+            _ => {
+                let Some(check) = app.item_check.as_ref().filter(|check| check.open) else { return };
+                (serde_json::to_value(&check.maps), Some(serde_json::to_value(&check.ultimatum)))
+            }
+        };
+        let Ok(maps) = maps else { return };
+        let values = ItemCheckValues { maps, ultimatum: ultimatum.and_then(Result::ok) };
+
+        let mut changed = false;
+        if let Some(overlay) = &mut app.widgets {
+            if let Some(widget) = overlay.widgets.iter_mut().find(|widget| widget.wm_type == widgets::ITEM_CHECK) {
+                changed = values.write(&mut widget.config);
+            }
+            if changed {
+                overlay.mark_config_dirty();
+            }
+        }
+        // The next press builds its widget from this copy (`Live::press` →
+        // `App::open_item_check_for`), so keep it in step even before the file is written.
+        if let Some(widget) = self
+            .startup
+            .config
+            .get_mut("widgets")
+            .and_then(serde_json::Value::as_array_mut)
+            .and_then(|widgets| widgets.iter_mut().find(|widget| widget["wmType"] == widgets::ITEM_CHECK))
+        {
+            values.write(widget);
+        }
     }
 
     /// `saveConfig()` for what the overlay itself changed: a dragged widget's `anchor`, a press's
@@ -1385,6 +1465,7 @@ impl Live {
             changed = true;
             self.deliver(app, requests);
         }
+        self.sync_item_check_config(app);
         self.save_widget_config(app);
 
         // Save or Cancel closes the settings window; either way the app re-reads its config so
@@ -1894,6 +1975,14 @@ impl App {
         } else {
             live.warn(format!("the copied text is not a {:?} item", live.game));
             return;
+        }
+        // The Ultimatum card's value line reads poe.ninja, which the shell keeps warm: copy the
+        // blob into the widget's own prices, only for an Inscribed Ultimatum.
+        if let Some(check) = self.item_check.as_mut()
+            && check.item().is_some_and(wraex_poe1::ultimatum::is_ultimatum)
+            && let Some(prices) = live.prices.as_ref()
+        {
+            check.prices = prices.prices().clone();
         }
         let requests: Vec<dispatch::Request> = match live.game {
             GameId::Poe2 => self

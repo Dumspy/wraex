@@ -1,0 +1,28 @@
+Item Class: Misc Map Items
+Rarity: Currency
+Inscribed Ultimatum
+--------
+Challenge: Protect the Altar
+Area Level: 83
+Requires Sacrifice: Divine Orb x1
+Reward: Doubles sacrificed Currency
+--------
+Stalking Ruin
+(An invulnerable shade stalks you, inflicting Ruin with its Melee Attacks
+Fail on reaching 7 Ruin)
+Razor Dance III
+(Swarms of blades will periodically appear and fly at you, applying Corrupted Blood on Hit)
+Reduced Recovery
+(60% Reduced Life, Mana, and Energy Shield Recovery Rate)
+Escalating Damage Taken
+(For the remainder of the encounter, damage taken will slowly increase by 2% per second, up to 50%)
+Lightning Damage from Mana Costs
+(Take 1000% of Mana costs as Lightning Damage)
+Deadly Monsters
+(Monster Hits are always Critical Strikes)
+Prismatic Monsters
+(Monsters gain 50% of Physical Damage as Extra Damage of each Element)
+10% increased Monster Damage
+30% more Monster Life
+--------
+Can be used in a personal map device to open portals to the Trialmaster's Domain and attempt his challenge. Portals will close once the challenge begins. While viewing your Atlas, Right-click this item to pinpoint its location.

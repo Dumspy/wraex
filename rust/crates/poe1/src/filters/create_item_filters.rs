@@ -7,8 +7,8 @@ use wraex_core::filters::{ceil_to_bracket, floor_to_bracket};
 
 use super::{
     CorruptedFilter, Disabled, FilterNumeric, HiddenFilter, InfluenceFilter, ItemFilters, MapBlighted,
-    MapCompletionReward, R, RarityFilter, SearchFilter, TradeFilters, UnidentifiedFilter, ValueFilter, VeiledFilter,
-    missing,
+    MapCompletionReward, R, RarityFilter, SearchFilter, TradeFilters, UltimatumFilters, UnidentifiedFilter,
+    ValueFilter, VeiledFilter, missing,
 };
 use crate::data::{BaseType, Data, Namespace};
 use crate::parser::calc_q20::get_prop_quality;
@@ -157,6 +157,7 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
         map_tier: None,
         map_blighted: None,
         map_completion_reward: None,
+        ultimatum: None,
         item_level: None,
         stack_size: None,
         unidentified: None,
@@ -188,6 +189,13 @@ pub fn create_filters(d: &Data, item: &Item, opts: &CreateOptions) -> R<ItemFilt
 
     if is(item, C::Gem) {
         return create_gem_filters(d, item, filters, opts);
+    }
+    // Upstream has no Inscribed Ultimatum support: the base type is the whole search, and the
+    // challenge, reward and sacrifice ride in `filters.ultimatum`.
+    if crate::ultimatum::is_ultimatum(item) {
+        filters.search_exact = base_type(opts, info);
+        filters.ultimatum = crate::ultimatum::parse(item, d).as_ref().map(UltimatumFilters::from);
+        return Ok(filters);
     }
     if is(item, C::CapturedBeast) {
         filters.search_exact = base_type(opts, info);

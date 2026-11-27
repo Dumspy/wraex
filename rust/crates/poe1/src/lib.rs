@@ -2,8 +2,9 @@
 //!
 //! Ported from `ref/apt` (Awakened PoE Trade). Ported so far: the data layer
 //! ([`data`]), the parser ([`parser`]), the default filters ([`filters`]),
-//! trade request building ([`trade`]), the map check ([`map_check`]) and the
-//! item check's actions ([`item_check`]).
+//! trade request building ([`trade`]), the map check ([`map_check`]), the
+//! item check's actions ([`item_check`]) and Inscribed Ultimatum items
+//! ([`ultimatum`], with their check in [`ultimatum_check`]).
 
 pub mod client_log;
 pub mod config;
@@ -17,6 +18,8 @@ pub mod prices;
 pub mod results;
 pub mod trade;
 pub mod trends;
+pub mod ultimatum;
+pub mod ultimatum_check;
 
 use wraex_core::GameId;
 use wraex_game::{Game, ParseError};
@@ -205,6 +208,111 @@ mod tests {
         }
         assert!(compared > 0);
         assert!(failures.is_empty(), "{} of {compared} cases differ:\n\n{}", failures.len(), failures.join("\n\n"));
+    }
+
+    /// Inscribed Ultimata are the port's own feature (upstream has no parser for them), so
+    /// their filters, preset and request are asserted here rather than against a fixture.
+    #[test]
+    fn ultimatum_filters_presets_and_requests() {
+        use filters::create_item_filters::CreateOptions;
+
+        let data = data::Data::load(&data::reference_source(), "en").unwrap();
+        let opts = filters::CreatePresetsOptions {
+            filters: CreateOptions {
+                league: "Standard".to_owned(),
+                merchant_only: true,
+                currency: None,
+                collapse_listings: "api".to_owned(),
+                activate_stock_filter: false,
+                exact: false,
+                use_en: false,
+            },
+            search_stat_range: 10.0,
+        };
+        // The preset and the request a scene would send for one item text.
+        let check = |name: &str, text: &str| {
+            let item = parser::parse_clipboard(&data, text).unwrap_or_else(|e| panic!("{name}: {e:?}"));
+            let presets = filters::create_presets(&data, &item, &opts).unwrap();
+            assert_eq!(presets.presets.len(), 1, "{name}");
+            assert_eq!(presets.active, "filters.preset_exact", "{name}");
+            let preset = &presets.presets[0];
+            assert_eq!(preset.id, "filters.preset_exact", "{name}");
+            assert!(preset.stats.is_empty(), "{name}: the modifier lines are not trade stats");
+            assert!(preset.filters.rarity.is_none(), "{name}: no rarity filter");
+            assert!(preset.filters.item_level.is_none(), "{name}: no item level");
+            assert!(preset.filters.area_level.is_none(), "{name}: no area level");
+            assert_eq!(preset.filters.search_exact.base_type.as_deref(), Some("Inscribed Ultimatum"), "{name}");
+            assert_eq!(trade::api_to_satisfy_search(&item, &preset.stats), trade::Api::Trade, "{name}: search API");
+            let request = trade::create_trade_request(&data, &preset.filters, &preset.stats)
+                .unwrap_or_else(|e| panic!("{name}: {e}"));
+            assert_eq!(
+                serde_json::to_value(&request.query.kind).unwrap(),
+                serde_json::json!("Inscribed Ultimatum"),
+                "{name}"
+            );
+            (preset.filters.clone(), request)
+        };
+
+        let (filters, request) = check("survive-currency", include_str!("../testdata/ultimatum/survive-currency.txt"));
+        let ultimatum = filters.ultimatum.as_ref().expect("ultimatum filters");
+        fn fields(filter: Option<&filters::UltimatumFilter>) -> Option<(&str, &str, bool)> {
+            filter.map(|filter| (filter.value.as_str(), filter.label.as_str(), filter.disabled))
+        }
+        assert_eq!(fields(ultimatum.challenge.as_ref()), Some(("Survival", "Survive", true)));
+        assert_eq!(fields(ultimatum.reward.as_ref()), Some(("DoubleCurrency", "Currency", false)));
+        assert_eq!(fields(ultimatum.input.as_ref()), Some(("Vaal Orb", "Vaal Orb", false)));
+        assert!(ultimatum.output.is_none());
+        let ultimatum_filters = |request: &trade::TradeRequest| request.query.filters.get("ultimatum_filters").cloned();
+        assert_eq!(
+            ultimatum_filters(&request),
+            Some(serde_json::json!({"filters": {
+                "ultimatum_reward": {"option": "DoubleCurrency"},
+                "ultimatum_input": {"option": "Vaal Orb"},
+            }}))
+        );
+
+        // The challenge chip starts off; ticking it puts the challenge in the request too.
+        let mut with_challenge = filters.clone();
+        with_challenge.ultimatum.as_mut().unwrap().challenge.as_mut().unwrap().disabled = false;
+        let request = trade::create_trade_request(&data, &with_challenge, &[]).unwrap();
+        assert_eq!(
+            ultimatum_filters(&request),
+            Some(serde_json::json!({"filters": {
+                "ultimatum_challenge": {"option": "Survival"},
+                "ultimatum_reward": {"option": "DoubleCurrency"},
+                "ultimatum_input": {"option": "Vaal Orb"},
+            }}))
+        );
+
+        let (filters, request) =
+            check("survive-unique-swap", include_str!("../testdata/ultimatum/survive-unique-swap.txt"));
+        let ultimatum = filters.ultimatum.as_ref().expect("ultimatum filters");
+        assert_eq!(fields(ultimatum.challenge.as_ref()), Some(("Survival", "Survive", true)));
+        assert_eq!(fields(ultimatum.reward.as_ref()), Some(("ExchangeUnique", "Unique Item", false)));
+        assert_eq!(fields(ultimatum.input.as_ref()), Some(("Prospero's Protection", "Prospero's Protection", false)));
+        assert_eq!(fields(ultimatum.output.as_ref()), Some(("Grasping Nightshade", "Grasping Nightshade", false)));
+        assert_eq!(
+            ultimatum_filters(&request),
+            Some(serde_json::json!({"filters": {
+                "ultimatum_reward": {"option": "ExchangeUnique"},
+                "ultimatum_input": {"option": "Prospero's Protection"},
+                "ultimatum_output": {"option": "Grasping Nightshade"},
+            }}))
+        );
+
+        let (filters, request) = check("waves-div-cards", include_str!("../testdata/ultimatum/waves-div-cards.txt"));
+        let ultimatum = filters.ultimatum.as_ref().expect("ultimatum filters");
+        assert_eq!(fields(ultimatum.challenge.as_ref()), Some(("Exterminate", "Defeat waves of enemies", true)));
+        assert_eq!(fields(ultimatum.reward.as_ref()), Some(("DoubleDivCards", "Divination Cards", false)));
+        assert_eq!(fields(ultimatum.input.as_ref()), Some(("Monochrome", "Monochrome", false)));
+        assert!(ultimatum.output.is_none());
+        assert_eq!(
+            ultimatum_filters(&request),
+            Some(serde_json::json!({"filters": {
+                "ultimatum_reward": {"option": "DoubleDivCards"},
+                "ultimatum_input": {"option": "Monochrome"},
+            }}))
+        );
     }
 
     /// `defaultConfig()`, `initConfig()` and `getConfigForHost()` equal the

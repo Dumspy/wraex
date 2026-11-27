@@ -20,7 +20,7 @@ use wraex_poe1::data::{Data, source};
 use wraex_poe1::filters::create_item_filters::{CreateOptions, category_to_trade_id};
 use wraex_poe1::filters::{
     CreatePresetsOptions, FilterError, FilterNumeric, FilterOrGroup, FilterPreset, ItemFilters, Presets, StatFilter,
-    create_presets,
+    UltimatumFilter, UltimatumFilters, create_presets,
 };
 use wraex_poe1::parser::item::Item;
 use wraex_poe1::parser::meta::ItemCategory;
@@ -28,6 +28,7 @@ use wraex_poe1::parser::parse_clipboard;
 use wraex_poe1::prices::NinjaPrice;
 use wraex_poe1::trade::{Api, api_to_satisfy_search, create_bulk_request, create_trade_request};
 use wraex_poe1::trends::DetailsId;
+use wraex_poe1::ultimatum::{Ultimatum, UltimatumValue};
 
 use crate::trade::Mode;
 
@@ -88,6 +89,9 @@ pub struct PriceCheck {
     pub text: String,
     /// `parseClipboard(text)`.
     pub item: Result<Item, ParseError>,
+    /// The parsed Inscribed Ultimatum, when the item is one: the chips, the sacrifice note and
+    /// the poe.ninja value estimate all read it (upstream has no Ultimatum support).
+    pub ultimatum: Option<Ultimatum>,
     /// `createPresets(item, …)`, one preset per way of searching the item. `None` when the
     /// item did not parse (the reference never reaches `CheckedItem` then).
     pub presets: Option<Result<Presets, FilterError>>,
@@ -170,6 +174,7 @@ impl PriceCheck {
     /// The window over a parsed item, whatever produced it.
     fn build(text: String, item: Result<Item, ParseError>, mode: Mode, league: &str) -> Self {
         let presets = item.as_ref().ok().map(|item| create_presets(data(), item, &preset_options_for(league)));
+        let ultimatum = item.as_ref().ok().and_then(|item| wraex_poe1::ultimatum::parse(item, data()));
         let do_search = match (&item, &presets) {
             (Ok(item), Some(Ok(presets))) => initial_do_search(item, presets),
             _ => false,
@@ -177,6 +182,7 @@ impl PriceCheck {
         let mut check = Self {
             text,
             item,
+            ultimatum,
             presets,
             do_search,
             league: league.to_owned(),
@@ -297,6 +303,16 @@ impl PriceCheck {
     /// `findPriceByQuery(getDetailsId(item))`: the item's entry in the price blob.
     pub fn price_info(&self) -> Option<NinjaPrice> {
         self.prices.find_price(&self.details_id()?.query())
+    }
+
+    /// The Inscribed Ultimatum's sacrifice and reward in chaos, once poe.ninja prices loaded.
+    pub fn ultimatum_value(&self) -> Option<UltimatumValue> {
+        let ultimatum = self.ultimatum.as_ref()?;
+        let prices = self.prices.prices();
+        if prices.is_empty() {
+            return None;
+        }
+        Some(wraex_poe1::ultimatum::value(ultimatum, data(), prices))
     }
 
     /// `OnlineFilterCore.vue`'s offline toggle: it also opens the listed range up.
@@ -601,6 +617,11 @@ impl PriceCheck {
                     influence.disabled = !influence.disabled;
                 }
             }
+            LogicalToggle::Ultimatum(which) => {
+                if let Some(filter) = filters.ultimatum.as_mut().and_then(|ultimatum| which.get_mut(ultimatum)) {
+                    filter.disabled = !filter.disabled;
+                }
+            }
         }
         self.filters_changed();
     }
@@ -795,6 +816,66 @@ pub enum LogicalToggle {
     Foil,
     Mirrored,
     Split,
+    /// `filters.ultimatum`: an Inscribed Ultimatum's challenge, reward, input or output.
+    Ultimatum(UltimatumFilterKind),
+}
+
+/// The four `filters.ultimatum` chips. Upstream has no Inscribed Ultimatum support, so the
+/// order, keys and labels are the port's own.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UltimatumFilterKind {
+    Challenge,
+    Reward,
+    Input,
+    Output,
+}
+
+impl UltimatumFilterKind {
+    /// The order the block draws them in.
+    pub const ALL: [UltimatumFilterKind; 4] = [
+        UltimatumFilterKind::Challenge,
+        UltimatumFilterKind::Reward,
+        UltimatumFilterKind::Input,
+        UltimatumFilterKind::Output,
+    ];
+
+    /// The key its chip is named with (`ultimatum_challenge` in the trade request).
+    pub const fn key(self) -> &'static str {
+        match self {
+            UltimatumFilterKind::Challenge => "challenge",
+            UltimatumFilterKind::Reward => "reward",
+            UltimatumFilterKind::Input => "input",
+            UltimatumFilterKind::Output => "output",
+        }
+    }
+
+    /// The i18n key of the chip's label; the output is a reward too.
+    pub const fn label_key(self) -> &'static str {
+        match self {
+            UltimatumFilterKind::Challenge => "ultimatum.challenge",
+            UltimatumFilterKind::Reward | UltimatumFilterKind::Output => "ultimatum.reward",
+            UltimatumFilterKind::Input => "ultimatum.sacrifice",
+        }
+    }
+
+    /// This kind's filter, when the preset has it.
+    pub fn get(self, filters: &UltimatumFilters) -> Option<&UltimatumFilter> {
+        match self {
+            UltimatumFilterKind::Challenge => filters.challenge.as_ref(),
+            UltimatumFilterKind::Reward => filters.reward.as_ref(),
+            UltimatumFilterKind::Input => filters.input.as_ref(),
+            UltimatumFilterKind::Output => filters.output.as_ref(),
+        }
+    }
+
+    fn get_mut(self, filters: &mut UltimatumFilters) -> Option<&mut UltimatumFilter> {
+        match self {
+            UltimatumFilterKind::Challenge => filters.challenge.as_mut(),
+            UltimatumFilterKind::Reward => filters.reward.as_mut(),
+            UltimatumFilterKind::Input => filters.input.as_mut(),
+            UltimatumFilterKind::Output => filters.output.as_mut(),
+        }
+    }
 }
 
 /// Which half of a min/max pair an input edits.

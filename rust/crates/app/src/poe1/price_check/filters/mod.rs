@@ -34,7 +34,7 @@ use wraex_poe1::parser::modifiers::ModifierMechanic;
 
 use crate::poe1::i18n;
 use crate::poe1::price_check::view::Project;
-use crate::poe1::price_check::{InputField, LogicalToggle, NumericFilter, PriceCheck, StatPath};
+use crate::poe1::price_check::{InputField, LogicalToggle, NumericFilter, PriceCheck, StatPath, UltimatumFilterKind};
 use crate::theme::{self, text as type_};
 use crate::ui::art;
 use crate::ui::{self, icon};
@@ -79,6 +79,20 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
     if let Some(reward) = &filters.map_completion_reward {
         let label = i18n::fmt("item.map_foil_reward", &[&reward.name]);
         chips = chips.child(btn::logical("map-foil", &label, true, None, None, |_: &mut S| {}));
+    }
+    if let Some(ultimatum) = &filters.ultimatum {
+        for which in UltimatumFilterKind::ALL {
+            let Some(filter) = which.get(ultimatum) else { continue };
+            let label = i18n::fmt(which.label_key(), &[&filter.label]);
+            chips = chips.child(btn::logical(
+                &format!("ultimatum-{}", which.key()),
+                &label,
+                !filter.disabled,
+                None,
+                None,
+                move |s: &mut S| project(s).toggle_logical(LogicalToggle::Ultimatum(which)),
+            ));
+        }
     }
     for which in [
         NumericFilter::AreaLevel,
@@ -197,6 +211,21 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
     }
     root = root.child(chips);
 
+    // An Inscribed Ultimatum has no trade stats; what to show below its chips is the count the
+    // trade site cannot filter and, once poe.ninja answers, what the deal is worth.
+    if let Some(ultimatum) = &check.ultimatum {
+        if ultimatum.sacrifice.count.is_some() {
+            root = root.child(
+                text(i18n::t("ultimatum.sacrifice_note")).key("ultimatum-note").font(type_::SM).color(theme::gray(500)),
+            );
+        }
+        if let Some(value) = check.ultimatum_value() {
+            for line in crate::poe1::ultimatum_check::value_lines("ultimatum", value, check.prices.prices()) {
+                root = root.child(line);
+            }
+        }
+    }
+
     if check.stats_collapsed || !has_stats {
         return root;
     }
@@ -303,10 +332,13 @@ fn preset_count(check: &PriceCheck) -> usize {
     }
 }
 
-/// `showUnknownMods`: the unknown rows are for craftable items, not maps or Sentinels.
+/// `showUnknownMods`: the unknown rows are for craftable items, not maps or Sentinels — and an
+/// Inscribed Ultimatum's lines are the encounter's modifiers, which no trade filter takes.
 fn unknown_count(check: &PriceCheck) -> usize {
     let Some(item) = check.item() else { return 0 };
-    if matches!(item.category, Some(ItemCategory::Sentinel) | Some(ItemCategory::Map)) {
+    if matches!(item.category, Some(ItemCategory::Sentinel) | Some(ItemCategory::Map))
+        || wraex_poe1::ultimatum::is_ultimatum(item)
+    {
         return 0;
     }
     item.unknown_modifiers.len()

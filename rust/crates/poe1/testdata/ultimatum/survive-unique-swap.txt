@@ -1,0 +1,25 @@
+Item Class: Misc Map Items
+Rarity: Currency
+Inscribed Ultimatum
+--------
+Challenge: Survive
+Area Level: 83
+Requires Sacrifice: Prospero's Protection
+Reward: Grasping Nightshade
+--------
+Choking Miasma
+(A cloud that deals Chaos Damage over Time will follow you)
+Razor Dance IV
+(Swarms of blades will periodically appear and fly at you, applying Corrupted Blood on Hit and leaving a trail of Blood ground)
+Totem of Costly Might
+(An invulnerable Totem will appear that imbues both its allies and its enemies with Speed and powerful Physical Damage benefits, but causes enemies to take 10% of their maximum Life and Energy Shield as Physical Damage per second)
+Escalating Monster Speed
+(Monsters gain 5% increased attack, cast, and movement speed per second they are alive, up to 50%)
+Treacherous Auras
+(Your Auras that affect Allies also affect Enemies)
+Resistant Monsters
+(Monsters have +50% to all Resistances)
+10% increased Monster Damage
+30% more Monster Life
+--------
+Can be used in a personal map device to open portals to the Trialmaster's Domain and attempt his challenge. Portals will close once the challenge begins. While viewing your Atlas, Right-click this item to pinpoint its location.

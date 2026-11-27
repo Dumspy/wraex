@@ -46,6 +46,19 @@ pub fn create_presets(d: &Data, item: &Item, opts: &CreatePresetsOptions) -> R<P
     let rarity = item.rarity;
     let is_unique = rarity == Some(Rarity::Unique);
 
+    // An Inscribed Ultimatum's modifier lines are the encounter's, not trade stats, so it gets
+    // one preset with nothing to tick (upstream has no Ultimatum support).
+    if crate::ultimatum::is_ultimatum(item) {
+        return Ok(Presets {
+            active: "filters.preset_exact".to_owned(),
+            presets: vec![FilterPreset {
+                id: "filters.preset_exact".to_owned(),
+                filters: create_filters(d, item, &exact)?,
+                stats: Vec::new(),
+            }],
+        });
+    }
+
     if item.ref_name_is("Expedition Logbook") {
         let areas = item.logbook_area_mods.as_ref().ok_or_else(|| missing("logbookAreaMods"))?;
         let mut presets = Vec::new();

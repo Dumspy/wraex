@@ -1,0 +1,23 @@
+Item Class: Misc Map Items
+Rarity: Currency
+Inscribed Ultimatum
+--------
+Challenge: Protect the Altar
+Area Level: 83
+Requires Sacrifice: The Siren x4
+Reward: Doubles sacrificed Divination Cards
+--------
+Choking Miasma III
+(A large and fast cloud that deals Chaos Damage over Time will follow you)
+Blistering Cold III
+(Many frozen pustules will periodically appear, chill you, and rapidly explode when you approach)
+Reduced Recovery
+(60% Reduced Life, Mana, and Energy Shield Recovery Rate)
+Lethal Rare Monsters
+(Rare Monsters have 2 additional Modifiers)
+Overwhelming Monsters
+(Monster Hits Overwhelm all Physical Damage Reduction)
+10% increased Monster Damage
+30% more Monster Life
+--------
+Can be used in a personal map device to open portals to the Trialmaster's Domain and attempt his challenge. Portals will close once the challenge begins. While viewing your Atlas, Right-click this item to pinpoint its location.

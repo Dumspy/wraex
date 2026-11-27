@@ -1,0 +1,31 @@
+Item Class: Misc Map Items
+Rarity: Currency
+Inscribed Ultimatum
+--------
+Challenge: Survive
+Area Level: 83
+Requires Sacrifice: Vaal Orb x20
+Reward: Doubles sacrificed Currency
+--------
+Stormcaller Runes II
+(Large runes will appear that will call deadly Lightning storms if you remain in them)
+Razor Dance
+(Blades will periodically appear and fly at you, applying Corrupted Blood on Hit)
+Totem of Costly Potency
+(An invulnerable Totem will appear that imbues both its allies and its enemies with Speed and powerful Elemental Damage benefits, but causes enemies to take 15% of their maximum Life and Energy Shield as Fire Damage per second)
+Unlucky Criticals
+(Your Critical Strike Chance is Unlucky
+Monsters take 50% reduced Extra Damage from Critical Strikes)
+Siphoned Charges
+(Lose a Power, Frenzy, and Endurance Charge every second
+Monsters gain Power, Frenzy, and Endurance Charges on hit)
+Deadly Monsters
+(Monster Hits are always Critical Strikes)
+Resistant Monsters
+(Monsters have +50% to all Resistances)
+Siphoning Monsters
+(Monster Hits remove 10% of current Energy Shield and Mana)
+10% increased Monster Damage
+30% more Monster Life
+--------
+Can be used in a personal map device to open portals to the Trialmaster's Domain and attempt his challenge. Portals will close once the challenge begins. While viewing your Atlas, Right-click this item to pinpoint its location.

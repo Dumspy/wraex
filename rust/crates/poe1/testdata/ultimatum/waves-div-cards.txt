@@ -1,0 +1,27 @@
+Item Class: Misc Map Items
+Rarity: Currency
+Inscribed Ultimatum
+--------
+Challenge: Defeat waves of enemies
+Area Level: 83
+Requires Sacrifice: Monochrome x2
+Reward: Doubles sacrificed Divination Cards
+--------
+Stormcaller Runes II
+(Large runes will appear that will call deadly Lightning storms if you remain in them)
+Blistering Cold IV
+(Many frozen pustules will periodically appear, chill you, and rapidly explode when you approach, freezing if they hit)
+Less Cooldown Recovery
+(Cooldowns take five times longer to recharge)
+Escalating Monster Speed
+(Monsters gain 5% increased attack, cast, and movement speed per second they are alive, up to 50%)
+Hindering Flasks
+(Using a Flask Hinders you by 50% for 4 seconds)
+Lethal Rare Monsters
+(Rare Monsters have 2 additional Modifiers)
+Deadly Monsters
+(Monster Hits are always Critical Strikes)
+20% increased Monster Damage
+70% more Monster Life
+--------
+Can be used in a personal map device to open portals to the Trialmaster's Domain and attempt his challenge. Portals will close once the challenge begins. While viewing your Atlas, Right-click this item to pinpoint its location.
