@@ -13,7 +13,7 @@
   "devDependencies": {
     "happy-dom": "21.0.4",
     "playwright": "1.65.0",
-    "vitest": "4.1.11",
+    "vitest": "4.1.12",
     "ws": "8.23.0"
   }
 }
