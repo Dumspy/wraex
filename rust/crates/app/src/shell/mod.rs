@@ -449,6 +449,7 @@ pub struct Live {
     pub window: GameWindow,
     pub clipboard: Box<dyn Clipboard>,
     pub keys: keys::OSSender,
+    pending_copy: Option<(ShortcutAction, Point)>,
     pub handle: AppHandle<App>,
     pub tray: Option<Tray>,
     /// The OS layer that finds and follows the game's window (`electron-overlay-window`'s
@@ -585,6 +586,7 @@ impl Live {
             window: GameWindow::new(),
             clipboard,
             keys: keys::OSSender::new(),
+            pending_copy: None,
             handle,
             tray: None,
             watcher: None,
@@ -995,6 +997,9 @@ impl Live {
     /// A press of one configured hotkey: upstream's `Shortcuts.press`, then whatever the
     /// press produced.
     fn press(&mut self, app: &mut App, entry: &ShortcutAction) {
+        if self.pending_copy.is_some() && matches!(entry.action, Action::CopyItem { .. }) {
+            return;
+        }
         let cursor = cursor_point();
 
         // Without key synthesis the game's copy key cannot be pressed, so a copy action reads
@@ -1038,6 +1043,11 @@ impl Live {
                 },
             )
         };
+        if matches!(entry.action, Action::CopyItem { .. }) {
+            self.pending_copy = Some((entry.clone(), cursor));
+            self.handle.wake();
+            return;
+        }
         self.deliver(app, dispatch::shortcut_requests(events));
         self.after_press(app, entry, cursor);
         // `focus-overlay` may have taken the focus from the game.
@@ -1348,6 +1358,27 @@ impl Live {
         let mut changed = self.poll_game_window();
         changed |= self.poll_mouse();
         changed |= self.poll_keyboard();
+        if let Some(result) = self.shortcuts.clipboard_mut().poll_capture(&mut *self.clipboard, LiveClock.now())
+            && let Some((entry, cursor)) = self.pending_copy.take()
+            && let Ok(text) = result
+        {
+            let event = Shortcuts::finish_copy(
+                &entry,
+                cursor,
+                text,
+                &mut self.overlay,
+                &mut self.window,
+                &mut OverlayPanel::new(self.panel.clone()),
+            );
+            self.deliver(app, dispatch::shortcut_requests(vec![event]));
+            self.after_press(app, &entry, cursor);
+            self.sync_registration();
+            changed = true;
+        }
+        if let Some(deadline) = self.shortcuts.clipboard_mut().capture_deadline() {
+            tx.wake_after(std::time::Duration::from_millis(deadline.saturating_sub(LiveClock.now())));
+        }
+
         if let Some(state) = self.client_log.as_ref().and_then(crate::client_log::Log::take) {
             app.apply_client_log(state);
             changed = true;
