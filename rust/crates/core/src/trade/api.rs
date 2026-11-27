@@ -38,6 +38,16 @@ impl TradeSite {
             TradeSite::Trade2 => "trade2",
         }
     }
+
+    /// A trade site web page for `league`: `/trade/{page}/{league}` for PoE1,
+    /// `/trade2/{page}/poe2/{league}` for PoE2 (`makeTradeLink`'s templates in
+    /// `TradeListing.vue`/`TradeBulk.vue`). `league` is already encoded.
+    pub(crate) fn page(self, page: &str, league: &str) -> String {
+        match self {
+            TradeSite::Trade => format!("trade/{page}/{league}"),
+            TradeSite::Trade2 => format!("trade2/{page}/poe2/{league}"),
+        }
+    }
 }
 
 /// `poeWebApi` (PoE1): the trade site host for the app's language.

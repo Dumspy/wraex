@@ -54,3 +54,18 @@ re-check each entry: drop the workaround if the bug is gone.
   or labels raises it as `mousedown` would, and a handle's drag calls `Overlay::bring_to_top`
   itself. Pressing one of a widget's own buttons does not raise the widget; that only shows when
   two cards overlap at that pixel (`rust/crates/app/src/widgets/mod.rs`).
+
+## `open_url` refuses links with whitespace or JSON's characters
+
+- **Seen:** the trade site's Browser button did nothing for a search that had not run, and a search
+  by id broke for a league with a space ("Standard Hardcore"). `makeTradeLink` writes the raw
+  `JSON.stringify` query into `?q=` and leaves Chromium to percent-encode it.
+- **Cause:** `open_url`'s `check_link` (`crates/rune/src/open_url.rs`) refuses links longer than
+  8192 bytes or containing whitespace, control characters, `` \ " < > ` ^ { | } ``, `[`/`]` after
+  the host, or a `%` that is not a two-hex-digit escape (other than `%00`). The raw query has `"`,
+  `{`, `}`, `[`, `]` and spaces.
+- **Workaround:** `wraex_core::trade::site_link` percent-encodes the league and `q` with
+  `encodeURIComponent`'s rules (`wraex_core::js::encode_uri_component`) — the trade site decodes
+  `q` the same way — and falls back to the bare search/exchange page when the encoded link would
+  exceed the limit (`MAX_LINK_LEN`). A refusal is logged with `wraex_platform::log!` instead of
+  dropped (`rust/crates/core/src/trade/site_link.rs`, `rust/crates/app/src/poe{1,2}/price_check/trade/`).
