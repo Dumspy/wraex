@@ -209,6 +209,7 @@ impl HostClipboard {
         clock: &dyn Clock,
         write: impl FnOnce(&mut dyn Clipboard) -> T,
     ) -> Option<T> {
+        self.apply_pending_restore(clipboard, clock);
         if !self.is_restored || self.is_polling() {
             return None;
         }

@@ -1355,6 +1355,7 @@ impl Live {
         // The overlay draws every widget whose `wmWants` is `show`, so its state has to exist
         // before the cards are read (`App::cards_for`) and drawn (`crate::view`).
         app.ensure_overlay_state(self.game, &self.startup.config);
+        self.shortcuts.clipboard_mut().apply_pending_restore(&mut *self.clipboard, &LiveClock);
         let mut changed = self.poll_game_window();
         changed |= self.poll_mouse();
         changed |= self.poll_keyboard();
@@ -1435,6 +1436,9 @@ impl Live {
 
         self.drain_overlay_events(app);
         self.sync_window(app, tx);
+        if let Some(deadline) = self.shortcuts.clipboard_mut().pending_restore_deadline() {
+            tx.wake_after(std::time::Duration::from_millis(deadline.saturating_sub(LiveClock.now())));
+        }
         changed
     }
 }
