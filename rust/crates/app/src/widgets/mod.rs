@@ -711,6 +711,7 @@ impl Overlay {
     pub fn create(&mut self, wm_type: &str) -> u32 {
         let id = self.widgets.iter().map(|widget| widget.wm_id).max().unwrap_or(0) + 1;
         self.widgets.push(Widget::from_config(&initialised(wm_type, id)).expect("a widget object"));
+        self.config_dirty = true;
         self.actions.push(Action::Create(wm_type.to_owned()));
         if wm_type == stopwatch::WM_TYPE {
             self.timers.insert(id, stopwatch::Timer::default());
@@ -722,7 +723,9 @@ impl Overlay {
 
     /// `wm.remove(wmId)`: `Widget.vue`'s delete button, held for a second upstream.
     pub fn remove(&mut self, wm_id: u32) {
+        let count = self.widgets.len();
         self.widgets.retain(|widget| widget.wm_id != wm_id);
+        self.config_dirty |= count != self.widgets.len();
         self.timers.remove(&wm_id);
         if self.hover == Some(wm_id) {
             self.hover = None;
@@ -810,7 +813,7 @@ impl Overlay {
         if let Some(widget) = self.widget_mut(wm_id)
             && let Some(object) = widget.config.as_object_mut()
         {
-            object.insert("alwaysShow".to_owned(), Value::Bool(on));
+            self.config_dirty |= object.insert("alwaysShow".to_owned(), Value::Bool(on)) != Some(Value::Bool(on));
         }
     }
 
@@ -819,7 +822,8 @@ impl Overlay {
         if let Some(widget) = self.widget_mut(wm_id) {
             widget.wm_title = title.to_owned();
             if let Some(object) = widget.config.as_object_mut() {
-                object.insert("wmTitle".to_owned(), Value::String(title.to_owned()));
+                let previous = object.insert("wmTitle".to_owned(), Value::String(title.to_owned()));
+                self.config_dirty |= previous.as_ref().and_then(Value::as_str) != Some(title);
             }
         }
     }
@@ -829,7 +833,9 @@ impl Overlay {
         if let Some(widget) = self.widget_mut(wm_id)
             && let Some(images) = widget.config.get_mut("images").and_then(Value::as_array_mut)
         {
+            let count = images.len();
             images.retain(|image| image.get("id").and_then(Value::as_i64) != Some(image_id));
+            self.config_dirty |= count != images.len();
         }
     }
 
