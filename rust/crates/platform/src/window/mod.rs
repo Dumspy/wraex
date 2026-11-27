@@ -114,11 +114,23 @@ pub enum MouseEvent {
 /// `logKeys` logs them all. Only observed: the hook never blocks, swallows or injects a key.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum KeyEvent {
+    /// Activity outside both monitored windows cancels the Alt peek without disclosing a key.
+    Outside,
     /// `uIOhook`'s `keydown`, with the modifiers held at the time.
     Down(InputEvent),
     /// `uIOhook`'s `keyup`. The modifier the released key names is already cleared, which is
     /// what `OverlayVisibility`'s `if (!e.altKey)` relies on.
     Up(InputEvent),
+}
+
+#[cfg(any(windows, test))]
+fn scoped_key_event(
+    foreground: isize,
+    game: isize,
+    overlay: Option<isize>,
+    key: impl FnOnce() -> KeyEvent,
+) -> KeyEvent {
+    if foreground != 0 && (foreground == game || Some(foreground) == overlay) { key() } else { KeyEvent::Outside }
 }
 
 /// Which modifiers the keyboard hook has seen held, in `uiohook`'s `ctrlKey`/`shiftKey`/
@@ -379,6 +391,20 @@ impl std::error::Error for WatchError {}
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn unrelated_foreground_keys_never_reach_diagnostics() {
+        let key = InputEvent { key: Some("S"), alt: false, ctrl: false, shift: false };
+        for event in [KeyEvent::Down(key), KeyEvent::Up(key)] {
+            for foreground in [1, 3, 0, 2] {
+                let captured = scoped_key_event(foreground, 1, Some(2), || {
+                    assert!(matches!(foreground, 1 | 2), "external key was decoded");
+                    event
+                });
+                assert_eq!(captured, if matches!(foreground, 1 | 2) { event } else { KeyEvent::Outside });
+            }
+        }
+    }
 
     /// libuiohook's sign: Windows reports a notch away from the user (scrolling up) as +120,
     /// `uiohook` as rotation -1, and upstream's `Shortcuts.ts` turns negative into ArrowLeft

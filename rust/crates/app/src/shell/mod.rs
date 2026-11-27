@@ -415,6 +415,7 @@ fn apply_overlay_event_in(event: &OverlayEvent, app: &mut App, settings_armed: b
 /// nothing here swallows, repeats or synthesizes a key.
 fn apply_key_event(overlay: &mut OverlayController, shortcuts: &Shortcuts, event: KeyEvent, clock: &dyn Clock) {
     match event {
+        KeyEvent::Outside => overlay.on_global_key_up(false),
         KeyEvent::Down(event) => {
             overlay.on_global_key_down(&event, clock);
             if let Some(line) = shortcuts.log_key_down(&event) {
@@ -659,7 +660,11 @@ impl Live {
             return self.warn("the config has no window title: the game's window cannot be followed");
         }
         let handle = self.handle.clone();
-        match window::Watcher::start(WindowTarget::new(title.clone()), Box::new(move || handle.wake())) {
+        match window::Watcher::start(
+            WindowTarget::new(title.clone()),
+            self.panel.overlay.clone(),
+            Box::new(move || handle.wake()),
+        ) {
             Ok(watcher) => {
                 wraex_platform::log!("wraex: following the \"{title}\" window");
                 self.watcher = Some(watcher);
@@ -2169,7 +2174,7 @@ pub struct Panel {
     /// The Rune window, once it exists.
     window: Mutex<Option<rune::WindowHandle>>,
     /// Its native handle (unused off Windows).
-    overlay: Mutex<Option<isize>>,
+    overlay: Arc<Mutex<Option<isize>>>,
     /// The tracked game window's handle, for [`OverlayHandle::focus_game`].
     game: Mutex<Option<isize>>,
     /// What [`OverlayHandle::is_visible`] answers: the shell's own bookkeeping, since Rune
