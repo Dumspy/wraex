@@ -246,10 +246,16 @@ impl PriceCheck {
     /// one of its picked entries is pressed (`WidgetItemSearch.vue`'s `starredItemClick`, which
     /// builds a `createVirtualItem` and `Host.selfDispatch`es it). `parseClipboard` is skipped;
     /// the text is the virtual item's own `rawText`.
-    pub(crate) fn with_item(item: Item, mode: Mode, client: crate::trade::Shared, config: &serde_json::Value) -> Self {
+    pub(crate) fn with_item(
+        item: Item,
+        mode: Mode,
+        league: &str,
+        client: crate::trade::Shared,
+        config: &serde_json::Value,
+    ) -> Self {
         crate::ui::art::set_mode(mode);
         let text = item.raw_text.clone();
-        Self::build(text, Ok(item), mode, DEFAULT_LEAGUE, client, config, &[])
+        Self::build(text, Ok(item), mode, league, client, config, &[])
     }
 
     /// A window with no item: the live app's idle state before a hotkey brings one. Nothing is
@@ -504,7 +510,7 @@ impl PriceCheck {
                 self.trade.lazy_request = None;
                 let request =
                     create_trade_request(data(self.mode), &filters, &stats, &item).map_err(|error| error.to_string());
-                trade::Query::Trade { league, request, prices: self.prices.clone() }
+                trade::Query::Trade { league, request: request.map(Box::new), prices: self.prices.clone() }
             }
             Api::Bulk => {
                 // `CheckedItem.vue` forces online listings before a bulk search.
@@ -512,9 +518,8 @@ impl PriceCheck {
                 filters.trade.listing_type = "online".to_owned();
                 let ref_name = item.info().ref_name.clone().unwrap_or_default();
                 let request = create_bulk_request(&filters, &item, optimistic_have(&ref_name));
-                self.trade.lazy_request =
-                    Some(trade::LazyBulk { league: league.clone(), filters, item, prices: self.prices.clone() });
-                trade::Query::Bulk { league, request, prices: self.prices.clone() }
+                self.trade.lazy_request = Some(trade::LazyBulk { league: league.clone(), filters, item });
+                trade::Query::Bulk { league, request }
             }
         };
         self.trade.begin(query);
