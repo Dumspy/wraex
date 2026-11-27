@@ -764,6 +764,9 @@ impl Live {
                 MouseEvent::Wheel { point, rotation, ctrl } => {
                     let wheel = WheelEvent { point, rotation, ctrl };
                     self.shortcuts.on_wheel(&wheel, &self.window, &mut self.keys);
+                    if let Some(error) = self.keys.take_failure() {
+                        wraex_platform::log!("wraex: {error}");
+                    }
                 }
             }
         }
@@ -1034,6 +1037,9 @@ impl Live {
                 },
             )
         };
+        if let Some(error) = self.keys.take_failure() {
+            return self.warn(error);
+        }
         self.deliver(app, dispatch::shortcut_requests(events));
         self.after_press(app, entry, cursor);
         // `focus-overlay` may have taken the focus from the game.
@@ -1124,6 +1130,9 @@ impl Live {
                 show_mods_key: &show_mods,
             },
         );
+        if let Some(error) = self.keys.take_failure() {
+            self.warn(error);
+        }
         self.sync_registration();
     }
 
