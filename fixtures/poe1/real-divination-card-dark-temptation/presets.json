@@ -1,0 +1,29 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "searchExact": {
+          "baseType": "Dark Temptation",
+          "baseTypeTrade": "Dark Temptation"
+        },
+        "stackSize": {
+          "disabled": true,
+          "value": 5
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": false,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": []
+    }
+  ]
+}

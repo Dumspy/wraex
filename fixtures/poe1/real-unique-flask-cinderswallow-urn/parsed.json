@@ -1,0 +1,842 @@
+{
+  "baseType": "Silver Flask",
+  "category": "Flask",
+  "dustEquivalent": 10774,
+  "influences": [],
+  "info": {
+    "icon": "https://web.poecdn.com/gen/image/WzksMTQseyJmIjoiMkRJdGVtcy9GbGFza3MvVmlhbG9mVW5saWZlIiwidyI6MSwiaCI6Miwic2NhbGUiOjEsImxldmVsIjoxfV0/9911226887/VialofUnlife.png",
+    "name": "Cinderswallow Urn",
+    "namespace": "UNIQUE",
+    "refName": "Cinderswallow Urn",
+    "unique": {
+      "base": "Silver Flask",
+      "disenchantValue": 4.31,
+      "fixedStats": [
+        "+# to Maximum Charges",
+        "Recharges # Charge when you Consume an Ignited corpse",
+        "#% increased Charges per use",
+        "Enemies Ignited by you during Effect take #% increased Damage"
+      ]
+    }
+  },
+  "infoVariants": [
+    {
+      "icon": "https://web.poecdn.com/gen/image/WzksMTQseyJmIjoiMkRJdGVtcy9GbGFza3MvVmlhbG9mVW5saWZlIiwidyI6MSwiaCI6Miwic2NhbGUiOjEsImxldmVsIjoxfV0/9911226887/VialofUnlife.png",
+      "name": "Cinderswallow Urn",
+      "namespace": "UNIQUE",
+      "refName": "Cinderswallow Urn",
+      "unique": {
+        "base": "Silver Flask",
+        "disenchantValue": 4.31,
+        "fixedStats": [
+          "+# to Maximum Charges",
+          "Recharges # Charge when you Consume an Ignited corpse",
+          "#% increased Charges per use",
+          "Enemies Ignited by you during Effect take #% increased Damage"
+        ]
+      }
+    }
+  ],
+  "isUnidentified": false,
+  "itemLevel": 85,
+  "name": "Cinderswallow Urn",
+  "newMods": [
+    {
+      "info": {
+        "tags": [],
+        "type": "enchant"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Used when Charges reach full"
+              }
+            ],
+            "ref": "Used when Charges reach full",
+            "trade": {
+              "ids": {
+                "enchant": [
+                  "enchant.stat_3287581721"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Used when Charges reach full"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "generation": "prefix",
+        "mechanic": "explicit-veiled",
+        "name": "Catarina's",
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Enemies Ignited by you during Effect have Malediction"
+              }
+            ],
+            "ref": "Enemies Ignited by you during Effect have Malediction",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_1558071928"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Enemies Ignited by you during Effect have Malediction"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 20,
+            "min": 10,
+            "unscalable": false,
+            "value": 12
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "# to Maximum Charges"
+              }
+            ],
+            "ref": "+# to Maximum Charges",
+            "trade": {
+              "ids": {
+                "enchant": [
+                  "enchant.stat_1437957544"
+                ],
+                "explicit": [
+                  "explicit.stat_1437957544"
+                ],
+                "fractured": [
+                  "fractured.stat_1437957544"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "# to Maximum Charges"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 5,
+            "min": 5,
+            "unscalable": false,
+            "value": 5
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Recharges # Charge when you Consume an Ignited corpse"
+              },
+              {
+                "string": "Recharges # Charges when you Consume an Ignited corpse"
+              }
+            ],
+            "ref": "Recharges # Charge when you Consume an Ignited corpse",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_2557247391"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Recharges # Charges when you Consume an Ignited corpse"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [
+          "Damage"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 10,
+            "min": 7,
+            "unscalable": false,
+            "value": 8
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Enemies Ignited by you during Effect take #% increased Damage"
+              },
+              {
+                "negate": true,
+                "string": "Enemies Ignited by you during Effect take #% reduced Damage"
+              }
+            ],
+            "ref": "Enemies Ignited by you during Effect take #% increased Damage",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_3477833022"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Enemies Ignited by you during Effect take #% increased Damage"
+          }
+        }
+      ]
+    },
+    {
+      "info": {
+        "tags": [
+          "Life"
+        ],
+        "type": "explicit"
+      },
+      "stats": [
+        {
+          "roll": {
+            "dp": false,
+            "max": 3,
+            "min": 1,
+            "unscalable": false,
+            "value": 3
+          },
+          "stat": {
+            "better": 1,
+            "matchers": [
+              {
+                "string": "Recover #% of Life when you Kill an Enemy during Effect"
+              }
+            ],
+            "ref": "Recover #% of Life when you Kill an Enemy during Effect",
+            "trade": {
+              "ids": {
+                "explicit": [
+                  "explicit.stat_1217476473"
+                ]
+              }
+            }
+          },
+          "translation": {
+            "string": "Recover #% of Life when you Kill an Enemy during Effect"
+          }
+        }
+      ]
+    }
+  ],
+  "rarity": "Unique",
+  "rawText": "Item Class: Utility Flasks\nRarity: Unique\nCinderswallow Urn\nSilver Flask\n--------\nLasts 6 Seconds\nConsumes 40 of 72 (augmented) Charges on use\nCurrently has 72 Charges\nOnslaught\n--------\nRequirements:\nLevel: 48\n--------\nItem Level: 85\n--------\nUsed when Charges reach full (enchant)\n--------\n{ Prefix Modifier \"Catarina's\" }\nEnemies Ignited by you during Effect have Malediction\n(Malediction causes 10% reduced Damage dealt and 10% increased Damage taken)\n{ Unique Modifier }\n+12(10-20) to Maximum Charges\n{ Unique Modifier }\nRecharges 5 Charges when you Consume an Ignited corpse\n{ Unique Modifier — Damage }\nEnemies Ignited by you during Effect take 8(7-10)% increased Damage\n{ Unique Modifier — Life }\nRecover 3(1-3)% of Life when you Kill an Enemy during Effect\n--------\nA controlled burn is sometimes necessary for new life.\n--------\nRight click to drink. Can only hold charges while in belt. Refills as you kill monsters.\n",
+  "statsByType": [
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "enchant"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Used when Charges reach full"
+                    }
+                  ],
+                  "ref": "Used when Charges reach full",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_3287581721"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Used when Charges reach full"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Used when Charges reach full"
+                }
+              ],
+              "ref": "Used when Charges reach full",
+              "trade": {
+                "ids": {
+                  "enchant": [
+                    "enchant.stat_3287581721"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Used when Charges reach full"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Used when Charges reach full"
+          }
+        ],
+        "ref": "Used when Charges reach full",
+        "trade": {
+          "ids": {
+            "enchant": [
+              "enchant.stat_3287581721"
+            ]
+          }
+        }
+      },
+      "type": "enchant"
+    },
+    {
+      "sources": [
+        {
+          "modifier": {
+            "info": {
+              "generation": "prefix",
+              "mechanic": "explicit-veiled",
+              "name": "Catarina's",
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Enemies Ignited by you during Effect have Malediction"
+                    }
+                  ],
+                  "ref": "Enemies Ignited by you during Effect have Malediction",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1558071928"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Enemies Ignited by you during Effect have Malediction"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Enemies Ignited by you during Effect have Malediction"
+                }
+              ],
+              "ref": "Enemies Ignited by you during Effect have Malediction",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_1558071928"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Enemies Ignited by you during Effect have Malediction"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Enemies Ignited by you during Effect have Malediction"
+          }
+        ],
+        "ref": "Enemies Ignited by you during Effect have Malediction",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_1558071928"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 20,
+            "min": 10,
+            "value": 12
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 20,
+                  "min": 10,
+                  "unscalable": false,
+                  "value": 12
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "# to Maximum Charges"
+                    }
+                  ],
+                  "ref": "+# to Maximum Charges",
+                  "trade": {
+                    "ids": {
+                      "enchant": [
+                        "enchant.stat_1437957544"
+                      ],
+                      "explicit": [
+                        "explicit.stat_1437957544"
+                      ],
+                      "fractured": [
+                        "fractured.stat_1437957544"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "# to Maximum Charges"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 20,
+              "min": 10,
+              "unscalable": false,
+              "value": 12
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "# to Maximum Charges"
+                }
+              ],
+              "ref": "+# to Maximum Charges",
+              "trade": {
+                "ids": {
+                  "enchant": [
+                    "enchant.stat_1437957544"
+                  ],
+                  "explicit": [
+                    "explicit.stat_1437957544"
+                  ],
+                  "fractured": [
+                    "fractured.stat_1437957544"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "# to Maximum Charges"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "# to Maximum Charges"
+          }
+        ],
+        "ref": "+# to Maximum Charges",
+        "trade": {
+          "ids": {
+            "enchant": [
+              "enchant.stat_1437957544"
+            ],
+            "explicit": [
+              "explicit.stat_1437957544"
+            ],
+            "fractured": [
+              "fractured.stat_1437957544"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 5,
+            "min": 5,
+            "value": 5
+          },
+          "modifier": {
+            "info": {
+              "tags": [],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 5,
+                  "min": 5,
+                  "unscalable": false,
+                  "value": 5
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Recharges # Charge when you Consume an Ignited corpse"
+                    },
+                    {
+                      "string": "Recharges # Charges when you Consume an Ignited corpse"
+                    }
+                  ],
+                  "ref": "Recharges # Charge when you Consume an Ignited corpse",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_2557247391"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Recharges # Charges when you Consume an Ignited corpse"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 5,
+              "min": 5,
+              "unscalable": false,
+              "value": 5
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Recharges # Charge when you Consume an Ignited corpse"
+                },
+                {
+                  "string": "Recharges # Charges when you Consume an Ignited corpse"
+                }
+              ],
+              "ref": "Recharges # Charge when you Consume an Ignited corpse",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_2557247391"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Recharges # Charges when you Consume an Ignited corpse"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Recharges # Charge when you Consume an Ignited corpse"
+          },
+          {
+            "string": "Recharges # Charges when you Consume an Ignited corpse"
+          }
+        ],
+        "ref": "Recharges # Charge when you Consume an Ignited corpse",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_2557247391"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 10,
+            "min": 7,
+            "value": 8
+          },
+          "modifier": {
+            "info": {
+              "tags": [
+                "Damage"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 10,
+                  "min": 7,
+                  "unscalable": false,
+                  "value": 8
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Enemies Ignited by you during Effect take #% increased Damage"
+                    },
+                    {
+                      "negate": true,
+                      "string": "Enemies Ignited by you during Effect take #% reduced Damage"
+                    }
+                  ],
+                  "ref": "Enemies Ignited by you during Effect take #% increased Damage",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_3477833022"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Enemies Ignited by you during Effect take #% increased Damage"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 10,
+              "min": 7,
+              "unscalable": false,
+              "value": 8
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Enemies Ignited by you during Effect take #% increased Damage"
+                },
+                {
+                  "negate": true,
+                  "string": "Enemies Ignited by you during Effect take #% reduced Damage"
+                }
+              ],
+              "ref": "Enemies Ignited by you during Effect take #% increased Damage",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_3477833022"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Enemies Ignited by you during Effect take #% increased Damage"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Enemies Ignited by you during Effect take #% increased Damage"
+          },
+          {
+            "negate": true,
+            "string": "Enemies Ignited by you during Effect take #% reduced Damage"
+          }
+        ],
+        "ref": "Enemies Ignited by you during Effect take #% increased Damage",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_3477833022"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    },
+    {
+      "sources": [
+        {
+          "contributes": {
+            "max": 3,
+            "min": 1,
+            "value": 3
+          },
+          "modifier": {
+            "info": {
+              "tags": [
+                "Life"
+              ],
+              "type": "explicit"
+            },
+            "stats": [
+              {
+                "roll": {
+                  "dp": false,
+                  "max": 3,
+                  "min": 1,
+                  "unscalable": false,
+                  "value": 3
+                },
+                "stat": {
+                  "better": 1,
+                  "matchers": [
+                    {
+                      "string": "Recover #% of Life when you Kill an Enemy during Effect"
+                    }
+                  ],
+                  "ref": "Recover #% of Life when you Kill an Enemy during Effect",
+                  "trade": {
+                    "ids": {
+                      "explicit": [
+                        "explicit.stat_1217476473"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Recover #% of Life when you Kill an Enemy during Effect"
+                }
+              }
+            ]
+          },
+          "stat": {
+            "roll": {
+              "dp": false,
+              "max": 3,
+              "min": 1,
+              "unscalable": false,
+              "value": 3
+            },
+            "stat": {
+              "better": 1,
+              "matchers": [
+                {
+                  "string": "Recover #% of Life when you Kill an Enemy during Effect"
+                }
+              ],
+              "ref": "Recover #% of Life when you Kill an Enemy during Effect",
+              "trade": {
+                "ids": {
+                  "explicit": [
+                    "explicit.stat_1217476473"
+                  ]
+                }
+              }
+            },
+            "translation": {
+              "string": "Recover #% of Life when you Kill an Enemy during Effect"
+            }
+          }
+        }
+      ],
+      "stat": {
+        "better": 1,
+        "matchers": [
+          {
+            "string": "Recover #% of Life when you Kill an Enemy during Effect"
+          }
+        ],
+        "ref": "Recover #% of Life when you Kill an Enemy during Effect",
+        "trade": {
+          "ids": {
+            "explicit": [
+              "explicit.stat_1217476473"
+            ]
+          }
+        }
+      },
+      "type": "explicit"
+    }
+  ],
+  "uniqueBase": {
+    "craftable": {
+      "category": "Flask"
+    },
+    "h": 2,
+    "icon": "https://web.poecdn.com/gen/image/WzksMTQseyJmIjoiMkRJdGVtcy9GbGFza3Mvc2lsdmVyIiwidyI6MSwiaCI6Miwic2NhbGUiOjEsImxldmVsIjoxfV0/a2143b575d/silver.png",
+    "name": "Silver Flask",
+    "namespace": "ITEM",
+    "refName": "Silver Flask"
+  },
+  "unknownModifiers": []
+}

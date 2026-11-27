@@ -1,0 +1,12 @@
+Item Class: Stackable Currency
+Rarity: Currency
+Allflame Ember of the Wildwood
+--------
+Stack Size: 6/20
+--------
+Enchants a Map to substitute 11 Monster Packs in Area with Wildwood Fiends
+Pack Leaders Empower Map Bosses with Wildwood Wisps when slain
+--------
+Right click this item then left click
+a non-Unique Map item to use.
+Shift click to unstack.

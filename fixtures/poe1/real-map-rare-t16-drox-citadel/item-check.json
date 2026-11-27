@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Maps%0ARarity%3A%20Rare%0ARemote%20Crosscut%0AMap%20(Tier%2016)%0A--------%0AAtlas%20Drops%3A%20%2B58%25%20(augmented)%0AItem%20Rarity%3A%20%2B34%25%20(augmented)%0AMonster%20Pack%20Size%3A%20%2B22%25%20(augmented)%0A--------%0AItem%20Level%3A%2083%0A--------%0AMonster%20Level%3A%2083%0A--------%0A%7B%20Implicit%20Modifier%20%7D%0AMap%20contains%20Drox's%20Citadel(...)%20%E2%80%94%20Unscalable%20Value%0A--------%0A%7B%20Prefix%20Modifier%20%22Burning%22%20(Tier%3A%201)%20%E2%80%94%20Damage%2C%20Physical%2C%20Elemental%2C%20Fire%20%7D%0AMonsters%20deal%20108(90-110)%25%20extra%20Physical%20Damage%20as%20Fire%0A%7B%20Prefix%20Modifier%20%22Fecund%22%20(Tier%3A%201)%20%E2%80%94%20Life%20%7D%0A45(40-49)%25%20more%20Monster%20Life%0A%7B%20Suffix%20Modifier%20%22of%20Giants%22%20(Tier%3A%201)%20%7D%0AMonsters%20have%20100%25%20increased%20Area%20of%20Effect%0A%7B%20Suffix%20Modifier%20%22of%20Stasis%22%20(Tier%3A%201)%20%E2%80%94%20Life%2C%20Mana%2C%20Defences%2C%20Energy%20Shield%20%7D%0APlayers%20cannot%20Regenerate%20Life%2C%20Mana%20or%20Energy%20Shield%20%E2%80%94%20Unscalable%20Value%0A--------%0ATravel%20to%20a%20Map%20of%20this%20tier%20or%20lower%20by%20using%20this%20in%20a%20personal%20Map%20Device.%20Maps%20can%20only%20be%20used%20once.%20%0A",
+  "poedb": "https://poedb.tw/us/Map",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Map\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Map"
+}

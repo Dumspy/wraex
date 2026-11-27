@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Stackable%20Currency%0ARarity%3A%20Currency%0AEssence%20of%20Delirium%0A--------%0AStack%20Size%3A%209%2F10%0A--------%0AUpgrades%20a%20normal%20item%20to%20rare%20or%20reforges%20a%20rare%20item%2C%20guaranteeing%20one%20property%0A%0AQuiver%3A%2025%25%20increased%20Effect%20of%20your%20Marks%0AWeapon%3A%20Your%20Hits%20inflict%20Decay%2C%20dealing%20700%20Chaos%20Damage%20per%20second%20for%208%20seconds%0A%0AGloves%3A%20Socketed%20Gems%20deal%2030%25%20more%20Damage%20over%20Time%0ABoots%3A%20Cannot%20be%20Poisoned%0ABody%20Armour%3A%2025%25%20reduced%20Chaos%20Damage%20taken%20over%20time%0AHelmet%3A%20%2B2%20to%20Level%20of%20Socketed%20Aura%20Gems%0AShield%3A%20%2B15%25%20Chance%20to%20Block%20Spell%20Damage%20while%20on%20Low%20Life%0A%0AAmulet%3A%20(6-7)%25%20Chance%20to%20Block%20Spell%20Damage%0ARing%3A%20(12-15)%25%20to%20Damage%20over%20Time%20Multiplier%0ABelt%3A%20%2B50%25%20to%20Chaos%20Resistance%20during%20any%20Flask%20Effect%0A--------%0ARight%20click%20this%20item%20then%20left%20click%20a%20normal%20or%20rare%20item%20to%20apply%20it.%0AShift%20click%20to%20unstack.%0A",
+  "poedb": "https://poedb.tw/us/Essence_of_Delirium",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Essence of Delirium\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Essence of Delirium"
+}

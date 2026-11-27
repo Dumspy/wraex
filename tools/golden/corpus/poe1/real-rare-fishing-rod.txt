@@ -1,0 +1,30 @@
+Item Class: Fishing Rods
+Rarity: Rare
+Fate Gill
+Fishing Rod
+--------
+Fishing Rod
+Physical Damage: 8-15
+Critical Strike Chance: 5.00%
+Attacks per Second: 1.20
+Weapon Range: 1.3 metres
+--------
+Requirements:
+Level: 8
+--------
+Sockets: R-W B-G 
+--------
+Item Level: 85
+--------
+{ Prefix Modifier "Filigree" (Tier: 1) }
+35(20-40)% increased Fishing Line Strength
+{ Prefix Modifier "Calming" (Tier: 1) }
+30(30-15)% reduced Fishing Pool Consumption
+{ Prefix Modifier "Alluring" (Tier: 1) }
+Rhoa Feather Lure(...) — Unscalable Value
+{ Suffix Modifier "of Fascination" (Tier: 1) — Drop }
+20(15-20)% increased Quantity of Fish Caught
+{ Suffix Modifier "of Bounty" (Tier: 1) — Drop }
+39(25-40)% increased Rarity of Fish Caught
+{ Suffix Modifier "of Casting" (Tier: 1) — Caster, Speed }
+26(24-28)% increased Cast Speed

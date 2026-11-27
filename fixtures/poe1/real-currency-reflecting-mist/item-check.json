@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Stackable%20Currency%0ARarity%3A%20Currency%0AReflecting%20Mist%0A--------%0AStack%20Size%3A%204%2F10%0A--------%0AUnpredictably%20reflects%20a%20rare%20amulet%20or%20ring%2C%20breaking%20it%0Ainto%20two%20mirrored%20halves%20with%20reflected%20modifiers%0A--------%0ARight%20click%20this%20item%20then%20left%20click%20a%20rare%20amulet%20or%20ring%20to%20reflect%20it.%20Cannot%20be%20used%20on%20Veiled%20or%20Influenced%20items.%0AShift%20click%20to%20unstack.%0A",
+  "poedb": "https://poedb.tw/us/Reflecting_Mist",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Reflecting Mist\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Reflecting Mist"
+}

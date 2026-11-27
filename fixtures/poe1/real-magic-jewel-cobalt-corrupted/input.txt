@@ -1,0 +1,17 @@
+Item Class: Jewels
+Rarity: Magic
+Vivid Cobalt Jewel of Zealousness
+--------
+Item Level: 80
+--------
+{ Corruption Implicit Modifier — Caster, Curse }
+You cannot be Cursed with Silence — Unscalable Value
+--------
+{ Prefix Modifier "Vivid" (Tier: 1) — Life }
+7(5-7)% increased maximum Life
+{ Suffix Modifier "of Zealousness" (Tier: 1) — Damage, Elemental, Fire }
++8(6-8)% to Fire Damage over Time Multiplier
+--------
+Place into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.
+--------
+Corrupted

@@ -1,0 +1,11 @@
+Item Class: Stackable Currency
+Rarity: Currency
+Reflecting Mist
+--------
+Stack Size: 4/10
+--------
+Unpredictably reflects a rare amulet or ring, breaking it
+into two mirrored halves with reflected modifiers
+--------
+Right click this item then left click a rare amulet or ring to reflect it. Cannot be used on Veiled or Influenced items.
+Shift click to unstack.

@@ -1,0 +1,84 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "fractured_item": {
+              "option": "false"
+            },
+            "mirrored": {
+              "option": "false"
+            },
+            "split": {
+              "option": "false"
+            }
+          }
+        },
+        "type_filters": {
+          "filters": {
+            "rarity": {
+              "option": "nonunique"
+            }
+          }
+        }
+      },
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": true,
+              "id": "enchant.stat_2448920197",
+              "value": {
+                "min": 67
+              }
+            },
+            {
+              "disabled": true,
+              "id": "enchant.stat_4123533923",
+              "value": {}
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_1256719186",
+              "value": {
+                "min": -24
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_2448920197",
+              "value": {
+                "min": 25
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_1506355899",
+              "value": {
+                "min": -44
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_3965637181",
+              "value": {}
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Quicksilver Flask"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

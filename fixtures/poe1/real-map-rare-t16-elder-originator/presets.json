@@ -1,0 +1,644 @@
+{
+  "active": "filters.preset_pseudo",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "mapBlighted": {
+          "value": false
+        },
+        "mapTier": {
+          "disabled": false,
+          "value": 16
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Map",
+          "baseTypeTrade": "Map",
+          "discriminatorTrade": "map"
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_pseudo",
+      "stats": [
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 9007199254740991,
+              "min": 0
+            },
+            "default": {
+              "max": 58,
+              "min": 46
+            },
+            "dp": false,
+            "goodness": 5.773159728050815e-15,
+            "isNegated": false,
+            "min": 46,
+            "value": 52
+          },
+          "sources": [],
+          "statRef": "Atlas Drops: +#%",
+          "tag": "property",
+          "text": "Atlas Drops: +#%",
+          "tradeId": [
+            "item.map_atlas_drops"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 9007199254740991,
+              "min": 0
+            },
+            "default": {
+              "max": 35,
+              "min": 27
+            },
+            "dp": false,
+            "goodness": 3.4416913763379857e-15,
+            "isNegated": false,
+            "min": 27,
+            "value": 31
+          },
+          "sources": [],
+          "statRef": "Item Rarity: +#%",
+          "tag": "property",
+          "text": "Item Rarity: +#%",
+          "tradeId": [
+            "item.map_item_rarity"
+          ]
+        },
+        {
+          "disabled": false,
+          "roll": {
+            "bounds": {
+              "max": 9007199254740991,
+              "min": 0
+            },
+            "default": {
+              "max": 22,
+              "min": 18
+            },
+            "dp": false,
+            "goodness": 2.2204460492503135e-15,
+            "isNegated": false,
+            "min": 18,
+            "value": 20
+          },
+          "sources": [],
+          "statRef": "Monster Pack Size: +#%",
+          "tag": "property",
+          "text": "Monster Pack Size: +#%",
+          "tradeId": [
+            "item.map_pack_size"
+          ]
+        },
+        {
+          "disabled": false,
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Area is influenced by The Elder"
+                        }
+                      ],
+                      "ref": "Area is influenced by The Elder",
+                      "trade": {
+                        "ids": {
+                          "implicit": [
+                            "implicit.stat_1792283443|2"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Area is influenced by The Elder"
+                    }
+                  },
+                  {
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Map is occupied by The Constrictor"
+                        }
+                      ],
+                      "ref": "Map is occupied by The Constrictor",
+                      "trade": {
+                        "ids": {
+                          "implicit": [
+                            "implicit.stat_3624393862|3"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Map is occupied by The Constrictor"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Area is influenced by The Elder"
+                    }
+                  ],
+                  "ref": "Area is influenced by The Elder",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_1792283443|2"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Area is influenced by The Elder"
+                }
+              }
+            }
+          ],
+          "statRef": "Area is influenced by The Elder",
+          "tag": "variant",
+          "text": "Area is influenced by The Elder",
+          "tradeId": [
+            "implicit.stat_1792283443|2"
+          ]
+        },
+        {
+          "disabled": false,
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Area is influenced by The Elder"
+                        }
+                      ],
+                      "ref": "Area is influenced by The Elder",
+                      "trade": {
+                        "ids": {
+                          "implicit": [
+                            "implicit.stat_1792283443|2"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Area is influenced by The Elder"
+                    }
+                  },
+                  {
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Map is occupied by The Constrictor"
+                        }
+                      ],
+                      "ref": "Map is occupied by The Constrictor",
+                      "trade": {
+                        "ids": {
+                          "implicit": [
+                            "implicit.stat_3624393862|3"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Map is occupied by The Constrictor"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Map is occupied by The Constrictor"
+                    }
+                  ],
+                  "ref": "Map is occupied by The Constrictor",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_3624393862|3"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Map is occupied by The Constrictor"
+                }
+              }
+            }
+          ],
+          "statRef": "Map is occupied by The Constrictor",
+          "tag": "variant",
+          "text": "Map is occupied by The Constrictor",
+          "tradeId": [
+            "implicit.stat_3624393862|3"
+          ]
+        },
+        {
+          "disabled": false,
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": "yes",
+                      "matchers": [
+                        {
+                          "string": "Area is Influenced by the Originator's Memories"
+                        }
+                      ],
+                      "ref": "Area is Influenced by the Originator's Memories",
+                      "trade": {
+                        "ids": {
+                          "implicit": [
+                            "implicit.stat_2696470877"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Area is Influenced by the Originator's Memories"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Area is Influenced by the Originator's Memories"
+                    }
+                  ],
+                  "ref": "Area is Influenced by the Originator's Memories",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_2696470877"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Area is Influenced by the Originator's Memories"
+                }
+              }
+            }
+          ],
+          "statRef": "Area is Influenced by the Originator's Memories",
+          "tag": "implicit",
+          "text": "Area is Influenced by the Originator's Memories",
+          "tradeId": [
+            "implicit.stat_2696470877"
+          ]
+        }
+      ]
+    },
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": false
+        },
+        "fractured": {
+          "value": false
+        },
+        "mapBlighted": {
+          "value": false
+        },
+        "mapTier": {
+          "disabled": false,
+          "value": 16
+        },
+        "mirrored": {
+          "disabled": true,
+          "hidden": true
+        },
+        "rarity": {
+          "disabled": false,
+          "value": "nonunique"
+        },
+        "searchExact": {
+          "baseType": "Map",
+          "baseTypeTrade": "Map",
+          "discriminatorTrade": "map"
+        },
+        "split": {
+          "disabled": true,
+          "hidden": true
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_bulk",
+      "stats": [
+        {
+          "disabled": false,
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Area is influenced by The Elder"
+                        }
+                      ],
+                      "ref": "Area is influenced by The Elder",
+                      "trade": {
+                        "ids": {
+                          "implicit": [
+                            "implicit.stat_1792283443|2"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Area is influenced by The Elder"
+                    }
+                  },
+                  {
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Map is occupied by The Constrictor"
+                        }
+                      ],
+                      "ref": "Map is occupied by The Constrictor",
+                      "trade": {
+                        "ids": {
+                          "implicit": [
+                            "implicit.stat_3624393862|3"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Map is occupied by The Constrictor"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Area is influenced by The Elder"
+                    }
+                  ],
+                  "ref": "Area is influenced by The Elder",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_1792283443|2"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Area is influenced by The Elder"
+                }
+              }
+            }
+          ],
+          "statRef": "Area is influenced by The Elder",
+          "tag": "variant",
+          "text": "Area is influenced by The Elder",
+          "tradeId": [
+            "implicit.stat_1792283443|2"
+          ]
+        },
+        {
+          "disabled": false,
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Area is influenced by The Elder"
+                        }
+                      ],
+                      "ref": "Area is influenced by The Elder",
+                      "trade": {
+                        "ids": {
+                          "implicit": [
+                            "implicit.stat_1792283443|2"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Area is influenced by The Elder"
+                    }
+                  },
+                  {
+                    "stat": {
+                      "better": 0,
+                      "matchers": [
+                        {
+                          "string": "Map is occupied by The Constrictor"
+                        }
+                      ],
+                      "ref": "Map is occupied by The Constrictor",
+                      "trade": {
+                        "ids": {
+                          "implicit": [
+                            "implicit.stat_3624393862|3"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Map is occupied by The Constrictor"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 0,
+                  "matchers": [
+                    {
+                      "string": "Map is occupied by The Constrictor"
+                    }
+                  ],
+                  "ref": "Map is occupied by The Constrictor",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_3624393862|3"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Map is occupied by The Constrictor"
+                }
+              }
+            }
+          ],
+          "statRef": "Map is occupied by The Constrictor",
+          "tag": "variant",
+          "text": "Map is occupied by The Constrictor",
+          "tradeId": [
+            "implicit.stat_3624393862|3"
+          ]
+        },
+        {
+          "disabled": false,
+          "sources": [
+            {
+              "modifier": {
+                "info": {
+                  "tags": [],
+                  "type": "implicit"
+                },
+                "stats": [
+                  {
+                    "stat": {
+                      "better": 1,
+                      "fromAreaMods": "yes",
+                      "matchers": [
+                        {
+                          "string": "Area is Influenced by the Originator's Memories"
+                        }
+                      ],
+                      "ref": "Area is Influenced by the Originator's Memories",
+                      "trade": {
+                        "ids": {
+                          "implicit": [
+                            "implicit.stat_2696470877"
+                          ]
+                        }
+                      }
+                    },
+                    "translation": {
+                      "string": "Area is Influenced by the Originator's Memories"
+                    }
+                  }
+                ]
+              },
+              "stat": {
+                "stat": {
+                  "better": 1,
+                  "fromAreaMods": "yes",
+                  "matchers": [
+                    {
+                      "string": "Area is Influenced by the Originator's Memories"
+                    }
+                  ],
+                  "ref": "Area is Influenced by the Originator's Memories",
+                  "trade": {
+                    "ids": {
+                      "implicit": [
+                        "implicit.stat_2696470877"
+                      ]
+                    }
+                  }
+                },
+                "translation": {
+                  "string": "Area is Influenced by the Originator's Memories"
+                }
+              }
+            }
+          ],
+          "statRef": "Area is Influenced by the Originator's Memories",
+          "tag": "implicit",
+          "text": "Area is Influenced by the Originator's Memories",
+          "tradeId": [
+            "implicit.stat_2696470877"
+          ]
+        }
+      ]
+    }
+  ]
+}

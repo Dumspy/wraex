@@ -1,0 +1,29 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "searchExact": {
+          "baseType": "The Maven's Writ",
+          "baseTypeTrade": "The Maven's Writ"
+        },
+        "stackSize": {
+          "disabled": true,
+          "value": 1
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": []
+    }
+  ]
+}

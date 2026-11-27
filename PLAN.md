@@ -110,8 +110,10 @@ texts from EE2's `specs/Parser/items.ts` and port its vitest assertions too.
 - Normalize JSON (key order, floats) so Rust and TS output compare as text.
 - Script: `golden regen` (TS, `devenv tasks run golden:regen`) and `golden check`
   (Rust, `wraex_golden::{cases, diff}` in each ported module's tests) → diff report.
-- Still open: map-check / item-check data (step 3 above), a real PoE1 corpus
-  (the current one is hand-written, see `tools/golden/corpus/README.md`),
+- Still open: map-check / item-check data (step 3 above), more real PoE1
+  items (31 real copies so far, the rest hand-written; see
+  `tools/golden/corpus/README.md`; still missing: rare weapons and jewellery,
+  influenced, synthesised and crafted mods, scarabs, awakened gems),
   non-English cases, and the rest of EE2's vitest assertions. Ported as Rust
   tests against the modules above: `Parser/{advanced-mod-desc, augment,
   fractureParsers, integration, magic-name, mapParser, modifiersParsers,

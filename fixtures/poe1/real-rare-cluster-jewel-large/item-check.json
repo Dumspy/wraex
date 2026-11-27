@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Jewels%0ARarity%3A%20Rare%0AMaelstr%C3%B6m%20Stone%0ALarge%20Cluster%20Jewel%0A--------%0ARequirements%3A%0ALevel%3A%2040%0A--------%0AItem%20Level%3A%2083%0A--------%0AAdds%208%20Passive%20Skills%20(enchant)%0A(Added%20Passive%20Skills%20are%20never%20considered%20to%20be%20in%20Radius%20by%20other%20Jewels)%20(enchant)%0A(All%20Added%20Passive%20Skills%20are%20Small%20unless%20otherwise%20specified)%20(enchant)%0A2%20Added%20Passive%20Skills%20are%20Jewel%20Sockets%20(enchant)%0AAdded%20Small%20Passive%20Skills%20grant%3A%2012%25%20increased%20Fire%20Damage%20(enchant)%0A(Passive%20Skills%20that%20are%20not%20Notable%2C%20Masteries%2C%20Keystones%2C%20or%20Jewel%20Sockets%20are%20Small)%20(enchant)%0A--------%0A%7B%20Prefix%20Modifier%20%22Notable%22%20(Tier%3A%201)%20%E2%80%94%20Damage%2C%20Elemental%2C%20Fire%20%7D%0A1%20Added%20Passive%20Skill%20is%20Smoking%20Remains%20%E2%80%94%20Unscalable%20Value%0A%7B%20Prefix%20Modifier%20%22Notable%22%20(Tier%3A%201)%20%E2%80%94%20Damage%2C%20Elemental%2C%20Fire%20%7D%0A1%20Added%20Passive%20Skill%20is%20Burning%20Bright%20%E2%80%94%20Unscalable%20Value%0A%7B%20Suffix%20Modifier%20%22of%20the%20Brute%22%20(Tier%3A%203)%20%E2%80%94%20Attribute%20%7D%0AAdded%20Small%20Passive%20Skills%20also%20grant%3A%20%2B3(2-3)%20to%20Strength%0A%7B%20Suffix%20Modifier%20%22of%20Significance%22%20(Tier%3A%201)%20%E2%80%94%20Damage%2C%20Elemental%20%7D%0A1%20Added%20Passive%20Skill%20is%20Widespread%20Destruction%20%E2%80%94%20Unscalable%20Value%0A--------%0APlace%20into%20an%20allocated%20Large%20Jewel%20Socket%20on%20the%20Passive%20Skill%20Tree.%20Added%20passives%20do%20not%20interact%20with%20jewel%20radiuses.%20Right%20click%20to%20remove%20from%20the%20Socket.%0A",
+  "poedb": "https://poedb.tw/us/Large_Cluster_Jewel",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Large Cluster Jewel\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Large Cluster Jewel"
+}

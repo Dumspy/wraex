@@ -1,0 +1,27 @@
+Item Class: Jewels
+Rarity: Rare
+Maelström Stone
+Large Cluster Jewel
+--------
+Requirements:
+Level: 40
+--------
+Item Level: 83
+--------
+Adds 8 Passive Skills (enchant)
+(Added Passive Skills are never considered to be in Radius by other Jewels) (enchant)
+(All Added Passive Skills are Small unless otherwise specified) (enchant)
+2 Added Passive Skills are Jewel Sockets (enchant)
+Added Small Passive Skills grant: 12% increased Fire Damage (enchant)
+(Passive Skills that are not Notable, Masteries, Keystones, or Jewel Sockets are Small) (enchant)
+--------
+{ Prefix Modifier "Notable" (Tier: 1) — Damage, Elemental, Fire }
+1 Added Passive Skill is Smoking Remains — Unscalable Value
+{ Prefix Modifier "Notable" (Tier: 1) — Damage, Elemental, Fire }
+1 Added Passive Skill is Burning Bright — Unscalable Value
+{ Suffix Modifier "of the Brute" (Tier: 3) — Attribute }
+Added Small Passive Skills also grant: +3(2-3) to Strength
+{ Suffix Modifier "of Significance" (Tier: 1) — Damage, Elemental }
+1 Added Passive Skill is Widespread Destruction — Unscalable Value
+--------
+Place into an allocated Large Jewel Socket on the Passive Skill Tree. Added passives do not interact with jewel radiuses. Right click to remove from the Socket.

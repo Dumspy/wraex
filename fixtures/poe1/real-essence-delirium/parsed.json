@@ -1,0 +1,32 @@
+{
+  "category": "Currency",
+  "influences": [],
+  "info": {
+    "exchangeable": true,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvRXNzZW5jZS9NYWRuZXNzMSIsInNjYWxlIjoxfV0/e7a9b32a18/Madness1.png",
+    "name": "Essence of Delirium",
+    "namespace": "ITEM",
+    "refName": "Essence of Delirium",
+    "tradeTag": "essence-of-delirium"
+  },
+  "infoVariants": [
+    {
+      "exchangeable": true,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvRXNzZW5jZS9NYWRuZXNzMSIsInNjYWxlIjoxfV0/e7a9b32a18/Madness1.png",
+      "name": "Essence of Delirium",
+      "namespace": "ITEM",
+      "refName": "Essence of Delirium",
+      "tradeTag": "essence-of-delirium"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "Essence of Delirium",
+  "newMods": [],
+  "rawText": "Item Class: Stackable Currency\nRarity: Currency\nEssence of Delirium\n--------\nStack Size: 9/10\n--------\nUpgrades a normal item to rare or reforges a rare item, guaranteeing one property\n\nQuiver: 25% increased Effect of your Marks\nWeapon: Your Hits inflict Decay, dealing 700 Chaos Damage per second for 8 seconds\n\nGloves: Socketed Gems deal 30% more Damage over Time\nBoots: Cannot be Poisoned\nBody Armour: 25% reduced Chaos Damage taken over time\nHelmet: +2 to Level of Socketed Aura Gems\nShield: +15% Chance to Block Spell Damage while on Low Life\n\nAmulet: (6-7)% Chance to Block Spell Damage\nRing: (12-15)% to Damage over Time Multiplier\nBelt: +50% to Chaos Resistance during any Flask Effect\n--------\nRight click this item then left click a normal or rare item to apply it.\nShift click to unstack.\n",
+  "stackSize": {
+    "max": 10,
+    "value": 9
+  },
+  "statsByType": [],
+  "unknownModifiers": []
+}

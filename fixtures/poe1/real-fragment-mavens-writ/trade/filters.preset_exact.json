@@ -1,0 +1,21 @@
+{
+  "api": "bulk",
+  "request": {
+    "engine": "new",
+    "query": {
+      "have": [
+        "divine",
+        "chaos"
+      ],
+      "status": {
+        "option": "online"
+      },
+      "want": [
+        "the-mavens-writ"
+      ]
+    },
+    "sort": {
+      "have": "asc"
+    }
+  }
+}

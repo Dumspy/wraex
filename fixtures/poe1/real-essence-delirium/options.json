@@ -1,0 +1,24 @@
+{
+  "config": {
+    "language": "en",
+    "realm": "pc-ggg",
+    "useIntlSite": false,
+    "widgets": [
+      {
+        "apiLatencySeconds": 2,
+        "wmType": "price-check"
+      }
+    ]
+  },
+  "have": [],
+  "lang": "en",
+  "options": {
+    "activateStockFilter": false,
+    "collapseListings": "api",
+    "currency": null,
+    "league": "Standard",
+    "merchantOnly": true,
+    "searchStatRange": 10,
+    "useEn": false
+  }
+}

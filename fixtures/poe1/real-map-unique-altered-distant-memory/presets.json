@@ -1,0 +1,42 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "corrupted": {
+          "exact": false,
+          "twice": false,
+          "value": true
+        },
+        "foulborn": {
+          "value": false
+        },
+        "mapTier": {
+          "disabled": false,
+          "value": 16
+        },
+        "searchExact": {
+          "baseTypeTrade": "Map",
+          "discriminatorTrade": "map",
+          "name": "Altered Distant Memory",
+          "nameTrade": "Altered Distant Memory"
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": false,
+          "currency": null,
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        },
+        "vestigial": {
+          "value": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": []
+    }
+  ]
+}

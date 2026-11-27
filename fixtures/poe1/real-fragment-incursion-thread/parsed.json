@@ -1,0 +1,32 @@
+{
+  "influences": [],
+  "info": {
+    "exchangeable": true,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvVGhyZWFkcy9JbmN1cnNpb25UaHJlYWQiLCJzY2FsZSI6MX1d/c727d5bfc4/IncursionThread.png",
+    "name": "Incursion Thread",
+    "namespace": "ITEM",
+    "refName": "Incursion Thread",
+    "tradeTag": "incursion-thread"
+  },
+  "infoVariants": [
+    {
+      "exchangeable": true,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvVGhyZWFkcy9JbmN1cnNpb25UaHJlYWQiLCJzY2FsZSI6MX1d/c727d5bfc4/IncursionThread.png",
+      "name": "Incursion Thread",
+      "namespace": "ITEM",
+      "refName": "Incursion Thread",
+      "tradeTag": "incursion-thread"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "Incursion Thread",
+  "newMods": [],
+  "rarity": "Normal",
+  "rawText": "Item Class: Map Fragments\nRarity: Normal\nIncursion Thread\n--------\nStack Size: 295/100\n--------\nThreads Temporal Incursions into an Area\n--------\nCan be used in a personal Map Device to add content to a Map.\n",
+  "stackSize": {
+    "max": 100,
+    "value": 295
+  },
+  "statsByType": [],
+  "unknownModifiers": []
+}

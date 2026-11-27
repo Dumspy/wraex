@@ -1,0 +1,23 @@
+Item Class: Stackable Currency
+Rarity: Currency
+Essence of Delirium
+--------
+Stack Size: 9/10
+--------
+Upgrades a normal item to rare or reforges a rare item, guaranteeing one property
+
+Quiver: 25% increased Effect of your Marks
+Weapon: Your Hits inflict Decay, dealing 700 Chaos Damage per second for 8 seconds
+
+Gloves: Socketed Gems deal 30% more Damage over Time
+Boots: Cannot be Poisoned
+Body Armour: 25% reduced Chaos Damage taken over time
+Helmet: +2 to Level of Socketed Aura Gems
+Shield: +15% Chance to Block Spell Damage while on Low Life
+
+Amulet: (6-7)% Chance to Block Spell Damage
+Ring: (12-15)% to Damage over Time Multiplier
+Belt: +50% to Chaos Resistance during any Flask Effect
+--------
+Right click this item then left click a normal or rare item to apply it.
+Shift click to unstack.

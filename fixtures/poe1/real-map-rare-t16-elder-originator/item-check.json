@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Maps%0ARarity%3A%20Rare%0ASteel%20Voyage%0AMap%20(Tier%2016)%0A--------%0AAtlas%20Drops%3A%20%2B52%25%20(augmented)%0AItem%20Rarity%3A%20%2B31%25%20(augmented)%0AMonster%20Pack%20Size%3A%20%2B20%25%20(augmented)%0A--------%0AItem%20Level%3A%2083%0A--------%0AMonster%20Level%3A%2083%0A--------%0A%7B%20Implicit%20Modifier%20%7D%0AArea%20is%20influenced%20by%20The%20Elder%20%E2%80%94%20Unscalable%20Value%0AMap%20is%20occupied%20by%20The%20Constrictor(...)%20%E2%80%94%20Unscalable%20Value%0A%7B%20Implicit%20Modifier%20%7D%0AArea%20is%20Influenced%20by%20the%20Originator's%20Memories%20%E2%80%94%20Unscalable%20Value%0A--------%0A%7B%20Prefix%20Modifier%20%22Fecund%22%20%E2%80%94%20Life%20%7D%0A44(40-49)%25%20more%20Monster%20Life%0A%7B%20Prefix%20Modifier%20%22Conflagrating%22%20%E2%80%94%20Elemental%2C%20Fire%2C%20Ailment%20%7D%0AAll%20Monster%20Damage%20from%20Hits%20always%20Ignites%20%E2%80%94%20Unscalable%20Value%0A(Ignite%20deals%20Fire%20Damage%20over%20time%2C%20based%20on%20the%20base%20Fire%20Damage%20of%20the%20Skill%2C%20for%204%20seconds)%0A%7B%20Suffix%20Modifier%20%22of%20Vulnerability%22%20%E2%80%94%20Caster%2C%20Curse%20%7D%0APlayers%20are%20Cursed%20with%20Vulnerability%0A(Vulnerability%20is%20a%20Hex%20which%20increases%20Physical%20Damage%20taken%20by%2015%25%20and%20causes%20Hits%20to%20have%20%2B25%25%20chance%20to%20inflict%20Bleeding%20on%20the%20target.%20It%20lasts%208%20seconds)%0A%7B%20Suffix%20Modifier%20%22of%20Venom%22%20%E2%80%94%20Chaos%2C%20Ailment%20%7D%0AMonsters%20Poison%20on%20Hit%20%E2%80%94%20Unscalable%20Value%0A(Poison%20deals%20Chaos%20Damage%20over%20time%2C%20based%20on%20the%20base%20Physical%20and%20Chaos%20Damage%20of%20the%20Skill.%20Multiple%20instances%20of%20Poison%20stack)%0A--------%0ATravel%20to%20a%20Map%20of%20this%20tier%20or%20lower%20by%20using%20this%20in%20a%20personal%20Map%20Device.%20Maps%20can%20only%20be%20used%20once.%20%0A",
+  "poedb": "https://poedb.tw/us/Map",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Map\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Map"
+}

@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Jewels%0ARarity%3A%20Unique%0AFoulborn%20The%20Red%20Dream%0ACrimson%20Jewel%0A--------%0ALimited%20to%3A%201%0ARadius%3A%20Large%0A--------%0AItem%20Level%3A%2083%0A--------%0A%7B%20Unique%20Modifier%20%E2%80%94%20Damage%2C%20Elemental%2C%20Fire%2C%20Chaos%20%7D%0AGain%208(6-10)%25%20of%20Fire%20Damage%20as%20Extra%20Chaos%20Damage%0A%7B%20Foulborn%20Unique%20Modifier%20%E2%80%94%20Life%2C%20Elemental%2C%20Fire%20%7D%0APassives%20granting%20Fire%20Resistance%20or%20all%20Elemental%20Resistances%20in%20Radius%0Aalso%20grant%20increased%20Maximum%20Life%20at%2050%25%20of%20its%20value%0A--------%0AWe%20flow%20like%20blood%20into%20Chayula's%20open%20mouth%2C%0Aand%20spill%20into%20the%20land%20we%20have%20watched%20forever.%0A--------%0APlace%20into%20an%20allocated%20Jewel%20Socket%20on%20the%20Passive%20Skill%20Tree.%20Right%20click%20to%20remove%20from%20the%20Socket.%0A",
+  "poedb": "https://poedb.tw/us/The_Red_Dream",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"The Red Dream\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/The Red Dream"
+}

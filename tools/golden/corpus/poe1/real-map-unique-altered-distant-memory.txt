@@ -1,0 +1,27 @@
+Item Class: Maps
+Rarity: Unique
+Altered Distant Memory
+Map (Tier 16)
+--------
+Atlas Drops: +100% (augmented)
+Monster Pack Size: +25% (augmented)
+--------
+Item Level: 85
+--------
+Monster Level: 81
+--------
+{ Unique Modifier }
+100% increased Experience gain
+{ Unique Modifier }
+Map has 4(3-5) additional random Modifiers
+{ Unique Modifier }
+Map has 2(2-4) additional Synthesis Global Modifiers
+{ Unique Modifier }
+Monster Level: 81 — Unscalable Value
+--------
+The winters of my youth were cold and harsh.
+We had nothing, yet to my mother's credit, I wanted for so little.
+--------
+Travel to a Map of this tier or lower by using this in a personal Map Device. Maps can only be used once. 
+--------
+Corrupted

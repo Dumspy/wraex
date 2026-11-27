@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Map%20Fragments%0ARarity%3A%20Normal%0AThe%20Maven's%20Writ%0A--------%0AIt%20would%20be%20foolish%20to%20obey%20the%20Maven's%20demands.%0AIt%20would%20also%20be%20foolish%20not%20to.%0A--------%0AOpen%20a%20portal%20to%20Absence%20of%20Mercy%20and%20Empathy%20by%20using%20this%20item%20in%20a%20personal%20Map%20Device.%20Can%20only%20be%20used%20once.%20While%20viewing%20your%20Atlas%2C%20Right-click%20this%20item%20to%20pinpoint%20its%20location.%0A",
+  "poedb": "https://poedb.tw/us/The_Mavens_Writ",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"The Maven's Writ\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/The Maven's Writ"
+}

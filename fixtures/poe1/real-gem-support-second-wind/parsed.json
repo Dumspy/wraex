@@ -1,0 +1,32 @@
+{
+  "category": "Gem",
+  "gemLevel": 1,
+  "influences": [],
+  "info": {
+    "gem": {
+      "maxLevel": 20
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9TdXBwb3J0L1NlY29uZFdpbmRTdXBwb3J0IiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/ccfc5c7b25/SecondWindSupport.png",
+    "name": "Second Wind Support",
+    "namespace": "GEM",
+    "refName": "Second Wind Support"
+  },
+  "infoVariants": [
+    {
+      "gem": {
+        "maxLevel": 20
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9TdXBwb3J0L1NlY29uZFdpbmRTdXBwb3J0IiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/ccfc5c7b25/SecondWindSupport.png",
+      "name": "Second Wind Support",
+      "namespace": "GEM",
+      "refName": "Second Wind Support"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "Second Wind Support",
+  "newMods": [],
+  "quality": 20,
+  "rawText": "Item Class: Support Gems\nRarity: Gem\nSecond Wind Support\n--------\nSupport\nLevel: 1\nCost & Reservation Multiplier: 200%\nQuality: +20% (augmented)\n--------\nRequirements:\nLevel: 31\nDex: 33\nInt: 23\n--------\nSupports skills with cooldowns.\nCannot support triggered skills.\n--------\nSupported Skills have 24% reduced Cooldown Recovery Rate\nSupported Non-Instant Skills have +1 Cooldown Use\n\nAdditional Effects From Quality:\nSupported Skills have +5(0-5)% increased Cooldown Recovery Rate\n--------\nExperience: 1/285,815\n--------\nThis is a Support Gem. It does not grant a bonus to your character, but to skills in sockets connected to it. Place into an item socket connected to a socket containing the Skill Gem you wish to augment. Right click to remove from a socket.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

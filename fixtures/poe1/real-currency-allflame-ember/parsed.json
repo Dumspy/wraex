@@ -1,0 +1,32 @@
+{
+  "category": "Currency",
+  "influences": [],
+  "info": {
+    "exchangeable": true,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvTmVjcm9wb2xpcy9BbGxmbGFtZVdpbGR3b29kIiwic2NhbGUiOjF9XQ/5c1042cde7/AllflameWildwood.png",
+    "name": "Allflame Ember of the Wildwood",
+    "namespace": "ITEM",
+    "refName": "Allflame Ember of the Wildwood",
+    "tradeTag": "allflame-ember-of-the-wildwood"
+  },
+  "infoVariants": [
+    {
+      "exchangeable": true,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvTmVjcm9wb2xpcy9BbGxmbGFtZVdpbGR3b29kIiwic2NhbGUiOjF9XQ/5c1042cde7/AllflameWildwood.png",
+      "name": "Allflame Ember of the Wildwood",
+      "namespace": "ITEM",
+      "refName": "Allflame Ember of the Wildwood",
+      "tradeTag": "allflame-ember-of-the-wildwood"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "Allflame Ember of the Wildwood",
+  "newMods": [],
+  "rawText": "Item Class: Stackable Currency\nRarity: Currency\nAllflame Ember of the Wildwood\n--------\nStack Size: 6/20\n--------\nEnchants a Map to substitute 11 Monster Packs in Area with Wildwood Fiends\nPack Leaders Empower Map Bosses with Wildwood Wisps when slain\n--------\nRight click this item then left click\na non-Unique Map item to use.\nShift click to unstack.\n",
+  "stackSize": {
+    "max": 20,
+    "value": 6
+  },
+  "statsByType": [],
+  "unknownModifiers": []
+}

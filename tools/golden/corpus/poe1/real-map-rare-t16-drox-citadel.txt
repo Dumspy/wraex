@@ -1,0 +1,26 @@
+Item Class: Maps
+Rarity: Rare
+Remote Crosscut
+Map (Tier 16)
+--------
+Atlas Drops: +58% (augmented)
+Item Rarity: +34% (augmented)
+Monster Pack Size: +22% (augmented)
+--------
+Item Level: 83
+--------
+Monster Level: 83
+--------
+{ Implicit Modifier }
+Map contains Drox's Citadel(...) — Unscalable Value
+--------
+{ Prefix Modifier "Burning" (Tier: 1) — Damage, Physical, Elemental, Fire }
+Monsters deal 108(90-110)% extra Physical Damage as Fire
+{ Prefix Modifier "Fecund" (Tier: 1) — Life }
+45(40-49)% more Monster Life
+{ Suffix Modifier "of Giants" (Tier: 1) }
+Monsters have 100% increased Area of Effect
+{ Suffix Modifier "of Stasis" (Tier: 1) — Life, Mana, Defences, Energy Shield }
+Players cannot Regenerate Life, Mana or Energy Shield — Unscalable Value
+--------
+Travel to a Map of this tier or lower by using this in a personal Map Device. Maps can only be used once. 

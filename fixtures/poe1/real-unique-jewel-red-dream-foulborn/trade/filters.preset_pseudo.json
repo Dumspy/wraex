@@ -1,0 +1,48 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "misc_filters": {
+          "filters": {
+            "corrupted": {
+              "option": "false"
+            },
+            "vestigial": {
+              "option": "false"
+            }
+          }
+        }
+      },
+      "name": "The Red Dream",
+      "stats": [
+        {
+          "filters": [
+            {
+              "disabled": false,
+              "id": "explicit.stat_1599775597",
+              "value": {
+                "min": 7
+              }
+            },
+            {
+              "disabled": false,
+              "id": "explicit.stat_4068640319",
+              "value": {
+                "min": 50
+              }
+            }
+          ],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": "Crimson Jewel"
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

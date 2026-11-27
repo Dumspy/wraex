@@ -1,0 +1,28 @@
+{
+  "influences": [],
+  "info": {
+    "exchangeable": true,
+    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQXRsYXMvTWF2ZW5LZXkiLCJzY2FsZSI6MX1d/40683e487b/MavenKey.png",
+    "name": "The Maven's Writ",
+    "namespace": "ITEM",
+    "refName": "The Maven's Writ",
+    "tradeTag": "the-mavens-writ"
+  },
+  "infoVariants": [
+    {
+      "exchangeable": true,
+      "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQXRsYXMvTWF2ZW5LZXkiLCJzY2FsZSI6MX1d/40683e487b/MavenKey.png",
+      "name": "The Maven's Writ",
+      "namespace": "ITEM",
+      "refName": "The Maven's Writ",
+      "tradeTag": "the-mavens-writ"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "The Maven's Writ",
+  "newMods": [],
+  "rarity": "Normal",
+  "rawText": "Item Class: Map Fragments\nRarity: Normal\nThe Maven's Writ\n--------\nIt would be foolish to obey the Maven's demands.\nIt would also be foolish not to.\n--------\nOpen a portal to Absence of Mercy and Empathy by using this item in a personal Map Device. Can only be used once. While viewing your Atlas, Right-click this item to pinpoint its location.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

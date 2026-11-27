@@ -1,0 +1,31 @@
+{
+  "category": "Gem",
+  "gemLevel": 1,
+  "influences": [],
+  "info": {
+    "gem": {
+      "maxLevel": 3
+    },
+    "icon": "https://web.poecdn.com/gen/image/WzMwLDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9TdXBwb3J0L01pbmlvblBhY3RTdXBwb3IiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MSwiZ2UiOnRydWV9XQ/d9b5bdb23e/MinionPactSuppor.png",
+    "name": "Communion Support",
+    "namespace": "GEM",
+    "refName": "Communion Support"
+  },
+  "infoVariants": [
+    {
+      "gem": {
+        "maxLevel": 3
+      },
+      "icon": "https://web.poecdn.com/gen/image/WzMwLDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9TdXBwb3J0L01pbmlvblBhY3RTdXBwb3IiLCJ3IjoxLCJoIjoxLCJzY2FsZSI6MSwiZ2UiOnRydWV9XQ/d9b5bdb23e/MinionPactSuppor.png",
+      "name": "Communion Support",
+      "namespace": "GEM",
+      "refName": "Communion Support"
+    }
+  ],
+  "isUnidentified": false,
+  "name": "Communion Support",
+  "newMods": [],
+  "rawText": "Item Class: Support Gems\nRarity: Gem\nCommunion Support\n--------\nExceptional, Spell, Minion, Physical, Support\nLevel: 1\nCost & Reservation Multiplier: 150%\n--------\nRequirements:\nLevel: 72\nInt: 114\n--------\nSupports spell skills that hit enemies. Cannot modify the skills of minions.\n--------\nSupported Spells deal 17 to 25 added Physical Damage for each permanent Minion\n\nAdditional Effects From Quality:\nSupported Skills deal 0(0-10)% increased Spell Damage\n--------\nExperience: 1/226,854,909\n--------\nCatarina envisioned a Wraeclast of disparate societies united.\nThat diversity would empower the Syndicate - and the increased\nnumber of dispensible bodies was a convenient coincidence.\n--------\nThis is a Support Gem. It does not grant a bonus to your character, but to skills in sockets connected to it. Place into an item socket connected to a socket containing the Skill Gem you wish to augment. Right click to remove from a socket.\n",
+  "statsByType": [],
+  "unknownModifiers": []
+}

@@ -1,0 +1,30 @@
+Item Class: Body Armours
+Rarity: Unique
+Foulborn Greed's Embrace
+Golden Plate
+--------
+Armour: 624
+--------
+Requirements:
+Level: 56
+Str: 106 (augmented)
+--------
+Sockets: W W W W-W-W 
+--------
+Item Level: 83
+--------
+{ Unique Modifier — Speed }
+20% reduced Movement Speed
+{ Unique Modifier — Elemental, Fire, Resistance }
+-10% to Fire Resistance
+{ Unique Modifier — Elemental, Cold, Resistance }
++29(20-30)% to Cold Resistance
+{ Unique Modifier — Elemental, Lightning, Resistance }
+-14(-20--10)% to Lightning Resistance
+{ Unique Modifier }
+30% reduced Strength Requirement
+{ Foulborn Unique Modifier }
+5% increased Experience gain
+--------
+Some would question if the risk was worth it.
+The rest were already dead.

@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Body%20Armours%0ARarity%3A%20Unique%0AFoulborn%20Greed's%20Embrace%0AGolden%20Plate%0A--------%0AArmour%3A%20624%0A--------%0ARequirements%3A%0ALevel%3A%2056%0AStr%3A%20106%20(augmented)%0A--------%0ASockets%3A%20W%20W%20W%20W-W-W%20%0A--------%0AItem%20Level%3A%2083%0A--------%0A%7B%20Unique%20Modifier%20%E2%80%94%20Speed%20%7D%0A20%25%20reduced%20Movement%20Speed%0A%7B%20Unique%20Modifier%20%E2%80%94%20Elemental%2C%20Fire%2C%20Resistance%20%7D%0A-10%25%20to%20Fire%20Resistance%0A%7B%20Unique%20Modifier%20%E2%80%94%20Elemental%2C%20Cold%2C%20Resistance%20%7D%0A%2B29(20-30)%25%20to%20Cold%20Resistance%0A%7B%20Unique%20Modifier%20%E2%80%94%20Elemental%2C%20Lightning%2C%20Resistance%20%7D%0A-14(-20--10)%25%20to%20Lightning%20Resistance%0A%7B%20Unique%20Modifier%20%7D%0A30%25%20reduced%20Strength%20Requirement%0A%7B%20Foulborn%20Unique%20Modifier%20%7D%0A5%25%20increased%20Experience%20gain%0A--------%0ASome%20would%20question%20if%20the%20risk%20was%20worth%20it.%0AThe%20rest%20were%20already%20dead.%0A",
+  "poedb": "https://poedb.tw/us/Greeds_Embrace",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Greed's Embrace\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Greed's Embrace"
+}

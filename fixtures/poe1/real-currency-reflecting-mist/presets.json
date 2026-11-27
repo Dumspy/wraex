@@ -1,0 +1,29 @@
+{
+  "active": "filters.preset_exact",
+  "presets": [
+    {
+      "filters": {
+        "searchExact": {
+          "baseType": "Reflecting Mist",
+          "baseTypeTrade": "Reflecting Mist"
+        },
+        "stackSize": {
+          "disabled": true,
+          "value": 4
+        },
+        "trade": {
+          "collapseListings": "api",
+          "collapseMerchant": true,
+          "currency": "chaos_divine",
+          "league": "Standard",
+          "listed": null,
+          "merchantOnly": true,
+          "offline": false,
+          "onlineInLeague": false
+        }
+      },
+      "id": "filters.preset_exact",
+      "stats": []
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+Item Class: Misc Map Items
+Rarity: Normal
+Screaming Invitation
+--------
+Item Level: 83
+--------
+{ Implicit Modifier }
+Modifiers to Item Quantity affect the amount of rewards dropped by the boss — Unscalable Value
+--------
+From the heart of the Tangle, the Eater of Worlds
+reaches out for control of the Atlas.
+--------
+Open portals to Absence of Symmetry and Harmony by using this item in a personal Map Device. While viewing your Atlas, Right-click this item to pinpoint its location.

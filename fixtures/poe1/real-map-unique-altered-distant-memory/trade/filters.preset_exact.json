@@ -1,0 +1,50 @@
+{
+  "api": "trade",
+  "request": {
+    "query": {
+      "filters": {
+        "map_filters": {
+          "filters": {
+            "map_tier": {
+              "max": 16,
+              "min": 16
+            }
+          }
+        },
+        "misc_filters": {
+          "filters": {
+            "foulborn_item": {
+              "option": "false"
+            },
+            "twice_corrupted": {
+              "option": "false"
+            },
+            "vestigial": {
+              "option": "false"
+            }
+          }
+        }
+      },
+      "name": {
+        "discriminator": "map",
+        "option": "Altered Distant Memory"
+      },
+      "stats": [
+        {
+          "filters": [],
+          "type": "and"
+        }
+      ],
+      "status": {
+        "option": "securable"
+      },
+      "type": {
+        "discriminator": "map",
+        "option": "Map"
+      }
+    },
+    "sort": {
+      "price": "asc"
+    }
+  }
+}

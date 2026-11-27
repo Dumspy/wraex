@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Divination%20Cards%0ARarity%3A%20Divination%20Card%0ADark%20Temptation%0A--------%0AStack%20Size%3A%205%2F5%0A--------%0AObliteration%0A--------%0A%22Only%20a%20fool%20looks%20to%20the%20occult%20for%20power%20and%20expects%20to%20be%20spared%20from%20its%20wrath.%22%20%0A-%20Voll%2C%20Emperor%20of%20Purity%0A--------%0AShift%20click%20to%20unstack.%0A",
+  "poedb": "https://poedb.tw/us/Dark_Temptation",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Dark Temptation\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Dark Temptation"
+}

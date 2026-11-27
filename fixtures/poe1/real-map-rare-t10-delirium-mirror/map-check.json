@@ -1,0 +1,16 @@
+[
+  {
+    "matcher": "Area is inhabited by Demons"
+  },
+  {
+    "matcher": "Monsters' skills Chain # additional times",
+    "roll": 2
+  },
+  {
+    "matcher": "Area contains a Mirror of Delirium"
+  },
+  {
+    "matcher": "Monsters steal Power, Frenzy and Endurance charges on Hit",
+    "roll": 100
+  }
+]

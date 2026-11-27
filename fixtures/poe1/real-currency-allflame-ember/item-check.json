@@ -1,0 +1,12 @@
+{
+  "craftOfExile": "https://craftofexile.com/?game=poe1&eimport=Item%20Class%3A%20Stackable%20Currency%0ARarity%3A%20Currency%0AAllflame%20Ember%20of%20the%20Wildwood%0A--------%0AStack%20Size%3A%206%2F20%0A--------%0AEnchants%20a%20Map%20to%20substitute%2011%20Monster%20Packs%20in%20Area%20with%20Wildwood%20Fiends%0APack%20Leaders%20Empower%20Map%20Bosses%20with%20Wildwood%20Wisps%20when%20slain%0A--------%0ARight%20click%20this%20item%20then%20left%20click%0Aa%20non-Unique%20Map%20item%20to%20use.%0AShift%20click%20to%20unstack.%0A",
+  "poedb": "https://poedb.tw/us/Allflame_Ember_of_the_Wildwood",
+  "similar": {
+    "name": "CLIENT->MAIN::user-action",
+    "payload": {
+      "action": "stash-search",
+      "text": "\"Allflame Ember of the Wildwood\""
+    }
+  },
+  "wiki": "https://www.poewiki.net/wiki/Allflame Ember of the Wildwood"
+}
