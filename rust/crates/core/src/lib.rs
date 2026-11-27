@@ -18,6 +18,7 @@ pub mod keys;
 pub mod leagues;
 pub mod levenshtein;
 pub mod parse;
+pub mod quick_math;
 pub mod rarity;
 pub mod relative_time;
 pub mod trade;

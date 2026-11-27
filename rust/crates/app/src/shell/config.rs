@@ -190,7 +190,9 @@ mod tests {
         let startup = load(GameId::Poe1, dir.path());
         assert_eq!(startup.source, Source::Defaults);
         assert_eq!(startup.upstream, None);
-        assert_eq!(startup.config, wraex_poe1::config::default_config());
+        // Wraex's own keys are added on top of upstream's defaults.
+        assert_eq!(startup.config, settings::default_config(GameId::Poe1));
+        assert_eq!(startup.config["quickMathKey"], crate::quick_math::DEFAULT_KEY);
         assert!(!startup.save_temporary);
         assert_eq!(startup.folder(), settings::config_path_in(GameId::Poe1, dir.path()).parent());
     }

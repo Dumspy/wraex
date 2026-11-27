@@ -70,6 +70,9 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
         ("hotkeys-overlay", tr(settings, "settings.overlay"), Field::Root("overlayKey"), true),
         ("hotkeys-item-check", item_check, Field::Widget("item-check", "hotkey"), false),
         ("hotkeys-delve-grid", tr(settings, "settings.delve_grid"), Field::Widget("delve-grid", "toggleKey"), false),
+        // Wraex's own quick-math bar (issue #6). The label is an English literal: the bar has no
+        // i18n key in either reference, and translating it is out of this issue's scope.
+        ("hotkeys-quick-math", "Quick math".to_owned(), Field::Root("quickMathKey"), false),
     ] {
         list = list.child(single_row(settings, key, &label, field, required, project));
     }

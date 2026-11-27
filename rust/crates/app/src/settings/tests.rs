@@ -105,6 +105,13 @@ fn every_settings_page_shows_its_labels() {
         assert!(has_text(&hotkeys, "Auto-hide Mode"), "{game:?}: price check hotkey row");
         assert!(hotkeys.find("hotkeys-overlay-input").is_some(), "{game:?}: overlay key field");
         assert!(text_of(&hotkeys, "hotkeys-price-check-ctrl-label").as_deref() == Some("Ctrl"));
+        // Wraex's own bar: a row of its own, with the default hotkey from `fill_defaults`.
+        assert!(has_text(&hotkeys, "Quick math"), "{game:?}: quick-math row");
+        assert_eq!(
+            text_of(&hotkeys, "hotkeys-quick-math-input-value").as_deref(),
+            Some(crate::quick_math::DEFAULT_KEY),
+            "{game:?}: the bar's default hotkey"
+        );
         assert!(has_text(&hotkeys, "Stash tab scrolling"), "{game:?}: stash scroll");
 
         let chat = scene(game, Page::Chat);
@@ -234,6 +241,39 @@ fn recording_a_hotkey_produces_upstreams_string() {
         rune::KeyEvent { key: rune::Key::Function(12), mods: rune::Mods { ctrl: true, ..rune::Mods::default() } },
     );
     assert_eq!(runtime.state.settings.as_ref().unwrap().string(Field::Root("overlayKey")), "Ctrl + Alt + D");
+}
+
+/// The bar's own hotkey row writes and clears `quickMathKey`, Wraex's root key.
+#[test]
+fn recording_the_quick_math_hotkey_writes_its_root_key() {
+    let key = crate::quick_math::CONFIG_KEY;
+    let mut runtime = scene(GameId::Poe1, Page::Hotkeys);
+    assert_eq!(
+        runtime.state.settings.as_ref().unwrap().string(Field::Root(key)),
+        crate::quick_math::DEFAULT_KEY,
+        "the default config carries the default hotkey"
+    );
+
+    click(&mut runtime, "hotkeys-quick-math-input");
+    release(
+        &mut runtime,
+        rune::KeyEvent {
+            key: rune::Key::Text("Q".to_owned()),
+            mods: rune::Mods { ctrl: true, ..rune::Mods::default() },
+        },
+    );
+    let settings = runtime.state.settings.as_ref().unwrap();
+    assert_eq!(settings.string(Field::Root(key)), "Ctrl + Q");
+    assert_eq!(text_of(&runtime, "hotkeys-quick-math-input-value").as_deref(), Some("Ctrl + Q"));
+
+    // Backspace clears it (the field is not required): `null` means no hotkey.
+    click(&mut runtime, "hotkeys-quick-math-input");
+    release_named(&mut runtime, "Backspace");
+    assert_eq!(
+        runtime.state.settings.as_ref().unwrap().config[key],
+        serde_json::Value::Null,
+        "clearing writes null, which the host config reads as no hotkey"
+    );
 }
 
 /// A release of one named key, with no modifiers.
@@ -455,6 +495,34 @@ fn the_thank_you_box_fits_the_menu_column() {
 /// The about page's "Check now" hands the request to a worker: the press shows upstream's
 /// checking state at once (no blocking HTTPS call), the page draws it, and the answer lands
 /// through [`Settings::poll`].
+#[test]
+fn a_config_without_the_quick_math_key_gets_its_default() {
+    for game in [GameId::Poe1, GameId::Poe2] {
+        // Upstream's defaults know nothing about Wraex's bar.
+        let upstream = match game {
+            GameId::Poe2 => wraex_poe2::config::default_config(),
+            _ => wraex_poe1::config::default_config(),
+        };
+        assert!(upstream.get(crate::quick_math::CONFIG_KEY).is_none(), "{game:?}");
+        let loaded = load(game, Some(&upstream.to_string()));
+        assert_eq!(
+            loaded.config[crate::quick_math::CONFIG_KEY],
+            serde_json::Value::String(crate::quick_math::DEFAULT_KEY.to_owned()),
+            "{game:?}: the missing key gets the default"
+        );
+        assert_eq!(
+            default_config(game)[crate::quick_math::CONFIG_KEY],
+            serde_json::Value::String("Alt + M".to_owned()),
+            "{game:?}"
+        );
+        // A cleared key is kept, not defaulted again.
+        let mut cleared = default_config(game);
+        cleared[crate::quick_math::CONFIG_KEY] = serde_json::Value::Null;
+        let loaded = load(game, Some(&cleared.to_string()));
+        assert_eq!(loaded.config[crate::quick_math::CONFIG_KEY], serde_json::Value::Null, "{game:?}");
+    }
+}
+
 #[test]
 fn check_now_runs_on_a_worker() {
     let mut app = App::settings_scene(GameId::Poe1, Page::About);

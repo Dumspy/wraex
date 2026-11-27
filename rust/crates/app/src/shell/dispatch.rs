@@ -33,6 +33,9 @@ pub enum Request {
     /// `MAIN->CLIENT::widget-action`: a widget's hotkey (the delve grid's toggle, a timer's
     /// start/stop).
     WidgetAction(String),
+    /// The quick-math bar's hotkey (Wraex's own `quickMathKey`): open it at the cursor, or close
+    /// it if it is already up.
+    QuickMath,
     /// Draw the widget the config's `wmWants` now shows (`wm.show(wmId)` from the menu).
     ShowWidget(u32),
     /// Nothing the port does yet, and why.
@@ -118,7 +121,11 @@ pub fn shortcut_requests(events: Vec<ShortcutEvent>) -> Vec<Request> {
                     other => Request::Unsupported(format!("item text for {other}")),
                 }
             }
-            ShortcutEvent::WidgetAction { target } => Request::WidgetAction(target),
+            ShortcutEvent::WidgetAction { target } => {
+                // Wraex's own bar, not an upstream widget: its hotkey is a `trigger-event` like
+                // the delve grid's, but the shell opens a window rather than a widget action.
+                if target == crate::quick_math::WM_TYPE { Request::QuickMath } else { Request::WidgetAction(target) }
+            }
             ShortcutEvent::OcrRequest { target, .. } => Request::Unsupported(format!("OCR for {target}")),
         })
         .collect()
@@ -178,6 +185,14 @@ mod tests {
         assert_eq!(
             shortcut_requests(vec![ShortcutEvent::WidgetAction { target: "stopwatch-start-stop:3".to_owned() }]),
             vec![Request::WidgetAction("stopwatch-start-stop:3".to_owned())]
+        );
+    }
+
+    #[test]
+    fn the_quick_math_hotkey_opens_the_bar_rather_than_a_widget_action() {
+        assert_eq!(
+            shortcut_requests(vec![ShortcutEvent::WidgetAction { target: crate::quick_math::WM_TYPE.to_owned() }]),
+            vec![Request::QuickMath]
         );
     }
 

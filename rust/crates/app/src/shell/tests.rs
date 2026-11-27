@@ -169,7 +169,7 @@ fn menu_offset() -> (f32, f32) {
 fn the_overlay_draws_every_shown_widget_at_its_own_anchor() {
     let mut app = overlay_app();
     let menu = widget_id(&app, widgets::menu::WM_TYPE);
-    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    let cards = app.cards_for(true, BOUNDS, 1.0, None, None);
     assert_eq!(cards.len(), 1, "the config's other widgets are hidden");
     assert_eq!(cards[0].shown, Shown::Widget(widgets::menu::WM_TYPE.to_owned()));
     assert_eq!(cards[0].wm_id, Some(menu));
@@ -181,7 +181,7 @@ fn the_overlay_draws_every_shown_widget_at_its_own_anchor() {
     // above the `auto` ones.
     let stash = widget_id(&app, widgets::Kind::StashSearch.wm_type());
     app.widgets.as_mut().expect("the overlay").show(stash);
-    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    let cards = app.cards_for(true, BOUNDS, 1.0, None, None);
     assert_eq!(cards.len(), 2, "the menu and the stash search");
     assert_eq!(cards[0].wm_id, Some(stash), "the `auto` card paints first");
     assert_eq!(cards[1].wm_id, Some(menu), "the menu paints above it");
@@ -204,7 +204,7 @@ fn save_returns_to_the_menu_at_its_own_anchor() {
     app.settings = Some(crate::settings::Settings::scene(GameId::Poe1, Page::Hotkeys));
     // `App::open_settings` asks for a centred window; over the game the settings card covers the
     // overlay whatever the placement says.
-    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred));
+    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred), None);
     assert_eq!(cards.len(), 1, "the exclusive settings window hides the menu");
     assert_eq!(cards[0].shown, Shown::Settings);
     assert_eq!(cards[0].offset, (0.0, 0.0));
@@ -214,7 +214,7 @@ fn save_returns_to_the_menu_at_its_own_anchor() {
     // Save: the working copy is written and the window closes, as `Live::poll` runs after it.
     app.settings.as_mut().expect("the settings window").save().expect("the scene's temp store");
     app.hide_settings_widget();
-    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred));
+    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred), None);
     assert_eq!(cards.len(), 1);
     assert_eq!(cards[0].shown, Shown::Widget(widgets::menu::WM_TYPE.to_owned()));
     assert_eq!(cards[0].offset, menu_offset(), "the menu is at 5 %/5 %, not where the settings was");
@@ -223,7 +223,7 @@ fn save_returns_to_the_menu_at_its_own_anchor() {
     app.settings = Some(crate::settings::Settings::scene(GameId::Poe1, Page::General));
     app.settings.as_mut().expect("the settings window").cancel();
     app.hide_settings_widget();
-    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred));
+    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred), None);
     assert_eq!(cards[0].shown, Shown::Widget(widgets::menu::WM_TYPE.to_owned()));
     assert_eq!(cards[0].offset, menu_offset());
 }
@@ -236,7 +236,7 @@ fn the_settings_widget_card_needs_the_settings_window() {
     let mut app = overlay_app();
     let settings = widget_id(&app, widgets::SETTINGS);
     app.widgets.as_mut().expect("the overlay").show(settings);
-    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    let cards = app.cards_for(true, BOUNDS, 1.0, None, None);
     assert!(
         cards.iter().all(|card| card.shown != Shown::Settings && card.wm_id != Some(settings)),
         "the settings widget is drawn by the settings window"
@@ -253,7 +253,7 @@ fn the_price_check_draws_alone() {
     app.widgets.as_mut().expect("the overlay").show(stash);
     app.price_check.open = true;
     let cursor = Point { x: 400.0, y: 300.0 };
-    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Cursor(cursor)));
+    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Cursor(cursor)), None);
     assert_eq!(cards.len(), 1, "an exclusive widget hides the rest");
     assert_eq!(cards[0].shown, Shown::PriceCheck);
     let size = (crate::poe1::price_check::WIDTH, BOUNDS.height as f32);
@@ -262,16 +262,45 @@ fn the_price_check_draws_alone() {
     assert_eq!(app.shown_in(true), Shown::PriceCheck);
 }
 
+/// The quick-math bar is a card in addition to what the overlay already draws (a trader does
+/// maths beside an open price check), and the last one, so it paints on top. It sits at the
+/// cursor that opened it, not at the price check's placement, and alone it is still what the
+/// window shows.
+#[test]
+fn the_quick_math_bar_draws_last_at_its_own_cursor() {
+    let mut app = overlay_app();
+    app.price_check.open = true;
+    let check_cursor = Point { x: 400.0, y: 300.0 };
+    app.quick_math.open();
+    let bar_cursor = Point { x: 900.0, y: 700.0 };
+
+    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Cursor(check_cursor)), Some(bar_cursor));
+    assert_eq!(cards.len(), 2, "the price check and the bar");
+    assert_eq!(cards[0].shown, Shown::PriceCheck, "the bar is drawn after the check");
+    assert_eq!(cards[1].shown, Shown::QuickMath, "the bar is the last card, on top");
+    let size = (crate::quick_math::WIDTH, crate::quick_math::HEIGHT);
+    assert_eq!(cards[1].size(), Some(size));
+    assert_eq!(cards[1].offset, widget_offset(Some(Placement::Cursor(bar_cursor)), size, BOUNDS, 1.0));
+
+    // Alone (no check, no menu: the overlay is inactive) it is what keeps the window drawn.
+    let mut app = overlay_app();
+    app.quick_math.open();
+    let cards = app.cards_for(false, BOUNDS, 1.0, None, None);
+    assert_eq!(cards.len(), 1, "the bar is the only card");
+    assert_eq!(cards[0].shown, Shown::QuickMath);
+    assert_eq!(app.shown_in(false), Shown::QuickMath);
+}
+
 /// `visibilityState`'s `invisible-on-blur`: the menu goes with the overlay, while a widget whose
 /// flag was cleared (a running stopwatch) stays drawn over the game.
 #[test]
 fn hidden_widgets_are_not_drawn() {
     let mut app = overlay_app();
-    assert!(app.cards_for(false, BOUNDS, 1.0, None).is_empty(), "the menu is `invisible-on-blur`");
+    assert!(app.cards_for(false, BOUNDS, 1.0, None, None).is_empty(), "the menu is `invisible-on-blur`");
 
     let timer = app.widgets.as_mut().expect("the overlay").create(widgets::Kind::Stopwatch.wm_type());
     app.widgets.as_mut().expect("the overlay").timer_start(timer, 0.0);
-    let cards = app.cards_for(false, BOUNDS, 1.0, None);
+    let cards = app.cards_for(false, BOUNDS, 1.0, None, None);
     assert_eq!(cards.len(), 1, "the running stopwatch is the only card off-overlay");
     assert_eq!(cards[0].wm_id, Some(timer));
     // The timer's own anchor is the centre (`cc`), which its card is shifted by.
@@ -321,14 +350,14 @@ fn the_windows_runs_sequence_keeps_every_card_in_place() {
     let settings = widget_id(&app, widgets::SETTINGS);
 
     // The overlay key: the menu, at 5 %/5 %.
-    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    let cards = app.cards_for(true, BOUNDS, 1.0, None, None);
     assert_eq!(cards.len(), 1);
     assert_eq!(cards[0].wm_id, Some(menu));
     assert_eq!(cards[0].offset, menu_offset());
 
     // "Map rolling": the menu's button is `wm.toggle`, which shows the stash search.
     app.widgets.as_mut().expect("the overlay").toggle(stash);
-    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    let cards = app.cards_for(true, BOUNDS, 1.0, None, None);
     assert_eq!(cards.len(), 2, "both cards: the image strip must not hide the menu");
     assert!(cards.iter().any(|card| card.wm_id == Some(menu) && card.offset == menu_offset()));
     assert!(cards.iter().any(|card| card.wm_id == Some(stash)));
@@ -337,14 +366,14 @@ fn the_windows_runs_sequence_keeps_every_card_in_place() {
     // only card, covering the overlay.
     app.widgets.as_mut().expect("the overlay").toggle(settings);
     app.settings = Some(crate::settings::Settings::scene(GameId::Poe1, Page::Hotkeys));
-    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred));
+    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred), None);
     assert_eq!(cards.len(), 1);
     assert_eq!(cards[0].shown, Shown::Settings);
 
     // Save: the settings widget goes back to `hide`, and the menu is where it belongs.
     app.settings.as_mut().expect("the settings window").save().expect("the scene's temp store");
     app.hide_settings_widget();
-    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred));
+    let cards = app.cards_for(true, BOUNDS, 1.0, Some(Placement::Centred), None);
     let menu_card = cards.iter().find(|card| card.wm_id == Some(menu)).expect("the menu is back");
     assert_eq!(menu_card.offset, menu_offset(), "the menu, not the settings window's placement");
     assert!(cards.iter().any(|card| card.wm_id == Some(stash)), "the stash search stayed up");
@@ -352,7 +381,7 @@ fn the_windows_runs_sequence_keeps_every_card_in_place() {
     // The background click: the game gets the focus back, and the overlay draws nothing.
     apply_overlay_event(&OverlayEvent::FocusChange { game: true, overlay: false, using_hotkey: false }, &mut app);
     assert!(
-        app.cards_for(false, BOUNDS, 1.0, None).is_empty(),
+        app.cards_for(false, BOUNDS, 1.0, None, None).is_empty(),
         "the menu and the stash search are `invisible-on-blur`"
     );
     assert_eq!(app.shown_in(false), Shown::None);
@@ -362,7 +391,7 @@ fn the_windows_runs_sequence_keeps_every_card_in_place() {
 /// in one window (`OverlayWindow.vue`'s `visibilityState`). The live shell places the same cards
 /// (`App::cards_for`); this renders them from the app's own state, as a `--snap` of a scene does.
 fn game_overlay(app: &App, cx: &mut rune::Cx<App>) -> El {
-    let cards = app.cards_for(true, BOUNDS, 1.0, None);
+    let cards = app.cards_for(true, BOUNDS, 1.0, None, None);
     crate::shell::overlay_root(cards, true, |card| crate::card_at(app, cx, card))
 }
 
@@ -579,6 +608,10 @@ fn a_window_is_sized_for_what_it_draws() {
     assert_eq!(window_size(GameId::Poe1, &Shown::PriceCheck), Some((crate::poe1::price_check::WIDTH, HEIGHT)));
     assert_eq!(window_size(GameId::Poe1, &Shown::Poe2), Some((crate::poe2::price_check::WIDTH, HEIGHT)));
     assert_eq!(
+        window_size(GameId::Poe1, &Shown::QuickMath),
+        Some((crate::quick_math::WIDTH, crate::quick_math::HEIGHT))
+    );
+    assert_eq!(
         window_size(GameId::Poe1, &Shown::Widget(widgets::Kind::Menu.name().to_owned())),
         Some(widgets::scene_size(GameId::Poe1, widgets::Kind::Menu))
     );
@@ -602,6 +635,7 @@ fn only_widgets_are_the_overlay() {
     assert!(is_overlay(&Shown::PriceCheck));
     assert!(is_overlay(&Shown::Poe2));
     assert!(is_overlay(&Shown::ItemCheck));
+    assert!(is_overlay(&Shown::QuickMath), "Wraex's bar is drawn in the overlay window");
     assert!(is_overlay(&Shown::Widget(widgets::Kind::Menu.name().to_owned())));
     assert!(!is_overlay(&Shown::Settings));
     assert!(!is_overlay(&Shown::None));
@@ -707,6 +741,49 @@ fn a_broken_config_falls_back_to_an_empty_host_config() {
     assert!(host.shortcuts.is_empty());
     assert_eq!(host.overlay_key, "Shift + Space");
     assert_eq!(host.language, "en");
+}
+
+/// Wraex's own quick-math hotkey is appended to the game's shortcuts, in both the translated
+/// and the fallback path. A config without the key gets `Alt + M`; a cleared one adds nothing;
+/// a configured one is used as it is.
+#[test]
+fn the_quick_math_hotkey_comes_from_the_config() {
+    fn trigger(host: &HostConfig) -> Option<&ShortcutAction> {
+        host.shortcuts
+            .iter()
+            .find(|entry| entry.action == Action::TriggerEvent { target: crate::quick_math::WM_TYPE.to_owned() })
+    }
+
+    let default = host_config(GameId::Poe1, &config());
+    let entry = trigger(&default).expect("the default config's quick-math hotkey");
+    assert_eq!(entry.shortcut, crate::quick_math::DEFAULT_KEY);
+    assert_eq!(entry.shortcut, "Alt + M");
+    assert!(entry.keep_mod_keys, "the game keeps the modifiers the user holds");
+
+    let mut cleared = config();
+    cleared[crate::quick_math::CONFIG_KEY] = serde_json::Value::Null;
+    assert!(trigger(&host_config(GameId::Poe1, &cleared)).is_none(), "the user cleared it");
+
+    let mut custom = config();
+    custom[crate::quick_math::CONFIG_KEY] = serde_json::json!("Ctrl + Q");
+    assert_eq!(trigger(&host_config(GameId::Poe1, &custom)).map(|entry| entry.shortcut.as_str()), Some("Ctrl + Q"));
+
+    // The fallback path (a config the game's translation rejects) adds it too.
+    let fallback = host_config(GameId::Poe1, &serde_json::json!({ "quickMathKey": "Ctrl + Q" }));
+    assert_eq!(trigger(&fallback).map(|entry| entry.shortcut.as_str()), Some("Ctrl + Q"));
+}
+
+/// The bar's typing capture is armed exactly while it can do something: the bar is open, the
+/// keyboard hook exists, and the overlay does not hold the keyboard yet.
+#[test]
+fn the_typing_capture_is_armed_only_while_the_bar_waits_for_the_focus() {
+    // (bar open, hook, overlay focused, game in front, overlay asked for the focus)
+    assert!(capture_wanted(true, true, false, true, false), "the bar waits for its first key");
+    assert!(capture_wanted(true, true, false, false, true), "the hand-over is under way");
+    assert!(!capture_wanted(false, true, false, true, false), "a closed bar lets every key through");
+    assert!(!capture_wanted(true, false, false, true, false), "no hook to capture with");
+    assert!(!capture_wanted(true, true, true, false, true), "the overlay window already has the keyboard");
+    assert!(!capture_wanted(true, true, false, false, false), "another application's keys are never taken");
 }
 
 /// The price-check hotkey's whole effect: `MAIN->CLIENT::item-text` opens the window on the
@@ -880,6 +957,19 @@ fn escape_closes_the_card_and_gives_the_game_its_focus() {
     let mut app = App::replay("currency-divine-orb");
     apply_overlay_event(&events[0], &mut app);
     assert_eq!(app.shown(), Shown::None);
+}
+
+/// The bar is `hide-on-blur` like the checks: the game taking the focus (Escape through the
+/// overlay, a background click, alt-tab) closes it.
+#[test]
+fn the_game_taking_the_focus_closes_the_quick_math_bar() {
+    let mut app = overlay_app();
+    app.quick_math.open();
+    assert_eq!(app.shown_in(false), Shown::QuickMath);
+
+    apply_overlay_event(&OverlayEvent::FocusChange { game: true, overlay: false, using_hotkey: false }, &mut app);
+    assert!(!app.quick_math.open, "the bar closed with the overlay");
+    assert_eq!(app.shown_in(false), Shown::None);
 }
 
 /// The game taking the focus back (the player clicked into it) closes a non-pinned widget, as
@@ -1074,7 +1164,7 @@ fn overlay_runtime(app: App) -> rune::Runtime<App> {
 
 /// The `wmId`s of the cards the overlay draws over the game, in paint order.
 fn card_ids(app: &App) -> Vec<Option<u32>> {
-    app.cards_for(true, BOUNDS, 1.0, None).iter().map(|card| card.wm_id).collect()
+    app.cards_for(true, BOUNDS, 1.0, None, None).iter().map(|card| card.wm_id).collect()
 }
 
 /// The saved config, read the way the next start reads it.
@@ -1114,6 +1204,17 @@ fn price_check_hotkey(app: &App) -> ShortcutAction {
         .find(|entry| matches!(&entry.action, Action::CopyItem { target, .. } if target == "price-check"))
         .cloned()
         .expect("the config's price-check hotkey")
+}
+
+/// Wraex's quick-math hotkey (`trigger-event` to `quick-math`).
+fn quick_math_hotkey(app: &App) -> ShortcutAction {
+    let live = app.live.as_ref().expect("the live shell");
+    live.shortcuts
+        .actions()
+        .iter()
+        .find(|entry| entry.action == Action::TriggerEvent { target: crate::quick_math::WM_TYPE.to_owned() })
+        .cloned()
+        .expect("the config's quick-math hotkey")
 }
 
 /// A hotkey press as Rune delivers it: the handler `Live::register_hotkeys` installs, which is
@@ -1301,7 +1402,37 @@ fn the_price_check_hotkey_draws_its_card_until_the_game_takes_the_focus() {
     assert!(!window_visible(&app), "the window is hidden");
 }
 
-/// `Widget.vue`'s move handles through the real path: a drag of the stopwatch's centre handle
+/// The quick-math hotkey through the real path: it opens the bar (standalone here, with no
+/// window to sit over), the shell draws it, and Enter's value goes to the clipboard as it is.
+#[test]
+fn the_quick_math_hotkey_opens_the_bar_and_enter_copies_the_value() {
+    let mut app = live_app("quick-math", TestClipboard::default());
+    press(&mut app, quick_math_hotkey);
+    assert!(app.quick_math.open, "the hotkey opened the bar");
+    poll(&mut app);
+    assert_eq!(drawn(&app), vec![Shown::QuickMath], "the shell draws the bar's card");
+
+    // Enter, as the field's handler runs it.
+    app.quick_math.set_input("1.5k / 3");
+    assert_eq!(app.quick_math.submit().as_deref(), Some("500"));
+    poll(&mut app);
+    assert!(!app.quick_math.open, "Enter closed the bar");
+    assert_eq!(
+        app.live.as_mut().expect("the live shell").clipboard.read_text(),
+        "500",
+        "the plain value, not the grouped one"
+    );
+    assert!(drawn(&app).is_empty(), "nothing is left to draw: {:?}", drawn(&app));
+
+    // The hotkey toggles it closed again too.
+    press(&mut app, quick_math_hotkey);
+    poll(&mut app);
+    press(&mut app, quick_math_hotkey);
+    assert!(!app.quick_math.open);
+    poll(&mut app);
+    assert!(drawn(&app).is_empty());
+}
+
 /// takes the card with the pointer every frame, the release writes the new `anchor` into the
 /// widget's config, and the next poll saves it (`saveConfig()`, which upstream runs on the
 /// overlay's blur). A restart reads the same position and paint order back.
@@ -1333,7 +1464,7 @@ fn dragging_a_widgets_handle_moves_it_and_saves_the_anchor() {
     runtime.pointer_move(400.0, 300.0);
     runtime.frame(1.0 / 60.0);
     assert_eq!(runtime.state.widgets.as_ref().unwrap().widget(timer).unwrap().anchor(), (25.0, 25.0));
-    let cards = runtime.state.cards_for(true, BOUNDS, 1.0, None);
+    let cards = runtime.state.cards_for(true, BOUNDS, 1.0, None, None);
     let card = cards.iter().find(|card| card.wm_id == Some(timer)).expect("the timer's card");
     assert_eq!(card.offset, anchored_offset("cc", (25.0, 25.0), size, BOUNDS, 1.0));
 
@@ -1356,7 +1487,7 @@ fn dragging_a_widgets_handle_moves_it_and_saves_the_anchor() {
     assert_eq!(widget.anchor(), (25.0, 25.0));
     assert_eq!(widget.zorder(), Some(2.0));
     assert_eq!(card_ids(&restarted), vec![Some(menu), Some(timer)], "the menu, then the stopwatch");
-    let cards = restarted.cards_for(true, BOUNDS, 1.0, None);
+    let cards = restarted.cards_for(true, BOUNDS, 1.0, None, None);
     assert_eq!(cards[1].offset, anchored_offset("cc", (25.0, 25.0), size, BOUNDS, 1.0));
 }
 
