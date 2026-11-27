@@ -19,35 +19,35 @@ impl Watcher {
         Err(WatchError::Unsupported("only the Win32 backend exists so far"))
     }
 
-    pub fn drain(&mut self) -> Vec<GameWindowEvents> {
+    pub const fn drain(&mut self) -> Vec<GameWindowEvents> {
         Vec::new()
     }
 
-    pub fn drain_mouse(&mut self) -> Vec<MouseEvent> {
+    pub const fn drain_mouse(&mut self) -> Vec<MouseEvent> {
         Vec::new()
     }
 
-    pub fn drain_keys(&mut self) -> Vec<KeyEvent> {
+    pub const fn drain_keys(&mut self) -> Vec<KeyEvent> {
         Vec::new()
     }
 
-    pub fn set_mouse_moves(&self, _enabled: bool) {}
+    pub const fn set_mouse_moves(&self, _enabled: bool) {}
 
-    pub fn hwnd(&self) -> Option<isize> {
+    pub const fn hwnd(&self) -> Option<isize> {
         None
     }
 }
 
-pub fn place_overlay(_hwnd: isize, _bounds: Bounds) -> bool {
+pub const fn place_overlay(_hwnd: isize, _bounds: Bounds) -> bool {
     false
 }
 
-pub fn configure_overlay(_hwnd: isize) {}
+pub const fn configure_overlay(_hwnd: isize) {}
 
-pub fn focus_window(_hwnd: isize) -> bool {
+pub const fn focus_window(_hwnd: isize) -> bool {
     false
 }
 
-pub fn dpi_scale(_hwnd: isize) -> f64 {
+pub const fn dpi_scale(_hwnd: isize) -> f64 {
     1.0
 }

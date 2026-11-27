@@ -112,7 +112,7 @@ impl TrackArea {
     /// rectangle first). On macOS and Linux Electron is already in screen
     /// coordinates. The OS layer may also convert itself and pass `dpr: 1.0`.
     fn into_screen_space(self, os: Os) -> TrackedArea {
-        let TrackArea { hold_key, close_threshold, from, area, dpr } = self;
+        let Self { hold_key, close_threshold, from, area, dpr } = self;
         if os != Os::Windows {
             return TrackedArea { hold_key, close_threshold, from, area };
         }
@@ -128,6 +128,13 @@ impl TrackArea {
             },
         }
     }
+}
+
+/// The keyboard modifiers a mouse event carries (`WidgetAreaTracker`'s `ctrlKey`/`altKey`).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct Modifiers {
+    pub ctrl: bool,
+    pub alt: bool,
 }
 
 /// The keys pressed inside the overlay window, from Electron's
@@ -176,13 +183,13 @@ struct Visibility {
 }
 
 impl Visibility {
-    fn new() -> Self {
+    const fn new() -> Self {
         Self { is_visible: true, hide_at: None }
     }
 
     /// `makeVisible`: `Some(true)` when the overlay comes back now, `None` when it
     /// already was visible or a pending hide was only cancelled.
-    fn make_visible(&mut self) -> Option<bool> {
+    const fn make_visible(&mut self) -> Option<bool> {
         if self.is_visible && self.hide_at.is_none() {
             return None;
         }
@@ -200,7 +207,7 @@ impl Visibility {
             return;
         }
         let delay = if interactable { VISIBILITY_HIDE_DELAY_INTERACTABLE } else { VISIBILITY_HIDE_DELAY };
-        self.hide_at = Some(clock.now() + delay);
+        self.hide_at = Some(clock.now().saturating_add(delay));
     }
 }
 
@@ -221,6 +228,16 @@ impl AreaTracker {
     }
 }
 
+/// EE2's window-visibility policy: its `hideOverlayOnBlur` setting, and whether its
+/// renderer reported anything to show (`render-state`'s `shouldShowOverlay`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct WindowPolicy {
+    /// `hideOverlayOnBlur`: hide the window while the game is unfocused.
+    hide_on_blur: bool,
+    /// The renderer's last `render-state`: it has something to show.
+    has_content: bool,
+}
+
 /// `OverlayWindow.ts`'s state machine plus `OverlayVisibility.ts`'s Alt peek and
 /// `WidgetAreaTracker.ts`'s follow-the-cursor behaviour.
 #[derive(Debug, Clone, PartialEq)]
@@ -237,10 +254,8 @@ pub struct OverlayController {
     overlay_key: String,
     /// `isOverlayKeyUsed`: whether this focus change came from that key.
     is_overlay_key_used: bool,
-    /// EE2's `shouldShowOverlay`, from the renderer's `render-state`.
-    should_show_overlay: bool,
-    /// EE2's `hideOverlayOnBlur`: hide the window while the game is unfocused.
-    hide_overlay_on_blur: bool,
+    /// EE2's `shouldShowOverlay`/`hideOverlayOnBlur`.
+    policy: WindowPolicy,
     tracker: AreaTracker,
     visibility: Visibility,
     events: Vec<OverlayEvent>,
@@ -255,8 +270,7 @@ impl OverlayController {
             was_used_recently: true,
             overlay_key: "Shift + Space".to_owned(),
             is_overlay_key_used: false,
-            should_show_overlay: true,
-            hide_overlay_on_blur: false,
+            policy: WindowPolicy { hide_on_blur: false, has_content: true },
             tracker: AreaTracker::default(),
             visibility: Visibility::new(),
             events: Vec::new(),
@@ -264,18 +278,18 @@ impl OverlayController {
     }
 
     /// `isInteractable`: a widget is taking the mouse.
-    pub fn is_interactable(&self) -> bool {
+    pub const fn is_interactable(&self) -> bool {
         self.is_interactable
     }
 
     /// `wasUsedRecently`.
-    pub fn was_used_recently(&self) -> bool {
+    pub const fn was_used_recently(&self) -> bool {
         self.was_used_recently
     }
 
     /// `CLIENT->MAIN::used-recently`: the renderer reports whether the user's last
     /// window was the overlay or the game.
-    pub fn set_was_used_recently(&mut self, is_overlay: bool) {
+    pub const fn set_was_used_recently(&mut self, is_overlay: bool) {
         self.was_used_recently = is_overlay;
     }
 
@@ -285,12 +299,12 @@ impl OverlayController {
     }
 
     /// `OverlayVisibility`'s current state.
-    pub fn is_visible(&self) -> bool {
+    pub const fn is_visible(&self) -> bool {
         self.visibility.is_visible
     }
 
     /// When the Alt peek's timer should call [`Self::poll`].
-    pub fn visibility_deadline(&self) -> Option<Millis> {
+    pub const fn visibility_deadline(&self) -> Option<Millis> {
         self.visibility.hide_at
     }
 
@@ -302,8 +316,8 @@ impl OverlayController {
 
     /// `updateOpts`: the overlay key, and EE2's hide-on-blur.
     pub fn update_options(&mut self, overlay_key: &str, hide_overlay_on_blur: bool) {
-        self.overlay_key = overlay_key.to_owned();
-        self.hide_overlay_on_blur = hide_overlay_on_blur;
+        overlay_key.clone_into(&mut self.overlay_key);
+        self.policy.hide_on_blur = hide_overlay_on_blur;
     }
 
     /// The host config's `updateOpts` call (`overlay.updateOpts(...)`). The window
@@ -412,7 +426,7 @@ impl OverlayController {
         if self.game != GameId::Poe2 {
             return;
         }
-        self.should_show_overlay = should_show;
+        self.policy.has_content = should_show;
         self.sync_window_visibility(window, handle);
     }
 
@@ -420,14 +434,14 @@ impl OverlayController {
     /// interactable or the game is focused and there is something to show; hide it
     /// otherwise. Without `hideOverlayOnBlur` the window is left alone, which is
     /// PoE1's behaviour (it has no such setting).
-    fn sync_window_visibility(&mut self, window: &GameWindow, handle: &mut dyn OverlayHandle) {
+    fn sync_window_visibility(&self, window: &GameWindow, handle: &mut dyn OverlayHandle) {
         // `hideOverlayOnBlur` is EE2's setting; PoE1's renderer has no visibility
         // to report and its host config has no such field, so the game's window is
         // left to `electron-overlay-window`/Rune there.
-        if self.game != GameId::Poe2 || !self.hide_overlay_on_blur {
+        if self.game != GameId::Poe2 || !self.policy.hide_on_blur {
             return;
         }
-        if self.is_interactable || (self.should_show_overlay && window.is_active()) {
+        if self.is_interactable || (self.policy.has_content && window.is_active()) {
             if !handle.is_visible() {
                 handle.show();
             }
@@ -471,7 +485,7 @@ impl OverlayController {
     }
 
     /// Whether a widget's area is being followed.
-    pub fn is_tracking_area(&self) -> bool {
+    pub const fn is_tracking_area(&self) -> bool {
         self.tracker.tracked.is_some()
     }
 
@@ -481,8 +495,7 @@ impl OverlayController {
     pub fn on_mouse_move(
         &mut self,
         point: Point,
-        ctrl: bool,
-        alt: bool,
+        modifiers: Modifiers,
         window: &mut GameWindow,
         handle: &mut dyn OverlayHandle,
     ) {
@@ -493,9 +506,9 @@ impl OverlayController {
         // widget without a hold key activates on hover like upstream, and an empty
         // hold key does not.
         let hold_key = tracked.hold_key.as_deref();
-        let modifier = if ctrl {
+        let modifier = if modifiers.ctrl {
             Some("Ctrl")
-        } else if alt {
+        } else if modifiers.alt {
             Some("Alt")
         } else {
             None
@@ -569,6 +582,7 @@ impl OverlayController {
 }
 
 #[cfg(test)]
+#[expect(clippy::disallowed_macros, reason = "expected JSON written as literals")]
 mod tests {
     use super::*;
     use crate::test_support::{FakeClock, FakeOverlay, OverlayCall};
@@ -687,7 +701,7 @@ mod tests {
 
         // The OS layer reports a destruction once; the overlay keeps its state either way.
         forward(&mut controller, &mut window, &mut handle, GameWindowEvents::Detach);
-        assert!(controller.take_events().is_empty());
+        assert_eq!(controller.take_events(), []);
     }
 
     #[test]
@@ -700,7 +714,7 @@ mod tests {
         );
         // `set isActive` emits only on a change, so the second report is silent.
         forward(&mut controller, &mut window, &mut handle, GameWindowEvents::Focus);
-        assert!(controller.take_events().is_empty());
+        assert_eq!(controller.take_events(), []);
 
         forward(&mut controller, &mut window, &mut handle, GameWindowEvents::Attach { has_access: Some(true) });
         assert_eq!(controller.take_events(), vec![OverlayEvent::Attached]);
@@ -821,7 +835,7 @@ mod tests {
         controller.on_track_area(tracked(Point { x: 500.0, y: 500.0 }, Some("Ctrl")));
         assert!(controller.is_tracking_area());
 
-        controller.on_mouse_move(Point { x: 510.0, y: 510.0 }, false, false, &mut window, &mut handle);
+        controller.on_mouse_move(Point { x: 510.0, y: 510.0 }, Modifiers::default(), &mut window, &mut handle);
         assert_eq!(controller.take_events(), vec![OverlayEvent::HideExclusiveWidget]);
         assert!(!controller.is_tracking_area(), "the listeners are removed");
     }
@@ -831,7 +845,7 @@ mod tests {
         let (mut controller, mut window, mut handle, _clock) = focused();
         // The item is where the cursor already is, so the distance check passes.
         controller.on_track_area(tracked(Point { x: 200.0, y: 200.0 }, None));
-        controller.on_mouse_move(Point { x: 200.0, y: 200.0 }, false, false, &mut window, &mut handle);
+        controller.on_mouse_move(Point { x: 200.0, y: 200.0 }, Modifiers::default(), &mut window, &mut handle);
         assert!(controller.is_interactable());
         assert!(controller.is_tracking_area());
     }
@@ -854,7 +868,7 @@ mod tests {
 
         controller.on_track_area(tracked(Point { x: 2000.0, y: 2000.0 }, None));
         // Far away and outside the widget's rectangle.
-        controller.on_mouse_move(Point { x: 2000.0, y: 2000.0 }, false, false, &mut window, &mut handle);
+        controller.on_mouse_move(Point { x: 2000.0, y: 2000.0 }, Modifiers::default(), &mut window, &mut handle);
         assert!(!controller.is_interactable());
         assert!(window.is_active());
         assert!(!controller.is_tracking_area());
@@ -866,9 +880,14 @@ mod tests {
         controller.on_track_area(tracked(Point { x: 500.0, y: 500.0 }, Some("Ctrl")));
         // Away from the item and outside the widget, but Ctrl is held: the widget
         // stays, and nothing steals the focus back.
-        controller.on_mouse_move(Point { x: 2000.0, y: 2000.0 }, true, false, &mut window, &mut handle);
+        controller.on_mouse_move(
+            Point { x: 2000.0, y: 2000.0 },
+            Modifiers { ctrl: true, alt: false },
+            &mut window,
+            &mut handle,
+        );
         assert!(controller.is_tracking_area());
-        assert!(controller.take_events().is_empty());
+        assert_eq!(controller.take_events(), []);
         assert!(window.is_active());
     }
 
@@ -883,7 +902,7 @@ mod tests {
             dpr: 2.0,
         });
         // 300,200 is outside the CSS rectangle but inside the doubled one.
-        controller.on_mouse_move(Point { x: 300.0, y: 200.0 }, false, false, &mut window, &mut handle);
+        controller.on_mouse_move(Point { x: 300.0, y: 200.0 }, Modifiers::default(), &mut window, &mut handle);
         assert!(controller.is_interactable());
     }
 
@@ -925,7 +944,7 @@ mod tests {
         clock.advance(VISIBILITY_HIDE_DELAY_INTERACTABLE);
         controller.poll(&clock);
         assert!(controller.is_visible());
-        assert!(controller.take_events().is_empty());
+        assert_eq!(controller.take_events(), []);
     }
 
     #[test]
@@ -976,6 +995,6 @@ mod tests {
         assert_eq!(controller.overlay_key(), "Shift + Space");
         forward(&mut controller, &mut window, &mut handle, GameWindowEvents::Focus);
         forward(&mut controller, &mut window, &mut handle, GameWindowEvents::Blur);
-        assert!(handle.calls().is_empty());
+        assert_eq!(handle.calls(), []);
     }
 }

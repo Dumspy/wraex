@@ -1,5 +1,6 @@
-//! The [`Transport`] the app sends requests with: `main/src/proxy.ts` without
-//! the proxy. Every request carries [`USER_AGENT`]; hosts are the trade proxy's
+//! The [`Transport`] the app sends requests with: `main/src/proxy.ts` without the proxy.
+//!
+//! Every request carries [`USER_AGENT`]; hosts are the trade proxy's
 //! [`ALLOWED_HOSTS`] plus the update check's [`UPDATE_HOST`], the item art's
 //! [`CDN_HOST`] and the map screenshots' [`SCREENSHOT_HOST`]. Non-2xx answers come
 //! back as responses (the trade site's errors are JSON bodies), and the body is
@@ -50,7 +51,7 @@ impl CookieJar {
     /// with `; `, as RFC 6265's cookie-string.
     fn header(&self, url: &str) -> Option<String> {
         let url = Url::parse(url).ok()?;
-        let store = self.store.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let store = self.store.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let mut cookies = String::new();
         for (name, value) in store.get_request_values(&url) {
             if !cookies.is_empty() {
@@ -60,6 +61,7 @@ impl CookieJar {
             cookies.push('=');
             cookies.push_str(value);
         }
+        drop(store);
         (!cookies.is_empty()).then_some(cookies)
     }
 
@@ -67,15 +69,16 @@ impl CookieJar {
     /// `Partitioned`, then saves the expiring ones when the jar has a file.
     fn store(&self, url: &str, set_cookies: &[String]) {
         let Ok(url) = Url::parse(url) else { return };
-        let mut store = self.store.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let mut store = self.store.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         for header in set_cookies {
             // An unparseable cookie is the site's problem, not the request's: ignore it,
             // as a browser does, and never log its value.
-            let _ = store.parse(&without_partitioned(header), &url);
+            _ = store.parse(&without_partitioned(header), &url);
         }
         if let Some(path) = &self.file {
             save_store(&store, path);
         }
+        drop(store);
     }
 }
 
@@ -97,17 +100,17 @@ fn load_store(path: &Path) -> CookieStore {
             return CookieStore::default();
         }
     };
-    match cookie_store::serde::json::load(BufReader::new(file)) {
-        Ok(store) => {
-            crate::log!("wraex: {} cookies loaded", store.iter_unexpired().count());
-            store
-        }
-        Err(_) => {
+    cookie_store::serde::json::load(BufReader::new(file)).map_or_else(
+        |_| {
             // The parser's message can quote the file, so it is not logged.
             crate::log!("wraex: ignoring the unreadable cookie file {}", path.display());
             CookieStore::default()
-        }
-    }
+        },
+        |store| {
+            crate::log!("wraex: {} cookies loaded", store.iter_unexpired().count());
+            store
+        },
+    )
 }
 
 /// Writes the unexpired, persistent cookies to `path` (session cookies are not saved);
@@ -128,7 +131,7 @@ fn save_store(store: &CookieStore, path: &Path) {
     })();
     if let Err(error) = written {
         crate::log!("wraex: cannot save the cookie file {}: {error}", path.display());
-        let _ = std::fs::remove_file(&temporary);
+        _ = std::fs::remove_file(&temporary);
     }
 }
 
@@ -186,9 +189,9 @@ impl HttpTransport {
     }
 
     /// Stores a response's `Set-Cookie` headers in the session jar.
-    fn remember_cookies(&self, url: &str, set_cookies: Vec<String>) {
+    fn remember_cookies(&self, url: &str, set_cookies: &[String]) {
         if !set_cookies.is_empty() {
-            self.cookies.store(url, &set_cookies);
+            self.cookies.store(url, set_cookies);
         }
     }
 
@@ -207,7 +210,7 @@ impl HttpTransport {
         }
         let mut response = request.call().map_err(|e| e.to_string())?;
         let status = response.status();
-        self.remember_cookies(url, set_cookies(response.headers()));
+        self.remember_cookies(url, &set_cookies(response.headers()));
         if !status.is_success() {
             return Err(format!("{status} from {url}"));
         }
@@ -268,7 +271,7 @@ impl Transport for HttpTransport {
             .iter()
             .filter_map(|(name, value)| Some((name.as_str().to_ascii_lowercase(), value.to_str().ok()?.to_owned())))
             .collect();
-        self.remember_cookies(&request.url, set_cookies(response.headers()));
+        self.remember_cookies(&request.url, &set_cookies(response.headers()));
         let body = response.body_mut().read_to_string().map_err(|e| e.to_string())?;
         Ok(HttpResponse { status, headers, body })
     }
@@ -281,7 +284,7 @@ mod tests {
     /// A fresh cookie file under the temp dir, named for the test.
     fn temp_cookie_file(name: &str) -> PathBuf {
         let folder = std::env::temp_dir().join(format!("wraex-cookies-{}-{name}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&folder);
+        _ = std::fs::remove_dir_all(&folder);
         folder.join("cookies.json")
     }
 
@@ -383,7 +386,7 @@ mod tests {
 
         let loaded = CookieJar::new(Some(path.clone()));
         assert_eq!(loaded.header(url), Some("keep=1".to_owned()));
-        let _ = std::fs::remove_dir_all(path.parent().expect("a folder"));
+        _ = std::fs::remove_dir_all(path.parent().expect("a folder"));
     }
 
     /// The one place a real image is fetched: run it by hand (`cargo test -p

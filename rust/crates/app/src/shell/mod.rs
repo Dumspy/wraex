@@ -81,9 +81,10 @@ use wraex_core::leagues::{LeagueSource, Leagues};
 use wraex_core::trade::api::Clock;
 use wraex_core::updates::{NoDownloadReason, UpdateInfo};
 use wraex_platform::clipboard::{Clipboard, is_poe_item};
-use wraex_platform::overlay::{OverlayController, OverlayEvent, OverlayHandle, TrackArea};
+use wraex_platform::overlay::{Modifiers, OverlayController, OverlayEvent, OverlayHandle, TrackArea};
 use wraex_platform::shortcuts::{
-    Action, HostConfig, ItemText, PressContext, Registration, ShortcutAction, ShortcutEvent, Shortcuts, WheelEvent,
+    Action, HostConfig, ItemText, OverlayContext, PressContext, Registration, ShortcutAction, ShortcutEvent, Shortcuts,
+    WheelEvent,
 };
 use wraex_platform::tray::{Tray, TrayAction};
 use wraex_platform::window::{self, Bounds, GameWindow, KeyEvent, MouseEvent, Point};
@@ -767,7 +768,7 @@ impl Live {
             match event {
                 MouseEvent::Move { point, ctrl, alt } => {
                     self.overlay.on_global_mouse_move(alt);
-                    self.overlay.on_mouse_move(point, ctrl, alt, &mut self.window, &mut panel);
+                    self.overlay.on_mouse_move(point, Modifiers { ctrl, alt }, &mut self.window, &mut panel);
                 }
                 MouseEvent::Down { point } => {
                     self.overlay.on_mouse_down(point, &mut self.window, &mut panel);
@@ -1372,15 +1373,18 @@ impl Live {
             && let Some((entry, cursor)) = self.pending_copy.take()
             && let Ok(text) = result
         {
-            let event = Shortcuts::finish_copy(
+            if let Some(event) = Shortcuts::finish_copy(
                 &entry,
                 cursor,
                 text,
-                &mut self.overlay,
-                &mut self.window,
-                &mut OverlayPanel::new(self.panel.clone()),
-            );
-            self.deliver(app, dispatch::shortcut_requests(vec![event]));
+                OverlayContext {
+                    overlay: &mut self.overlay,
+                    window: &mut self.window,
+                    handle: &mut OverlayPanel::new(self.panel.clone()),
+                },
+            ) {
+                self.deliver(app, dispatch::shortcut_requests(vec![event]));
+            }
             self.after_press(app, &entry, cursor);
             self.sync_registration();
             changed = true;

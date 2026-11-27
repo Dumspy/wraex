@@ -7,7 +7,7 @@
 
 use super::*;
 use crate::settings::Page;
-use wraex_platform::overlay::{OverlayEvent, OverlayHandle, OverlayInput};
+use wraex_platform::overlay::{Modifiers, OverlayEvent, OverlayHandle, OverlayInput};
 use wraex_platform::shortcuts::InputEvent;
 
 /// One [`OverlayHandle`] call, recorded; the same shape the platform crate's tests use, which
@@ -101,7 +101,7 @@ impl Harness {
     fn mouse(&mut self, event: MouseEvent) {
         match event {
             MouseEvent::Move { point, ctrl, alt } => {
-                self.overlay.on_mouse_move(point, ctrl, alt, &mut self.window, &mut self.handle);
+                self.overlay.on_mouse_move(point, Modifiers { ctrl, alt }, &mut self.window, &mut self.handle);
             }
             MouseEvent::Down { point } => self.overlay.on_mouse_down(point, &mut self.window, &mut self.handle),
             MouseEvent::Wheel { .. } => {}

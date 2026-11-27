@@ -79,7 +79,7 @@ pub struct Point {
 
 impl Point {
     /// `Math.hypot(x - from.x, y - from.y)`.
-    pub fn distance_to(self, from: Point) -> f64 {
+    pub fn distance_to(self, from: Self) -> f64 {
         (self.x - from.x).hypot(self.y - from.y)
     }
 
@@ -147,7 +147,7 @@ fn scoped_key_event(
 /// down), and the remainder is kept for the next tick. A high-resolution wheel's small deltas
 /// therefore make no rotation until they add up to a notch. Same 16-bit arithmetic as the C.
 #[cfg(any(windows, test))]
-pub(crate) fn wheel_rotation(leftover: &mut i16, delta: i16) -> i16 {
+pub(crate) const fn wheel_rotation(leftover: &mut i16, delta: i16) -> i16 {
     *leftover = leftover.wrapping_add(delta);
     let rotation = *leftover / -120;
     *leftover %= 120;
@@ -175,16 +175,16 @@ impl ModifierState {
         }
     }
 
-    pub(crate) fn ctrl(&self) -> bool {
+    pub(crate) const fn ctrl(self) -> bool {
         self.ctrl
     }
 
-    pub(crate) fn alt(&self) -> bool {
+    pub(crate) const fn alt(self) -> bool {
         self.alt
     }
 
     /// The modifiers as the [`InputEvent`] for `key`.
-    pub(crate) fn input(&self, key: Option<&'static str>) -> InputEvent {
+    pub(crate) const fn input(self, key: Option<&'static str>) -> InputEvent {
         InputEvent { key, ctrl: self.ctrl, shift: self.shift, alt: self.alt }
     }
 }
@@ -239,18 +239,18 @@ impl GameWindow {
 
     /// `this._isActive`: whether the game window has focus. Hotkeys are registered
     /// only while this is true.
-    pub fn is_active(&self) -> bool {
+    pub const fn is_active(&self) -> bool {
         self.is_active
     }
 
     /// `this._isTracking`: `attach()` ran, so the OS layer owns a window hook.
-    pub fn is_tracking(&self) -> bool {
+    pub const fn is_tracking(&self) -> bool {
         self.is_tracking
     }
 
     /// `this.bounds` (`OverlayController.targetBounds`); `None` until the OS
     /// layer reports the window's rectangle.
-    pub fn bounds(&self) -> Option<Bounds> {
+    pub const fn bounds(&self) -> Option<Bounds> {
         self.bounds
     }
 
@@ -296,7 +296,7 @@ impl GameWindow {
     /// focus away from the game when the overlay becomes interactive
     /// ([`crate::overlay::OverlayController::assert_overlay_active`]) and to give
     /// it back. Returns the change, like the `active-change` event does.
-    pub fn set_active(&mut self, is_active: bool) -> Option<WindowEvent> {
+    pub const fn set_active(&mut self, is_active: bool) -> Option<WindowEvent> {
         if self.is_active == is_active {
             return None;
         }
@@ -305,10 +305,11 @@ impl GameWindow {
     }
 }
 
-/// Where the game's window is looked for: the config's `windowTitle` (upstream's
-/// `OverlayWindow.updateOpts(overlayKey, windowTitle)` → `GameWindow.attach`), which
-/// `electron-overlay-window` compares with the window's title exactly (`strcmp`), plus an
-/// optional window class.
+/// Where the game's window is looked for: the config's `windowTitle` plus an optional
+/// window class.
+///
+/// That is upstream's `OverlayWindow.updateOpts(overlayKey, windowTitle)` →
+/// `GameWindow.attach`; `electron-overlay-window` compares the title exactly (`strcmp`).
 ///
 /// The reference never passes a class: it matches the title alone. PoE's own window classes
 /// are not documented anywhere in either reference, so Wraex does not guess one; a class
@@ -339,10 +340,7 @@ pub fn matches_target(target: &WindowTarget, title: &str, class: Option<&str>) -
     if title != target.title {
         return false;
     }
-    match &target.class {
-        Some(expected) => class == Some(expected.as_str()),
-        None => true,
-    }
+    target.class.as_ref().is_none_or(|expected| class == Some(expected.as_str()))
 }
 
 /// Called when [`Watcher`] queued events, so a threaded app's poll loop wakes up. Rune's
@@ -362,8 +360,8 @@ pub enum WatchError {
 impl std::fmt::Display for WatchError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            WatchError::Unsupported(what) => write!(f, "game window tracking is not implemented here yet ({what})"),
-            WatchError::Thread(error) => write!(f, "starting the window hook failed: {error}"),
+            Self::Unsupported(what) => write!(f, "game window tracking is not implemented here yet ({what})"),
+            Self::Thread(error) => write!(f, "starting the window hook failed: {error}"),
         }
     }
 }
@@ -407,7 +405,7 @@ mod tests {
     }
 
     /// libuiohook's sign: Windows reports a notch away from the user (scrolling up) as +120,
-    /// `uiohook` as rotation -1, and upstream's `Shortcuts.ts` turns negative into ArrowLeft
+    /// `uiohook` as rotation -1, and upstream's `Shortcuts.ts` turns negative into `ArrowLeft`
     /// (#13: wheel down goes right, up goes left).
     #[test]
     fn a_wheel_notch_is_inverted_as_uiohook_reports_it() {

@@ -37,6 +37,8 @@
 //! keys the hook reports. The spike in PLAN.md phase 2 picks among them, so this
 //! module names no crate.
 
+use std::cmp::Ordering;
+
 use serde::Deserialize;
 use wraex_core::GameId;
 use wraex_core::game_files::Os;
@@ -141,15 +143,28 @@ impl Action {
     /// `action.type`, for logging and matching.
     pub const fn type_name(&self) -> &'static str {
         match self {
-            Action::CopyItem { .. } => "copy-item",
-            Action::OcrText { .. } => "ocr-text",
-            Action::TriggerEvent { .. } => "trigger-event",
-            Action::StashSearch { .. } => "stash-search",
-            Action::ToggleOverlay => "toggle-overlay",
-            Action::PasteInChat { .. } => "paste-in-chat",
-            Action::TestOnly => "test-only",
+            Self::CopyItem { .. } => "copy-item",
+            Self::OcrText { .. } => "ocr-text",
+            Self::TriggerEvent { .. } => "trigger-event",
+            Self::StashSearch { .. } => "stash-search",
+            Self::ToggleOverlay => "toggle-overlay",
+            Self::PasteInChat { .. } => "paste-in-chat",
+            Self::TestOnly => "test-only",
         }
     }
+}
+
+/// The `updateActions` options besides the shortcut list (`restoreClipboard`,
+/// `stashScroll`, `logKeys`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ShortcutOptions {
+    /// Put the clipboard back after a hotkey wrote to it.
+    pub restore_clipboard: bool,
+    /// Ctrl+wheel changes stash tabs.
+    pub stash_scroll: bool,
+    /// Log every keypress (for recording a hotkey).
+    pub log_keys: bool,
 }
 
 /// `HostConfig` (`ipc/types.ts`): what the renderer sends the host. Only the fields
@@ -160,12 +175,9 @@ impl Action {
 pub struct HostConfig {
     /// Every configured hotkey, in the settings' order.
     pub shortcuts: Vec<ShortcutAction>,
-    /// Put the clipboard back after a hotkey wrote to it.
-    pub restore_clipboard: bool,
-    /// Ctrl+wheel changes stash tabs.
-    pub stash_scroll: bool,
-    /// Log every keypress (for recording a hotkey).
-    pub log_keys: bool,
+    /// `restoreClipboard`, `stashScroll` and `logKeys`, as flat keys like upstream's.
+    #[serde(flatten)]
+    pub options: ShortcutOptions,
     /// The key that toggles the overlay.
     pub overlay_key: String,
     /// The game window's title, for the window hook ([`crate::window`]).
@@ -189,7 +201,7 @@ pub enum ShortcutWarning {
 
 impl std::fmt::Display for ShortcutWarning {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let ShortcutWarning::Reserved { shortcut } = self;
+        let Self::Reserved { shortcut } = self;
         write!(f, "Hotkey \"{shortcut}\" reserved by the game will not be registered.")
     }
 }
@@ -248,6 +260,15 @@ pub struct ItemText {
     pub focus_overlay: bool,
 }
 
+/// The overlay side of a press: the controller, the game window and the OS handle it
+/// drives.
+#[derive(Debug)]
+pub struct OverlayContext<'a> {
+    pub overlay: &'a mut OverlayController,
+    pub window: &'a mut GameWindow,
+    pub handle: &'a mut dyn OverlayHandle,
+}
+
 /// Everything a press acts on: the OS traits, the overlay, and the game's own
 /// config. Built per press by the app; the overlay's events are drained from
 /// [`OverlayController`] afterwards.
@@ -300,7 +321,7 @@ pub struct Shortcuts {
 }
 
 impl Shortcuts {
-    pub fn new(game: GameId, os: Os) -> Self {
+    pub const fn new(game: GameId, os: Os) -> Self {
         Self {
             game,
             os,
@@ -314,7 +335,7 @@ impl Shortcuts {
 
     /// The clipboard poller, for the app's timer
     /// ([`HostClipboard::pending_restore_deadline`]).
-    pub fn clipboard_mut(&mut self) -> &mut HostClipboard {
+    pub const fn clipboard_mut(&mut self) -> &mut HostClipboard {
         &mut self.clipboard
     }
 
@@ -325,7 +346,7 @@ impl Shortcuts {
 
     /// `updateActions`: filter the config's shortcuts and remember the options.
     /// Returns the problems upstream writes to its log.
-    pub fn update_actions(&mut self, actions: Vec<ShortcutAction>, options: UpdateOptions) -> Vec<ShortcutWarning> {
+    pub fn update_actions(&mut self, actions: Vec<ShortcutAction>, options: &UpdateOptions) -> Vec<ShortcutWarning> {
         self.stash_scroll = options.stash_scroll;
         self.log_keys = options.log_keys;
         self.clipboard.update_options(options.restore_clipboard);
@@ -367,10 +388,10 @@ impl Shortcuts {
     pub fn apply_host_config(&mut self, config: &HostConfig, show_mods_key: &str) -> Vec<ShortcutWarning> {
         self.update_actions(
             config.shortcuts.clone(),
-            UpdateOptions {
-                stash_scroll: config.stash_scroll,
-                log_keys: config.log_keys,
-                restore_clipboard: config.restore_clipboard,
+            &UpdateOptions {
+                stash_scroll: config.options.stash_scroll,
+                log_keys: config.options.log_keys,
+                restore_clipboard: config.options.restore_clipboard,
                 show_mods_key: show_mods_key.to_owned(),
                 initial_delay: config.initial_delay,
             },
@@ -392,7 +413,7 @@ impl Shortcuts {
     }
 
     /// `active-change`: register while the game is focused, unregister otherwise.
-    pub fn on_game_active(&mut self, is_active: bool) -> Registration {
+    pub const fn on_game_active(&mut self, is_active: bool) -> Registration {
         if self.registered == is_active {
             return Registration::None;
         }
@@ -401,13 +422,13 @@ impl Shortcuts {
     }
 
     /// Whether hotkeys are currently registered.
-    pub fn is_registered(&self) -> bool {
+    pub const fn is_registered(&self) -> bool {
         self.registered
     }
 
     /// `logKeys`: every keypress is written to the log while the overlay key was
     /// recorded this way.
-    pub fn logs_keys(&self) -> bool {
+    pub const fn logs_keys(&self) -> bool {
         self.log_keys
     }
 
@@ -440,8 +461,7 @@ impl Shortcuts {
     /// One press of a registered hotkey: release what the user held, then run the
     /// action. Exactly one action per press.
     pub fn press(&mut self, entry: &ShortcutAction, ctx: PressContext<'_>) -> Vec<ShortcutEvent> {
-        let PressContext { keys, system_clipboard, clock, window, overlay, overlay_handle, cursor: _, show_mods_key } =
-            ctx;
+        let PressContext { keys, system_clipboard, clock, window, overlay, overlay_handle, show_mods_key, .. } = ctx;
         let game = self.game;
         let os = self.os;
 
@@ -488,27 +508,28 @@ impl Shortcuts {
     }
 
     /// Finish the original copy action with the cursor position recorded at the press.
+    /// `None` when `entry` is not a copy action, which cannot happen: only a copy action
+    /// starts a capture.
     pub fn finish_copy(
         entry: &ShortcutAction,
         cursor: Point,
         clipboard: String,
-        overlay: &mut OverlayController,
-        window: &mut GameWindow,
-        handle: &mut dyn OverlayHandle,
-    ) -> ShortcutEvent {
+        overlay: OverlayContext<'_>,
+    ) -> Option<ShortcutEvent> {
+        let OverlayContext { overlay, window, handle } = overlay;
         let Action::CopyItem { target, focus_overlay } = &entry.action else {
-            unreachable!("only copy actions capture")
+            return None;
         };
         overlay.stop_tracking_area();
         if *focus_overlay && overlay.was_used_recently() {
             overlay.assert_overlay_active(window, handle);
         }
-        ShortcutEvent::ItemText(ItemText {
+        Some(ShortcutEvent::ItemText(ItemText {
             target: target.clone(),
             clipboard,
             position: cursor,
             focus_overlay: *focus_overlay,
-        })
+        }))
     }
 
     /// Ctrl+wheel outside the stash panel walks the stash tabs. Returns whether a
@@ -520,14 +541,16 @@ impl Shortcuts {
         if is_stash_area(wheel.point, window) {
             return false;
         }
-        if wheel.rotation > 0 {
-            keys.key_tap("ArrowRight", &[]);
-            true
-        } else if wheel.rotation < 0 {
-            keys.key_tap("ArrowLeft", &[]);
-            true
-        } else {
-            false
+        match wheel.rotation.cmp(&0) {
+            Ordering::Greater => {
+                keys.key_tap("ArrowRight", &[]);
+                true
+            }
+            Ordering::Less => {
+                keys.key_tap("ArrowLeft", &[]);
+                true
+            }
+            Ordering::Equal => false,
         }
     }
 }
@@ -821,15 +844,15 @@ mod tests {
         );
         while let Some(due) = shortcuts.clipboard.capture_deadline() {
             clock.advance(due.saturating_sub(clock.now()));
-            if let Some(Ok(text)) = shortcuts.clipboard.poll_capture(&mut clipboard, clock.now()) {
-                events.push(Shortcuts::finish_copy(
+            if let Some(Ok(text)) = shortcuts.clipboard.poll_capture(&mut clipboard, clock.now())
+                && let Some(event) = Shortcuts::finish_copy(
                     entry,
                     Point { x: 400., y: 300. },
                     text,
-                    &mut controller,
-                    &mut window,
-                    &mut handle,
-                ));
+                    OverlayContext { overlay: &mut controller, window: &mut window, handle: &mut handle },
+                )
+            {
+                events.push(event);
             }
         }
         Pressed { keys, clipboard, clock, handle, events }
@@ -864,7 +887,7 @@ mod tests {
                 entry("Shift + Space", Action::ToggleOverlay, true),
                 entry("F5", Action::PasteInChat { text: "/hideout".into(), send: true }, false),
             ],
-            options("Alt"),
+            &options("Alt"),
         );
         assert_eq!(warnings, vec![]);
         let accelerators: Vec<String> =
@@ -884,7 +907,7 @@ mod tests {
                 copy_item("Ctrl + D", true),
                 entry("Ctrl + E", Action::TestOnly, false),
             ],
-            options("Alt"),
+            &options("Alt"),
         );
         assert_eq!(
             warnings,
@@ -899,7 +922,7 @@ mod tests {
 
         // A `test-only` entry is registered and immediately unregistered again.
         let mut shortcuts = windows(GameId::Poe1);
-        shortcuts.update_actions(vec![entry("Ctrl + E", Action::TestOnly, false)], options("Alt"));
+        shortcuts.update_actions(vec![entry("Ctrl + E", Action::TestOnly, false)], &options("Alt"));
         let registered = shortcuts.registered_shortcuts();
         assert_eq!(registered.len(), 1);
         assert!(registered[0].unregister_immediately);
@@ -911,20 +934,20 @@ mod tests {
 
         // APT forces Ctrl, so `Ctrl + Alt + C` is nobody's hotkey.
         let mut poe1 = windows(GameId::Poe1);
-        assert_eq!(poe1.update_actions(vec![bind_copy()], options("Alt")), vec![]);
+        assert_eq!(poe1.update_actions(vec![bind_copy()], &options("Alt")), vec![]);
         assert_eq!(poe1.actions().len(), 1);
 
         // EE2 merges the game's Alt and takes `Ctrl + Alt + C` for its copy.
         let mut poe2 = windows(GameId::Poe2);
         assert_eq!(
-            poe2.update_actions(vec![bind_copy()], options("Alt")),
+            poe2.update_actions(vec![bind_copy()], &options("Alt")),
             vec![ShortcutWarning::Reserved { shortcut: "Ctrl + Alt + C".into() }]
         );
-        assert!(poe2.actions().is_empty());
+        assert_eq!(poe2.actions(), []);
 
         // With the game's key on Ctrl there is nothing extra to reserve.
         let mut poe2 = windows(GameId::Poe2);
-        assert_eq!(poe2.update_actions(vec![bind_copy()], options("Ctrl")), vec![]);
+        assert_eq!(poe2.update_actions(vec![bind_copy()], &options("Ctrl")), vec![]);
         assert_eq!(poe2.actions().len(), 1);
     }
 
@@ -1079,8 +1102,8 @@ mod tests {
             )
         };
         let copy = copy_item("Ctrl + D", true);
-        assert!(press(&copy).is_empty());
-        assert!(press(&copy).is_empty());
+        assert_eq!(press(&copy), []);
+        assert_eq!(press(&copy), []);
         let other = entry("F1", Action::TriggerEvent { target: "delve-grid".into() }, false);
         assert_eq!(press(&other), vec![ShortcutEvent::WidgetAction { target: "delve-grid".into() }]);
         assert_eq!(clock.now(), 0);
@@ -1430,13 +1453,13 @@ mod tests {
         let mut shortcuts = windows(GameId::Poe1);
         let other = entry("Ctrl + O", Action::OcrText { target: "something".into() }, true);
         let pressed = press(&mut shortcuts, &other, "Alt", FakeClipboard::scripted(&[""]));
-        assert!(pressed.events.is_empty());
+        assert_eq!(pressed.events, []);
     }
 
     #[test]
     fn ctrl_wheel_outside_the_stash_grid_changes_tabs() {
         let mut shortcuts = windows(GameId::Poe1);
-        shortcuts.update_actions(vec![], options("Alt"));
+        shortcuts.update_actions(vec![], &options("Alt"));
         let mut window = GameWindow::new();
         window.feed(GameWindowEvents::Bounds(Bounds { x: 0.0, y: 0.0, width: 1600.0, height: 1200.0 }));
         window.set_active(true);
@@ -1457,7 +1480,7 @@ mod tests {
         let mut keys = FakeKeySender::default();
         let wheel = WheelEvent { point: Point { x: 700.0, y: 600.0 }, rotation: 1, ctrl: true };
         assert!(!shortcuts.on_wheel(&wheel, &window, &mut keys));
-        assert!(keys.steps().is_empty());
+        assert_eq!(keys.steps(), []);
     }
 
     #[test]
@@ -1469,7 +1492,7 @@ mod tests {
 
         // Stash scrolling off: `updateActions` never ran.
         assert!(!shortcuts.on_wheel(&wheel, &window, &mut keys));
-        shortcuts.update_actions(vec![], options("Alt"));
+        shortcuts.update_actions(vec![], &options("Alt"));
         // The game is not focused.
         assert!(!shortcuts.on_wheel(&wheel, &window, &mut keys));
         window.set_active(true);
@@ -1480,7 +1503,7 @@ mod tests {
         let mut keys = FakeKeySender::default();
         let wheel = WheelEvent { ctrl: false, ..wheel };
         assert!(!shortcuts.on_wheel(&wheel, &window, &mut keys));
-        assert!(keys.steps().is_empty());
+        assert_eq!(keys.steps(), []);
     }
 
     #[test]
@@ -1488,7 +1511,7 @@ mod tests {
         let mut shortcuts = windows(GameId::Poe1);
         assert_eq!(shortcuts.log_key_down(&InputEvent { key: Some("A"), ctrl: true, shift: false, alt: false }), None);
 
-        shortcuts.update_actions(vec![], UpdateOptions { log_keys: true, ..options("Alt") });
+        shortcuts.update_actions(vec![], &UpdateOptions { log_keys: true, ..options("Alt") });
         let log = |event: InputEvent| shortcuts.log_key_down(&event);
         assert_eq!(
             log(InputEvent { key: Some("A"), ctrl: true, shift: false, alt: false }),
@@ -1562,7 +1585,7 @@ mod tests {
                 // The config's own options reached the poller.
                 assert_eq!(
                     shortcuts.clipboard_mut().should_restore(),
-                    config.restore_clipboard,
+                    config.options.restore_clipboard,
                     "{}/{}",
                     game,
                     case.slug
