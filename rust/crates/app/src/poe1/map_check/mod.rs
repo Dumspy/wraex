@@ -24,8 +24,9 @@ use crate::ui::{self, art, icon};
 /// `MapCheck.vue`'s `MEMORY_MAPS`: the maps Maven's Invitation needs a witness from.
 const MEMORY_MAPS: [&str; 3] = ["Courtyard of Wasting", "Chambers of Impurity", "Theatre of Lies"];
 
-/// The three profile numerals, as `MapCheck.vue` lists them.
-const PROFILES: [&str; 3] = ["I", "II", "III"];
+/// The three profile numerals, as `MapCheck.vue` lists them, with the `profile` value each
+/// button selects.
+const PROFILES: [(u32, &str); 3] = [(1, "I"), (2, "II"), (3, "III")];
 
 /// `MapCheck.vue`: the map check card.
 pub fn view<S: 'static>(item: &Item, config: &MapCheckConfig, project: Project<S>) -> El {
@@ -39,11 +40,11 @@ pub fn view<S: 'static>(item: &Item, config: &MapCheckConfig, project: Project<S
         .border(theme::rem(0.25), theme::gray(900))
         .border_layout()
         .child(header(item, config, project));
-    let mut body_top_rule = false;
-    if let Some(url) = image(item) {
-        card = card.child(screenshot(&url));
-        body_top_rule = true;
+    let shot = image(item);
+    if let Some(url) = &shot {
+        card = card.child(screenshot(url));
     }
+    let body_top_rule = shot.is_some();
     card = card.child(body(item, config, body_top_rule, project));
     if outdated {
         card = card.child(
@@ -71,8 +72,7 @@ pub fn view<S: 'static>(item: &Item, config: &MapCheckConfig, project: Project<S
 fn header<S: 'static>(item: &Item, config: &MapCheckConfig, project: Project<S>) -> El {
     let profile = config.profile;
     let mut profiles = row().key("map-check-profiles").gap(2.0).items_center();
-    for (index, numeral) in PROFILES.iter().enumerate() {
-        let number = index as u32 + 1;
+    for (number, numeral) in PROFILES {
         let mut button = row()
             .key(format!("map-check-profile-{number}"))
             .w(theme::rem(1.5))
@@ -80,9 +80,9 @@ fn header<S: 'static>(item: &Item, config: &MapCheckConfig, project: Project<S>)
             .fill(theme::gray(800))
             .focusable(true)
             .role("button")
-            .label(*numeral)
+            .label(numeral)
             .on_press(move |s: &mut S| project(s).maps.profile = number)
-            .child(text(*numeral).key(format!("map-check-profile-{number}-text")).font(type_::SM));
+            .child(text(numeral).key(format!("map-check-profile-{number}-text")).font(type_::SM));
         // `:class="{ 'border border-gray-600': profile.active }"`
         if profile == number {
             button = button.border(1.0, theme::gray(600)).border_layout();
@@ -137,6 +137,10 @@ fn image(item: &Item) -> Option<String> {
 /// `FullscreenImage`'s 21:9 box: the screenshot filling it, then the reference's white glow
 /// (`::after`: an 8 % white wash with a lighter top-left border).
 fn screenshot(url: &str) -> El {
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "`width - 2 * rem` is the reference's CSS arithmetic; `mul_add` would round differently"
+    )]
     let width = crate::poe1::price_check::WIDTH - theme::rem(0.25) * 2.0;
     let height = width * 9.0 / 21.0;
     let glow = rune::Color::WHITE;
@@ -217,13 +221,16 @@ fn has_maven_reminder(item: &Item) -> bool {
     MEMORY_MAPS.contains(&area.ref_name.as_str())
 }
 
+/// A decision's glyph, drawn at 14 pt in the button's own colour.
+type DecisionGlyph = fn(f32, rune::Color) -> El;
+
 /// `MapStatButton.vue`: the decision button and the eye column.
 fn stat_button<S: 'static>(stat: &PreparedStat, index: usize, config: &MapCheckConfig, project: Project<S>) -> El {
     let current_decision = decision(config, &stat.matcher);
-    let (fill, icon) = match current_decision {
-        Some('d') => (Some(theme::red(700)), Some(icon::skull as fn(f32, rune::Color) -> El)),
-        Some('w') => (Some(theme::orange(600)), Some(icon::warning as fn(f32, rune::Color) -> El)),
-        Some('g') => (Some(theme::green(700)), Some(icon::check as fn(f32, rune::Color) -> El)),
+    let (fill, draw): (Option<rune::Color>, Option<DecisionGlyph>) = match current_decision {
+        Some('d') => (Some(theme::red(700)), Some(icon::skull)),
+        Some('w') => (Some(theme::orange(600)), Some(icon::warning)),
+        Some('g') => (Some(theme::green(700)), Some(icon::check)),
         _ => (None, None),
     };
     let matcher = stat.matcher.clone();
@@ -249,7 +256,7 @@ fn stat_button<S: 'static>(stat: &PreparedStat, index: usize, config: &MapCheckC
         None => cycle.hover(theme::gray(700)),
     };
     // The `<i class="w-4 shrink-0">` keeps the text indented whether or not it draws a glyph.
-    cycle = match icon {
+    cycle = match draw {
         Some(draw) => cycle.child(draw(14.0, theme::gray(200)).key(format!("stat-{index}-icon"))),
         None => cycle.child(el().w(theme::rem(1.0))),
     };
@@ -303,7 +310,7 @@ pub fn unknown_modifier(text_: &str, index: usize) -> El {
 /// character in its decision set.
 pub fn decision(config: &MapCheckConfig, matcher: &str) -> Option<char> {
     let entry = config.selected_stats.iter().find(|entry| entry.matcher == matcher)?;
-    entry.decision.chars().nth(config.profile.checked_sub(1)? as usize)
+    entry.decision.chars().nth(usize::try_from(config.profile.checked_sub(1)?).ok()?)
 }
 
 /// `decision.value = …`: `decisionCreate` into the entry, pushing a new one when there is none.

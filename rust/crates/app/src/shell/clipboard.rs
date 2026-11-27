@@ -14,7 +14,7 @@ use wraex_platform::clipboard::Clipboard;
 pub struct SystemClipboard;
 
 impl SystemClipboard {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 }

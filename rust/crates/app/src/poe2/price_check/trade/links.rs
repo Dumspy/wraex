@@ -35,7 +35,9 @@ pub fn trade_links<S: 'static>(check: &PriceCheck, _project: Project<S>) -> El {
         .child(icon::external_link(theme::rem(0.75), theme::gray(400)));
     if let Some(url) = url {
         link = link.on_press_tx(move |_s: &mut S, tx: &mut rune::Tx| {
-            let _ = tx.open_url(&url);
+            if let Err(error) = tx.open_url(&url) {
+                wraex_platform::log!("could not open {url}: {error}");
+            }
         });
     }
     row().key("trade-links").items_center().child(link)
@@ -46,9 +48,10 @@ pub fn trade_links<S: 'static>(check: &PriceCheck, _project: Project<S>) -> El {
 pub fn link(check: &PriceCheck) -> Option<String> {
     let league = &check.filters().trade.league;
     match api_to_satisfy_search(check.item()?, check.item_stats(), check.filters()) {
-        Api::Trade => match &check.trade.list {
-            Some(list) => Some(format!("https://{HOST}/trade2/search/poe2/{league}/{}", list.id)),
-            None => {
+        Api::Trade => {
+            if let Some(list) = &check.trade.list {
+                Some(format!("https://{HOST}/trade2/search/poe2/{league}/{}", list.id))
+            } else {
                 let request = create_trade_request(
                     crate::poe2::price_check::data(check.mode()),
                     check.filters(),
@@ -58,13 +61,19 @@ pub fn link(check: &PriceCheck) -> Option<String> {
                 .ok()?;
                 Some(format!("https://{HOST}/trade2/search/poe2/{league}?q={}", js::stringify(&request)))
             }
-        },
+        }
         Api::Bulk => {
             let have = super::listing::have_for(check.trade.selected);
             let request = create_bulk_request(check.filters(), check.item()?, vec![have.to_owned()]);
             // `JSON.stringify({ exchange: httpPostBody.query })`
-            let query = serde_json::json!({ "exchange": request.query });
+            let query = ExchangeBody { exchange: &request.query };
             Some(format!("https://{HOST}/trade2/exchange/poe2/{league}?q={}", js::stringify(&query)))
         }
     }
+}
+
+/// `{ exchange: httpPostBody.query }`, whose key order is the trade site's.
+#[derive(serde::Serialize)]
+struct ExchangeBody<'a> {
+    exchange: &'a wraex_core::trade::BulkQuery,
 }

@@ -35,10 +35,19 @@ pub fn trade_links<S: 'static>(check: &PriceCheck, _project: Project<S>) -> El {
         .child(icon::external_link(theme::rem(0.75), theme::gray(400)));
     if let Some(url) = url {
         link = link.on_press_tx(move |_s: &mut S, tx: &mut rune::Tx| {
-            let _ = tx.open_url(&url);
+            if let Err(error) = tx.open_url(&url) {
+                wraex_platform::log!("could not open {url}: {error}");
+            }
         });
     }
     row().key("trade-links").items_center().child(link)
+}
+
+/// `JSON.stringify({ exchange: httpPostBody.query })`: one fixed key around the bulk query,
+/// in the reference's key order.
+#[derive(serde::Serialize)]
+struct ExchangeQuery<'a> {
+    exchange: &'a wraex_core::trade::BulkQuery,
 }
 
 /// `makeTradeLink`: the found search's id once there is one, else the query itself, and
@@ -46,20 +55,21 @@ pub fn trade_links<S: 'static>(check: &PriceCheck, _project: Project<S>) -> El {
 pub fn link(check: &PriceCheck) -> Option<String> {
     let league = &check.item_filters()?.trade.league;
     match api_to_satisfy_search(check.item()?, check.item_stats()) {
-        Api::Trade => match &check.trade.list {
-            Some(list) => Some(format!("https://{HOST}/trade/search/{league}/{}", list.id)),
-            None => {
+        Api::Trade => {
+            if let Some(list) = &check.trade.list {
+                Some(format!("https://{HOST}/trade/search/{league}/{}", list.id))
+            } else {
                 let request =
                     create_trade_request(crate::poe1::price_check::data(), check.item_filters()?, check.item_stats())
                         .ok()?;
                 Some(format!("https://{HOST}/trade/search/{league}?q={}", js::stringify(&request)))
             }
-        },
+        }
         Api::Bulk => {
             let have = super::listing::have_for(check.trade.selected);
             let request = create_bulk_request(check.item_filters()?, check.item()?, vec![have.to_owned()]);
             // `JSON.stringify({ exchange: httpPostBody.query })`
-            let query = serde_json::json!({ "exchange": request.query });
+            let query = ExchangeQuery { exchange: &request.query };
             Some(format!("https://{HOST}/trade/exchange/{league}?q={}", js::stringify(&query)))
         }
     }

@@ -56,16 +56,18 @@ pub fn view<S: 'static>(key: &str, stat: &UnknownModifier, _item_text: &str, _pr
                         ),
                 ),
         )
-        .child(reload_trade_data::<S>(format!("{key}-reload")))
+        .child(reload_trade_data::<S>(&format!("{key}-reload")))
 }
 
 /// `ReloadTradeData.vue`'s first state: the button that asks for the trade site's data
-/// again. The app loads that data once per run (`price_check::data`), so the button is drawn
+/// again.
+///
+/// The app loads that data once per run (`price_check::data`), so the button is drawn
 /// where the reference has it but cannot refresh it yet — its label wraps in the narrow
 /// column the row leaves it, as the reference's does.
-fn reload_trade_data<S: 'static>(key: String) -> El {
+fn reload_trade_data<S: 'static>(key: &str) -> El {
     let label = i18n::t("Reload fallback data");
-    col().key(key.clone()).w(theme::rem(4.25)).mx(theme::rem(0.25)).my(theme::rem(0.25)).child(
+    col().key(key.to_owned()).w(theme::rem(4.25)).mx(theme::rem(0.25)).my(theme::rem(0.25)).child(
         row()
             .key(format!("{key}-button"))
             .w_full()

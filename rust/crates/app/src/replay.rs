@@ -20,7 +20,7 @@
 //! A missing recording is an error: the app never falls back to the network, so a
 //! scene that changes a request shows the failure instead of a live price.
 
-use std::fmt::Write as _;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -48,13 +48,19 @@ pub fn proxy_file_name(raw_url: &str, body: Option<&str>) -> String {
     }
     if let Some(body) = body.filter(|body| !body.is_empty()) {
         name.push_str("--body");
-        name.push_str(&sha1_hex(body)[..8]);
+        name.push_str(prefix(&sha1_hex(body), 8));
     }
     if name.len() > MAX_NAME {
         let hash = sha1_hex(&name);
-        name = format!("{}--len{}-{}", &name[..CUT_NAME], name.len(), &hash[..16]);
+        name = format!("{}--len{}-{}", prefix(&name, CUT_NAME), name.len(), prefix(&hash, 16));
     }
     name
+}
+
+/// The first `len` bytes of `text`, or all of it when it is shorter. Every string this module
+/// cuts is ASCII (a sanitised URL, or a SHA-1 hex digest), so `len` is always a char boundary.
+fn prefix(text: &str, len: usize) -> &str {
+    text.get(..len).unwrap_or(text)
 }
 
 fn sanitize(text: &str) -> String {
@@ -76,7 +82,9 @@ fn sha1_hex(text: &str) -> String {
     let digest = Sha1::digest(text.as_bytes());
     let mut out = String::with_capacity(40);
     for byte in digest {
-        let _ = write!(out, "{byte:02x}");
+        for nibble in [byte >> 4, byte & 0x0f] {
+            out.push(char::from_digit(u32::from(nibble), 16).unwrap_or('0'));
+        }
     }
     out
 }
@@ -144,7 +152,7 @@ impl Transport for ReplayTransport {
         let body = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
         let (status, headers) = match read_meta(&path) {
             Some(meta) => (meta.status, meta.headers),
-            None => (200, Default::default()),
+            None => (200, HashMap::default()),
         };
         Ok(HttpResponse { status, headers, body })
     }
@@ -159,7 +167,7 @@ pub struct ReplayClock {
 
 impl ReplayClock {
     pub fn new(base: EpochMillis) -> Self {
-        Self { now: AtomicU64::new(base.max(0) as u64) }
+        Self { now: AtomicU64::new(base.max(0).cast_unsigned()) }
     }
 
     /// The clock at `tools/golden/corpus/screens/poe1/recorded-at.txt`.
@@ -189,7 +197,9 @@ pub const CORPUS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../tools/go
 /// `corpus/screens/<game>/recorded-at.txt`, the page clock the screenshots froze at.
 /// A missing or unparsable file is the harness's fallback (`2026-01-01T12:00:00Z`).
 pub fn recorded_at(game: &str) -> EpochMillis {
-    let fallback = parse_iso("2026-01-01T12:00:00Z").expect("a valid ISO date");
+    // The harness's fallback date; `parse_iso` reads the exact form it writes, so this is
+    // always the parsed date and never the epoch.
+    let fallback = parse_iso("2026-01-01T12:00:00Z").unwrap_or_default();
     std::fs::read_to_string(format!("{CORPUS}/{game}/recorded-at.txt"))
         .ok()
         .and_then(|text| parse_iso(text.trim()))
@@ -208,6 +218,13 @@ mod tests {
         Path::new(CORPUS)
     }
 
+    /// The recorded search answer the fetch name is rebuilt from.
+    #[derive(serde::Deserialize)]
+    struct SearchAnswer {
+        id: String,
+        result: Vec<String>,
+    }
+
     /// The README's two examples, then the two suffixes.
     #[test]
     fn names_follow_the_harness() {
@@ -223,7 +240,7 @@ mod tests {
         let body = r#"{"query":{"status":{"option":"securable"},"stats":[{"type":"and","filters":[]}],"filters":{}},"sort":{"price":"asc"}}"#;
         assert_eq!(
             proxy_file_name("www.pathofexile.com/api/trade/search/Standard", Some(body)),
-            format!("www.pathofexile.com__api__trade__search__Standard--body{}", &sha1_hex(body)[..8])
+            format!("www.pathofexile.com__api__trade__search__Standard--body{}", prefix(&sha1_hex(body), 8))
         );
         // Over MAX_NAME: the first CUT_NAME characters, then the length and a hash of
         // the whole name.
@@ -232,8 +249,8 @@ mod tests {
         let full = format!("{}--{}", sanitize(pathname), sanitize(query));
         let name = proxy_file_name(&long, None);
         assert!(name.len() <= MAX_NAME, "{name}");
-        assert!(name.starts_with(&full[..CUT_NAME]), "{name}");
-        assert_eq!(name, format!("{}--len{}-{}", &full[..CUT_NAME], full.len(), &sha1_hex(&full)[..16]));
+        assert!(name.starts_with(prefix(&full, CUT_NAME)), "{name}");
+        assert_eq!(name, format!("{}--len{}-{}", prefix(&full, CUT_NAME), full.len(), prefix(&sha1_hex(&full), 16)));
     }
 
     /// Windows' `MAX_PATH` (260 characters) is a whole-path limit, so every recording's
@@ -258,18 +275,17 @@ mod tests {
     #[test]
     fn a_recorded_fetch_name_matches_its_file() {
         let dir = corpus().join("poe1/proxy");
-        let search: serde_json::Value = serde_json::from_str(
+        let search: SearchAnswer = serde_json::from_str(
             &std::fs::read_to_string(
                 dir.join("www.pathofexile.com__api__trade__search__Standard--body95b7a0dc.POST.json"),
             )
             .unwrap(),
         )
         .unwrap();
-        let query = search["id"].as_str().unwrap();
-        let ids: Vec<&str> = search["result"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect();
+        let ids: Vec<&str> = search.result.iter().map(String::as_str).collect();
         let request = HttpRequest {
             method: Method::Get,
-            url: format!("https://www.pathofexile.com/api/trade/fetch/{}?query={query}", ids.join(",")),
+            url: format!("https://www.pathofexile.com/api/trade/fetch/{}?query={}", ids.join(","), search.id),
             headers: Vec::new(),
             body: None,
         };
@@ -304,8 +320,8 @@ mod tests {
         let recorded = parse_iso("2026-11-24T10:11:38.653Z").expect("ISO with milliseconds");
         assert_eq!(recorded_at("poe1"), recorded);
         let clock = ReplayClock::poe1();
-        assert_eq!(clock.now(), recorded as u64);
+        assert_eq!(i64::try_from(clock.now()), Ok(recorded));
         clock.sleep(1000);
-        assert_eq!(clock.now(), recorded as u64 + 1000);
+        assert_eq!(i64::try_from(clock.now()), Ok(recorded + 1000));
     }
 }

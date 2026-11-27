@@ -20,6 +20,9 @@ use crate::ui::{self, art, icon};
 /// The three profile numerals, as `MapCheck.vue` lists them.
 const PROFILES: [&str; 3] = ["I", "II", "III"];
 
+/// The icon a decision draws on its button (`skull`, `warning`, `check`).
+type DecisionIcon = fn(f32, rune::Color) -> El;
+
 /// `MapCheck.vue`: the map check card.
 pub fn view<S: 'static>(item: &Item, config: &MapCheckConfig, mode: Mode, project: Project<S>) -> El {
     let data = crate::poe2::price_check::data(mode);
@@ -62,8 +65,7 @@ pub fn view<S: 'static>(item: &Item, config: &MapCheckConfig, mode: Mode, projec
 fn header<S: 'static>(item: &Item, config: &MapCheckConfig, project: Project<S>) -> El {
     let profile = config.profile;
     let mut profiles = row().key("map-check-profiles").gap(2.0).items_center();
-    for (index, numeral) in PROFILES.iter().enumerate() {
-        let number = index as u32 + 1;
+    for (numeral, number) in PROFILES.iter().zip(1u32..) {
         let mut button = row()
             .key(format!("map-check-profile-{number}"))
             .w(theme::rem(1.5))
@@ -114,6 +116,10 @@ fn image(item: &Item) -> Option<String> {
 }
 
 /// `FullscreenImage`'s 21:9 box (`style="height: auto"`): the screenshot, filling it.
+#[expect(
+    clippy::suboptimal_flops,
+    reason = "`width: calc(100% - 0.25rem * 2)` from the reference's stylesheet; `mul_add` rounds differently"
+)]
 fn screenshot(url: &str) -> El {
     let width = crate::poe2::price_check::WIDTH - theme::rem(0.25) * 2.0;
     let height = width * 9.0 / 21.0;
@@ -151,10 +157,10 @@ fn body<S: 'static>(item: &Item, config: &MapCheckConfig, project: Project<S>) -
 /// `MapStatButton.vue`: the decision button and the eye column.
 fn stat_button<S: 'static>(stat: &PreparedStat, index: usize, config: &MapCheckConfig, project: Project<S>) -> El {
     let current_decision = decision(config, &stat.matcher);
-    let (fill, icon) = match current_decision {
-        Some('d') => (Some(theme::red(700)), Some(icon::skull as fn(f32, rune::Color) -> El)),
-        Some('w') => (Some(theme::orange(600)), Some(icon::warning as fn(f32, rune::Color) -> El)),
-        Some('g') => (Some(theme::green(700)), Some(icon::check as fn(f32, rune::Color) -> El)),
+    let (fill, draw): (Option<rune::Color>, Option<DecisionIcon>) = match current_decision {
+        Some('d') => (Some(theme::red(700)), Some(icon::skull)),
+        Some('w') => (Some(theme::orange(600)), Some(icon::warning)),
+        Some('g') => (Some(theme::green(700)), Some(icon::check)),
         _ => (None, None),
     };
     let matcher = stat.matcher.clone();
@@ -178,7 +184,7 @@ fn stat_button<S: 'static>(stat: &PreparedStat, index: usize, config: &MapCheckC
         Some(c) => cycle.fill(c),
         None => cycle.hover(theme::gray(700)),
     };
-    cycle = match icon {
+    cycle = match draw {
         Some(draw) => cycle.child(draw(14.0, theme::gray(200)).key(format!("stat-{index}-icon"))),
         None => cycle.child(el().w(theme::rem(1.0))),
     };
@@ -230,7 +236,7 @@ pub fn unknown_modifier(text_: &str, index: usize) -> El {
 /// The current profile's decision for a stat text.
 pub fn decision(config: &MapCheckConfig, matcher: &str) -> Option<char> {
     let entry = config.selected_stats.iter().find(|entry| entry.matcher == matcher)?;
-    entry.decision.chars().nth(config.profile.checked_sub(1)? as usize)
+    entry.decision.chars().nth(usize::try_from(config.profile.checked_sub(1)?).ok()?)
 }
 
 /// `decision.value = …`: `decisionCreate` into the entry, pushing a new one when there is none.

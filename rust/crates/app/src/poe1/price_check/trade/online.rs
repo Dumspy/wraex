@@ -88,7 +88,7 @@ pub fn panel<S: 'static>(check: &PriceCheck, api: Api, project: Project<S>) -> E
             let checked = trade.listed.as_deref().unwrap_or("") == value;
             left =
                 left.child(radio(format!("online-filter-listed-{value}"), &i18n::t(key), checked, move |s: &mut S| {
-                    project(s).set_listed(Some(value).filter(|value| !value.is_empty()))
+                    project(s).set_listed(Some(value).filter(|value| !value.is_empty()));
                 }));
         }
     }

@@ -74,17 +74,19 @@ use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex};
 
 use rune::{AppHandle, AppSpec, El, Tx};
-use serde_json::json;
+use serde::Deserialize;
+use serde_json::Value;
 use wraex_core::GameId;
 use wraex_core::game_files::{self, Os, UserDirs};
 use wraex_core::leagues::{LeagueSource, Leagues};
+use wraex_core::num::{f64_to_f32, f64_to_i32, u64_to_f64};
 use wraex_core::trade::api::Clock;
 use wraex_core::updates::{NoDownloadReason, UpdateInfo};
 use wraex_platform::clipboard::{Clipboard, is_poe_item};
 use wraex_platform::overlay::{Modifiers, OverlayController, OverlayEvent, OverlayHandle, TrackArea};
 use wraex_platform::shortcuts::{
-    Action, HostConfig, ItemText, OverlayContext, PressContext, Registration, ShortcutAction, ShortcutEvent, Shortcuts,
-    WheelEvent,
+    Action, HostConfig, ItemText, OverlayContext, PressContext, Registration, ShortcutAction, ShortcutEvent,
+    ShortcutOptions, Shortcuts, WheelEvent,
 };
 use wraex_platform::tray::{Tray, TrayAction};
 use wraex_platform::window::{self, Bounds, GameWindow, KeyEvent, MouseEvent, Point};
@@ -138,10 +140,86 @@ enum Placement {
     Centred,
 }
 
-/// One card the overlay draws inside its single window: what it is, where its top-left goes
-/// (points from the overlay's own) and the size it is laid out at. `OverlayWindow.vue` draws
-/// every visible widget at once, each at its own `anchor`; the shell works out the cards
-/// ([`App::cards_for`]) and [`crate::view`] paints them over the background click layer.
+/// The game's client area in physical pixels and the overlay window's DPI scale: together they
+/// turn the OS hook's physical pixels into the points Rune lays a widget out in.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Screen {
+    /// The game's client area, in physical pixels.
+    bounds: Bounds,
+    /// The overlay window's `devicePixelRatio`.
+    scale: f64,
+}
+
+/// Which overlay state [`App::shown_state`] reads.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum OverlayMode {
+    /// `OverlayWindow.vue`'s `active`: the overlay takes the mouse and the keyboard.
+    Active,
+    /// The overlay window is on screen without taking input.
+    Inactive,
+    /// The port's headless app: its one widget stands in for what an active overlay draws.
+    Scene,
+}
+
+impl OverlayMode {
+    /// Whether `visibilityState` draws what an active overlay draws.
+    const fn active(self) -> bool {
+        matches!(self, Self::Active | Self::Scene)
+    }
+}
+
+/// What a price check opens on: the copied item, the league it prices in, and the prices the app
+/// already fetched.
+pub struct PriceCheckRequest<'a> {
+    /// The game whose trade site is asked.
+    pub game: GameId,
+    /// The league the trade site lists.
+    pub league: &'a str,
+    /// Where the window's requests go (the recordings in a test).
+    pub mode: Mode,
+    /// The item's raw text, as the copy hotkey read it.
+    pub text: &'a str,
+    /// The prices the app fetched at startup (`usePoeninja` is shared by every window upstream);
+    /// used in place of a fresh request.
+    pub warm: Option<crate::poe1::price_check::prices::PriceList>,
+    /// EE2's poe.ninja overviews, likewise.
+    pub overviews: Option<Vec<(&'static str, String)>>,
+}
+
+impl std::fmt::Debug for PriceCheckRequest<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // `PriceList` has no `Debug`; the rest of the request is what a failure log needs.
+        f.debug_struct("PriceCheckRequest")
+            .field("game", &self.game)
+            .field("league", &self.league)
+            .field("mode", &self.mode)
+            .field("text", &self.text)
+            .finish_non_exhaustive()
+    }
+}
+
+/// What an item check opens on: the copied item, the config its `maps` live in, and the hotkey
+/// action that asked for it.
+#[derive(Debug)]
+pub struct ItemCheckRequest<'a> {
+    /// The game whose item data is asked.
+    pub game: GameId,
+    /// The game's config (`AppConfig()`), for the widget's `maps`.
+    pub config: &'a Value,
+    /// Where the window's requests go (the recordings in a test).
+    pub mode: Mode,
+    /// The item's raw text.
+    pub text: &'a str,
+    /// The item check's own hotkey (`wikiKey`, ...), when one asked for the window.
+    pub action: Option<ItemAction>,
+}
+
+/// One card the overlay draws inside its single window.
+///
+/// It is what the card is, where its top-left goes (points from the overlay's own) and the size
+/// it is laid out at. `OverlayWindow.vue` draws every visible widget at once, each at its own
+/// `anchor`; the shell works out the cards ([`App::cards_for`]) and [`crate::view`] paints them
+/// over the background click layer.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Card {
     /// What to draw.
@@ -161,10 +239,7 @@ pub struct Card {
 impl Card {
     /// The card's element key: one per drawn widget, so the element tree names every card.
     pub fn key(&self) -> String {
-        match self.wm_id {
-            Some(wm_id) => format!("card-{wm_id}"),
-            None => format!("card-{}", card_slug(&self.shown)),
-        }
+        self.wm_id.map_or_else(|| format!("card-{}", card_slug(&self.shown)), |wm_id| format!("card-{wm_id}"))
     }
 
     /// The card's size, when it has one of its own (the tracker reports the price check's).
@@ -175,7 +250,7 @@ impl Card {
 
 /// The price check's card, the only one `WidgetAreaTracker` follows
 /// (`PriceCheckWindow.vue`'s `track-area`).
-fn is_price_check(shown: &Shown) -> bool {
+const fn is_price_check(shown: &Shown) -> bool {
     matches!(shown, Shown::PriceCheck | Shown::Poe2)
 }
 
@@ -191,7 +266,7 @@ fn drawn_widget(widget: &widgets::Widget, overlay_active: bool) -> bool {
 }
 
 /// A [`Shown`]'s short name, for element keys and log lines.
-fn card_slug(shown: &Shown) -> &'static str {
+const fn card_slug(shown: &Shown) -> &'static str {
     match shown {
         Shown::None => "none",
         Shown::Settings => "settings",
@@ -225,9 +300,9 @@ pub(crate) fn overlay_root(cards: Vec<Card>, background: bool, mut card: impl Fn
     if background {
         window = window.child(overlay_background());
     }
-    for entry in &cards {
-        let body = card(entry).instant_changes();
-        window = window.child(placed_card(entry, body));
+    for entry in cards {
+        let body = card(&entry).instant_changes();
+        window = window.child(placed_card(&entry, body));
     }
     window
 }
@@ -262,14 +337,14 @@ fn placed_card(card: &Card, body: El) -> El {
 /// as soon as neither the game nor the overlay window is in front (`electron-overlay-window`'s
 /// blur rule), while the settings window does not — the tray can open it with no game to sit
 /// over, and it closes on the focus change itself (`App::hide_widgets_on_blur`).
-fn is_overlay(shown: &Shown) -> bool {
+const fn is_overlay(shown: &Shown) -> bool {
     matches!(shown, Shown::PriceCheck | Shown::Poe2 | Shown::ItemCheck | Shown::Widget(_))
 }
 
 /// `OverlayVisibility`: a lone Alt hides the widget the overlay draws, not the window itself
 /// (the game keeps the mouse and keyboard it already had) and not the settings window, which
 /// upstream draws in an ordinary window of its own.
-fn peek_hides(shown: &Shown, overlay_visible: bool) -> bool {
+const fn peek_hides(shown: &Shown, overlay_visible: bool) -> bool {
     is_overlay(shown) && !overlay_visible
 }
 
@@ -277,27 +352,102 @@ fn peek_hides(shown: &Shown, overlay_visible: bool) -> bool {
 /// and right, as the ordinary window has always opened) or centred for a window the tray
 /// opened, then clamped so the whole card stays inside the game's client area.
 ///
-/// `bounds` is the game's client area in physical pixels and `scale` the window's DPI scale,
-/// which is what turns both into the points Rune lays the widget out in.
-fn widget_offset(placement: Option<Placement>, size: (f32, f32), bounds: Bounds, scale: f64) -> (f32, f32) {
+/// `screen` is the game's client area and the overlay window's DPI scale, which is what turns a
+/// physical pixel position into the points Rune lays the widget out in.
+fn widget_offset(placement: Option<Placement>, size: (f32, f32), screen: Screen) -> (f32, f32) {
     let (width, height) = (f64::from(size.0), f64::from(size.1));
-    let (client_width, client_height) = (bounds.width / scale, bounds.height / scale);
+    let (client_width, client_height) = (screen.bounds.width / screen.scale, screen.bounds.height / screen.scale);
     let (x, y) = match placement {
         Some(Placement::Cursor(point)) => (
-            (point.x - bounds.x) / scale + f64::from(CURSOR_OFFSET),
-            (point.y - bounds.y) / scale + f64::from(CURSOR_OFFSET),
+            (point.x - screen.bounds.x) / screen.scale + f64::from(CURSOR_OFFSET),
+            (point.y - screen.bounds.y) / screen.scale + f64::from(CURSOR_OFFSET),
         ),
         _ => ((client_width - width) / 2.0, (client_height - height) / 2.0),
     };
     // A widget taller than the game (a card at a small window size) starts at the top edge.
-    let clamp = |value: f64, limit: f64| value.clamp(0.0, limit.max(0.0)) as f32;
+    let clamp = |value: f64, limit: f64| f64_to_f32(value.clamp(0.0, limit.max(0.0)));
     (clamp(x, client_width - width), clamp(y, client_height - height))
+}
+
+/// The config's own fields the shell reads, as `AppConfig()` has them (`Config.ts`).
+///
+/// Each field is read leniently: a value of the wrong JSON type is the same as a missing one, so
+/// one odd field does not drop the rest — upstream's `?.field` chains give the same fallbacks.
+#[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+struct ShellConfig {
+    /// `overlayBackgroundClose`: the overlay's background click gives the game its focus back.
+    #[serde(deserialize_with = "lenient")]
+    overlay_background_close: Option<bool>,
+    /// `leagueId`: the league prices and searches use. An empty string is not a league.
+    #[serde(deserialize_with = "lenient")]
+    league_id: Option<String>,
+    /// `readClientLog`: whether EE2's log watcher reads the game's `Client.txt`.
+    #[serde(deserialize_with = "lenient")]
+    read_client_log: Option<bool>,
+    /// `clientLog`: the `Client.txt` path, when the user set one.
+    #[serde(deserialize_with = "lenient")]
+    client_log: Option<String>,
+    /// `gameConfig`: the game's INI path, when the user set one.
+    #[serde(deserialize_with = "lenient")]
+    game_config: Option<String>,
+    /// `realm`: `pc-ggg` or `pc-garena`.
+    #[serde(deserialize_with = "lenient")]
+    realm: Option<String>,
+}
+
+impl ShellConfig {
+    /// The shell's view of `config`; a document that is not an object reads as the defaults.
+    fn read(config: &Value) -> Self {
+        Self::deserialize(config).unwrap_or_default()
+    }
+
+    /// `realm`, `pc-ggg` when the config does not say.
+    fn realm(&self) -> &str {
+        self.realm.as_deref().unwrap_or("pc-ggg")
+    }
+
+    /// `leagueId`, when it names a league (`!== ''`).
+    fn league(&self) -> Option<&str> {
+        self.league_id.as_deref().filter(|league| !league.is_empty())
+    }
+
+    /// `overlayBackgroundClose`, `true` on a fresh install.
+    fn overlay_background_close(&self) -> bool {
+        self.overlay_background_close.unwrap_or(true)
+    }
+
+    /// `readClientLog`, `false` when the config does not say.
+    fn read_client_log(&self) -> bool {
+        self.read_client_log.unwrap_or(false)
+    }
+
+    /// `clientLog ?? ""`.
+    fn client_log(&self) -> &str {
+        self.client_log.as_deref().unwrap_or_default()
+    }
+
+    /// `gameConfig ?? ""`.
+    fn game_config(&self) -> &str {
+        self.game_config.as_deref().unwrap_or_default()
+    }
+}
+
+/// One config field read as upstream reads it: a value of another JSON type is the same as a
+/// missing one, and the other fields of the same view still read.
+fn lenient<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    let value = Value::deserialize(deserializer)?;
+    Ok(T::deserialize(value).ok())
 }
 
 /// Whether the overlay's background click gives the game its focus back
 /// (`AppConfig().overlayBackgroundClose`, `true` on a fresh install).
-fn overlay_background_close(config: &serde_json::Value) -> bool {
-    config.get("overlayBackgroundClose").and_then(serde_json::Value::as_bool).unwrap_or(true)
+fn overlay_background_close(config: &Value) -> bool {
+    ShellConfig::read(config).overlay_background_close()
 }
 
 /// Whether the shell hides the native window for what the app draws: nothing at all (the app
@@ -305,18 +455,28 @@ fn overlay_background_close(config: &serde_json::Value) -> bool {
 /// front (`electron-overlay-window`'s `blur` handler; `focusNext`: a focus we asked for is not a
 /// blur yet). The settings window is not the overlay — upstream gives it an ordinary window of
 /// its own — so it stays while the game is in the background.
-fn hides_window(shown: &Shown, following_game: bool, in_front: bool) -> bool {
-    *shown == Shown::None || (following_game && is_overlay(shown) && !in_front)
+const fn hides_window(shown: &Shown, visibility: Visibility) -> bool {
+    matches!(shown, Shown::None) || (visibility.following_game && is_overlay(shown) && !visibility.in_front)
+}
+
+/// What decides whether the overlay window stays on screen: whether the shell follows the game's
+/// window, and whether either the game or the overlay holds the focus.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Visibility {
+    /// The shell started the window hook (`wraex_platform::window::Watcher`).
+    following_game: bool,
+    /// The game or the overlay window has the focus, or the overlay asked for it (`focusNext`).
+    in_front: bool,
 }
 
 /// Where a widget at its config's `anchor` sits inside the overlay, in points from the card's
 /// top-left: `Widget.vue`'s `top: <y>%`, `left: <x>%` with the `translate` its `pos` picks
-/// (`tl` none, `tc` half the card's width to the left, `br` all of it, ...). `bounds` is the
-/// game's client area in physical pixels and `scale` the overlay's DPI scale; the result is
-/// clamped so the whole card stays inside the game.
-fn anchored_offset(pos: &str, anchor: (f32, f32), size: (f32, f32), bounds: Bounds, scale: f64) -> (f32, f32) {
+/// (`tl` none, `tc` half the card's width to the left, `br` all of it, ...). `screen` is the
+/// game's client area and the overlay's DPI scale; the result is clamped so the whole card stays
+/// inside the game.
+fn anchored_offset(pos: &str, anchor: (f32, f32), size: (f32, f32), screen: Screen) -> (f32, f32) {
     let (width, height) = (f64::from(size.0), f64::from(size.1));
-    let (client_width, client_height) = (bounds.width / scale, bounds.height / scale);
+    let (client_width, client_height) = (screen.bounds.width / screen.scale, screen.bounds.height / screen.scale);
     let x = client_width * f64::from(anchor.0) / 100.0;
     let y = client_height * f64::from(anchor.1) / 100.0;
     let left = match pos.chars().nth(1) {
@@ -329,7 +489,7 @@ fn anchored_offset(pos: &str, anchor: (f32, f32), size: (f32, f32), bounds: Boun
         Some('b') => y - height,
         _ => y,
     };
-    let clamp = |value: f64, limit: f64| value.clamp(0.0, limit.max(0.0)) as f32;
+    let clamp = |value: f64, limit: f64| f64_to_f32(value.clamp(0.0, limit.max(0.0)));
     (clamp(left, client_width - width), clamp(top, client_height - height))
 }
 
@@ -337,10 +497,14 @@ fn anchored_offset(pos: &str, anchor: (f32, f32), size: (f32, f32), bounds: Boun
 /// height (`#price-window` is `h-full` with the listings scrolling inside it), the settings
 /// window's root covers the whole overlay (`position: absolute; inset: 0`), and every other
 /// card keeps its own size, as upstream's `Widget.vue` cards do.
-fn overlay_widget_size(game: GameId, shown: &Shown, bounds: Bounds, scale: f64) -> Option<(f32, f32)> {
+fn overlay_widget_size(game: GameId, shown: &Shown, screen: Screen) -> Option<(f32, f32)> {
     match shown {
-        Shown::PriceCheck | Shown::Poe2 => Some((crate::poe1::price_check::WIDTH, (bounds.height / scale) as f32)),
-        Shown::Settings => Some(((bounds.width / scale) as f32, (bounds.height / scale) as f32)),
+        Shown::PriceCheck | Shown::Poe2 => {
+            Some((crate::poe1::price_check::WIDTH, f64_to_f32(screen.bounds.height / screen.scale)))
+        }
+        Shown::Settings => {
+            Some((f64_to_f32(screen.bounds.width / screen.scale), f64_to_f32(screen.bounds.height / screen.scale)))
+        }
         _ => window_size(game, shown),
     }
 }
@@ -348,13 +512,11 @@ fn overlay_widget_size(game: GameId, shown: &Shown, bounds: Bounds, scale: f64) 
 /// `OVERLAY->MAIN::track-area`, in the coordinates upstream's renderer reports: the card's
 /// rectangle and the press position in screen DIPs, and `dpr` for `WidgetAreaTracker`'s Win32
 /// conversion. `offset` is where the card sits inside the overlay and `size` its size, both
-/// in points; `bounds` is the game's client area in physical pixels and `scale` the overlay's
-/// DPI scale.
+/// in points; `screen` is the game's client area and the overlay's DPI scale.
 fn track_area(
     offset: (f32, f32),
     size: (f32, f32),
-    bounds: Bounds,
-    scale: f64,
+    screen: Screen,
     cursor: Point,
     hold_key: Option<String>,
 ) -> TrackArea {
@@ -362,30 +524,34 @@ fn track_area(
         hold_key,
         close_threshold: f64::from(CLOSE_THRESHOLD),
         // `from` is where the item's hotkey fired (`e.position`).
-        from: Point { x: cursor.x / scale, y: cursor.y / scale },
+        from: Point { x: cursor.x / screen.scale, y: cursor.y / screen.scale },
         // `window.screenX + wm.poePanelWidth`, and the overlay's whole `innerHeight`.
         area: Bounds {
-            x: bounds.x / scale + f64::from(offset.0),
-            y: bounds.y / scale + f64::from(offset.1),
+            x: screen.bounds.x / screen.scale + f64::from(offset.0),
+            y: screen.bounds.y / screen.scale + f64::from(offset.1),
             width: f64::from(size.0),
             height: f64::from(size.1),
         },
-        dpr: scale,
+        dpr: screen.scale,
     }
 }
 
 /// The price check's `hotkeyHold` (`Ctrl` by default), the modifier that keeps the card open
 /// while the cursor is away from the press position. `None` is JavaScript's `undefined`: a
 /// hotkey with no hold key at all. An empty string is not the same thing.
-fn price_check_hold_key(config: &serde_json::Value) -> Option<String> {
-    config
-        .get("widgets")?
-        .as_array()?
-        .iter()
-        .find(|widget| widget.get("wmType").and_then(|value| value.as_str()) == Some("price-check"))?
-        .get("hotkeyHold")?
-        .as_str()
-        .map(str::to_owned)
+fn price_check_hold_key(config: &Value) -> Option<String> {
+    let widget = settings::widget(config, "price-check")?;
+    PriceCheckHold::deserialize(widget).ok()?.hotkey_hold
+}
+
+/// The price-check widget's `hotkeyHold` (`PriceCheckWidget`), the one field the shell reads
+/// from a widget.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PriceCheckHold {
+    /// A string, `null` or missing; a value of another type is no hold key either.
+    #[serde(default)]
+    hotkey_hold: Option<String>,
 }
 
 /// What an [`OverlayEvent`] does to the app's windows, matching upstream's renderer:
@@ -394,14 +560,14 @@ fn price_check_hold_key(config: &serde_json::Value) -> Option<String> {
 /// front (Escape, Ctrl+W, the overlay key's off state, the game taking the focus back) and
 /// every `hide-on-focus` widget when it is.
 #[cfg(test)]
-fn apply_overlay_event(event: &OverlayEvent, app: &mut App) {
-    let settings_armed = app.shell().is_none_or(|live| live.settings_armed);
+fn apply_overlay_event(event: OverlayEvent, app: &mut App) {
+    let settings_armed = app.shell().is_none_or(|live| live.settings_state.armed);
     apply_overlay_event_in(event, app, settings_armed);
 }
 
 /// [`apply_overlay_event`] from inside the shell, which runs with itself taken out of `app.live`
 /// (`App::poll_with`) and so passes its own `settings_armed`.
-fn apply_overlay_event_in(event: &OverlayEvent, app: &mut App, settings_armed: bool) {
+fn apply_overlay_event_in(event: OverlayEvent, app: &mut App, settings_armed: bool) {
     match event {
         OverlayEvent::HideExclusiveWidget => app.close_exclusive_widget(),
         OverlayEvent::FocusChange { overlay: false, .. } => app.hide_widgets_on_blur_in(settings_armed),
@@ -470,13 +636,9 @@ pub struct Live {
     /// A price-check press asked for the card's area to be followed
     /// (`OVERLAY->MAIN::track-area`); honoured once the window is placed over the game.
     pending_track: Option<Point>,
-    /// A widget opened under the cursor takes the mouse as soon as it is on screen
-    /// (`Live::sync_window`). Only for a window that is the widget itself (no game to be over)
-    /// and for the settings window; a hotkey-opened widget over the game stays inactive.
-    activate_on_show: bool,
-    /// Whether the overlay window itself has the focus (`AppSpec::on_focus`): the library's
-    /// blur rule hides the overlay when neither it nor the game is in front.
-    pub overlay_focused: bool,
+    /// The overlay window's own state: whether it takes the mouse when it is next shown, and
+    /// whether it holds the focus.
+    window_state: WindowState,
     /// Tray clicks, queued by the tray's native menu callback for [`Live::poll`].
     tray_actions: Arc<Mutex<Vec<TrayAction>>>,
     registered: Vec<rune::ShortcutId>,
@@ -494,18 +656,38 @@ pub struct Live {
     pub prices: Option<crate::poe1::price_check::prices::PriceList>,
     /// EE2's poe.ninja overviews, fetched since launch (`usePoeninja` is app-wide there).
     pub poe2_prices: Option<Vec<(&'static str, String)>>,
-    /// The settings window was open at the last poll: a close means Save or Cancel, and
-    /// either way the app re-reads its file.
-    settings_was_open: bool,
-    /// The overlay window has held the focus since the settings window opened. The settings
-    /// widget is `invisible-on-blur` upstream, but the tray click that opens it can bounce the
-    /// game's foreground back before the overlay's `focus()` lands; that is the tray menu
-    /// closing, not the user going back to the game.
-    settings_armed: bool,
+    /// The settings window's own state: whether it was open at the last poll, and whether the
+    /// overlay has held the focus since it opened.
+    settings_state: SettingsState,
     shown: Shown,
     /// The cards drawn at the last poll, for the log: `OverlayWindow.vue` draws every visible
     /// widget, so a change of the set is what a new or closed card looks like.
     drawn: Vec<Shown>,
+}
+
+/// The overlay window's own state, which nothing outside the shell provides.
+#[derive(Debug, Default)]
+struct WindowState {
+    /// A widget opened under the cursor takes the mouse as soon as it is on screen
+    /// (`Live::sync_window`). Only for a window that is the widget itself (no game to be over)
+    /// and for the settings window; a hotkey-opened widget over the game stays inactive.
+    activate_on_show: bool,
+    /// Whether the overlay window itself has the focus (`AppSpec::on_focus`): the library's
+    /// blur rule hides the overlay when neither it nor the game is in front.
+    focused: bool,
+}
+
+/// The settings window's state across polls.
+#[derive(Debug, Default)]
+struct SettingsState {
+    /// The settings window was open at the last poll: a close means Save or Cancel, and
+    /// either way the app re-reads its file.
+    was_open: bool,
+    /// The overlay window has held the focus since the settings window opened. The settings
+    /// widget is `invisible-on-blur` upstream, but the tray click that opens it can bounce the
+    /// game's foreground back before the overlay's `focus()` lands; that is the tray menu
+    /// closing, not the user going back to the game.
+    armed: bool,
 }
 
 impl std::fmt::Debug for Live {
@@ -559,13 +741,8 @@ impl Live {
         let mut overlay = OverlayController::new(game, os);
         overlay.update_from(&host);
 
-        let league = startup
-            .config
-            .get("leagueId")
-            .and_then(|value| value.as_str())
-            .filter(|league| !league.is_empty())
-            .map(str::to_owned)
-            .unwrap_or_else(|| default_league(game).to_owned());
+        let view = ShellConfig::read(&startup.config);
+        let league = view.league().map_or_else(|| default_league(game).to_owned(), str::to_owned);
 
         // `usePoeninja` runs for the whole renderer at launch; the port's prices live in a
         // price check, so the shell keeps one warm and hands it to the first window opened.
@@ -575,7 +752,10 @@ impl Live {
         if startup.source == config::Source::ImportedUpstream {
             warnings.push(format!(
                 "imported {} into {} (upstream's file was left as it was)",
-                startup.upstream.as_deref().map_or("<upstream config>".to_owned(), |path| path.display().to_string()),
+                startup
+                    .upstream
+                    .as_deref()
+                    .map_or_else(|| "<upstream config>".to_owned(), |path| path.display().to_string()),
                 startup.store.path().display()
             ));
         }
@@ -599,8 +779,7 @@ impl Live {
             placement: None,
             placed: None,
             pending_track: None,
-            activate_on_show: false,
-            overlay_focused: false,
+            window_state: WindowState::default(),
             tray_actions: Arc::new(Mutex::new(Vec::new())),
             registered: Vec::new(),
             warnings,
@@ -611,8 +790,7 @@ impl Live {
             leagues: Leagues::default(),
             prices: (game == GameId::Poe1).then_some(prices),
             poe2_prices: None,
-            settings_was_open: false,
-            settings_armed: false,
+            settings_state: SettingsState::default(),
             shown: Shown::None,
             drawn: Vec::new(),
         }
@@ -630,6 +808,9 @@ impl Live {
     /// `register_shortcut`).
     pub fn boot(&mut self) {
         self.start_tray();
+        // macOS, X11 and Wayland have no window hook yet (`wraex_platform::window` documents the
+        // follow-ups): they keep the earlier ordinary window and system-wide hotkeys.
+        #[cfg(target_os = "windows")]
         self.start_game_window();
         // EE2 reads the log for both games' renderers, but only its PoE2 build uses it for
         // level tracking; APT's log reader is for chat and trades (`crate::client_log`).
@@ -648,11 +829,10 @@ impl Live {
 
     /// `GameLogWatcher.restart(config.clientLog ?? "", config.readClientLog)`: the config's log
     /// path and switch, applied when the window opens and after the settings save.
-    fn sync_client_log(&mut self) {
+    fn sync_client_log(&self) {
         let Some(log) = &self.client_log else { return };
-        let read = self.startup.config.get("readClientLog").and_then(|value| value.as_bool()).unwrap_or(false);
-        let path = self.startup.config.get("clientLog").and_then(|value| value.as_str()).unwrap_or_default();
-        log.update(read, path);
+        let view = ShellConfig::read(&self.startup.config);
+        log.update(view.read_client_log(), view.client_log());
     }
 
     /// Start following the game's window, by the config's `windowTitle` (`OverlayWindow`'s
@@ -669,7 +849,7 @@ impl Live {
         let handle = self.handle.clone();
         match window::Watcher::start(
             WindowTarget::new(title.clone()),
-            self.panel.overlay.clone(),
+            Arc::clone(&self.panel.overlay),
             Box::new(move || handle.wake()),
         ) {
             Ok(watcher) => {
@@ -684,11 +864,6 @@ impl Live {
         }
     }
 
-    /// macOS, X11 and Wayland keep the earlier behaviour: an ordinary window, system-wide
-    /// hotkeys and opt-in key synthesis. `wraex_platform::window` documents the follow-ups.
-    #[cfg(not(target_os = "windows"))]
-    fn start_game_window(&mut self) {}
-
     /// The OS layer's reports: the game gained or lost the focus, moved, was minimised or
     /// closed. The window state machine turns them into the changes the rest of the host
     /// acts on, and the hotkeys follow the focus as upstream's `active-change` does.
@@ -702,7 +877,7 @@ impl Live {
         if let Ok(mut current) = self.panel.game.lock() {
             *current = game;
         }
-        let mut panel = OverlayPanel::new(self.panel.clone());
+        let mut panel = OverlayPanel::new(Arc::clone(&self.panel));
         let mut changed = false;
         for event in events {
             if let Some(change) = self.window.feed(event) {
@@ -739,11 +914,11 @@ impl Live {
                 OverlayEvent::Attached => wraex_platform::log!("wraex: overlay attached to the game window"),
                 OverlayEvent::FocusChange { game, overlay, using_hotkey } => {
                     wraex_platform::log!("wraex: focus game={game} overlay={overlay} hotkey={using_hotkey}");
-                    apply_overlay_event_in(&event, app, self.settings_armed);
+                    apply_overlay_event_in(event, app, self.settings_state.armed);
                 }
                 OverlayEvent::HideExclusiveWidget => {
                     wraex_platform::log!("wraex: the cursor moved away from the card: closing it");
-                    apply_overlay_event_in(&event, app, self.settings_armed);
+                    apply_overlay_event_in(event, app, self.settings_state.armed);
                 }
                 // The Alt peek: `sync_window` reads `OverlayController::is_visible`, which is
                 // the state this event reports; there is no renderer channel to forward it to.
@@ -763,7 +938,7 @@ impl Live {
             watcher.set_mouse_moves(self.overlay.is_tracking_area());
             return false;
         }
-        let mut panel = OverlayPanel::new(self.panel.clone());
+        let mut panel = OverlayPanel::new(Arc::clone(&self.panel));
         for event in events {
             match event {
                 MouseEvent::Move { point, ctrl, alt } => {
@@ -836,7 +1011,7 @@ impl Live {
                 wraex_platform::log!("wraex: tray icon created ({}x{width})", height);
                 // `AppTray.ts`'s click handler: the entries report themselves; the app drains
                 // them in `poll`, which this callback wakes.
-                let pending = self.tray_actions.clone();
+                let pending = Arc::clone(&self.tray_actions);
                 let handle = self.handle.clone();
                 wraex_platform::tray::set_menu_handler(move |action| {
                     if let Ok(mut queue) = pending.lock() {
@@ -885,7 +1060,9 @@ impl Live {
                     if error == rune::ShortcutError::Conflict
                         && let Some(owner) = self.handle.shortcut_owner(&shortcut)
                     {
-                        message.push_str(&format!(" ({owner})"));
+                        message.push_str(" (");
+                        message.push_str(&owner);
+                        message.push(')');
                     }
                     self.warn(message);
                 }
@@ -904,12 +1081,12 @@ impl Live {
     }
 
     pub(crate) fn market(&self) -> Option<wraex_core::leagues::SelectedLeague> {
-        self.leagues.selected(Some(&self.league), self.startup.config["realm"].as_str().unwrap_or("pc-ggg"))
+        self.leagues.selected(Some(&self.league), ShellConfig::read(&self.startup.config).realm())
     }
 
     fn unregister_hotkeys(&mut self) {
         for id in self.registered.drain(..) {
-            let _ = self.handle.unregister_shortcut(id);
+            drop(self.handle.unregister_shortcut(id));
         }
     }
 
@@ -923,15 +1100,9 @@ impl Live {
         self.startup.config = loaded.config;
         // `updateConfig` also carries the league: the next price check prices in it, and the
         // prices the shell kept warm are asked for again.
-        if let Some(league) = self
-            .startup
-            .config
-            .get("leagueId")
-            .and_then(|value| value.as_str())
-            .filter(|league| !league.is_empty() && *league != self.league)
-            .map(str::to_owned)
-        {
-            self.league = league.clone();
+        let view = ShellConfig::read(&self.startup.config);
+        if let Some(league) = view.league().filter(|league| *league != self.league).map(str::to_owned) {
+            self.league = league;
             let market = self.market();
             if let Some(prices) = &mut self.prices {
                 prices.queue_selected(market.as_ref(), true);
@@ -950,9 +1121,11 @@ impl Live {
             self.watcher = None;
             self.watched_title = None;
             if let Some(change) = self.window.feed(window::GameWindowEvents::Detach) {
-                let mut panel = OverlayPanel::new(self.panel.clone());
+                let mut panel = OverlayPanel::new(Arc::clone(&self.panel));
                 self.overlay.on_window_event(&change, &self.window, &mut panel);
             }
+            // The hook is Windows-only, so a renamed window is a no-op elsewhere.
+            #[cfg(target_os = "windows")]
             self.start_game_window();
         }
         if let Some(tray) = &mut self.tray
@@ -979,11 +1152,11 @@ impl Live {
             return;
         }
         let widgets: Vec<serde_json::Value> = overlay.widgets.iter().map(|widget| widget.config.clone()).collect();
-        let Some(object) = self.startup.config.as_object_mut() else {
+        let Value::Object(object) = &mut self.startup.config else {
             // Still dirty, so the next poll asks again rather than losing the move.
             return overlay.mark_config_dirty();
         };
-        object.insert("widgets".to_owned(), serde_json::Value::Array(widgets));
+        object.insert("widgets".to_owned(), Value::Array(widgets));
         let contents = match serde_json::to_string(&self.startup.config) {
             Ok(contents) => contents,
             Err(error) => {
@@ -1000,7 +1173,7 @@ impl Live {
 
     /// Whether the hotkeys may be registered now: without a window hook they are system-wide
     /// (the earlier behaviour), with one they exist only while the game has the focus.
-    fn hotkeys_follow_game(&self) -> bool {
+    const fn hotkeys_follow_game(&self) -> bool {
         self.watcher.is_none() || self.window.is_active()
     }
 
@@ -1036,9 +1209,9 @@ impl Live {
         }
 
         let show_mods = show_mods_key(self.game, &self.startup.config);
-        let mut overlay_handle = OverlayPanel::new(self.panel.clone());
+        let mut overlay_handle = OverlayPanel::new(Arc::clone(&self.panel));
         let events = {
-            let Live { shortcuts, clipboard, keys, window, overlay, .. } = self;
+            let Self { shortcuts, clipboard, keys, window, overlay, .. } = self;
             shortcuts.press(
                 entry,
                 PressContext {
@@ -1077,7 +1250,7 @@ impl Live {
             Action::ToggleOverlay => None,
             _ => Some(Placement::Cursor(cursor)),
         };
-        self.activate_on_show = self.game_bounds().is_none();
+        self.window_state.activate_on_show = self.game_bounds().is_none();
         // `PriceCheckWindow.vue`: the renderer reports the card's area for the normal hotkey
         // (`focusOverlay: false`); the locked one focuses the overlay instead.
         if let Action::CopyItem { target, focus_overlay } = &entry.action
@@ -1133,8 +1306,8 @@ impl Live {
     fn stash_search(&mut self, text: &str) {
         let show_mods = show_mods_key(self.game, &self.startup.config);
         let cursor = cursor_point();
-        let mut overlay_handle = OverlayPanel::new(self.panel.clone());
-        let Live { shortcuts, clipboard, keys, window, overlay, .. } = self;
+        let mut overlay_handle = OverlayPanel::new(Arc::clone(&self.panel));
+        let Self { shortcuts, clipboard, keys, window, overlay, .. } = self;
         shortcuts.user_stash_search(
             text,
             PressContext {
@@ -1162,7 +1335,7 @@ impl Live {
             return false;
         }
         let Some(input) = keys::overlay_input(event) else { return false };
-        let mut panel = OverlayPanel::new(self.panel.clone());
+        let mut panel = OverlayPanel::new(Arc::clone(&self.panel));
         let handled = self.overlay.on_overlay_input(&input, &mut self.window, &mut panel);
         if handled {
             self.sync_registration();
@@ -1188,12 +1361,15 @@ impl Live {
         let shown = app.shown_in(active);
         let opened = shown != self.shown;
         let over_game = self.game_bounds();
-        let cards = over_game.map(|bounds| self.cards(app, bounds));
+        let screen = over_game.map(|bounds| self.screen(bounds));
+        let cards = screen.map(|screen| self.cards(app, screen));
         // `Widget.vue` positions and drags a card in percentages of the overlay: over the game
         // that is its client area in points (the window is placed over it), without one the
         // widget's own window.
-        let overlay_size = over_game
-            .map(|bounds| ((bounds.width / self.panel.scale()) as f32, (bounds.height / self.panel.scale()) as f32))
+        let overlay_size = screen
+            .map(|screen| {
+                (f64_to_f32(screen.bounds.width / screen.scale), f64_to_f32(screen.bounds.height / screen.scale))
+            })
             .or_else(|| window_size(self.game, &shown));
         if let Some(size) = overlay_size
             && let Some(overlay) = &mut app.widgets
@@ -1223,12 +1399,15 @@ impl Live {
         // `electron-overlay-window`'s `blur` handler: hide the overlay when neither the game
         // nor the overlay window itself is in front. (`focusNext`: a focus we asked for is not
         // a blur yet.)
-        let in_front = self.window.is_active() || self.overlay_focused || self.panel.expects_focus();
-        if hides_window(&shown, self.watcher.is_some(), in_front) {
+        let visibility = Visibility {
+            following_game: self.watcher.is_some(),
+            in_front: self.window.is_active() || self.window_state.focused || self.panel.expects_focus(),
+        };
+        if hides_window(&shown, visibility) {
             if shown == Shown::None {
                 // Nothing to draw: the next hotkey places its widget afresh.
                 self.placement = None;
-                self.activate_on_show = false;
+                self.window_state.activate_on_show = false;
             } else if self.handle.is_visible() {
                 wraex_platform::log!("wraex: hiding the overlay: neither the game nor the overlay is in front");
             }
@@ -1244,13 +1423,15 @@ impl Live {
 
         let Some(bounds) = over_game else {
             // No game window to be over: the widget's own window, at the cursor.
-            self.activate_on_show = false;
+            self.window_state.activate_on_show = false;
             self.placed = None;
             self.stop_tracking();
             if !self.handle.is_visible() {
                 if let Some(Placement::Cursor(point)) = self.placement {
-                    self.handle
-                        .set_position((point.x.round() as i32 + CURSOR_OFFSET, point.y.round() as i32 + CURSOR_OFFSET));
+                    self.handle.set_position((
+                        f64_to_i32(point.x.round()).saturating_add(CURSOR_OFFSET),
+                        f64_to_i32(point.y.round()).saturating_add(CURSOR_OFFSET),
+                    ));
                 }
                 self.placement = None;
                 self.handle.open();
@@ -1260,12 +1441,18 @@ impl Live {
             // to take the mouse and the keyboard (the overlay window is click-through by
             // default, `window_options`).
             if shown == Shown::Settings && opened {
-                let mut panel = OverlayPanel::new(self.panel.clone());
+                let mut panel = OverlayPanel::new(Arc::clone(&self.panel));
                 self.overlay.assert_overlay_active(&mut self.window, &mut panel);
             }
             return;
         };
 
+        self.place_over_game(&shown, opened, bounds, price_check);
+    }
+
+    /// The window over the game: show it inactive, place it over the game's client area, take the
+    /// mouse when the press asked for it, and follow the price check's card.
+    fn place_over_game(&mut self, shown: &Shown, opened: bool, bounds: Bounds, price_check: Option<&Card>) {
         if self.placed != Some(bounds) || !self.handle.is_visible() {
             if !self.handle.is_visible() {
                 // `showInactive()`: create/show the overlay without taking the focus or the
@@ -1284,8 +1471,8 @@ impl Live {
         // The settings window always takes the mouse and the keyboard; a widget does when the
         // cursor is already on it, which is the tray and the no-game paths. A hotkey-opened
         // widget over the game stays click-through until `WidgetAreaTracker` sees the mouse.
-        if (shown == Shown::Settings && opened) || std::mem::take(&mut self.activate_on_show) {
-            let mut panel = OverlayPanel::new(self.panel.clone());
+        if (*shown == Shown::Settings && opened) || std::mem::take(&mut self.window_state.activate_on_show) {
+            let mut panel = OverlayPanel::new(Arc::clone(&self.panel));
             self.overlay.assert_overlay_active(&mut self.window, &mut panel);
             self.sync_registration();
         }
@@ -1298,14 +1485,8 @@ impl Live {
             && !self.overlay.is_interactable()
             && let Some(size) = card.size()
         {
-            let area = track_area(
-                card.offset,
-                size,
-                bounds,
-                self.panel.scale(),
-                cursor,
-                price_check_hold_key(&self.startup.config),
-            );
+            let area =
+                track_area(card.offset, size, self.screen(bounds), cursor, price_check_hold_key(&self.startup.config));
             self.overlay.on_track_area(area);
             if let Some(watcher) = &self.watcher {
                 watcher.set_mouse_moves(true);
@@ -1317,7 +1498,7 @@ impl Live {
         // through the OS hook), so the two are reconciled here.
         let wanted = !self.overlay.is_interactable();
         if self.panel.click_through() != Some(wanted) {
-            OverlayPanel::new(self.panel.clone()).set_click_through(wanted);
+            OverlayPanel::new(Arc::clone(&self.panel)).set_click_through(wanted);
         }
     }
 
@@ -1335,8 +1516,13 @@ impl Live {
 
     /// The cards the overlay draws over the game, in paint order: [`crate::view`] paints them,
     /// and [`Live::sync_window`] reads the price check's card for the tracker.
-    pub(crate) fn cards(&self, app: &App, bounds: Bounds) -> Vec<Card> {
-        app.cards_for(self.overlay.is_interactable(), bounds, self.panel.scale(), self.placement)
+    fn cards(&self, app: &App, screen: Screen) -> Vec<Card> {
+        app.cards_for(self.overlay.is_interactable(), screen, self.placement)
+    }
+
+    /// The screen geometry of the game's client area: its bounds and the overlay's DPI scale.
+    fn screen(&self, bounds: Bounds) -> Screen {
+        Screen { bounds, scale: self.panel.scale() }
     }
 
     /// The game's client area while the OS layer follows the window, in physical pixels.
@@ -1354,7 +1540,7 @@ impl Live {
         // A hidden overlay is click-through again, so the frame after the next show cannot
         // swallow a click before `sync_window` reconciles it.
         if self.panel.click_through() != Some(true) {
-            OverlayPanel::new(self.panel.clone()).set_click_through(true);
+            OverlayPanel::new(Arc::clone(&self.panel)).set_click_through(true);
         }
         self.panel.visible.store(false, Ordering::Relaxed);
     }
@@ -1380,7 +1566,7 @@ impl Live {
                 OverlayContext {
                     overlay: &mut self.overlay,
                     window: &mut self.window,
-                    handle: &mut OverlayPanel::new(self.panel.clone()),
+                    handle: &mut OverlayPanel::new(Arc::clone(&self.panel)),
                 },
             ) {
                 self.deliver(app, dispatch::shortcut_requests(vec![event]));
@@ -1440,12 +1626,12 @@ impl Live {
         // the next hotkey press uses what the file now says, and the settings widget goes back
         // to `hide` so the menu lists it again (`WidgetSettings.vue`'s close).
         let settings_open = app.settings.as_ref().is_some_and(|settings| settings.open);
-        if self.settings_was_open && !settings_open {
+        if self.settings_state.was_open && !settings_open {
             app.hide_settings_widget();
             self.reload_config();
             changed = true;
         }
-        self.settings_was_open = settings_open;
+        self.settings_state.was_open = settings_open;
 
         self.drain_overlay_events(app);
         self.sync_window(app, tx);
@@ -1501,7 +1687,7 @@ impl App {
     pub fn overlay_cards(&self) -> Option<Vec<Card>> {
         let live = self.shell()?;
         let bounds = live.game_bounds()?;
-        Some(live.cards(self, bounds))
+        Some(live.cards(self, live.screen(bounds)))
     }
 
     /// `OverlayVisibility`: a lone Alt has the widgets peeked away. What the app draws is then
@@ -1518,14 +1704,26 @@ impl App {
 
     /// What the window draws, in [`crate::view`]'s order.
     pub fn shown(&self) -> Shown {
-        self.shown_state(self.overlay_active(), self.shell().is_none())
+        self.shown_state(self.overlay_mode())
+    }
+
+    /// The overlay state [`App::shown`] reads: a headless scene counts as an active overlay, and
+    /// a live app takes its answer from the overlay's own state.
+    fn overlay_mode(&self) -> OverlayMode {
+        if self.shell().is_none() {
+            OverlayMode::Scene
+        } else if self.overlay_active() {
+            OverlayMode::Active
+        } else {
+            OverlayMode::Inactive
+        }
     }
 
     /// [`App::shown`] for a live app, with the overlay's own state given: a test has no Rune
     /// window to flip `OverlayWindow.vue`'s `active`. [`App::shown`] also passes the scene case,
     /// where the app's one widget stands in for an active overlay.
     pub(crate) fn shown_in(&self, overlay_active: bool) -> Shown {
-        self.shown_state(overlay_active, false)
+        self.shown_state(if overlay_active { OverlayMode::Active } else { OverlayMode::Inactive })
     }
 
     /// The window this app draws: the exclusive widget that wins, else the widget the window was
@@ -1533,11 +1731,10 @@ impl App {
     /// overlay over the game draws *every* card ([`App::overlay_cards`]); this is the one the
     /// native window is sized for, and the change the debug log reports.
     ///
-    /// `overlay_active` is `OverlayWindow.vue`'s `active` (the overlay takes the mouse and
-    /// keyboard); `scene` is the port's headless app, whose one widget stands in for what an
-    /// active overlay draws.
-    fn shown_state(&self, overlay_active: bool, scene: bool) -> Shown {
-        let active = overlay_active || scene;
+    /// `mode` is `OverlayWindow.vue`'s `active` (the overlay takes the mouse and keyboard), or
+    /// the port's headless scene, whose one widget stands in for what an active overlay draws.
+    fn shown_state(&self, mode: OverlayMode) -> Shown {
+        let active = mode.active();
         if let Some(shown) = self.exclusive_check() {
             return shown;
         }
@@ -1553,10 +1750,7 @@ impl App {
         // `WidgetMenu.vue`'s instance is `wmWants: 'show'` and always exists, and
         // `visibilityState` draws every `show` widget while the overlay is active: activating
         // the overlay with the overlay key therefore shows at least the menu.
-        match self.visible_widgets(active).first() {
-            Some(widget) => Shown::Widget(widget.wm_type.clone()),
-            None => Shown::None,
-        }
+        self.visible_widgets(active).first().map_or(Shown::None, |widget| Shown::Widget(widget.wm_type.clone()))
     }
 
     /// The app's exclusive windows, in `visibilityState`'s order: the settings window, then the
@@ -1571,22 +1765,19 @@ impl App {
         {
             return Some(Shown::ItemCheck);
         }
-        match self.game {
-            GameId::Poe2 => {
-                if self.poe2.as_ref().is_some_and(|check| check.open) {
-                    return Some(Shown::Poe2);
-                }
-                if self.price_check.open {
-                    return Some(Shown::PriceCheck);
-                }
+        if self.game == GameId::Poe2 {
+            if self.poe2.as_ref().is_some_and(|check| check.open) {
+                return Some(Shown::Poe2);
             }
-            _ => {
-                if self.price_check.open {
-                    return Some(Shown::PriceCheck);
-                }
-                if self.poe2.as_ref().is_some_and(|check| check.open) {
-                    return Some(Shown::Poe2);
-                }
+            if self.price_check.open {
+                return Some(Shown::PriceCheck);
+            }
+        } else {
+            if self.price_check.open {
+                return Some(Shown::PriceCheck);
+            }
+            if self.poe2.as_ref().is_some_and(|check| check.open) {
+                return Some(Shown::Poe2);
             }
         }
         None
@@ -1615,7 +1806,7 @@ impl App {
     /// anchor, in `wmZorder`'s order (`auto`, i.e. no number, first in the config's order, then
     /// the numbered ones as CSS paints their `z-index`). The price check, the item check and the
     /// settings fill or sit where their press put them, not at an anchor.
-    fn cards_for(&self, overlay_active: bool, bounds: Bounds, scale: f64, placement: Option<Placement>) -> Vec<Card> {
+    fn cards_for(&self, overlay_active: bool, screen: Screen, placement: Option<Placement>) -> Vec<Card> {
         // The settings window's root is `position: absolute; inset: 0` (its `.window` is the
         // 50 × 38 rem box inside it), so as a widget it covers the whole overlay.
         if let Some(shown @ Shown::Settings) = self.exclusive_check() {
@@ -1623,40 +1814,40 @@ impl App {
                 shown,
                 wm_id: None,
                 offset: (0.0, 0.0),
-                width: Some((bounds.width / scale) as f32),
-                height: Some((bounds.height / scale) as f32),
+                width: Some(f64_to_f32(screen.bounds.width / screen.scale)),
+                height: Some(f64_to_f32(screen.bounds.height / screen.scale)),
             }];
         }
         // The checks are hotkey widgets: at the cursor that pressed the hotkey (or centred for
         // one the tray opened), sized like the widget's own window.
         if let Some(shown) = self.exclusive_check() {
-            let Some(size) = overlay_widget_size(self.game, &shown, bounds, scale) else { return Vec::new() };
+            let Some(size) = overlay_widget_size(self.game, &shown, screen) else { return Vec::new() };
             return vec![Card {
                 shown,
                 wm_id: None,
-                offset: widget_offset(placement, size, bounds, scale),
+                offset: widget_offset(placement, size, screen),
                 width: Some(size.0),
                 height: Some(size.1),
             }];
         }
         if let Some(widget) = self.exclusive_widget(overlay_active) {
-            return self.widget_card(widget, bounds, scale).into_iter().collect();
+            return self.widget_card(widget, screen).into_iter().collect();
         }
         let mut visible = self.visible_widgets(overlay_active);
         visible.sort_by(|a, b| a.zorder().unwrap_or(0.0).total_cmp(&b.zorder().unwrap_or(0.0)));
-        visible.into_iter().filter_map(|widget| self.widget_card(widget, bounds, scale)).collect()
+        visible.into_iter().filter_map(|widget| self.widget_card(widget, screen)).collect()
     }
 
     /// One `Widget.vue` card: `anchor`'s percentage of the game, shifted by the `translate` its
     /// `pos` picks. The card is content-sized, so its size is only an estimate for the anchor
     /// (the reference's own, from [`widgets::scene_size`]).
-    fn widget_card(&self, widget: &widgets::Widget, bounds: Bounds, scale: f64) -> Option<Card> {
+    fn widget_card(&self, widget: &widgets::Widget, screen: Screen) -> Option<Card> {
         let kind = widgets::Kind::from_wm_type(&widget.wm_type)?;
         let size = widgets::scene_size(self.game, kind);
         Some(Card {
             shown: Shown::Widget(widget.wm_type.clone()),
             wm_id: Some(widget.wm_id),
-            offset: anchored_offset(&widget.anchor_pos(), widget.anchor(), size, bounds, scale),
+            offset: anchored_offset(&widget.anchor_pos(), widget.anchor(), size, screen),
             width: None,
             height: None,
         })
@@ -1683,7 +1874,7 @@ impl App {
         // key's off state do. Without it the overlay would still be active and the shell would
         // draw the widget menu again in the next frame instead of hiding.
         if let Some(live) = self.shell_mut() {
-            let mut panel = OverlayPanel::new(live.panel.clone());
+            let mut panel = OverlayPanel::new(Arc::clone(&live.panel));
             live.overlay.assert_game_active(&mut live.window, &mut panel);
             live.sync_registration();
         }
@@ -1731,7 +1922,7 @@ impl App {
 
     /// `MAIN->OVERLAY::hide-exclusive-widget`: the cursor moved away from the price check's
     /// card, so the window hides itself (`PriceCheckWindow.vue` is the only listener).
-    pub fn close_exclusive_widget(&mut self) {
+    pub const fn close_exclusive_widget(&mut self) {
         self.price_check.open = false;
         if let Some(check) = &mut self.poe2 {
             check.open = false;
@@ -1748,7 +1939,7 @@ impl App {
     /// drawing it — which [`App::shown_in`] re-checks, so the menu goes with the overlay and
     /// comes back the next time it is activated.
     pub fn hide_widgets_on_blur(&mut self) {
-        let settings_armed = self.shell().is_none_or(|live| live.settings_armed);
+        let settings_armed = self.shell().is_none_or(|live| live.settings_state.armed);
         self.hide_widgets_on_blur_in(settings_armed);
     }
 
@@ -1814,10 +2005,10 @@ impl App {
     /// and it settles a focus the overlay asked for (`focusNext`).
     pub fn on_focus(&mut self, focused: bool, _tx: &mut Tx) {
         if let Some(live) = self.shell_mut() {
-            live.overlay_focused = focused;
+            live.window_state.focused = focused;
             live.panel.focus_settled();
-            // The settings window's blur rule waits for this: see `Live::settings_armed`.
-            live.settings_armed |= focused;
+            // The settings window's blur rule waits for this: see `SettingsState::armed`.
+            live.settings_state.armed |= focused;
         }
     }
 
@@ -1833,21 +2024,21 @@ impl App {
     ///
     /// Settings is `wmZorder: 'exclusive'` with `invisible-on-blur` upstream, so opening it
     /// hides whatever exclusive widget was showing (the price check, the item check), and the
-    /// window takes the overlay's focus (`activate_on_show`). A focus change to the game is
-    /// therefore what closes it: the tray click itself only asked for it.
+    /// window takes the overlay's focus (`WindowState::activate_on_show`). A focus change to the
+    /// game is therefore what closes it: the tray click itself only asked for it.
     fn open_settings(&mut self, live: &mut Live) {
         let mut settings = self.open_settings_window(live.game);
         settings.update = live.update.clone();
         if let Some(waker) = &self.waker {
-            settings.set_waker(waker.clone());
+            settings.set_waker(Arc::clone(waker));
         }
         self.settings = Some(settings);
-        live.settings_was_open = true;
+        live.settings_state.was_open = true;
         // The overlay window being on screen and focused means the settings opens in an active
         // overlay (the menu's cog); otherwise the focus it asks for arms this when it lands.
-        live.settings_armed = live.panel.visible() && live.overlay_focused;
+        live.settings_state.armed = live.panel.visible() && live.window_state.focused;
         live.placement = Some(Placement::Centred);
-        live.activate_on_show = true;
+        live.window_state.activate_on_show = true;
     }
 
     /// [`App::open_settings`]'s app half: the exclusive checks close, and the window opens on a
@@ -1871,7 +2062,7 @@ impl App {
         if !live.overlay.is_interactable() || !overlay_background_close(&live.startup.config) {
             return;
         }
-        let mut panel = OverlayPanel::new(live.panel.clone());
+        let mut panel = OverlayPanel::new(Arc::clone(&live.panel));
         live.overlay.assert_game_active(&mut live.window, &mut panel);
         live.sync_registration();
     }
@@ -1879,14 +2070,23 @@ impl App {
     /// `MAIN->CLIENT::item-text` for `price-check`: the window for the copied item, in the
     /// league the trade site lists.
     fn open_price_check(&mut self, live: &mut Live, text: &str) {
-        let warm = live.prices.take();
-        let overviews = live.poe2_prices.take();
-        let league = live.league.clone();
         // `self.mode`, not `Mode::Live`: a test's shell opens the window on the recordings.
-        self.open_price_check_for(live.game, &league, self.mode, text, warm, overviews);
+        self.open_price_check_for(PriceCheckRequest {
+            game: live.game,
+            league: &live.league,
+            mode: self.mode,
+            text,
+            warm: live.prices.take(),
+            overviews: live.poe2_prices.take(),
+        });
         match live.game {
-            GameId::Poe2 => self.poe2.as_mut().unwrap().market = live.market(),
-            _ => self.price_check.prices.queue_selected(live.market().as_ref(), false),
+            GameId::Poe2 => {
+                // `open_price_check_for` just built the PoE2 window.
+                if let Some(check) = self.poe2.as_mut() {
+                    check.market = live.market();
+                }
+            }
+            GameId::Poe1 => self.price_check.prices.queue_selected(live.market().as_ref(), false),
         }
         self.settings = None;
         // The press recorded where the cursor was; that is where the widget goes.
@@ -1894,19 +2094,9 @@ impl App {
 
     /// [`App::open_price_check`] without the shell: the window itself, which a test drives
     /// with the recorded answers (`MAIN->CLIENT::item-text`'s whole effect).
-    ///
-    /// `warm` is the prices the app fetched at startup (`usePoeninja` is shared by every
-    /// window upstream), and `overviews` EE2's; either is used in place of a fresh request.
-    pub fn open_price_check_for(
-        &mut self,
-        game: GameId,
-        league: &str,
-        mode: Mode,
-        text: &str,
-        warm: Option<crate::poe1::price_check::prices::PriceList>,
-        overviews: Option<Vec<(&'static str, String)>>,
-    ) {
-        let waker = self.waker.clone();
+    pub fn open_price_check_for(&mut self, request: PriceCheckRequest<'_>) {
+        let waker = self.waker.as_ref().map(Arc::clone);
+        let PriceCheckRequest { game, league, mode, text, warm, overviews } = request;
         match game {
             GameId::Poe2 => {
                 let mut check =
@@ -1915,28 +2105,28 @@ impl App {
                     check.apply_price_overviews(&overviews);
                 }
                 if let Some(waker) = &waker {
-                    check.set_waker(waker.clone());
+                    check.set_waker(Arc::clone(waker));
                 }
                 self.game = GameId::Poe2;
                 self.poe2 = Some(check);
             }
-            _ => {
+            GameId::Poe1 => {
                 let mut check = crate::poe1::price_check::PriceCheck::with_client(
                     text,
                     mode,
                     league,
-                    self.price_check.trade.client.clone(),
+                    Arc::clone(&self.price_check.trade.client),
                 );
                 if let Some(mut warm) = warm {
                     // The startup fetch is the app's prices; the window's own request goes
                     // with the empty list it replaces.
                     std::mem::swap(&mut check.prices, &mut warm);
                     if let Some(waker) = &waker {
-                        check.prices.set_waker(waker.clone());
+                        check.prices.set_waker(Arc::clone(waker));
                     }
                 }
                 if let Some(waker) = &waker {
-                    check.set_waker(waker.clone());
+                    check.set_waker(Arc::clone(waker));
                 }
                 self.game = GameId::Poe1;
                 self.price_check = check;
@@ -1947,7 +2137,13 @@ impl App {
     /// `MAIN->CLIENT::item-text` for `item-check`, and its own hotkeys, which press the
     /// button whose page they open.
     fn open_item_check(&mut self, live: &mut Live, text: &str, action: Option<ItemAction>) {
-        self.open_item_check_for(live.game, &live.startup.config, self.mode, text, action);
+        self.open_item_check_for(&ItemCheckRequest {
+            game: live.game,
+            config: &live.startup.config,
+            mode: self.mode,
+            text,
+            action,
+        });
         if self.item_check.as_ref().is_some_and(|check| check.open)
             || self.item_check_poe2.as_ref().is_some_and(|check| check.open)
         {
@@ -1963,7 +2159,7 @@ impl App {
                 .as_mut()
                 .map(|check| check.take_actions().iter().map(dispatch::poe2_item_request).collect())
                 .unwrap_or_default(),
-            _ => self
+            GameId::Poe1 => self
                 .item_check
                 .as_mut()
                 .map(|check| check.take_actions().iter().map(dispatch::poe1_item_request).collect())
@@ -1975,14 +2171,8 @@ impl App {
     /// [`App::open_item_check`] without the shell, for a test: the widget on `text`, with the
     /// requested hotkey action recorded in its `actions` (`WidgetItemCheck.vue`'s
     /// `hotkeyable-actions`).
-    pub fn open_item_check_for(
-        &mut self,
-        game: GameId,
-        config: &serde_json::Value,
-        mode: Mode,
-        text: &str,
-        action: Option<ItemAction>,
-    ) {
+    pub fn open_item_check_for(&mut self, request: &ItemCheckRequest<'_>) {
+        let ItemCheckRequest { game, config, mode, text, action } = *request;
         match game {
             GameId::Poe2 => {
                 let mut check = crate::poe2::item_check::ItemCheck::from_config(text, config, mode);
@@ -1998,7 +2188,7 @@ impl App {
                     self.item_check_poe2 = Some(check);
                 }
             }
-            _ => {
+            GameId::Poe1 => {
                 let mut check = crate::poe1::item_check::ItemCheck::from_config(text, config);
                 match action {
                     Some(ItemAction::Wiki) => check.open_wiki(),
@@ -2018,7 +2208,7 @@ impl App {
     /// `MAIN->CLIENT::widget-action`: a widget's hotkey (the delve grid's toggle, a timer's
     /// play/pause).
     fn widget_action(&mut self, live: &mut Live, target: &str) {
-        let now = crate::trade::now(Mode::Live) as f64;
+        let now = u64_to_f64(crate::trade::now(Mode::Live));
         let config = live.startup.config.clone();
         let overlay = self.widgets.get_or_insert_with(|| widgets::Overlay::live(live.game, &config));
         // A timer's own state has to exist before its toggle (the target names its `wmId`).
@@ -2042,7 +2232,7 @@ impl App {
         }
         // Without a game window the widget *is* the window: it takes the mouse and keyboard.
         let standalone = live.game_bounds().is_none();
-        live.activate_on_show = standalone;
+        live.window_state.activate_on_show = standalone;
     }
 
     /// `wm.show(wmId)` from the widget menu: the config already says `show`, so the shell
@@ -2066,7 +2256,7 @@ impl App {
         // Without a game window the widget *is* the window, and has to take the mouse and
         // keyboard; over the game it is a card in the overlay the menu click already activated.
         let standalone = live.game_bounds().is_none();
-        live.activate_on_show = standalone;
+        live.window_state.activate_on_show = standalone;
     }
 
     /// The update worker's answer: the shell's copy for the next settings window, and the About
@@ -2110,14 +2300,14 @@ impl App {
             }
             if let Some(league) = league.filter(|league| *league != live.league) {
                 live.warn(format!("price checks now use the league \"{league}\""));
-                live.league = league.clone();
+                live.league.clone_from(&league);
             }
             live.leagues = leagues;
             let market = live.market();
             if let Some(prices) = &mut live.prices {
                 prices.queue_selected(market.as_ref(), false);
             }
-            live.poe2_prices = overviews.clone();
+            live.poe2_prices.clone_from(&overviews);
         }
         if let Some(overviews) = overviews {
             // A window that is already open takes them now; otherwise the next one does.
@@ -2130,29 +2320,32 @@ impl App {
 
 /// `HostConfig` from the game's config, or a fresh install's defaults when the config cannot
 /// be translated (upstream quits in that case; a widget app should still start).
-fn host_config(game: GameId, config: &serde_json::Value) -> HostConfig {
+fn host_config(game: GameId, config: &Value) -> HostConfig {
     let translated = match game {
         GameId::Poe2 => wraex_poe2::config::host_config(config),
-        _ => wraex_poe1::config::host_config(config),
+        GameId::Poe1 => wraex_poe1::config::host_config(config),
     };
-    translated.ok().and_then(|value| serde_json::from_value(value).ok()).unwrap_or_else(|| {
-        serde_json::from_value(json!({
-            "shortcuts": [],
-            "restoreClipboard": true,
-            "stashScroll": true,
-            "logKeys": false,
-            "overlayKey": "Shift + Space",
-            "windowTitle": "",
-            "language": "en"
-        }))
-        .expect("the fallback host config")
-    })
+    translated.ok().and_then(|value| serde_json::from_value(value).ok()).unwrap_or_else(fallback_host_config)
+}
+
+/// A fresh install's `HostConfig` (`defaultConfig()`'s host half).
+fn fallback_host_config() -> HostConfig {
+    HostConfig {
+        shortcuts: Vec::new(),
+        options: ShortcutOptions { restore_clipboard: true, stash_scroll: true, log_keys: false },
+        overlay_key: "Shift + Space".to_owned(),
+        window_title: String::new(),
+        language: "en".to_owned(),
+        initial_delay: None,
+        hide_overlay_on_blur: false,
+    }
 }
 
 /// `GameConfig.showModsKey`: the game's "show advanced item descriptions" key from its own
 /// INI, or `Alt` when the file is not where the port looks (upstream's default).
-pub fn show_mods_key(game: GameId, config: &serde_json::Value) -> String {
-    let configured = config.get("gameConfig").and_then(|value| value.as_str()).unwrap_or_default();
+pub fn show_mods_key(game: GameId, config: &Value) -> String {
+    let view = ShellConfig::read(config);
+    let configured = view.game_config();
     let path = if configured.is_empty() {
         user_dirs().and_then(|dirs| {
             let paths = game_files::config_paths(game, current_os(), &dirs);
@@ -2165,10 +2358,10 @@ pub fn show_mods_key(game: GameId, config: &serde_json::Value) -> String {
 }
 
 /// The league a fresh install prices in, per game.
-pub fn default_league(game: GameId) -> &'static str {
+pub const fn default_league(game: GameId) -> &'static str {
     match game {
         GameId::Poe2 => crate::poe2::price_check::DEFAULT_LEAGUE,
-        _ => crate::poe1::price_check::DEFAULT_LEAGUE,
+        GameId::Poe1 => crate::poe1::price_check::DEFAULT_LEAGUE,
     }
 }
 
@@ -2227,12 +2420,13 @@ pub fn current_os() -> Os {
 /// The cursor's position in physical desktop pixels, or upstream's `(0, 0)` when the platform
 /// cannot say.
 fn cursor_point() -> Point {
-    keys::cursor_position().map(|(x, y)| Point { x, y }).unwrap_or(Point { x: 0.0, y: 0.0 })
+    keys::cursor_position().map_or(Point { x: 0.0, y: 0.0 }, |(x, y)| Point { x, y })
 }
 
-/// The overlay's own native window and the game window it sits over. Created in [`run`]
-/// before the app, because Rune hands the window over when it creates it (`on_window`), and
-/// shared with every [`OverlayPanel`], which lives as long as one press.
+/// The overlay's own native window and the game window it sits over.
+///
+/// It is created in [`run`] before the app, because Rune hands the window over when it creates
+/// it (`on_window`), and shared with every [`OverlayPanel`], which lives as long as one press.
 #[derive(Default)]
 pub struct Panel {
     /// The Rune window, once it exists.
@@ -2344,7 +2538,7 @@ struct OverlayPanel {
 }
 
 impl OverlayPanel {
-    fn new(panel: Arc<Panel>) -> Self {
+    const fn new(panel: Arc<Panel>) -> Self {
         Self { panel }
     }
 }
@@ -2421,13 +2615,9 @@ pub fn game_from_args(args: &[String]) -> GameId {
 pub fn run(game: GameId) {
     let startup = config::startup(game);
     wraex_platform::log!("wraex: {:?}, config {} ({:?})", game, startup.store.path().display(), startup.source);
-    let realm = startup.config["realm"].as_str().unwrap_or("pc-ggg").to_owned();
-    let configured_league = startup
-        .config
-        .get("leagueId")
-        .and_then(|value| value.as_str())
-        .filter(|league| !league.is_empty())
-        .map(str::to_owned);
+    let shell_config = ShellConfig::read(&startup.config);
+    let realm = shell_config.realm().to_owned();
+    let configured_league = shell_config.league().map(str::to_owned);
 
     let size = (crate::poe1::price_check::WIDTH, HEIGHT);
     let spec = AppSpec::<App> {
@@ -2441,14 +2631,14 @@ pub fn run(game: GameId) {
         scenes: &[],
         fonts: crate::theme::FONTS,
         families: crate::theme::FAMILIES,
-        setup: Some(|app, waker| app.set_waker(waker)),
-        poll: Some(|app, clock, tx| app.poll_with(clock, tx)),
+        setup: Some(App::set_waker),
+        poll: Some(App::poll_with),
         on_key: Some(App::on_key),
     };
     // The overlay's window, and the game's, are handed to `Live` as one shared value: Rune
     // passes the window over when it creates it, before `Live` exists.
     let panel = Arc::new(Panel::default());
-    let window_panel = panel.clone();
+    let window_panel = Arc::clone(&panel);
     let mut app = rune::App::new(spec)
         // Nothing shows until a hotkey or the tray opens a widget; the app lives in the tray.
         .windowless()
@@ -2480,7 +2670,7 @@ pub fn run(game: GameId) {
     });
 
     spawn_startup_work(handle.clone(), game, configured_league, realm);
-    spawn_update_check(handle.clone());
+    spawn_update_check(&handle);
     app.run();
 }
 
@@ -2504,35 +2694,36 @@ fn window_options() -> rune::WindowOptions {
 /// [`Live::poll`]'s startup work on a worker: the trade site's leagues, the game data EE2's
 /// parser needs, and poe.ninja's prices.
 fn spawn_startup_work(handle: AppHandle<App>, game: GameId, configured: Option<String>, realm: String) {
-    std::thread::Builder::new()
-        .name("wraex-startup".to_owned())
-        .spawn(move || {
-            let transport = crate::trade::live_transport();
-            let source = match game {
-                GameId::Poe2 => LeagueSource::Poe2,
-                _ => LeagueSource::Poe1,
-            };
-            let mut leagues = Leagues::default();
-            let fallback = leagues.load(&transport, source, TRADE_HOST, configured.as_deref());
-            let league = fallback.or(configured).or_else(|| leagues.list.first().map(|league| league.id.clone()));
+    let started = std::thread::Builder::new().name("wraex-startup".to_owned()).spawn(move || {
+        let transport = crate::trade::live_transport();
+        let source = match game {
+            GameId::Poe2 => LeagueSource::Poe2,
+            GameId::Poe1 => LeagueSource::Poe1,
+        };
+        let mut leagues = Leagues::default();
+        let fallback = leagues.load(&transport, source, TRADE_HOST, configured.as_deref());
+        let league = fallback.or(configured).or_else(|| leagues.list.first().map(|league| league.id.clone()));
 
-            let mut overviews: Option<Vec<(&'static str, String)>> = None;
-            if game == GameId::Poe2 {
-                // `TradeData.ts`: the trade site's items and stats, which the parser and
-                // `createPresets` read. A failure leaves the empty sets, as upstream's does.
-                let _ = crate::poe2::price_check::data(Mode::Live);
-                if let Some(selected) = leagues.selected(league.as_deref(), &realm) {
-                    overviews = crate::poe2::price_check::prices::fetch(&selected).ok();
-                }
+        let mut overviews: Option<Vec<(&'static str, String)>> = None;
+        if game == GameId::Poe2 {
+            // `TradeData.ts`: the trade site's items and stats, which the parser and
+            // `createPresets` read. A failure leaves the empty sets, as upstream's does.
+            let _ = crate::poe2::price_check::data(Mode::Live);
+            if let Some(selected) = leagues.selected(league.as_deref(), &realm) {
+                overviews = crate::poe2::price_check::prices::fetch(&selected).ok();
             }
+        }
 
-            handle.update(move |app, _tx| app.apply_startup(leagues, league, overviews));
-        })
-        .expect("start the startup worker");
+        handle.update(move |app, _tx| app.apply_startup(leagues, league, overviews));
+    });
+    if let Err(error) = started {
+        // No leagues or prices until the next start: a failed thread is not worth failing over.
+        wraex_platform::log!("wraex: the startup worker could not start: {error}");
+    }
 }
 
 /// The update worker: one check at launch, then one per [`updates::CHECK_INTERVAL_MS`].
-fn spawn_update_check(handle: AppHandle<App>) {
+fn spawn_update_check(handle: &AppHandle<App>) {
     let notify = handle.clone();
     let worker = updates::Updates::spawn(
         move |info| {

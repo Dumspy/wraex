@@ -3,7 +3,7 @@
 
 use rune::{El, col, row, text};
 
-use crate::settings::hotkey::{self, Recording, hotkey_input, modifier_button};
+use crate::settings::hotkey::{self, HotkeyInput, Recording, hotkey_input, modifier_button};
 use crate::settings::pages::{page, tr};
 use crate::settings::{Field, Project, Settings};
 use crate::theme::{self, text as type_};
@@ -44,19 +44,23 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     let mut items = col().key("hotkeys-price-check-items").pl(theme::rem(1.0)).gap(theme::rem(0.5));
     items = items.child(split_row(
         settings,
-        "hotkeys-price-check",
-        "price_check.hotkey",
-        Field::Widget("price-check", "hotkeyHold"),
-        Field::Widget("price-check", "hotkey"),
-        false,
+        SplitRow {
+            key: "hotkeys-price-check",
+            label_key: "price_check.hotkey",
+            mod_field: Field::Widget("price-check", "hotkeyHold"),
+            key_field: Field::Widget("price-check", "hotkey"),
+            required: false,
+        },
         project,
     ));
     items = items.child(single_row(
         settings,
-        "hotkeys-price-check-locked",
-        &tr(settings, "price_check.hotkey_locked"),
-        Field::Widget("price-check", "hotkeyLocked"),
-        false,
+        SingleRow {
+            key: "hotkeys-price-check-locked",
+            label: &tr(settings, "price_check.hotkey_locked"),
+            field: Field::Widget("price-check", "hotkeyLocked"),
+            required: false,
+        },
         project,
     ));
     group = group.child(items);
@@ -71,7 +75,7 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
         ("hotkeys-item-check", item_check, Field::Widget("item-check", "hotkey"), false),
         ("hotkeys-delve-grid", tr(settings, "settings.delve_grid"), Field::Widget("delve-grid", "toggleKey"), false),
     ] {
-        list = list.child(single_row(settings, key, &label, field, required, project));
+        list = list.child(single_row(settings, SingleRow { key, label: &label, field, required }, project));
     }
     page = page.child(list);
 
@@ -94,17 +98,12 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
                 row()
                     .gap(theme::rem(1.0))
                     .child(ui::radio(
-                        "hotkeys-stash-scroll-wheel",
-                        "Ctrl + MouseWheel",
-                        stash_scroll,
-                        false,
+                        ui::RadioProps::new("hotkeys-stash-scroll-wheel", "Ctrl + MouseWheel").checked(stash_scroll),
                         move |s: &mut S| project(s).set_bool(Field::Root("stashScroll"), true),
                     ))
                     .child(ui::radio(
-                        "hotkeys-stash-scroll-disabled",
-                        &tr(settings, "Disabled"),
-                        !stash_scroll,
-                        false,
+                        ui::RadioProps::new("hotkeys-stash-scroll-disabled", &tr(settings, "Disabled"))
+                            .checked(!stash_scroll),
                         move |s: &mut S| project(s).set_bool(Field::Root("stashScroll"), false),
                     )),
             ),
@@ -113,15 +112,22 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     page
 }
 
+/// A [`single_row`]: `SettingsHotkey.vue`'s one hotkey row.
+#[derive(Debug, Clone, Copy)]
+pub struct SingleRow<'a> {
+    /// The row's element key; the input's is `{key}-input`.
+    pub key: &'a str,
+    /// The row's label.
+    pub label: &'a str,
+    /// The hotkey field (`schema.config`).
+    pub field: Field,
+    /// `schema.required`: Backspace can't clear it.
+    pub required: bool,
+}
+
 /// `SettingsHotkey.vue`'s `'value' in schema.config` branch: a label and one `HotkeyInput`.
-pub(super) fn single_row<S: 'static>(
-    settings: &Settings,
-    key: &str,
-    label: &str,
-    field: Field,
-    required: bool,
-    project: Project<S>,
-) -> El {
+pub(super) fn single_row<S: 'static>(settings: &Settings, props: SingleRow<'_>, project: Project<S>) -> El {
+    let SingleRow { key, label, field, required } = props;
     let value = settings.string(field);
     let value = (!value.is_empty()).then_some(value);
     let mut label_line = row()
@@ -135,25 +141,35 @@ pub(super) fn single_row<S: 'static>(
         label_line = label_line.child(text("*").key(format!("{key}-required")).font(type_::LG).color(theme::red(500)));
     }
     row().key(key.to_owned()).w_full().items_center().child(label_line).child(hotkey_input(
-        &format!("{key}-input"),
-        value.as_deref(),
-        hotkey::WIDE,
-        &hotkey::no_key(settings.game),
-        is_recording(settings, field),
+        HotkeyInput {
+            key: &format!("{key}-input"),
+            value: value.as_deref(),
+            width: hotkey::WIDE,
+            placeholder: &hotkey::no_key(settings.game),
+            recording: is_recording(settings, field),
+        },
         move |s: &mut S| start(project(s), Recording { field, required, no_mod_keys: false }),
     ))
 }
 
+/// A [`split_row`]: `SettingsHotkey.vue`'s `Ctrl`/`Alt` + key row.
+#[derive(Debug, Clone, Copy)]
+pub struct SplitRow<'a> {
+    /// The row's element key; the parts' keys are `{key}-ctrl`, `{key}-alt` and `{key}-input`.
+    pub key: &'a str,
+    /// The row's label's i18n key.
+    pub label_key: &'a str,
+    /// `schema.mod`: the held modifier (`hotkeyHold`).
+    pub mod_field: Field,
+    /// `schema.config`: the key without modifiers (`hotkey`).
+    pub key_field: Field,
+    /// `schema.required`: Backspace can't clear it.
+    pub required: bool,
+}
+
 /// `SettingsHotkey.vue`'s split branch: `Ctrl`/`Alt` buttons, `+`, then a `noModKeys` input.
-pub(super) fn split_row<S: 'static>(
-    settings: &Settings,
-    key: &str,
-    label_key: &str,
-    mod_field: Field,
-    key_field: Field,
-    required: bool,
-    project: Project<S>,
-) -> El {
+pub(super) fn split_row<S: 'static>(settings: &Settings, props: SplitRow<'_>, project: Project<S>) -> El {
+    let SplitRow { key, label_key, mod_field, key_field, required } = props;
     let mod_key = settings.string(mod_field);
     let mod_key = (!mod_key.is_empty()).then_some(mod_key);
     let non_mod = settings.string(key_field);
@@ -184,11 +200,13 @@ pub(super) fn split_row<S: 'static>(
         }))
         .child(text("+").key(format!("{key}-plus")).font(type_::SM).grow(1.0).align(rune::Align::Center))
         .child(hotkey_input(
-            &format!("{key}-input"),
-            non_mod.as_deref(),
-            hotkey::NARROW,
-            &hotkey::no_key(settings.game),
-            is_recording(settings, key_field),
+            HotkeyInput {
+                key: &format!("{key}-input"),
+                value: non_mod.as_deref(),
+                width: hotkey::NARROW,
+                placeholder: &hotkey::no_key(settings.game),
+                recording: is_recording(settings, key_field),
+            },
             move |s: &mut S| start(project(s), Recording { field: key_field, required, no_mod_keys: true }),
         ));
 
@@ -202,7 +220,7 @@ pub(super) fn is_recording(settings: &Settings, field: Field) -> bool {
 
 /// A press on a hotkey field: `HotkeyInput.vue`'s focused input, which the window's root hears
 /// releases for (`hotkey::record`).
-fn start(settings: &mut Settings, recording: Recording) {
+const fn start(settings: &mut Settings, recording: Recording) {
     settings.recording = Some(recording);
     settings.select_open = None;
 }

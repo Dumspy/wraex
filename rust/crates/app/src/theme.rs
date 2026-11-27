@@ -23,8 +23,16 @@ pub fn rem(n: f32) -> f32 {
 /// Tailwind's `rounded` (0.25 rem).
 pub const ROUNDED: f32 = 0.25 * REM;
 
+#[expect(clippy::panic, reason = "every colour here is a `#rrggbb` literal in this module; a bad one is a typo")]
 fn c(value: &str) -> Color {
-    hex(value).expect("a `#rrggbb` colour")
+    hex(value).unwrap_or_else(|| panic!("`{value}` is not a `#rrggbb` colour"))
+}
+
+/// Panic for a shade `config`'s `tailwind.config.js` has no entry for: the shades are written
+/// by the widgets that use them, so a miss is a programming error.
+#[expect(clippy::panic, reason = "every shade a widget asks for is in the palette; a miss is a programming error")]
+fn missing(name: &str, shade: u16, config: &str) -> ! {
+    panic!("no `{name}.{shade}` in {config}'s tailwind.config.js")
 }
 
 /// Tailwind's `gray` ramp.
@@ -39,7 +47,7 @@ pub fn gray(shade: u16) -> Color {
         700 => "#4a5568",
         800 => "#2d3748",
         900 => "#1a202c",
-        _ => panic!("no `gray.{shade}` in upstream's tailwind.config.js"),
+        other => missing("gray", other, "upstream"),
     })
 }
 
@@ -52,7 +60,7 @@ pub fn red(shade: u16) -> Color {
         600 => "#e53e3e",
         700 => "#c53030",
         800 => "#9b2c2c",
-        _ => panic!("no `red.{shade}` in upstream's tailwind.config.js"),
+        other => missing("red", other, "upstream"),
     })
 }
 
@@ -62,7 +70,7 @@ pub fn yellow(shade: u16) -> Color {
         100 => "#fffff0",
         500 => "#ecc94b",
         700 => "#b7791f",
-        _ => panic!("no `yellow.{shade}` in upstream's tailwind.config.js"),
+        other => missing("yellow", other, "upstream"),
     })
 }
 
@@ -74,7 +82,7 @@ pub fn orange(shade: u16) -> Color {
         500 => "#ed8936",
         600 => "#dd6b20",
         700 => "#c05621",
-        _ => panic!("no `orange.{shade}` in upstream's tailwind.config.js"),
+        other => missing("orange", other, "upstream"),
     })
 }
 
@@ -84,7 +92,7 @@ pub fn blue(shade: u16) -> Color {
         100 => "#ebf8ff",
         400 => "#4299e1",
         600 => "#3182ce",
-        _ => panic!("no `blue.{shade}` in upstream's tailwind.config.js"),
+        other => missing("blue", other, "upstream"),
     })
 }
 
@@ -96,7 +104,7 @@ pub fn green(shade: u16) -> Color {
         600 => "#38a169",
         700 => "#2f855a",
         900 => "#22543d",
-        _ => panic!("no `green.{shade}` in upstream's tailwind.config.js"),
+        other => missing("green", other, "upstream"),
     })
 }
 
@@ -104,7 +112,7 @@ pub fn green(shade: u16) -> Color {
 pub fn slate(shade: u16) -> Color {
     c(match shade {
         800 => "#1e293b",
-        _ => panic!("no `slate.{shade}` in EE2's tailwind.config.js"),
+        other => missing("slate", other, "EE2"),
     })
 }
 
@@ -114,11 +122,13 @@ pub fn table_stripe() -> Color {
     c("#353f52")
 }
 
-/// What an overlay widget is drawn over: `OverlayWindow.vue` paints `AppConfig()`'s
-/// `overlayBackground` (`rgba(129, 139, 149, 0.15)` on a fresh install) over the page's dark
-/// canvas (`<meta name="color-scheme" content="dark">`), and the screenshot harness's page
-/// flattens that to this. A widget scene fills its window with it, so a translucent widget (the
-/// delve grid, the stopwatch) composites as the reference's screenshot does.
+/// What an overlay widget is drawn over.
+///
+/// `OverlayWindow.vue` paints `AppConfig()`'s `overlayBackground` (`rgba(129, 139, 149, 0.15)`
+/// on a fresh install) over the page's dark canvas (`<meta name="color-scheme"
+/// content="dark">`), and the screenshot harness's page flattens that to this. A widget scene
+/// fills its window with it, so a translucent widget (the delve grid, the stopwatch) composites
+/// as the reference's screenshot does.
 pub fn overlay_background() -> Color {
     c("#232426")
 }
@@ -127,7 +137,7 @@ pub fn overlay_background() -> Color {
 pub fn indigo(shade: u16) -> Color {
     c(match shade {
         200 => "#c3dafe",
-        _ => panic!("no `indigo.{shade}` in upstream's tailwind.config.js"),
+        other => missing("indigo", other, "upstream"),
     })
 }
 
@@ -135,7 +145,7 @@ pub fn indigo(shade: u16) -> Color {
 pub fn pink(shade: u16) -> Color {
     c(match shade {
         400 => "#f687b3",
-        _ => panic!("no `pink.{shade}` in EE2's tailwind.config.js"),
+        other => missing("pink", other, "EE2"),
     })
 }
 
@@ -144,7 +154,7 @@ pub fn purple(shade: u16) -> Color {
     c(match shade {
         100 => "#faf5ff",
         600 => "#805ad5",
-        _ => panic!("no `purple.{shade}` in EE2's tailwind.config.js"),
+        other => missing("purple", other, "EE2"),
     })
 }
 
@@ -152,7 +162,7 @@ pub fn purple(shade: u16) -> Color {
 pub fn rose(shade: u16) -> Color {
     c(match shade {
         900 => "#881337",
-        _ => panic!("no `rose.{shade}` in EE2's tailwind.config.js"),
+        other => missing("rose", other, "EE2"),
     })
 }
 
@@ -191,58 +201,61 @@ pub mod text {
 }
 
 /// `leading-none`: the line box is exactly the font size.
-pub fn leading_none(style: TextStyle) -> TextStyle {
+pub const fn leading_none(style: TextStyle) -> TextStyle {
     style.lh(style.size)
 }
 
-/// `font-poe-sc` (`assets/font.css`): Fontin SmallCaps, with FrizQuadrataITC behind
+/// `font-poe-sc` (`assets/font.css`): `Fontin SmallCaps`, with `FrizQuadrataITC` behind
 /// it for the glyphs Fontin lacks (upstream lists it for Cyrillic).
 ///
 /// This is the family behind the sans slot ([`FAMILIES`]), so it is what plain
 /// `text()` draws in, as `#app { text-sm font-poe-sc }` draws the whole app.
 pub const FAMILY_POE_SC: Family = Family::Named("Fontin SmallCaps, FrizQuadrataITC");
-/// `font-poe`: Fontin, then FrizQuadrataITC.
+/// `font-poe`: `Fontin`, then `FrizQuadrataITC`.
 pub const FAMILY_POE: Family = Family::Named("Fontin, FrizQuadrataITC");
 /// `font-exo2`: Exo 2.
 pub const FAMILY_EXO2: Family = Family::Named("Exo 2");
 /// Font Awesome's family (`@fortawesome/fontawesome-free`): `fas`/`far` in upstream's
 /// templates, weight 900 for solid and 400 for regular, both under the same family name.
 pub const FAMILY_FA: Family = Family::Named("Font Awesome 6 Free");
-/// `font-mono`'s face (`WidgetTimer.vue`): Tailwind's default stack is
-/// `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
-/// monospace`, the platform's own monospaced face. Upstream bundles no monospaced font, so the
-/// port names the same families in the same order and Rune loads the first one installed: Menlo
-/// (what the reference's Chromium screenshots draw) on macOS, Consolas on Windows, Liberation
-/// Mono or DejaVu Sans Mono on Linux, the generic `monospace`'s usual faces. A machine with none
-/// of them falls back to the sans slot.
+/// `font-mono`'s face (`WidgetTimer.vue`).
+///
+/// Tailwind's default stack is `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+/// "Liberation Mono", "Courier New", monospace`, the platform's own monospaced face. Upstream
+/// bundles no monospaced font, so the port names the same families in the same order and Rune
+/// loads the first one installed: Menlo (what the reference's Chromium screenshots draw) on
+/// macOS, Consolas on Windows, Liberation Mono or DejaVu Sans Mono on Linux, the generic
+/// `monospace`'s usual faces. A machine with none of them falls back to the sans slot.
 pub const FAMILY_SYSTEM_MONO: Family =
     Family::Named("Menlo, Monaco, Consolas, Liberation Mono, Courier New, DejaVu Sans Mono");
 
-/// The sans and mono slots. Named after the face files themselves: `ref/apt`'s
-/// `@font-face` rules call the families `FontinSmallCaps` etc., but a TTF's own name
-/// table (name ID 16/1) is what a font collection registers, and that is
-/// `Fontin SmallCaps`, `Fontin`, `Exo 2` and `FrizQuadrataITC`.
+/// The sans and mono slots.
+///
+/// Named after the face files themselves: `ref/apt`'s `@font-face` rules call the families
+/// `FontinSmallCaps` etc., but a TTF's own name table (name ID 16/1) is what a font collection
+/// registers, and that is `Fontin SmallCaps`, `Fontin`, `Exo 2` and `FrizQuadrataITC`.
 ///
 /// Upstream has no monospaced face. Rune's styled text has no per-span family, only a `mono`
 /// flag selecting this slot, so the slot holds Exo 2: `ItemModifierText.vue` draws rolled
 /// numbers in `font-exo2 font-semibold`, and a span can reach that face through `mono`.
 pub const FAMILIES: (&str, &str) = ("Fontin SmallCaps, FrizQuadrataITC", "Exo 2");
 
-/// The fonts the widgets draw with, compiled in: the faces `ref/apt/renderer/src/assets/font`
-/// ships (they live in the `ref/apt` submodule, which CI checks out, not in `node_modules`),
-/// then Font Awesome's solid and regular faces.
+/// The fonts the widgets draw with, compiled in.
+///
+/// The faces `ref/apt/renderer/src/assets/font` ships (they live in the `ref/apt` submodule,
+/// which CI checks out, not in `node_modules`), then Font Awesome's solid and regular faces.
 ///
 /// Font Awesome is upstream's `node_modules` dependency, so the two faces the templates use are
 /// vendored in `assets/fontawesome/` (`fas` = weight 900, `far` = 400, one family name).
 pub const FONTS: &[&[u8]] = &[
-    include_bytes!("../../../../ref/apt/renderer/src/assets/font/Fontin-SmallCaps-Hinted.ttf") as &[u8],
-    include_bytes!("../../../../ref/apt/renderer/src/assets/font/Fontin-Regular-Hinted.ttf") as &[u8],
-    include_bytes!("../../../../ref/apt/renderer/src/assets/font/Fontin-Bold-Hinted.ttf") as &[u8],
-    include_bytes!("../../../../ref/apt/renderer/src/assets/font/Fontin-Italic-Hinted.ttf") as &[u8],
-    include_bytes!("../../../../ref/apt/renderer/src/assets/font/FrizQuadrataITC-Hinted.ttf") as &[u8],
-    include_bytes!("../../../../ref/apt/renderer/src/assets/font/Exo2-Regular.ttf") as &[u8],
-    include_bytes!("../../../../ref/apt/renderer/src/assets/font/Exo2-Medium.ttf") as &[u8],
-    include_bytes!("../../../../ref/apt/renderer/src/assets/font/Exo2-SemiBold.ttf") as &[u8],
-    include_bytes!("../assets/fontawesome/fa-solid-900.ttf") as &[u8],
-    include_bytes!("../assets/fontawesome/fa-regular-400.ttf") as &[u8],
+    include_bytes!("../../../../ref/apt/renderer/src/assets/font/Fontin-SmallCaps-Hinted.ttf"),
+    include_bytes!("../../../../ref/apt/renderer/src/assets/font/Fontin-Regular-Hinted.ttf"),
+    include_bytes!("../../../../ref/apt/renderer/src/assets/font/Fontin-Bold-Hinted.ttf"),
+    include_bytes!("../../../../ref/apt/renderer/src/assets/font/Fontin-Italic-Hinted.ttf"),
+    include_bytes!("../../../../ref/apt/renderer/src/assets/font/FrizQuadrataITC-Hinted.ttf"),
+    include_bytes!("../../../../ref/apt/renderer/src/assets/font/Exo2-Regular.ttf"),
+    include_bytes!("../../../../ref/apt/renderer/src/assets/font/Exo2-Medium.ttf"),
+    include_bytes!("../../../../ref/apt/renderer/src/assets/font/Exo2-SemiBold.ttf"),
+    include_bytes!("../assets/fontawesome/fa-solid-900.ttf"),
+    include_bytes!("../assets/fontawesome/fa-regular-400.ttf"),
 ];

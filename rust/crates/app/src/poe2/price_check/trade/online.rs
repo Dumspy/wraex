@@ -47,10 +47,7 @@ const CURRENCY: [(&str, &str); 5] = [
 
 /// A key of the `online_filter` namespace, or one EE2 writes out in English.
 fn label(key: &str) -> String {
-    match key.strip_prefix(':') {
-        Some(key) => i18n::t(&format!("online_filter.{key}")),
-        None => i18n::t(key),
-    }
+    key.strip_prefix(':').map_or_else(|| i18n::t(key), |key| i18n::t(&format!("online_filter.{key}")))
 }
 
 /// `OnlineFilter.vue`'s label: a history icon, the listing type and the warning colour.
@@ -64,7 +61,8 @@ pub fn view<S: 'static>(check: &PriceCheck, _api: Api, project: Project<S>) -> E
     };
     let mut label_text = i18n::t(name);
     if check.league != filters.trade.league {
-        label_text.push_str(&format!(", {}", filters.trade.league));
+        label_text.push_str(", ");
+        label_text.push_str(&filters.trade.league);
     }
     let warning = show_warning(filters);
     let color = if warning { theme::orange(500) } else { theme::gray(500) };
@@ -128,7 +126,7 @@ pub fn panel<S: 'static>(check: &PriceCheck, api: Api, project: Project<S>) -> E
     let mut right = col().key("online-filter-right").gap(theme::rem(0.25));
     if by_time {
         right = right.child(el().key("online-filter-right-spacer").h(theme::rem(0.75)));
-        for (value, text) in CURRENCY.iter() {
+        for (value, text) in &CURRENCY {
             let value = *value;
             right = right.child(radio(
                 format!("online-filter-currency-{value}"),

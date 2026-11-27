@@ -1,11 +1,12 @@
 //! `web/settings/chat.vue`: the chat commands, their Enter toggle and their hotkeys.
 
 use rune::{El, col, row, text};
-use serde_json::json;
+use wraex_core::js::json_value;
+use wraex_core::widget::Command;
 
-use crate::settings::hotkey::{self, Recording, hotkey_input};
-use crate::settings::pages::{page, text_field, tr};
-use crate::settings::{Field, Project, Settings};
+use crate::settings::hotkey::{self, HotkeyInput, Recording, hotkey_input};
+use crate::settings::pages::{TextField, page, text_field, tr};
+use crate::settings::{Field, Project, Settings, commands_mut};
 use crate::theme::{self, text as type_};
 use crate::ui;
 use crate::ui::field::Kind;
@@ -14,19 +15,16 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     let mut page = page("page-chat");
     let mut list = col().key("chat-commands").w_full().gap(theme::rem(1.0)).mb(theme::rem(1.0));
 
-    for (index, command) in settings.commands().iter().enumerate() {
-        let send = command.get("send").and_then(serde_json::Value::as_bool).unwrap_or(false);
-        let hotkey = command.get("hotkey").and_then(serde_json::Value::as_str).map(str::to_owned);
+    for index in 0..settings.commands().len() {
+        let command = settings.command(index);
+        let send = command.send();
+        let hotkey = command.hotkey().map(str::to_owned);
         let mut entry = col().key(format!("chat-command-{index}")).gap(theme::rem(0.25));
 
         // `input v-model.trim="command.text" class="… w-full font-poe"`
         entry = entry.child(text_field(
             settings,
-            &format!("chat-command-{index}"),
-            Field::Command(index, "text"),
-            Kind::Text,
-            None,
-            "",
+            TextField::new(&format!("chat-command-{index}"), Field::Command(index, "text"), Kind::Text),
             project,
         ));
 
@@ -55,7 +53,7 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
                     .label(tr(settings, "Remove"))
                     .on_press(move |s: &mut S| {
                         let settings = project(s);
-                        if let Some(commands) = settings.config.get_mut("commands").and_then(|c| c.as_array_mut())
+                        if let Some(commands) = commands_mut(&mut settings.config)
                             && index < commands.len()
                         {
                             commands.remove(index);
@@ -70,11 +68,13 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
                     ),
             )
             .child(hotkey_input(
-                &format!("chat-command-{index}-hotkey"),
-                hotkey.as_deref(),
-                hotkey::WIDE,
-                &hotkey::no_key(settings.game),
-                super::hotkeys::is_recording(settings, Field::Command(index, "hotkey")),
+                HotkeyInput {
+                    key: &format!("chat-command-{index}-hotkey"),
+                    value: hotkey.as_deref(),
+                    width: hotkey::WIDE,
+                    placeholder: &hotkey::no_key(settings.game),
+                    recording: super::hotkeys::is_recording(settings, Field::Command(index, "hotkey")),
+                },
                 move |s: &mut S| {
                     let settings = project(s);
                     settings.recording =
@@ -103,8 +103,8 @@ pub fn view<S: 'static>(settings: &Settings, project: Project<S>) -> El {
             .label(tr(settings, "settings.chat_cmd_add"))
             .on_press(move |s: &mut S| {
                 let settings = project(s);
-                if let Some(commands) = settings.config.get_mut("commands").and_then(|c| c.as_array_mut()) {
-                    commands.push(json!({ "text": "", "hotkey": null, "send": true }));
+                if let Some(commands) = commands_mut(&mut settings.config) {
+                    commands.push(json_value(&Command { text: String::new(), hotkey: None, send: true }));
                 }
                 settings.seed_edits();
             })

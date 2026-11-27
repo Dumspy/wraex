@@ -13,8 +13,9 @@
 //! has no component registry.
 
 use rune::{Color, El, col, row, text};
-use serde_json::Value;
+use serde::Deserialize;
 
+use super::lenient;
 use crate::theme::{self, text as type_};
 use crate::ui;
 use crate::widgets::{Overlay, Project, Wants, Widget, icon};
@@ -22,14 +23,27 @@ use crate::widgets::{Overlay, Project, Wants, Widget, icon};
 /// `WidgetSpec.type`.
 pub const WM_TYPE: &str = "menu";
 
+/// `config.alwaysShow` (`WidgetMenu.vue`'s edit mode).
+#[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AlwaysShowField {
+    #[serde(default, deserialize_with = "lenient")]
+    always_show: Option<bool>,
+}
+
+/// `config.alwaysShow`: the edit mode's `Show button for active widgets`.
+fn always_show(widget: &Widget) -> bool {
+    AlwaysShowField::deserialize(&widget.config).unwrap_or_default().always_show.unwrap_or(false)
+}
+
 /// `WidgetMenu.vue`: the bar, the add popover and the paste box.
 pub fn view<S: 'static>(overlay: &Overlay, widget: &Widget, project: Project<S>) -> El {
     let id = widget.wm_id;
     let editing = overlay.editing == Some(id);
-    let always_show = widget.config.get("alwaysShow").and_then(Value::as_bool).unwrap_or(false);
+    let always_show = always_show(widget);
 
     let mut bar = row().key("widget-menu-bar").padding(theme::rem(0.25)).gap(theme::rem(0.25)).items_center();
-    for entry in overlay.widgets.iter() {
+    for entry in &overlay.widgets {
         if entry.has_flag("menu::skip") || (!always_show && entry.wm_wants != Wants::Hide) {
             continue;
         }
@@ -195,7 +209,7 @@ fn paste_box<S: 'static>(overlay: &Overlay, project: Project<S>) -> El {
 
 /// `registry.widgets.filter(({ widget }) => widget.instances === 'multi')`, in registry order:
 /// `(wmType, trNameKey ?? type)`. EE2's registry has the notepad too.
-fn instantiable(game: wraex_core::GameId) -> &'static [(&'static str, &'static str)] {
+const fn instantiable(game: wraex_core::GameId) -> &'static [(&'static str, &'static str)] {
     match game {
         wraex_core::GameId::Poe2 => &[
             ("timer", "stopwatch.name"),
@@ -203,6 +217,8 @@ fn instantiable(game: wraex_core::GameId) -> &'static [(&'static str, &'static s
             ("image-strip", "image_strip.name"),
             ("notepad", "notepad.name"),
         ],
-        _ => &[("timer", "stopwatch.name"), ("stash-search", "stash_search.name"), ("image-strip", "image_strip.name")],
+        wraex_core::GameId::Poe1 => {
+            &[("timer", "stopwatch.name"), ("stash-search", "stash_search.name"), ("image-strip", "image_strip.name")]
+        }
     }
 }

@@ -9,17 +9,34 @@
 //! This is a stopgap for the price check's few labels: PLAN phase 5's last step replaces it
 //! with upstream's Crowdin files in every language (`ru`, `ko`, `cmn-Hant`).
 
+use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
-use serde_json::Value;
+use serde::Deserialize;
 use wraex_core::data::DataSource;
 use wraex_poe1::data::source;
 
 /// The `en` messages, relative to the game data root (`poe1::data::source`).
 const PATH: &str = "en/app_i18n.json";
 
-fn strings() -> &'static Value {
-    static STRINGS: OnceLock<Value> = OnceLock::new();
+/// One node of `app_i18n.json`: a message, or the group of messages a dotted key's segment
+/// names (`vue-i18n`'s nested messages).
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+enum Message {
+    /// `"Not recognized modifier"`.
+    Text(String),
+    /// `{ "item": { "not_corrupted": "…" } }`.
+    Group(BTreeMap<String, Self>),
+}
+
+/// The message table, read once.
+#[expect(
+    clippy::panic,
+    reason = "the `en` messages ship with the assets: a missing or unparsable file is a broken install and must fail loudly at first use instead of printing raw keys"
+)]
+fn strings() -> &'static BTreeMap<String, Message> {
+    static STRINGS: OnceLock<BTreeMap<String, Message>> = OnceLock::new();
     STRINGS.get_or_init(|| {
         let text = source().read_string(PATH).unwrap_or_else(|e| panic!("read {PATH}: {e}"));
         serde_json::from_str(&text).unwrap_or_else(|e| panic!("parse {PATH}: {e}"))
@@ -29,7 +46,7 @@ fn strings() -> &'static Value {
 /// `t(key)`: the message at `key`, or `key` itself.
 pub fn t(key: &str) -> String {
     match lookup(key) {
-        Some(Value::String(message)) => message.clone(),
+        Some(Message::Text(message)) => message.clone(),
         _ => key.to_owned(),
     }
 }
@@ -43,10 +60,16 @@ pub fn fmt(key: &str, args: &[&str]) -> String {
     message
 }
 
-fn lookup(key: &str) -> Option<&'static Value> {
-    let mut value = strings();
-    for segment in key.split('.') {
-        value = value.get(segment)?;
+fn lookup(key: &str) -> Option<&'static Message> {
+    let mut segments = key.split('.');
+    let mut message = strings().get(segments.next()?)?;
+    for segment in segments {
+        message = match message {
+            Message::Group(group) => group.get(segment)?,
+            // A leaf has no children: the key is not there, as `value[segment]` was
+            // `undefined` for a string in `vue-i18n`.
+            Message::Text(_) => return None,
+        };
     }
-    Some(value)
+    Some(message)
 }

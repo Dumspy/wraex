@@ -17,10 +17,10 @@ pub mod title_bar;
 pub mod toggle;
 
 pub use button::button;
-pub use checkbox::{checkbox, checkbox_with};
+pub use checkbox::{CheckboxProps, checkbox};
 pub use error_box::{actions, error_box};
 pub use item_modifier_text::item_modifier_text;
 pub use item_quick_price::ItemQuickPrice as QuickPrice;
-pub use radio::{radio, radio_icon};
+pub use radio::{RadioProps, radio, radio_icon};
 pub use title_bar::{TitleBar, title_bar};
 pub use toggle::toggle;

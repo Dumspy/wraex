@@ -1,6 +1,8 @@
 //! The text and number fields the settings pages are built from: upstream's
 //! `<input class="rounded bg-gray-900 px-1 …">` variants.
 
+use std::fmt;
+
 use rune::{Align, El, TextEdit, text_input};
 
 use crate::theme::{self, text as type_};
@@ -20,36 +22,58 @@ pub enum Kind {
 }
 
 impl Kind {
-    fn font(self) -> rune::tok::TextStyle {
+    const fn font(self) -> rune::tok::TextStyle {
         match self {
-            Kind::Text | Kind::Number => type_::SM.family(theme::FAMILY_POE),
-            Kind::Sans | Kind::Grow => type_::SM.mono(),
+            Self::Text | Self::Number => type_::SM.family(theme::FAMILY_POE),
+            Self::Sans | Self::Grow => type_::SM.mono(),
         }
     }
 
-    fn align(self) -> Align {
+    const fn align(self) -> Align {
         match self {
-            Kind::Number => Align::Center,
+            Self::Number => Align::Center,
             _ => Align::Start,
         }
     }
 
-    fn numeric(self) -> bool {
-        self == Kind::Number
+    const fn numeric(self) -> bool {
+        matches!(self, Self::Number)
     }
 }
 
-/// A field bound to `edit`: the value the settings' working copy holds, as text. `on_edit`
-/// hands the state's `TextEdit` back, `on_change` writes the edited text into the config.
+/// One [`text_field`]'s content: the state's edit handle and the field's own settings.
+pub struct TextFieldProps<'a> {
+    /// The value the settings' working copy holds, as text.
+    pub edit: &'a TextEdit,
+    /// The field's element key.
+    pub key: &'a str,
+    /// Which input class it copies.
+    pub kind: Kind,
+    /// A fixed width (`w-16`), or the column's own for `None`.
+    pub width: Option<f32>,
+    /// The empty text's placeholder, or `""` for none.
+    pub placeholder: &'a str,
+}
+
+impl fmt::Debug for TextFieldProps<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("TextFieldProps")
+            .field("key", &self.key)
+            .field("kind", &self.kind)
+            .field("width", &self.width)
+            .field("placeholder", &self.placeholder)
+            .finish_non_exhaustive()
+    }
+}
+
+/// A field bound to `props.edit`. `on_edit` hands the state's `TextEdit` back, `on_change`
+/// writes the edited text into the config.
 pub fn text_field<S: 'static>(
-    edit: &TextEdit,
-    key: &str,
-    kind: Kind,
-    width: Option<f32>,
-    placeholder: &str,
+    props: &TextFieldProps<'_>,
     on_edit: impl for<'a> Fn(&'a mut S) -> &'a mut TextEdit + 'static,
     on_change: impl Fn(&mut S, &mut rune::Tx) + 'static,
 ) -> El {
+    let TextFieldProps { edit, key, kind, width, placeholder } = *props;
     let font = kind.font();
     let mut field = text_input(edit, font)
         .key(key)

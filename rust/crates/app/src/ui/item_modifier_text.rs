@@ -33,27 +33,32 @@ pub fn render(text: &str, roll: Option<f64>) -> (String, Vec<(usize, usize)>) {
     let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
     let roll = roll.map(js::number_to_string);
     let bytes = text.as_bytes();
-    let mut content = String::with_capacity(text.len() + 4);
+    let mut content = String::with_capacity(text.len().saturating_add(4));
     let mut numbers = Vec::new();
     let mut copied = 0;
-    let mut i = 0;
-    while i < bytes.len() {
-        if bytes[i] != b'#' || (i > 0 && bytes[i - 1] == b'#') {
-            i += 1;
+    let mut previous = None;
+    for (i, byte) in bytes.iter().copied().enumerate() {
+        let after_hash = previous == Some(b'#');
+        let after_sign = matches!(previous, Some(b'+' | b'-'));
+        previous = Some(byte);
+        if byte != b'#' || after_hash {
             continue;
         }
         // The match starts at the sign when one precedes the `#`, and the sign is dropped.
-        let start = if i > copied && matches!(bytes[i - 1], b'+' | b'-') { i - 1 } else { i };
-        content.push_str(&text[copied..start]);
+        let start = if i > copied && after_sign { i.saturating_sub(1) } else { i };
+        if let Some(prefix) = text.get(copied..start) {
+            content.push_str(prefix);
+        }
         let at = content.len();
         content.push_str(roll.as_deref().unwrap_or(PLACEHOLDER));
         if roll.is_some() {
             numbers.push((at, content.len()));
         }
-        copied = i + 1;
-        i += 1;
+        copied = i.saturating_add(1);
     }
-    content.push_str(&text[copied..]);
+    if let Some(tail) = text.get(copied..) {
+        content.push_str(tail);
+    }
     (content, numbers)
 }
 
@@ -79,7 +84,7 @@ mod tests {
     fn no_roll_leaves_the_placeholder() {
         let (content, numbers) = render("+# to maximum Life", None);
         assert_eq!(content, "# to maximum Life");
-        assert!(numbers.is_empty());
+        assert_eq!(numbers, vec![]);
     }
 
     /// A two-line mod is one line in HTML, and here too.

@@ -11,7 +11,7 @@ pub mod trade;
 pub mod view;
 
 use std::collections::HashMap;
-use std::sync::OnceLock;
+use std::sync::{Arc, OnceLock};
 
 use rune::{TextEdit, Waker};
 use wraex_core::Rarity;
@@ -48,12 +48,17 @@ pub const API_LATENCY_SECONDS: f64 = 2.0;
 pub const APP_NAME: &str = "Awakened PoE Trade";
 
 /// The `en` game data, loaded once (`init("en")` in the reference).
+#[expect(
+    clippy::expect_used,
+    reason = "the `en` game data ships with the assets: a missing data root is a broken install and must fail loudly at first use"
+)]
 pub fn data() -> &'static Data {
     static DATA: OnceLock<Data> = OnceLock::new();
     DATA.get_or_init(|| Data::load(&source(), "en").expect("load `en` game data from the assets root"))
 }
 
-/// The options `CheckedItem.vue` hands `createPresets`, at a fresh install's defaults:
+/// The options `CheckedItem.vue` hands `createPresets`, at a fresh install's defaults.
+///
 /// `PriceCheckWidget.initInstance`'s `merchantOnly: true`, `collapseListings: 'api'`,
 /// `activateStockFilter: false`, `searchStatRange: 10`, `defaultCurrency: null`, plus
 /// `AppConfig().useIntlSite` (`false`) and the selected league.
@@ -82,6 +87,10 @@ pub fn preset_options_for(league: &str) -> CreatePresetsOptions {
 ///
 /// Built from the item text the game's copy key produced (`MAIN->CLIENT::item-text` in the
 /// reference), so a scene or a test is just [`PriceCheck::from_text`].
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "each flag is one reactive field of an upstream component: `CheckedItem.vue`'s `doSearch`, `PriceCheckWindow.vue`'s `open`/exchange popover, `FiltersBlock.vue`'s `statsVisibility.disabled`/`showHidden`/`showFilterSources` and `OnlineFilter.vue`'s popover"
+)]
 #[derive(Debug)]
 pub struct PriceCheck {
     /// The clipboard text the window was opened with: the raw block the error view shows.
@@ -229,7 +238,7 @@ impl PriceCheck {
 
     /// The waker a landed live answer uses to run `AppSpec::poll`.
     pub fn set_waker(&self, waker: Waker) {
-        self.trade.set_waker(waker.clone());
+        self.trade.set_waker(Arc::clone(&waker));
         self.prices.set_waker(waker);
     }
 
@@ -281,7 +290,7 @@ impl PriceCheck {
     }
 
     /// `CheckedItem.vue`'s `@reset`: hide the results, back to the Search row.
-    pub fn reset_search(&mut self) {
+    pub const fn reset_search(&mut self) {
         self.do_search = false;
     }
 
@@ -289,12 +298,12 @@ impl PriceCheck {
     /// results are up, any change to the stats or the filters hides them again ("force user to
     /// press Search button on change"). A trade-option change is the exception: the next watch
     /// (see [`PriceCheck::after_trade_change`]) starts the search itself.
-    fn filters_changed(&mut self) {
+    const fn filters_changed(&mut self) {
         self.do_search = false;
     }
 
     /// `OnlineFilter.vue`'s popover.
-    pub fn toggle_online_filter(&mut self) {
+    pub const fn toggle_online_filter(&mut self) {
         self.online_open = !self.online_open;
     }
 
@@ -305,7 +314,7 @@ impl PriceCheck {
     }
 
     /// The `⇄ 891` button's popover.
-    pub fn toggle_exchange(&mut self) {
+    pub const fn toggle_exchange(&mut self) {
         self.exchange_open = !self.exchange_open;
     }
 
@@ -323,7 +332,7 @@ impl PriceCheck {
     pub fn set_offline(&mut self, offline: bool) {
         if let Some(filters) = self.item_filters_mut() {
             filters.trade.offline = offline;
-            filters.trade.listed = if offline { Some("2months".to_owned()) } else { None };
+            filters.trade.listed = offline.then(|| "2months".to_owned());
         }
         self.after_trade_change();
     }
@@ -395,8 +404,7 @@ impl PriceCheck {
                     _ => vec!["divine".to_owned(), "chaos".to_owned()],
                 };
                 let request = create_bulk_request(&filters, item, have);
-                self.trade.lazy_request =
-                    Some(trade::LazyBulk { league: league.clone(), filters: filters.clone(), item: item.clone() });
+                self.trade.lazy_request = Some(trade::LazyBulk { league: league.clone(), filters, item: item.clone() });
                 trade::Query::Bulk { league, request }
             }
         };
@@ -455,7 +463,7 @@ impl PriceCheck {
     }
 
     /// The close button (`closePriceCheck`): upstream hides the widget.
-    pub fn close(&mut self) {
+    pub const fn close(&mut self) {
         self.open = false;
     }
 
@@ -466,7 +474,7 @@ impl PriceCheck {
         if !presets.presets.iter().any(|preset| preset.id == id) {
             return;
         }
-        presets.active = id.to_owned();
+        id.clone_into(&mut presets.active);
         self.sync_inputs();
         // `CheckedItem.vue`'s watch on the active preset: the results belong to the old
         // one, so the Search button comes back.
@@ -475,7 +483,7 @@ impl PriceCheck {
 
     /// `statsVisibility.disabled = !statsVisibility.disabled` (Collapse, and the chip with
     /// "N of M, stats").
-    pub fn toggle_stats_collapsed(&mut self) {
+    pub const fn toggle_stats_collapsed(&mut self) {
         self.stats_collapsed = !self.stats_collapsed;
     }
 
@@ -486,7 +494,7 @@ impl PriceCheck {
     }
 
     /// `showFilterSources = !showFilterSources`.
-    pub fn toggle_show_sources(&mut self) {
+    pub const fn toggle_show_sources(&mut self) {
         self.show_sources = !self.show_sources;
     }
 
@@ -535,6 +543,10 @@ impl PriceCheck {
 
     /// `FilterModifierOptions.vue`'s `handleOptionClick`: choosing another option enables the
     /// filter, choosing the checked one toggles it.
+    #[expect(
+        clippy::float_cmp,
+        reason = "`===` on the option's value, as `handleOptionClick` does: the values are the preset's own numbers"
+    )]
     pub fn click_stat_option(&mut self, path: StatPath, value: f64) {
         let Some(filter) = self.stat_mut(path) else { return };
         if filter.option.as_ref().is_some_and(|option| option.value == value) {
@@ -748,9 +760,9 @@ impl StatPath {
     /// or `1-0` (its first child).
     pub fn key(self) -> String {
         match self {
-            StatPath::Top(index) => index.to_string(),
-            StatPath::Meta(group) => format!("{group}m"),
-            StatPath::Child(group, index) => format!("{group}-{index}"),
+            Self::Top(index) => index.to_string(),
+            Self::Meta(group) => format!("{group}m"),
+            Self::Child(group, index) => format!("{group}-{index}"),
         }
     }
 }
@@ -772,30 +784,30 @@ pub enum NumericFilter {
 
 impl NumericFilter {
     /// The template's order.
-    pub const ALL: [NumericFilter; 9] = [
-        NumericFilter::LinkedSockets,
-        NumericFilter::MapTier,
-        NumericFilter::AreaLevel,
-        NumericFilter::SentinelCharge,
-        NumericFilter::ItemLevel,
-        NumericFilter::StackSize,
-        NumericFilter::WhiteSockets,
-        NumericFilter::GemLevel,
-        NumericFilter::Quality,
+    pub const ALL: [Self; 9] = [
+        Self::LinkedSockets,
+        Self::MapTier,
+        Self::AreaLevel,
+        Self::SentinelCharge,
+        Self::ItemLevel,
+        Self::StackSize,
+        Self::WhiteSockets,
+        Self::GemLevel,
+        Self::Quality,
     ];
 
     /// The key its chip and fields are named with (upstream's `item.*` label key).
     pub const fn key(self) -> &'static str {
         match self {
-            NumericFilter::LinkedSockets => "linked_sockets",
-            NumericFilter::MapTier => "map_tier",
-            NumericFilter::AreaLevel => "area_level",
-            NumericFilter::SentinelCharge => "sentinel_charge",
-            NumericFilter::ItemLevel => "item_level",
-            NumericFilter::StackSize => "stock",
-            NumericFilter::WhiteSockets => "white_sockets",
-            NumericFilter::GemLevel => "gem_level",
-            NumericFilter::Quality => "quality",
+            Self::LinkedSockets => "linked_sockets",
+            Self::MapTier => "map_tier",
+            Self::AreaLevel => "area_level",
+            Self::SentinelCharge => "sentinel_charge",
+            Self::ItemLevel => "item_level",
+            Self::StackSize => "stock",
+            Self::WhiteSockets => "white_sockets",
+            Self::GemLevel => "gem_level",
+            Self::Quality => "quality",
         }
     }
 }
@@ -827,8 +839,8 @@ pub enum NumericPart {
 impl NumericPart {
     const fn key(self) -> &'static str {
         match self {
-            NumericPart::Min => "min",
-            NumericPart::Max => "max",
+            Self::Min => "min",
+            Self::Max => "max",
         }
     }
 }
@@ -847,14 +859,14 @@ impl InputField {
     /// The element key and the [`PriceCheck::inputs`] key.
     pub fn key(self) -> String {
         match self {
-            InputField::Numeric(which, part) => format!("btn-{}-{}", which.key(), part.key()),
-            InputField::Stat(path, part) => format!("stat-{}-{}", path.key(), part.key()),
+            Self::Numeric(which, part) => format!("btn-{}-{}", which.key(), part.key()),
+            Self::Stat(path, part) => format!("stat-{}-{}", path.key(), part.key()),
         }
     }
 }
 
 /// `numeric`: the field the chip edits, when the preset has it.
-fn numeric(filters: &ItemFilters, which: NumericFilter) -> Option<&FilterNumeric> {
+const fn numeric(filters: &ItemFilters, which: NumericFilter) -> Option<&FilterNumeric> {
     match which {
         NumericFilter::LinkedSockets => filters.linked_sockets.as_ref(),
         NumericFilter::MapTier => filters.map_tier.as_ref(),
@@ -886,7 +898,7 @@ fn stats_with_paths(stats: &[FilterOrGroup]) -> Vec<(StatPath, &StatFilter)> {
 }
 
 /// `!disabled` on an optional field.
-fn flip(disabled: Option<&mut bool>) {
+const fn flip(disabled: Option<&mut bool>) {
     if let Some(disabled) = disabled {
         *disabled = !*disabled;
     }

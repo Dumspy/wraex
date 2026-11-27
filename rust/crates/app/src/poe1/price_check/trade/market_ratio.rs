@@ -31,7 +31,7 @@ pub struct MarketRatioRow {
 }
 
 /// `marketRatio[selectedCurr]`
-pub fn for_currency(rows: MarketRatioRow, stable: bool) -> Option<MarketRatio> {
+pub const fn for_currency(rows: MarketRatioRow, stable: bool) -> Option<MarketRatio> {
     if stable { rows.xchg_stable } else { rows.xchg_chaos }
 }
 

@@ -19,7 +19,7 @@ pub mod unknown;
 use rune::tok::TextStyle;
 use rune::{Align, Color, El, col, el, row, text, text_input};
 use wraex_core::Rarity;
-use wraex_poe2::filters::{FilterTag, StatFilter};
+use wraex_poe2::filters::{FilterTag, ItemFilters, StatFilter};
 use wraex_poe2::parser::item::{Item, ItemInfluence};
 use wraex_poe2::parser::meta::{self, ARMOUR, ItemCategory};
 
@@ -75,18 +75,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
     ] {
         chips = numeric_chip(check, chips, which, project);
     }
-    if let Some(blighted) = &filters.map_blighted {
-        chips = chips.child(btn::readonly::<S>("map-blighted", blighted.value));
-    }
-    if filters.rarity.as_ref().is_some_and(|rarity| rarity.value == "magic") {
-        chips = chips.child(btn::readonly::<S>("rarity-magic", &i18n::t("Magic")));
-    }
-    if filters.rarity.as_ref().is_some_and(|rarity| rarity.value == "normal") {
-        chips = chips.child(btn::readonly::<S>("rarity-normal", &i18n::t("Normal")));
-    }
-    if let Some(discriminator) = filters.discriminator.as_ref().and_then(|disc| disc.value.as_ref()) {
-        chips = chips.child(btn::readonly::<S>("discriminator", discriminator));
-    }
+    chips = readonly_chips::<S>(filters, chips);
     for which in [NumericFilter::ItemLevel, NumericFilter::RequiresLevel] {
         chips = numeric_chip(check, chips, which, project);
     }
@@ -99,78 +88,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
     ] {
         chips = numeric_chip(check, chips, which, project);
     }
-    if let Some(influences) = &filters.influences {
-        for (index, influence) in influences.iter().enumerate() {
-            let label = influence_name(influence.value);
-            // `:img="`/images/influence-${influence.value}.png`"`
-            let picture = art::Picture::local(format!("influence-{label}.png"));
-            chips = chips.child(btn::logical(
-                &format!("influence-{index}"),
-                label,
-                Some(!influence.disabled),
-                None,
-                Some(picture),
-                |_: &mut S| {},
-            ));
-        }
-    }
-    if let Some(tier) = &filters.unidentified_tier {
-        chips = chips.child(btn::logical(
-            "unidentified-tier",
-            &i18n::t("item.unidentified_tier"),
-            Some(!tier.disabled),
-            None,
-            None,
-            move |s: &mut S| project(s).toggle_logical(LogicalToggle::UnidentifiedTier),
-        ));
-    } else if let Some(unidentified) = &filters.unidentified {
-        chips = chips.child(btn::logical(
-            "unidentified",
-            &i18n::t("item.unidentified"),
-            Some(!unidentified.disabled),
-            None,
-            None,
-            move |s: &mut S| project(s).toggle_logical(LogicalToggle::Unidentified),
-        ));
-    }
-    if let Some(veiled) = &filters.veiled {
-        chips = chips.child(btn::logical(
-            "veiled",
-            &i18n::t("item.veiled"),
-            Some(!veiled.disabled),
-            None,
-            None,
-            move |s: &mut S| project(s).set_item_flag(ItemFlag::Veiled),
-        ));
-    }
-    if let Some(foil) = &filters.foil {
-        chips = chips.child(btn::logical(
-            "foil",
-            &i18n::t("item.foil_unique"),
-            Some(!foil.disabled),
-            None,
-            None,
-            move |s: &mut S| project(s).set_item_flag(ItemFlag::Foil),
-        ));
-    }
-    if let Some(mirrored) = &filters.mirrored {
-        let label = i18n::t(if mirrored.disabled { "item.not_mirrored" } else { "item.mirrored" });
-        chips = chips.child(btn::logical("mirrored", &label, Some(true), None, None, move |s: &mut S| {
-            project(s).set_item_flag(ItemFlag::Mirrored);
-        }));
-    }
-    if let Some(sanctified) = &filters.sanctified {
-        let label = i18n::t(if sanctified.disabled { "item.not_sanctified" } else { "item.sanctified" });
-        chips = chips.child(btn::logical("sanctified", &label, Some(true), None, None, move |s: &mut S| {
-            project(s).set_item_flag(ItemFlag::Sanctified);
-        }));
-    }
-    if let Some(hint) = &filters.ultimatum_hint {
-        let label = i18n::t(&format!("item.{}", hint.value.to_lowercase()));
-        chips = chips.child(btn::logical("ultimatum", &label, Some(!hint.disabled), None, None, move |s: &mut S| {
-            project(s).toggle_logical(LogicalToggle::UltimatumHint);
-        }));
-    }
+    chips = logical_chips(filters, chips, project);
 
     let stats = check.item_stats();
     let unknown = unknown_count(check);
@@ -188,9 +106,7 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
         chips = chips.child(btn::logical(
             "stats",
             &label,
-            Some(selected > 0),
-            Some(check.stats_collapsed),
-            None,
+            btn::Chip { active: Some(selected > 0), collapse: Some(check.stats_collapsed), ..btn::Chip::default() },
             move |s: &mut S| project(s).toggle_stats_collapsed(),
         ));
     }
@@ -203,6 +119,121 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
     if check.stats_collapsed || !has_stats {
         return root;
     }
+    let Some(block) = stats_block(check, preset_count, project) else { return root };
+    root = root.child(block);
+    // `FilterModifier.vue`'s `.mods`, which CSS shows only while its row is hovered.
+    if let Some(overlay) = hovered_sources(check) {
+        root = root.child(overlay);
+    }
+    root
+}
+
+/// `FiltersBlock.vue`'s `filter-btn-logical` read-only chips: the map state, the rarity and
+/// the discriminator, which `:readonly` draws as active and a press does nothing on.
+fn readonly_chips<S: 'static>(filters: &ItemFilters, chips: El) -> El {
+    let mut chips = chips;
+    if let Some(blighted) = &filters.map_blighted {
+        chips = chips.child(btn::readonly::<S>("map-blighted", blighted.value));
+    }
+    if filters.rarity.as_ref().is_some_and(|rarity| rarity.value == "magic") {
+        chips = chips.child(btn::readonly::<S>("rarity-magic", &i18n::t("Magic")));
+    }
+    if filters.rarity.as_ref().is_some_and(|rarity| rarity.value == "normal") {
+        chips = chips.child(btn::readonly::<S>("rarity-normal", &i18n::t("Normal")));
+    }
+    if let Some(discriminator) = filters.discriminator.as_ref().and_then(|disc| disc.value.as_ref()) {
+        chips = chips.child(btn::readonly::<S>("discriminator", discriminator));
+    }
+    chips
+}
+
+/// `FiltersBlock.vue`'s `filter-btn-logical` toggles: the influences, the unidentified tier
+/// or flag, and the item states the preset carries.
+fn logical_chips<S: 'static>(filters: &ItemFilters, chips: El, project: Project<S>) -> El {
+    let mut chips = chips;
+    if let Some(influences) = &filters.influences {
+        for (index, influence) in influences.iter().enumerate() {
+            let label = influence_name(influence.value);
+            // `:img="`/images/influence-${influence.value}.png`"`
+            let picture = art::Picture::local(format!("influence-{label}.png"));
+            chips = chips.child(btn::logical(
+                &format!("influence-{index}"),
+                label,
+                btn::Chip { active: Some(!influence.disabled), image: Some(picture), ..btn::Chip::default() },
+                |_: &mut S| {},
+            ));
+        }
+    }
+    if let Some(tier) = &filters.unidentified_tier {
+        chips = chips.child(btn::logical(
+            "unidentified-tier",
+            &i18n::t("item.unidentified_tier"),
+            btn::Chip { active: Some(!tier.disabled), ..btn::Chip::default() },
+            move |s: &mut S| project(s).toggle_logical(LogicalToggle::UnidentifiedTier),
+        ));
+    } else if let Some(unidentified) = &filters.unidentified {
+        chips = chips.child(btn::logical(
+            "unidentified",
+            &i18n::t("item.unidentified"),
+            btn::Chip { active: Some(!unidentified.disabled), ..btn::Chip::default() },
+            move |s: &mut S| project(s).toggle_logical(LogicalToggle::Unidentified),
+        ));
+    }
+    if let Some(veiled) = &filters.veiled {
+        chips = chips.child(btn::logical(
+            "veiled",
+            &i18n::t("item.veiled"),
+            btn::Chip { active: Some(!veiled.disabled), ..btn::Chip::default() },
+            move |s: &mut S| project(s).set_item_flag(ItemFlag::Veiled),
+        ));
+    }
+    if let Some(foil) = &filters.foil {
+        chips = chips.child(btn::logical(
+            "foil",
+            &i18n::t("item.foil_unique"),
+            btn::Chip { active: Some(!foil.disabled), ..btn::Chip::default() },
+            move |s: &mut S| project(s).set_item_flag(ItemFlag::Foil),
+        ));
+    }
+    if let Some(mirrored) = &filters.mirrored {
+        let label = i18n::t(if mirrored.disabled { "item.not_mirrored" } else { "item.mirrored" });
+        chips = chips.child(btn::logical(
+            "mirrored",
+            &label,
+            btn::Chip { active: Some(true), ..btn::Chip::default() },
+            move |s: &mut S| {
+                project(s).set_item_flag(ItemFlag::Mirrored);
+            },
+        ));
+    }
+    if let Some(sanctified) = &filters.sanctified {
+        let label = i18n::t(if sanctified.disabled { "item.not_sanctified" } else { "item.sanctified" });
+        chips = chips.child(btn::logical(
+            "sanctified",
+            &label,
+            btn::Chip { active: Some(true), ..btn::Chip::default() },
+            move |s: &mut S| {
+                project(s).set_item_flag(ItemFlag::Sanctified);
+            },
+        ));
+    }
+    if let Some(hint) = &filters.ultimatum_hint {
+        let label = i18n::t(&format!("item.{}", hint.value.to_lowercase()));
+        chips = chips.child(btn::logical(
+            "ultimatum",
+            &label,
+            btn::Chip { active: Some(!hint.disabled), ..btn::Chip::default() },
+            move |s: &mut S| {
+                project(s).toggle_logical(LogicalToggle::UltimatumHint);
+            },
+        ));
+    }
+    chips
+}
+
+/// The preset tabs, the stat rows and the controls row under the block, or nothing when
+/// there is no parsed item.
+fn stats_block<S: 'static>(check: &PriceCheck, preset_count: usize, project: Project<S>) -> Option<El> {
     let mut block = col().key("filters-stats").w_full().mb(theme::rem(1.0)).mt(if preset_count > 1 {
         theme::rem(0.25)
     } else {
@@ -212,7 +243,9 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
         block = block.child(preset_tabs(check, project));
     }
     let mut list = col().key("filters-list").w_full();
-    let Some(item) = check.item() else { return root };
+    let item = check.item()?;
+    let stats = check.item_stats();
+    let unknown = unknown_count(check);
     let filtered: Vec<(usize, &StatFilter)> =
         stats.iter().enumerate().filter(|(_, stat)| stat.hidden.is_some() == check.show_hidden).collect();
     for (index, filter) in &filtered {
@@ -234,17 +267,17 @@ pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
             list = list.child(unknown::view(&format!("unknown-{index}"), stat, &check.text, project));
         }
     }
-    block = block.child(list).child(controls(check, filtered.len(), stats.len(), project));
-    root = root.child(block);
-    // `FilterModifier.vue`'s `.mods`, which CSS shows only while its row is hovered.
-    if check.show_sources
-        && let Some(index) = check.source_hover
-        && let Some(filter) = check.stat(index)
-        && modifier::shows_source_info(check, filter)
-    {
-        root = root.child(sources_overlay(filter, index));
+    Some(block.child(list).child(controls(check, filtered.len(), stats.len(), project)))
+}
+
+/// `FilterModifier.vue`'s `.mods` overlay, when a stat row is hovered and Mods is on.
+fn hovered_sources(check: &PriceCheck) -> Option<El> {
+    if !check.show_sources {
+        return None;
     }
-    root
+    let index = check.source_hover?;
+    let filter = check.stat(index)?;
+    modifier::shows_source_info(check, filter).then(|| sources_overlay(filter, index))
 }
 
 /// `FilterModifier.vue`'s sources overlay: the row's contributing modifiers on a gradient
@@ -388,7 +421,7 @@ fn controls<S: 'static>(check: &PriceCheck, filtered: usize, total: usize, proje
     row = row.child(el().key("filters-controls-spacer").grow(1.0));
     row.child(
         ui::toggle::toggle("show-sources", &i18n::t("filters.mods_toggle"), check.show_sources, move |s: &mut S| {
-            project(s).toggle_show_sources()
+            project(s).toggle_show_sources();
         })
         .pt(theme::rem(0.5)),
     )
@@ -403,7 +436,7 @@ fn hidden_label(check: &PriceCheck) -> &'static str {
 }
 
 /// `hasStats`' preset clause.
-fn preset_count(check: &PriceCheck) -> usize {
+const fn preset_count(check: &PriceCheck) -> usize {
     match check.presets.as_ref() {
         Some(Ok(presets)) => presets.presets.len(),
         _ => 0,
@@ -422,7 +455,7 @@ fn unknown_count(check: &PriceCheck) -> usize {
 }
 
 /// `influence.value` as the chip's text (`ItemInfluence` serialises as `Shaper`, ...).
-pub(super) fn influence_name(influence: ItemInfluence) -> &'static str {
+pub(super) const fn influence_name(influence: ItemInfluence) -> &'static str {
     match influence {
         ItemInfluence::Crusader => "Crusader",
         ItemInfluence::Elder => "Elder",
@@ -446,12 +479,10 @@ pub(super) fn tag_badge(label: &str, tag: FilterTag) -> El {
     // `.tag` has no colour of its own; each tag class adds one (`FilterModifier.vue`'s
     // style module, which EE2 changed from APT's: `explicit` is plain gray-600).
     let (fill, color, margins) = match tag {
-        FilterTag::Type(T::Explicit) | FilterTag::Type(T::Implicit) | FilterTag::Type(T::Skill) => {
-            (None, theme::gray(600), true)
-        }
+        FilterTag::Type(T::Explicit | T::Implicit | T::Skill) => (None, theme::gray(600), true),
         FilterTag::Corrupted => (Some(theme::red(700)), theme::red(100), false),
         FilterTag::Type(T::Fractured) => (Some(theme::yellow(400)), Color::BLACK, false),
-        FilterTag::Type(T::Crafted) | FilterTag::Synthesised | FilterTag::Type(T::Augment) => {
+        FilterTag::Type(T::Crafted | T::Augment) | FilterTag::Synthesised => {
             (Some(theme::blue(600)), theme::blue(100), false)
         }
         FilterTag::Variant => (Some(theme::yellow(700)), theme::yellow(100), false),
@@ -460,9 +491,9 @@ pub(super) fn tag_badge(label: &str, tag: FilterTag) -> El {
         FilterTag::Type(T::AddedAugment) => (Some(theme::blue(600)), theme::blue(100), false),
         FilterTag::Type(T::Desecrated) => (Some(theme::green(900)), theme::green(100), false),
         FilterTag::Mutated => (Some(theme::rose(900)), theme::yellow(100), false),
-        // `.tag-sanctum { @apply border }`: a bare outline, no fill.
-        FilterTag::Type(T::Sanctum) => (None, theme::gray(600), false),
         FilterTag::Type(T::Scourge) => (Some(theme::orange(600)), Color::WHITE, false),
+        // `.tag-sanctum { @apply border }` and the tags this module gives no colour: a bare
+        // outline with no fill.
         _ => (None, theme::gray(600), false),
     };
     let key = format!("tag-{}", slug(label));
@@ -511,49 +542,56 @@ pub(super) enum FieldStyle {
 }
 
 impl FieldStyle {
-    fn height(self) -> f32 {
+    const fn height(self) -> f32 {
         match self {
             // The chip is 22 pt with its 1 pt border, so its content box is 20.
-            FieldStyle::Chip => LINE - 2.0,
-            FieldStyle::Roll => LINE,
+            Self::Chip => LINE - 2.0,
+            Self::Roll => LINE,
         }
     }
 
     fn fill(self, focused: bool) -> Color {
         match self {
-            FieldStyle::Chip if focused => theme::gray(700),
-            FieldStyle::Chip => Color::TRANSPARENT,
-            FieldStyle::Roll => theme::gray(900),
+            Self::Chip if focused => theme::gray(700),
+            Self::Chip => Color::TRANSPARENT,
+            Self::Roll => theme::gray(900),
         }
     }
 
     fn placeholder_color(self) -> Color {
         match self {
-            FieldStyle::Chip => theme::gray(400),
-            FieldStyle::Roll => theme::gray(700),
+            Self::Chip => theme::gray(400),
+            Self::Roll => theme::gray(700),
         }
     }
 
-    fn placeholder_font(self) -> TextStyle {
+    const fn placeholder_font(self) -> TextStyle {
         match self {
-            FieldStyle::Chip => TextStyle::new(14.0, 400.0).lh(20.0),
+            Self::Chip => TextStyle::new(14.0, 400.0).lh(20.0),
             // `.rollInput::placeholder` is 13 pt on the field's 20 pt line.
-            FieldStyle::Roll => TextStyle::new(13.0, 400.0).lh(20.0),
+            Self::Roll => TextStyle::new(13.0, 400.0).lh(20.0),
         }
     }
 }
 
+/// A chip or row's min/max field: `FilterBtnNumeric.vue`'s chip input and
+/// `FilterModifier.vue`'s `.rollInput` are styled differently.
+pub(super) struct NumberField<'a> {
+    /// The state key ([`InputField::key`]) and what a change writes back.
+    pub field: InputField,
+    /// `w-12` for a roll, `${1.2 + length}ch` for a chip.
+    pub width: f32,
+    /// The reference's placeholder, empty for a chip's own field.
+    pub placeholder: &'a str,
+    /// The corners the box keeps (a chip's min/max pair splits one box).
+    pub corners: [f32; 4],
+    pub style: FieldStyle,
+}
+
 /// A chip or row's min/max field: a Rune text field bound to the state, `w-12`/`w-auto`,
 /// `text-center`, styled by its [`FieldStyle`].
-pub(super) fn number_field<S: 'static>(
-    check: &PriceCheck,
-    field: InputField,
-    width: f32,
-    placeholder: &str,
-    corners: [f32; 4],
-    style: FieldStyle,
-    project: Project<S>,
-) -> El {
+pub(super) fn number_field<S: 'static>(check: &PriceCheck, number: &NumberField<'_>, project: Project<S>) -> El {
+    let NumberField { field, width, placeholder, corners, style } = *number;
     let key = field.key();
     let Some(edit) = check.input(&key) else {
         return el().key(key).size(width, style.height());
@@ -591,8 +629,12 @@ pub(super) fn number_field<S: 'static>(
 }
 
 /// The width `FilterBtnNumeric.vue` gives its input: `${1.2 + Math.max(String(value).length, 2)}ch`.
+#[expect(
+    clippy::suboptimal_flops,
+    reason = "`(1.2 + chars) * 7.8 + 2` from `FilterBtnNumeric.vue`'s `width`; `mul_add` rounds differently"
+)]
 pub(super) fn number_width(text: &str) -> f32 {
-    let chars = text.chars().count().max(2) as f32;
+    let chars = wraex_core::num::usize_to_f32(text.chars().count().max(2));
     (1.2 + chars) * 7.8 + 2.0
 }
 
@@ -608,7 +650,7 @@ pub(super) fn elemental_options<S: 'static>(filter: &StatFilter, index: usize, p
         if !info.contains_key(option.stat_ref()) {
             continue;
         }
-        let is_selected = selected == Some(option as u8 as f64);
+        let is_selected = selected == Some(option.value());
         let color = match option {
             ElementalOption::Any => theme::gray(200),
             ElementalOption::Fire => theme::fire(),
@@ -638,8 +680,8 @@ pub(super) fn elemental_options<S: 'static>(filter: &StatFilter, index: usize, p
 
 /// The item's or currency's image (`FiltersBlock.vue`'s influence badges, `FilterModifier.vue`):
 /// the reference's own `/images` art, or an item's CDN icon.
-pub(super) fn image(picture: art::Picture, size: f32) -> El {
-    art::picture(wraex_core::GameId::Poe2, &picture, (size, size))
+pub(super) fn image(picture: &art::Picture, size: f32) -> El {
+    art::picture(wraex_core::GameId::Poe2, picture, (size, size))
 }
 
 /// `Quality: {0}` and friends: the stat filter's own text, with internal trade ids
@@ -655,23 +697,23 @@ pub(super) fn stat_text(filter: &StatFilter) -> String {
 pub(super) fn shows_quality(trade_id: Option<&str>, item: &Item) -> bool {
     matches!(
         trade_id,
-        Some("item.armour")
-            | Some("item.evasion_rating")
-            | Some("item.energy_shield")
-            | Some("item.total_dps")
-            | Some("item.physical_dps")
+        Some("item.armour" | "item.evasion_rating" | "item.energy_shield" | "item.total_dps" | "item.physical_dps")
     ) && item.is_modifiable()
 }
 
 /// `FilterModifier.vue`'s `showTag`.
 pub(super) fn shows_tag(filter: &StatFilter, item: &Item) -> bool {
     let first = filter.trade_id.as_deref().and_then(|ids| ids.first()).map(String::as_str);
-    filter.tag != FilterTag::Property
-        && first != Some("item.has_empty_modifier")
-        && !item.ref_name_is("Chronicle of Atzoatl")
-        && !item.ref_name_is("Mirrored Tablet")
-        && !item.ref_name_is("Filled Coffin")
-        && !(item.rarity == Some(Rarity::Unique) && matches!(filter.tag, FilterTag::EXPLICIT | FilterTag::PSEUDO))
+    if filter.tag == FilterTag::Property || first == Some("item.has_empty_modifier") {
+        return false;
+    }
+    if item.ref_name_is("Chronicle of Atzoatl")
+        || item.ref_name_is("Mirrored Tablet")
+        || item.ref_name_is("Filled Coffin")
+    {
+        return false;
+    }
+    !(item.rarity == Some(Rarity::Unique) && matches!(filter.tag, FilterTag::EXPLICIT | FilterTag::PSEUDO))
 }
 
 /// The `filters.tag_<tag>` label plus `x N` when several sources make it up.
@@ -679,13 +721,14 @@ pub(super) fn tag_label(filter: &StatFilter) -> String {
     let tag = tag_key(filter.tag).replace('-', "_");
     let mut label = i18n::t(&format!("filters.tag_{tag}"));
     if filter.sources.len() > 1 {
-        label.push_str(&format!(" x {}", filter.sources.len()));
+        label.push_str(" x ");
+        label.push_str(&filter.sources.len().to_string());
     }
     label
 }
 
 /// `FilterTag`'s `filters.tag_<tag>` key: the modifier type's name, or the tag's own.
-fn tag_key(tag: FilterTag) -> &'static str {
+const fn tag_key(tag: FilterTag) -> &'static str {
     match tag {
         FilterTag::Type(kind) => kind.as_str(),
         FilterTag::Corrupted => "corrupted",

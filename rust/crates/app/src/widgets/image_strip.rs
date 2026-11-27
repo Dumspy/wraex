@@ -13,13 +13,52 @@
 //! an uploads path is the placeholder, as any picture the app cannot load is.
 
 use rune::{Color, El, col, row};
-use serde_json::Value;
+use serde::Deserialize;
+use serde_json::{Map, Value};
+use wraex_core::num::usize_to_f32;
 
+use super::lenient;
 use crate::theme::{self, text as type_};
 use crate::widgets::{Action, Overlay, Project, Widget, icon};
 
 /// `WidgetSpec.type`.
 pub const WM_TYPE: &str = "image-strip";
+
+/// One `images[]` entry (`WidgetImageStrip.vue`'s `{ id, url }`), read leniently: an odd entry is
+/// a card with the fallbacks the widget has always used.
+#[derive(Debug, Clone, Default, Deserialize)]
+struct StripImage {
+    #[serde(default, deserialize_with = "lenient")]
+    id: Option<serde_json::Number>,
+    #[serde(default, deserialize_with = "lenient")]
+    url: Option<String>,
+}
+
+/// `config.images`'s field of the widget object.
+#[derive(Debug, Deserialize)]
+struct ImagesField {
+    #[serde(default, deserialize_with = "lenient")]
+    images: Option<Vec<Value>>,
+}
+
+/// `config.images`, in config order; an entry that is not an object is an empty one.
+fn images(widget: &Widget) -> Vec<StripImage> {
+    ImagesField::deserialize(&widget.config)
+        .ok()
+        .and_then(|field| field.images)
+        .unwrap_or_default()
+        .iter()
+        .map(|image| StripImage::deserialize(image).unwrap_or_default())
+        .collect()
+}
+
+/// `WidgetImageStrip.vue`'s mount: the default cheat sheet, `syndicate.jpg`.
+pub fn default_images() -> Value {
+    let mut image = Map::new();
+    image.insert("id".to_owned(), Value::from(1_u32));
+    image.insert("url".to_owned(), Value::String("syndicate.jpg".to_owned()));
+    Value::Array(vec![Value::Object(image)])
+}
 
 /// `.card`: `width: 12rem; height: 6.5rem; p-1; bg-gray-800; rounded`, at the default 16 pt
 /// root font size.
@@ -28,17 +67,20 @@ const CARD: (f32, f32) = (12.0 * theme::REM, 6.5 * theme::REM);
 const PICTURE: (f32, f32) = (CARD.0 - 2.0 * theme::REM / 4.0, CARD.1 - 2.0 * theme::REM / 4.0);
 
 /// `WidgetImageStrip.vue`: the title (or its input) and the images.
+// `cards * CARD.0 + (cards - 1) * gap` is the reference's own arithmetic: `mul_add` fuses the
+// rounding, which would move the strip by a fraction of a point from the reference's CSS.
+#[expect(clippy::suboptimal_flops, reason = "the reference's CSS arithmetic is not fused")]
 pub fn view<S: 'static>(overlay: &Overlay, widget: &Widget, project: Project<S>) -> El {
     let id = widget.wm_id;
     let editing = overlay.editing == Some(id);
-    let images = widget.config.get("images").and_then(Value::as_array).cloned().unwrap_or_default();
+    let images = images(widget);
 
     // The columns the strip spans: one card per image, plus the "Choose File" card while
     // editing. Upstream's title is a block across the card's width, and its card is as wide as
     // its images, so the title takes the same width here.
     let gap = theme::rem(0.25);
-    let cards = images.len().max(1) + usize::from(editing);
-    let strip_width = cards as f32 * CARD.0 + (cards - 1) as f32 * gap;
+    let cards = images.len().max(1).saturating_add(usize::from(editing));
+    let strip_width = usize_to_f32(cards) * CARD.0 + usize_to_f32(cards.saturating_sub(1)) * gap;
     // `m-1` around the title: a block's auto width is its parent's minus its margins.
     let margin = theme::rem(0.25);
     let title_width = strip_width - 2.0 * margin;
@@ -87,9 +129,13 @@ pub fn view<S: 'static>(overlay: &Overlay, widget: &Widget, project: Project<S>)
 
     let mut strip = row().key("image-strip-images").gap(gap);
     for (index, image) in images.iter().enumerate() {
-        let url = image.get("url").and_then(Value::as_str).unwrap_or_default();
-        let image_id = image.get("id").and_then(Value::as_i64).unwrap_or(index as i64);
-        strip = strip.child(image_card(overlay, id, index, image_id, url, project));
+        let url = image.url.clone().unwrap_or_default();
+        let image_id = image
+            .id
+            .as_ref()
+            .and_then(serde_json::Number::as_i64)
+            .unwrap_or_else(|| i64::try_from(index).unwrap_or(i64::MAX));
+        strip = strip.child(image_card(overlay, id, ImageCard { index, id: image_id, url: &url }, project));
     }
     if editing {
         strip = strip.child(choose_file(overlay, id, project));
@@ -107,16 +153,18 @@ pub fn view<S: 'static>(overlay: &Overlay, widget: &Widget, project: Project<S>)
         .child(strip)
 }
 
+/// One image's card: the config entry's `{ id, url }` and the index its element keys count from.
+#[derive(Clone, Copy)]
+struct ImageCard<'a> {
+    index: usize,
+    id: i64,
+    url: &'a str,
+}
+
 /// One `.card` with its `FullscreenImage`; while editing, its remove button on top and the drag
 /// handle in the middle.
-fn image_card<S: 'static>(
-    overlay: &Overlay,
-    wm_id: u32,
-    index: usize,
-    image_id: i64,
-    url: &str,
-    project: Project<S>,
-) -> El {
+fn image_card<S: 'static>(overlay: &Overlay, wm_id: u32, image: ImageCard<'_>, project: Project<S>) -> El {
+    let ImageCard { index, id: image_id, url } = image;
     // The widget's `Widget.vue` modes: edit draws the remove button and drag handle, and the
     // handle hides while the widget is being moved.
     let editing = overlay.editing == Some(wm_id);

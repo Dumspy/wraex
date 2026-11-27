@@ -55,7 +55,7 @@ fn links(group: &FilterGroup) -> El {
     let skill_color = if supports.len() == 5 { theme::yellow(500) } else { theme::gray(600) };
     let mut out = row().key("group-links").items_center().gap(theme::rem(0.625)).child(diamond(
         skill_color,
-        if supports.len() == 5 { Some("6") } else { None },
+        (supports.len() == 5).then_some("6"),
         meta_checked && six_link,
     ));
     for (index, gem) in supports.into_iter().enumerate() {

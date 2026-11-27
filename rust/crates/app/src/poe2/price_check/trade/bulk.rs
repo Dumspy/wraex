@@ -6,6 +6,7 @@
 
 use rune::{Align, Color, El, Span, col, el, rich, row, text};
 use wraex_core::js;
+use wraex_core::num::usize_to_f64;
 use wraex_core::relative_time::EpochMillis;
 use wraex_core::trade::api::ExchangeResult;
 
@@ -65,7 +66,7 @@ pub struct OfferItem {
 }
 
 /// `Account` of `common.ts`: only the online status is optional.
-#[derive(Debug, Clone, PartialEq, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Account {
     pub name: String,
@@ -73,7 +74,7 @@ pub struct Account {
     pub online: Option<Online>,
 }
 
-#[derive(Debug, Clone, PartialEq, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize)]
 pub struct Online {
     pub status: Option<String>,
 }
@@ -115,8 +116,11 @@ pub fn searches(
 
     have.iter()
         .map(|trade_tag| {
-            let mut tagged: Vec<&ExchangeListing> =
-                results.iter().copied().filter(|r| &r.listing.offers[0].exchange.currency == trade_tag).collect();
+            let mut tagged: Vec<&ExchangeListing> = results
+                .iter()
+                .copied()
+                .filter(|r| r.listing.offers.first().is_some_and(|offer| &offer.exchange.currency == trade_tag))
+                .collect();
 
             let loaded_on_demand =
                 trade_tag == "exalted" && tagged.len() < SHOW_RESULTS && query.total > API_FETCH_LIMIT;
@@ -124,19 +128,20 @@ pub fn searches(
                 return None;
             }
 
+            // Every offer list has one offer: the filter above kept just those. A stray
+            // empty list would sort as `NaN` (`Array.prototype.sort` leaves it in place).
             let ratio = |r: &ExchangeListing| {
-                let offer = &r.listing.offers[0];
-                offer.exchange.amount / offer.item.amount
+                r.listing.offers.first().map_or(f64::NAN, |offer| offer.exchange.amount / offer.item.amount)
             };
             // Stable, like `Array.prototype.sort`.
             tagged.sort_by(|a, b| ratio(a).partial_cmp(&ratio(b)).unwrap_or(std::cmp::Ordering::Equal));
             let listed = tagged
                 .iter()
                 .take(SHOW_RESULTS)
-                .map(|r| {
-                    let offer = &r.listing.offers[0];
+                .filter_map(|r| {
+                    let offer = r.listing.offers.first()?;
                     let account = &r.listing.account;
-                    BulkPricingResult {
+                    Some(BulkPricingResult {
                         id: r.id.clone(),
                         relative_date: wraex_core::relative_time::iso_to_relative_short(&r.listing.indexed, now)
                             .unwrap_or_default(),
@@ -151,22 +156,22 @@ pub fn searches(
                         is_mine: account.name == account_name,
                         account_name: account.name.clone(),
                         ign: account.last_character_name.clone().unwrap_or_default(),
-                    }
+                    })
                 })
-                .collect();
+                .collect::<Vec<_>>();
 
             let chaos_is_loaded = trade_tag == "divine"
                 && tagged.len() < results.len()
-                && (results.len() - tagged.len() >= SHOW_RESULTS || query.total <= API_FETCH_LIMIT);
+                && (results.len().saturating_sub(tagged.len()) >= SHOW_RESULTS || query.total <= API_FETCH_LIMIT);
 
             Some(BulkSearch {
                 query_id: query.id.clone(),
                 have_tag: trade_tag.clone(),
                 // A best guess when the request asked for several `have` currencies.
                 total: if chaos_is_loaded {
-                    tagged.len() as f64
+                    usize_to_f64(tagged.len())
                 } else {
-                    query.total - (results.len() - tagged.len()) as f64
+                    query.total - usize_to_f64(results.len().saturating_sub(tagged.len()))
                 },
                 listed,
             })
@@ -415,6 +420,7 @@ fn listed_cell(index: usize, result: &BulkPricingResult) -> El {
 }
 
 #[cfg(test)]
+#[expect(clippy::disallowed_macros, reason = "expected JSON written as literals")]
 mod tests {
     use super::*;
     use serde_json::json;

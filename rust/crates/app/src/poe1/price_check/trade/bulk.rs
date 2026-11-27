@@ -131,19 +131,19 @@ fn table(check: &PriceCheck) -> El {
     let listed: &[BulkPricingResult] = columns.map_or(&[], |group| group.listed.as_slice());
 
     // `selectedResults`: the ratio merged into the first nineteen offers, twenty rows in all.
-    let rows = match market_ratio_row(check) {
-        Some(ratio) => market_ratio::merge(&listed[..listed.len().min(19)], ratio),
-        None => (0..listed.len().min(listing::SHOW_RESULTS)).map(market_ratio::Row::Offer).collect(),
-    };
+    let rows = market_ratio_row(check).map_or_else(
+        || (0..listed.len().min(listing::SHOW_RESULTS)).map(market_ratio::Row::Offer).collect(),
+        |ratio| market_ratio::merge(listed.get(..listed.len().min(19)).unwrap_or_default(), ratio),
+    );
 
     let mut body = col().key("bulk-rows").w_full();
     for (index, row) in rows.iter().enumerate() {
         let line = match row {
             market_ratio::Row::Offer(offer) => {
-                let result = &listed[*offer];
+                let Some(result) = listed.get(*offer) else { continue };
                 listing::row_for(index)
-                    .child(price_cell(index, &result.exchange_amount, &result.item_amount))
-                    .child(exchange_cell(index, &result.exchange_amount, &result.item_amount))
+                    .child(price_cell(index, result.exchange_amount, result.item_amount))
+                    .child(exchange_cell(index, result.exchange_amount, result.item_amount))
                     .child(number_cell(result.stock, &format!("bulk-{index}-stock"), STOCK_WIDTH, true))
                     .child(fulfill_cell(index, result))
                     .child(listed_cell(index, result))
@@ -221,7 +221,7 @@ fn heading_listed(key: &str) -> El {
 }
 
 /// `Number((exchangeAmount / itemAmount).toFixed(4))`.
-fn price_cell(index: usize, exchange_amount: &f64, item_amount: &f64) -> El {
+fn price_cell(index: usize, exchange_amount: f64, item_amount: f64) -> El {
     let price = exchange_amount / item_amount;
     let label =
         js::to_fixed(price, 4).parse::<f64>().map_or_else(|_| js::number_to_string(price), js::number_to_string);
@@ -241,7 +241,7 @@ fn ratio_row(index: usize, ratio: &market_ratio::MarketRatio) -> El {
     listing::row_for(index)
         .fill(theme::gray(700))
         .border(1.0, theme::gray(600))
-        .child(price_cell(index, &ratio.exchange_amount, &ratio.item_amount))
+        .child(price_cell(index, ratio.exchange_amount, ratio.item_amount))
         .child(
             row()
                 .key(format!("bulk-{index}-exchange"))
@@ -289,7 +289,7 @@ fn ratio_row(index: usize, ratio: &market_ratio::MarketRatio) -> El {
 }
 
 /// `Number(exchange.toFixed(1))` over a thin-space slash over `Number(item.toFixed(1))`.
-fn exchange_cell(index: usize, exchange_amount: &f64, item_amount: &f64) -> El {
+fn exchange_cell(index: usize, exchange_amount: f64, item_amount: f64) -> El {
     let amount = |value: f64| {
         js::to_fixed(value, 1).parse::<f64>().map_or_else(|_| js::number_to_string(value), js::number_to_string)
     };
@@ -300,7 +300,7 @@ fn exchange_cell(index: usize, exchange_amount: &f64, item_amount: &f64) -> El {
         .pr(theme::rem(0.5))
         .items_center()
         .child(
-            text(amount(*exchange_amount))
+            text(amount(exchange_amount))
                 .key(format!("bulk-{index}-exchange-left"))
                 .font(type_::SM)
                 .color(theme::gray(200))
@@ -311,7 +311,7 @@ fn exchange_cell(index: usize, exchange_amount: &f64, item_amount: &f64) -> El {
             text("\u{2009}/\u{2009}").key(format!("bulk-{index}-exchange-sep")).font(type_::SM).color(theme::gray(200)),
         )
         .child(
-            text(amount(*item_amount))
+            text(amount(item_amount))
                 .key(format!("bulk-{index}-exchange-right"))
                 .font(type_::SM)
                 .color(theme::gray(200))

@@ -44,19 +44,21 @@ impl Updates {
     ) -> Self {
         let updates = Self::default();
         let worker = updates.clone();
-        std::thread::Builder::new()
-            .name("wraex-updates".to_owned())
-            .spawn(move || {
-                loop {
-                    let info = check(&wraex_platform::http::HttpTransport::default(), no_download);
-                    if let Ok(mut latest) = worker.latest.lock() {
-                        *latest = Some(info.clone());
-                    }
-                    on_landed(info);
-                    std::thread::sleep(std::time::Duration::from_millis(CHECK_INTERVAL_MS));
+        let started = std::thread::Builder::new().name("wraex-updates".to_owned()).spawn(move || -> ! {
+            loop {
+                let info = check(&wraex_platform::http::HttpTransport::default(), no_download);
+                if let Ok(mut latest) = worker.latest.lock() {
+                    *latest = Some(info.clone());
                 }
-            })
-            .expect("start the update worker");
+                on_landed(info);
+                std::thread::sleep(std::time::Duration::from_millis(CHECK_INTERVAL_MS));
+            }
+        });
+        if let Err(error) = started {
+            // Without the worker the app simply never asks: a failed thread is not worth
+            // failing the start over.
+            wraex_platform::log!("wraex: the update worker could not start: {error}");
+        }
         updates
     }
 }
@@ -72,7 +74,9 @@ pub fn due(last: Option<u64>, now: u64) -> bool {
 }
 
 fn now() -> u64 {
-    SystemTime::now().duration_since(UNIX_EPOCH).map(|elapsed| elapsed.as_millis() as u64).unwrap_or(0)
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |elapsed| u64::try_from(elapsed.as_millis()).unwrap_or(u64::MAX))
 }
 
 #[cfg(test)]

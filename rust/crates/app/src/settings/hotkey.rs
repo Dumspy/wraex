@@ -25,6 +25,10 @@ pub struct Recording {
 }
 
 /// `e.code`'s name in upstream's `KeyToCode`, for the keys that table holds.
+#[expect(
+    clippy::too_many_lines,
+    reason = "line-for-line port of upstream's `KeyToCode` lookup table (ipc/KeyToCode.ts)"
+)]
 pub fn key_name(code: PhysicalKeyCode) -> Option<&'static str> {
     use PhysicalKeyCode as C;
     let name = match code {
@@ -136,13 +140,14 @@ pub fn key_name(code: PhysicalKeyCode) -> Option<&'static str> {
     key_to_code(name).map(|_| name)
 }
 
-/// A release's key name when it has no physical code (a headless `Runtime::key_up`, a script's
-/// `"key"` without a `"code"`): the character it types, named the way `KeyToCode` names the key
-/// that types it on a US layout.
+/// A release's key name when it has no physical code, named for the character it types.
+///
+/// A headless `Runtime::key_up`, or a script's `"key"` without a `"code"`, has no physical
+/// code: the port names the character the way `KeyToCode` names the key that types it on a US
+/// layout.
 pub fn logical_name(key: &Key) -> Option<String> {
     let character = |c: char| match c.to_ascii_uppercase() {
-        c @ 'A'..='Z' => Some(c.to_string()),
-        c @ '0'..='9' => Some(c.to_string()),
+        c @ ('A'..='Z' | '0'..='9') => Some(c.to_string()),
         ' ' => Some("Space".to_owned()),
         ';' => Some("Semicolon".to_owned()),
         '=' => Some("Equal".to_owned()),
@@ -233,20 +238,28 @@ pub fn record(settings: &mut Settings, ev: &KeyEvent, physical: Option<PhysicalK
 pub const WIDE: f32 = 12.0 * theme::REM;
 pub const NARROW: f32 = 5.0 * theme::REM;
 
+/// A [`hotkey_input`]: its element key, the hotkey (or the placeholder shown), its width and
+/// whether it is capturing keys.
+#[derive(Debug, Clone, Copy)]
+pub struct HotkeyInput<'a> {
+    /// The element key; the value text's key is `{key}-value`.
+    pub key: &'a str,
+    /// The hotkey, or `None` for the red `Not Set` placeholder.
+    pub value: Option<&'a str>,
+    /// `w-48` beside a label, `w-20` in the split key.
+    pub width: f32,
+    /// `t('settings.no_key')`, shown while no key is set.
+    pub placeholder: &'a str,
+    /// Whether this is the field the window is capturing keys for.
+    pub recording: bool,
+}
+
 /// `HotkeyInput.vue`: `rounded bg-gray-900 px-1 text-center font-poe`, the hotkey or the red
 /// `Not Set` placeholder.
-pub fn hotkey_input<S: 'static>(
-    key: &str,
-    value: Option<&str>,
-    width: f32,
-    placeholder: &str,
-    recording: bool,
-    on_start: impl Fn(&mut S) + 'static,
-) -> El {
-    let (label, color) = match value {
-        Some(value) => (value.to_owned(), theme::gray(100)),
-        None => (placeholder.to_owned(), theme::red(400)),
-    };
+pub fn hotkey_input<S: 'static>(props: HotkeyInput<'_>, on_start: impl Fn(&mut S) + 'static) -> El {
+    let HotkeyInput { key, value, width, placeholder, recording } = props;
+    let (label, color) =
+        value.map_or_else(|| (placeholder.to_owned(), theme::red(400)), |value| (value.to_owned(), theme::gray(100)));
     row()
         .key(key)
         .w(width)

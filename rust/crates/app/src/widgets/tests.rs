@@ -5,6 +5,8 @@
 //! `cargo run -p wraex-app -- --snap out.png --scene widget-menu` renders the same window; these
 //! tests drive the handlers and read the element tree.
 
+#![expect(clippy::disallowed_macros, reason = "expected JSON written as literals")]
+
 use rune::runtime::ElementInfo;
 use rune::text::TextSystem;
 use rune::{Env, Runtime};
@@ -176,7 +178,10 @@ fn the_menu_always_show_toggle_lists_the_shown_widgets() {
 
     click(&mut runtime, "widget-menu-always-show-toggle");
     runtime.frame(1.0 / 60.0);
-    assert_eq!(overlay(&runtime).widget(1).map(|widget| widget.config["alwaysShow"].as_bool()), Some(Some(true)));
+    assert_eq!(
+        overlay(&runtime).widget(1).map(|widget| widget.config["alwaysShow"].clone()),
+        Some(serde_json::Value::Bool(true))
+    );
     // The shown image strip is listed now (its border shows it as shown); widgets with
     // `menu::skip` still are not, and the menu itself carries that flag.
     assert!(runtime.find("widget-menu-entry-8").is_some());
@@ -345,8 +350,9 @@ fn the_image_strip_shows_its_configured_images() {
 
     click(&mut runtime, "image-strip-remove-0");
     runtime.frame(1.0 / 60.0);
-    assert!(
-        overlay(&runtime).widget(id).and_then(|widget| widget.config["images"].as_array()).is_some_and(Vec::is_empty)
+    assert_eq!(
+        overlay(&runtime).widget(id).map(|widget| widget.config["images"].clone()),
+        Some(serde_json::Value::Array(Vec::new()))
     );
     assert!(runtime.find("image-strip-image-0").is_none(), "the image's card is gone");
     assert!(runtime.find("image-strip-choose-file").is_some(), "the file card stays");
@@ -627,9 +633,11 @@ fn the_stash_search_buttons_send_their_text() {
     // widget's own config object, which is what the settings window's editor writes.
     let id = overlay(&runtime).shown;
     if let Some(widget) = overlay_mut(&mut runtime).widget_mut(id)
-        && let Some(entries) = widget.config.get_mut("entries").and_then(|entries| entries.as_array_mut())
+        && let serde_json::Value::Object(object) = &mut widget.config
+        && let Some(serde_json::Value::Array(entries)) = object.get_mut("entries")
+        && let Some(serde_json::Value::Object(entry)) = entries.first_mut()
     {
-        entries[0]["hotkey"] = serde_json::json!("Ctrl+Shift+1");
+        entry.insert("hotkey".to_owned(), serde_json::Value::String("Ctrl+Shift+1".to_owned()));
     }
     // A press re-runs the view, which is what draws from the edited config.
     click(&mut runtime, "stash-search-entry-3");
@@ -640,7 +648,7 @@ fn the_stash_search_buttons_send_their_text() {
     settle(&mut runtime);
     assert_eq!(text_of(&runtime, "stash-search-title").as_deref(), Some("Map rolling"));
     click(&mut runtime, "stash-search-keys");
-    assert!(!overlay(&runtime).shown_widget().unwrap().config["enableHotkeys"].as_bool().unwrap());
+    assert_eq!(overlay(&runtime).shown_widget().unwrap().config["enableHotkeys"], serde_json::Value::Bool(false));
     assert!(runtime.find("stash-search-entry-0-hotkey").is_none(), "the labels follow the switch");
     click(&mut runtime, "stash-search-keys");
     assert!(runtime.find("stash-search-entry-0-hotkey").is_some());
@@ -715,7 +723,7 @@ fn the_poe2_item_search_prices_a_picked_unique() {
         app.item_search(|state| {
             state.set_tab(Tab::Unique);
             state.set_query("Mageblood");
-        })
+        });
     });
     settle(&mut runtime);
     assert_eq!(text_of(&runtime, "item-search-result-0-name-text").as_deref(), Some("Mageblood Utility Belt"));

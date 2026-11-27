@@ -33,11 +33,12 @@
 
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU8, Ordering};
-use std::sync::{Arc, LazyLock, Mutex, OnceLock};
+use std::sync::{Arc, LazyLock, Mutex, OnceLock, PoisonError};
 
 use rune::{El, Image, ImageCache, SurfaceFit, Waker, el};
 use wraex_core::GameId;
 use wraex_core::images::{is_cdn_url, is_map_screenshot_url};
+use wraex_core::num::{f32_to_u8, f32_to_u32, f64_to_f32};
 
 use crate::trade::Mode;
 use crate::ui::icon;
@@ -70,15 +71,21 @@ const MODE_UNSET: u8 = 0;
 const MODE_LIVE: u8 = 1;
 const MODE_REPLAY: u8 = 2;
 
-/// The mode a window was built with: [`crate::trade::Mode::Replay`] reads the screenshot
-/// harness's recordings, [`crate::trade::Mode::Live`] fetches from the CDN. The first caller
-/// wins; every later one is the same window's re-render.
+/// The mode a window was built with.
+///
+/// [`crate::trade::Mode::Replay`] reads the screenshot harness's recordings,
+/// [`crate::trade::Mode::Live`] fetches from the CDN. The first caller wins; every later one is
+/// the same window's re-render.
 pub fn set_mode(mode: Mode) {
     let value = match mode {
         Mode::Live => MODE_LIVE,
         Mode::Replay => MODE_REPLAY,
     };
-    let _ = MODE.compare_exchange(MODE_UNSET, value, Ordering::Relaxed, Ordering::Relaxed);
+    // The first caller wins; every later one is the same window's re-render, so a value already
+    // set is the expected case and needs nothing done with it.
+    if MODE.compare_exchange(MODE_UNSET, value, Ordering::Relaxed, Ordering::Relaxed).is_err() {
+        // Nothing to do: an earlier window set the mode.
+    }
 }
 
 /// [`set_mode`]'s value, or what a headless run would use when no window was built.
@@ -93,7 +100,7 @@ fn mode() -> Mode {
 /// Give the image cache the waker the window redraws with: `AppSpec::setup`'s. Called once at
 /// startup; a test that never calls it still renders, because it waits for its images.
 pub fn install_waker(waker: Waker) {
-    *WAKE.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(waker);
+    *WAKE.lock().unwrap_or_else(PoisonError::into_inner) = Some(waker);
     cache();
 }
 
@@ -101,7 +108,7 @@ pub fn install_waker(waker: Waker) {
 fn cache() -> &'static ImageCache {
     CACHE.get_or_init(|| {
         let wake: Waker = Arc::new(|| {
-            let waker = WAKE.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).clone();
+            let waker = WAKE.lock().unwrap_or_else(PoisonError::into_inner).clone();
             if let Some(waker) = waker {
                 waker();
             }
@@ -129,51 +136,51 @@ impl Source {
             Mode::Replay => "replay",
         };
         match self {
-            Source::Local { game, name } => format!("{mode}/{}/images/{name}", game.as_str()),
-            Source::Cdn { game, url } => format!("{mode}/{}/cdn/{url}", game.as_str()),
-            Source::Screenshot { game, url } => format!("{mode}/{}/screenshot/{url}", game.as_str()),
+            Self::Local { game, name } => format!("{mode}/{}/images/{name}", game.as_str()),
+            Self::Cdn { game, url } => format!("{mode}/{}/cdn/{url}", game.as_str()),
+            Self::Screenshot { game, url } => format!("{mode}/{}/screenshot/{url}", game.as_str()),
         }
     }
 
     /// What a test (and the element tree) calls it: the reference's `/images/<name>` or the URL.
     fn label(&self) -> String {
         match self {
-            Source::Local { name, .. } => format!("/images/{name}"),
-            Source::Cdn { url, .. } | Source::Screenshot { url, .. } => url.clone(),
+            Self::Local { name, .. } => format!("/images/{name}"),
+            Self::Cdn { url, .. } | Self::Screenshot { url, .. } => url.clone(),
         }
     }
 
     /// Whether `url` is the kind of remote image this source is.
     fn accepts(&self, url: &str) -> bool {
         match self {
-            Source::Cdn { .. } => is_cdn_url(url),
-            Source::Screenshot { .. } => is_map_screenshot_url(url),
-            Source::Local { .. } => false,
+            Self::Cdn { .. } => is_cdn_url(url),
+            Self::Screenshot { .. } => is_map_screenshot_url(url),
+            Self::Local { .. } => false,
         }
     }
 }
 
 /// `/images/<name>` from the reference's `public/images`, `size` points square.
 pub fn local(game: GameId, name: &str, size: f32) -> El {
-    draw(Source::Local { game, name: name.to_owned() }, (size, size))
+    draw(&Source::Local { game, name: name.to_owned() }, (size, size))
 }
 
 /// [`local`] in a box that is not square (an item's `w-8 h-10`).
 pub fn local_sized(game: GameId, name: &str, size: (f32, f32)) -> El {
-    draw(Source::Local { game, name: name.to_owned() }, size)
+    draw(&Source::Local { game, name: name.to_owned() }, size)
 }
 
-/// `/images/<name>` through CSS `filter: grayscale(1)`: `TradeListing.vue`'s stash icon and
-/// `TradeBulk.vue`'s currency icons. The picture's own opacity, if the reference adds one
-/// (`grayscale(1) opacity(0.5)`), is [`El::opacity`] on the returned element.
+/// `/images/<name>` through CSS `filter: grayscale(1)`.
+///
+/// `TradeListing.vue`'s stash icon and `TradeBulk.vue`'s currency icons. The picture's own
+/// opacity, if the reference adds one (`grayscale(1) opacity(0.5)`), is [`El::opacity`] on the
+/// returned element.
 pub fn local_grey(game: GameId, name: &str, size: f32) -> El {
     let source = Source::Local { game, name: name.to_owned() };
-    match ready_grey(&source) {
-        Some(image) => {
-            el().size(size, size).pixels_fit(image.pixels(), SurfaceFit::Fit).role("img").label(source.label())
-        }
-        None => icon::image_placeholder(size).size(size, size),
-    }
+    ready_grey(&source).map_or_else(
+        || icon::image_placeholder(size).size(size, size),
+        |image| el().size(size, size).pixels_fit(image.pixels(), SurfaceFit::Fit).role("img").label(source.label()),
+    )
 }
 
 /// `/images/<name>` cropped to fill `size`, as CSS `object-fit: cover` does:
@@ -194,8 +201,8 @@ pub fn local_cover(game: GameId, name: &str, size: (f32, f32)) -> El {
             .fill(crate::theme::gray(700))
             .a11y_hidden();
     };
-    let [iw, ih] = image.size().unwrap_or([w.max(1.0) as u32, h.max(1.0) as u32]);
-    let (iw, ih) = (iw as f32, ih as f32);
+    let [iw, ih] = image.size().unwrap_or_else(|| [f32_to_u32(w.max(1.0)), f32_to_u32(h.max(1.0))]);
+    let (iw, ih) = (f64_to_f32(f64::from(iw)), f64_to_f32(f64::from(ih)));
     let scale = (w / iw).max(h / ih);
     let (dw, dh) = (iw * scale, ih * scale);
     el().absolute((w - dw) / 2.0, (h - dh) / 2.0)
@@ -207,14 +214,14 @@ pub fn local_cover(game: GameId, name: &str, size: (f32, f32)) -> El {
 
 /// An item's art at `url` (a `web.poecdn.com` image from the game data), `size` points.
 pub fn cdn(game: GameId, url: &str, size: (f32, f32)) -> El {
-    draw(Source::Cdn { game, url: url.to_owned() }, size)
+    draw(&Source::Cdn { game, url: url.to_owned() }, size)
 }
 
 /// A map's screenshot at `url` (an `i.imgur.com` image from the game data's
 /// `area.screenshot`), filling `size` and cropping the overflow as `object-fit: cover`
 /// does (`MapCheck.vue`'s `FullscreenImage` in a 21:9 box).
 pub fn map_screenshot(game: GameId, url: &str, size: (f32, f32)) -> El {
-    draw_fit(Source::Screenshot { game, url: url.to_owned() }, size, SurfaceFit::Fill)
+    draw_fit(&Source::Screenshot { game, url: url.to_owned() }, size, SurfaceFit::Fill)
 }
 
 /// A picture a widget was handed, as `ItemQuickPrice.vue` takes its `itemImg` prop: either
@@ -230,42 +237,42 @@ pub enum Picture {
 impl Picture {
     /// `/images/<name>`.
     pub fn local(name: impl Into<String>) -> Self {
-        Picture::Local(name.into())
+        Self::Local(name.into())
     }
 
     /// An item's art on the CDN.
     pub fn cdn(url: impl Into<String>) -> Self {
-        Picture::Cdn(url.into())
+        Self::Cdn(url.into())
     }
 }
 
 /// [`Picture`] drawn in a `size` box.
 pub fn picture(game: GameId, picture: &Picture, size: (f32, f32)) -> El {
     match picture {
-        Picture::Local(name) => draw(Source::Local { game, name: name.clone() }, size),
-        Picture::Cdn(url) => draw(Source::Cdn { game, url: url.clone() }, size),
+        Picture::Local(name) => draw(&Source::Local { game, name: name.clone() }, size),
+        Picture::Cdn(url) => draw(&Source::Cdn { game, url: url.clone() }, size),
     }
 }
 
 /// One picture: the decoded image when it is ready, the placeholder until then (and if it
 /// never loads). The caller keys the element and adds margins, as it would with an `<img>`.
-fn draw(source: Source, size: (f32, f32)) -> El {
+fn draw(source: &Source, size: (f32, f32)) -> El {
     draw_fit(source, size, SurfaceFit::Fit)
 }
 
-fn draw_fit(source: Source, size: (f32, f32), fit: SurfaceFit) -> El {
+fn draw_fit(source: &Source, size: (f32, f32), fit: SurfaceFit) -> El {
     let (w, h) = size;
-    match ready(&source) {
-        Some(image) => el().size(w, h).pixels_fit(image.pixels(), fit).role("img").label(source.label()),
-        None => icon::image_placeholder(w).size(w, h),
-    }
+    ready(source).map_or_else(
+        || icon::image_placeholder(w).size(w, h),
+        |image| el().size(w, h).pixels_fit(image.pixels(), fit).role("img").label(source.label()),
+    )
 }
 
 /// The decoded image for `source`, starting the load the first time it is asked for.
 fn ready(source: &Source) -> Option<Image> {
     let key = source.key();
     let stored = {
-        let mut registry = REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let mut registry = REGISTRY.lock().unwrap_or_else(PoisonError::into_inner);
         if let Some(image) = registry.images.get(&key).cloned() {
             Some(image)
         } else if registry.failed.contains(&key) || !registry.pending.insert(key.clone()) {
@@ -282,7 +289,7 @@ fn ready(source: &Source) -> Option<Image> {
         return settle(image);
     }
     load(source, key);
-    let stored = REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).images.get(&source.key()).cloned();
+    let stored = REGISTRY.lock().unwrap_or_else(PoisonError::into_inner).images.get(&source.key()).cloned();
     stored.and_then(settle)
 }
 
@@ -291,12 +298,13 @@ fn settle(image: Image) -> Option<Image> {
     if image.is_ready() {
         return image.error().is_none().then_some(image);
     }
-    let _ = image.wait();
-    if let Some(error) = image.error() {
-        wraex_platform::log!("wraex: image error: {error}");
-        return None;
+    match image.wait() {
+        Ok(_) => Some(image),
+        Err(error) => {
+            wraex_platform::log!("wraex: image error: {error}");
+            None
+        }
     }
-    Some(image)
 }
 
 /// [`ready`] of `source`'s greyscale copy.
@@ -307,7 +315,7 @@ fn settle(image: Image) -> Option<Image> {
 fn ready_grey(source: &Source) -> Option<Image> {
     let key = format!("{}#greyscale", source.key());
     let stored = {
-        let mut registry = REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let mut registry = REGISTRY.lock().unwrap_or_else(PoisonError::into_inner);
         if let Some(image) = registry.images.get(&key).cloned() {
             Some(image)
         } else if registry.failed.contains(&key) || !registry.pending.insert(key.clone()) {
@@ -325,7 +333,7 @@ fn ready_grey(source: &Source) -> Option<Image> {
             settle(image)
         }
         Err(why) => {
-            fail(key, why);
+            fail(key, &why);
             None
         }
     }
@@ -352,10 +360,14 @@ fn greyscale(source: &Source) -> Result<Image, String> {
 }
 
 /// `filter: grayscale(1)` over straight-alpha sRGB pixels, in place.
+#[expect(
+    clippy::suboptimal_flops,
+    reason = "the weights are the filter matrix's separate multiply and add; `mul_add` rounds once instead of twice"
+)]
 fn to_greyscale(rgba: &mut [u8]) {
     for pixel in rgba.as_chunks_mut::<4>().0 {
         let luma = 0.2126 * f32::from(pixel[0]) + 0.7152 * f32::from(pixel[1]) + 0.0722 * f32::from(pixel[2]);
-        let luma = luma.round().clamp(0.0, 255.0) as u8;
+        let luma = f32_to_u8(luma.round().clamp(0.0, 255.0));
         pixel[0] = luma;
         pixel[1] = luma;
         pixel[2] = luma;
@@ -370,7 +382,7 @@ fn load(source: &Source, key: String) {
             if !path.is_file() {
                 fail(
                     key,
-                    format!("{} does not exist (the assets' {}/images directory)", path.display(), game.as_str()),
+                    &format!("{} does not exist (the assets' {}/images directory)", path.display(), game.as_str()),
                 );
                 return;
             }
@@ -387,7 +399,7 @@ fn load(source: &Source, key: String) {
 fn remote(source: &Source, key: String) {
     let (Source::Cdn { game, url } | Source::Screenshot { game, url }) = source else { return };
     if !source.accepts(url) {
-        fail(key, format!("{url} is not an image the app loads"));
+        fail(key, &format!("{url} is not an image the app loads"));
         return;
     }
     if mode() == Mode::Replay {
@@ -398,7 +410,7 @@ fn remote(source: &Source, key: String) {
                 store(key, image);
             }
             Err(error) => {
-                fail(key, format!("{}: {error} (run `npm run screens -- --record`)", path.display()));
+                fail(key, &format!("{}: {error} (run `npm run screens -- --record`)", path.display()));
             }
         }
     } else {
@@ -412,7 +424,7 @@ fn fetch(key: String, url: String) {
         let result = wraex_platform::http::HttpTransport::default().get_bytes(&url);
         match result {
             Ok(bytes) => store(key, cache().load(bytes)),
-            Err(error) => fail(key, error),
+            Err(error) => fail(key, &error),
         }
         wake();
     });
@@ -422,21 +434,21 @@ fn fetch(key: String, url: String) {
 }
 
 fn store(key: String, image: Image) {
-    let mut registry = REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let mut registry = REGISTRY.lock().unwrap_or_else(PoisonError::into_inner);
     registry.pending.remove(&key);
     registry.images.insert(key, image);
 }
 
-fn fail(key: String, why: String) {
+fn fail(key: String, why: &str) {
     wraex_platform::log!("wraex: no image: {why}");
-    let mut registry = REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let mut registry = REGISTRY.lock().unwrap_or_else(PoisonError::into_inner);
     registry.pending.remove(&key);
     registry.failed.insert(key);
 }
 
 fn wake() {
     // The cache's own waker is the app's; this is for a finished download before decoding.
-    let waker = WAKE.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).clone();
+    let waker = WAKE.lock().unwrap_or_else(PoisonError::into_inner).clone();
     if let Some(waker) = waker {
         waker();
     }
@@ -463,10 +475,9 @@ pub fn recorded_name(url: &str) -> String {
     use sha1::{Digest, Sha1};
 
     let digest = Sha1::digest(url.as_bytes());
-    let mut hash = String::with_capacity(8);
-    for byte in &digest[..4] {
-        hash.push_str(&format!("{byte:02x}"));
-    }
+    // The first eight hex digits: the digest's first four bytes, big-endian.
+    let head = digest.get(..4).unwrap_or_default();
+    let hash = format!("{:08x}", u32::from_be_bytes(head.try_into().unwrap_or_default()));
     let file = url.rsplit('/').next().unwrap_or_default();
     let mut name = String::with_capacity(file.len());
     for c in file.chars() {

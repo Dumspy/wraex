@@ -5,6 +5,7 @@
 //! draws the bar and leaves dragging to the min/max fields above it.
 
 use rune::{Color, El, el, row, text};
+use wraex_core::num::f64_to_f32;
 use wraex_poe2::filters::MinMax;
 
 use crate::theme::{self, text as type_};
@@ -43,6 +44,10 @@ fn state(min: Option<f64>, max: Option<f64>, bounds: MinMax) -> State {
 }
 
 /// `StatRollSlider.vue`: `mr-4`, 12.5 rem wide.
+#[expect(
+    clippy::suboptimal_flops,
+    reason = "the bar's geometry is `StatRollSlider.vue`'s CSS arithmetic; `mul_add` rounds differently"
+)]
 pub fn view(index: usize, roll: f64, min: Option<f64>, max: Option<f64>, bounds: MinMax) -> El {
     let state = state(min, max, bounds);
     let percent_roll = ((roll - bounds.min) / (bounds.max - bounds.min)) * 100.0;
@@ -52,7 +57,7 @@ pub fn view(index: usize, roll: f64, min: Option<f64>, max: Option<f64>, bounds:
     let band = (inner - left - right).max(12.0);
     // The tick marks the roll on the whole track, not on the band.
     let tick = (inner * (percent_roll / 100.0) - left - 2.0 * f64::from(INSET)).clamp(0.0, (band - 4.0).max(0.0));
-    let (left, right, tick) = (left as f32, right as f32, tick as f32);
+    let (left, right, tick) = (f64_to_f32(left), f64_to_f32(right), f64_to_f32(tick));
 
     let bound = |value: f64, inclusive: bool, key: String| {
         let color = if inclusive { theme::gray(900) } else { theme::gray(500) };

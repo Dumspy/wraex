@@ -51,24 +51,28 @@ pub fn title_bar<S>(title: impl Into<String>) -> TitleBar<S> {
 impl<S> TitleBar<S> {
     /// The element in `AppTitlebar`'s `<slot />`: the price check puts the divine-orb rate (or
     /// an empty `w-8` spacer that keeps the title centred) there.
+    #[must_use]
     pub fn leading(mut self, el: El) -> Self {
         self.leading = Some(el);
         self
     }
 
     /// An extra element just before the close button.
+    #[must_use]
     pub fn trailing(mut self, el: El) -> Self {
         self.trailing = Some(el);
         self
     }
 
     /// A press on the title. Upstream uses it to open the league selection.
+    #[must_use]
     pub fn on_title_press(mut self, f: impl Fn(&mut S) + 'static) -> Self {
         self.on_title_press = Some(Rc::new(f));
         self
     }
 
     /// A press on the close button.
+    #[must_use]
     pub fn on_close(mut self, f: impl Fn(&mut S) + 'static) -> Self {
         self.on_close = Some(Rc::new(f));
         self

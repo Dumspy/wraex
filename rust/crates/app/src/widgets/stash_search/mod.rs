@@ -14,8 +14,10 @@
 //! widget's own object.
 
 use rune::{El, col, el, row, text};
+use serde::Deserialize;
 use serde_json::Value;
 
+use super::lenient;
 use crate::theme::{self, text as type_};
 use crate::ui;
 use crate::widgets::{Action, Overlay, Project, Widget};
@@ -35,15 +37,43 @@ pub struct Entry {
     pub hotkey: Option<String>,
 }
 
+/// One `entries[]` object, read leniently: a missing or odd field is its fallback.
+#[derive(Debug, Default, Deserialize)]
+struct EntryView {
+    #[serde(default, deserialize_with = "lenient")]
+    id: Option<f64>,
+    #[serde(default, deserialize_with = "lenient")]
+    name: Option<String>,
+    #[serde(default, deserialize_with = "lenient")]
+    text: Option<String>,
+    #[serde(default, deserialize_with = "lenient")]
+    hotkey: Option<String>,
+}
+
+/// The widget's own fields this module reads.
+#[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct StashView {
+    #[serde(default, deserialize_with = "lenient")]
+    entries: Option<Vec<Value>>,
+    #[serde(default, deserialize_with = "lenient")]
+    enable_hotkeys: Option<bool>,
+}
+
+/// `config`, as this module reads it; a widget object is always one.
+fn settings(widget: &Widget) -> StashView {
+    StashView::deserialize(&widget.config).unwrap_or_default()
+}
+
 impl Entry {
     /// The entry's object in the config.
     pub fn from_config(entry: &Value) -> Self {
-        let text_of = |key: &str| entry.get(key).and_then(Value::as_str).unwrap_or_default().to_owned();
+        let view = EntryView::deserialize(entry).unwrap_or_default();
         Self {
-            id: entry.get("id").and_then(Value::as_f64).unwrap_or_default(),
-            name: text_of("name"),
-            text: text_of("text"),
-            hotkey: entry.get("hotkey").and_then(Value::as_str).map(str::to_owned),
+            id: view.id.unwrap_or_default(),
+            name: view.name.unwrap_or_default(),
+            text: view.text.unwrap_or_default(),
+            hotkey: view.hotkey,
         }
     }
 
@@ -55,17 +85,12 @@ impl Entry {
 
 /// `config.entries`, in config order.
 pub fn entries(widget: &Widget) -> Vec<Entry> {
-    widget
-        .config
-        .get("entries")
-        .and_then(Value::as_array)
-        .map(|entries| entries.iter().map(Entry::from_config).collect())
-        .unwrap_or_default()
+    settings(widget).entries.unwrap_or_default().iter().map(Entry::from_config).collect()
 }
 
 /// `config.enableHotkeys`.
 pub fn enable_hotkeys(widget: &Widget) -> bool {
-    widget.config.get("enableHotkeys").and_then(Value::as_bool).unwrap_or(false)
+    settings(widget).enable_hotkeys.unwrap_or(false)
 }
 
 /// `hasHotkeys`: the switch is drawn only when some entry has one.
@@ -77,8 +102,8 @@ pub fn has_hotkeys(entries: &[Entry]) -> bool {
 /// shell's half).
 pub fn toggle_hotkeys(overlay: &mut Overlay, wm_id: u32) {
     let Some(widget) = overlay.widget_mut(wm_id) else { return };
-    let on = widget.config.get("enableHotkeys").and_then(Value::as_bool).unwrap_or(false);
-    if let Some(object) = widget.config.as_object_mut() {
+    let on = enable_hotkeys(widget);
+    if let Value::Object(object) = &mut widget.config {
         object.insert("enableHotkeys".to_owned(), Value::Bool(!on));
     }
 }
@@ -175,6 +200,7 @@ fn entry_button<S: 'static>(widget: &Widget, index: usize, entry: &Entry, projec
 }
 
 #[cfg(test)]
+#[expect(clippy::disallowed_macros, reason = "expected JSON written as literals")]
 mod tests {
     use super::*;
     use crate::widgets::Kind;
@@ -207,13 +233,8 @@ mod tests {
     #[test]
     fn the_second_instance_sorts_a_dump() {
         let config = crate::settings::default_config(wraex_core::GameId::Poe1);
-        let widgets: Vec<Widget> = config["widgets"]
-            .as_array()
-            .expect("the config's widgets")
-            .iter()
-            .filter(|widget| widget["wmType"] == WM_TYPE)
-            .filter_map(Widget::from_config)
-            .collect();
+        let widgets: Vec<Widget> =
+            crate::widgets::overlay_widgets(&config).into_iter().filter(|widget| widget.wm_type == WM_TYPE).collect();
         assert_eq!(widgets.len(), 2, "`defaultInstances` ships two");
         let sorting = &widgets[1];
         assert_eq!(sorting.wm_title, "Dump sorting");
@@ -282,7 +303,7 @@ mod tests {
         assert!(enable_hotkeys(overlay.shown_widget().unwrap()));
         toggle_hotkeys(&mut overlay, id);
         assert!(!enable_hotkeys(overlay.shown_widget().unwrap()));
-        assert_eq!(overlay.shown_widget().unwrap().config["enableHotkeys"], serde_json::json!(false));
+        assert_eq!(overlay.shown_widget().unwrap().config["enableHotkeys"], serde_json::Value::Bool(false));
         toggle_hotkeys(&mut overlay, id);
         assert!(enable_hotkeys(overlay.shown_widget().unwrap()));
     }

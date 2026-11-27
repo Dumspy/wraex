@@ -27,13 +27,13 @@ pub enum Mode {
 impl Mode {
     /// The mode a run starts in: replay whenever Rune renders headlessly.
     pub fn for_run() -> Self {
-        if rune::is_headless() { Mode::Replay } else { Mode::Live }
+        if rune::is_headless() { Self::Replay } else { Self::Live }
     }
 }
 
 impl Default for Mode {
     fn default() -> Self {
-        Mode::for_run()
+        Self::for_run()
     }
 }
 
@@ -47,8 +47,8 @@ pub enum TargetTransport {
 impl Transport for TargetTransport {
     fn send(&self, request: &HttpRequest) -> Result<HttpResponse, String> {
         match self {
-            TargetTransport::Live(transport) => transport.send(request),
-            TargetTransport::Replay(transport) => transport.send(request),
+            Self::Live(transport) => transport.send(request),
+            Self::Replay(transport) => transport.send(request),
         }
     }
 }
@@ -63,16 +63,16 @@ pub enum TargetClock {
 impl Clock for TargetClock {
     fn now(&self) -> u64 {
         match self {
-            TargetClock::Live(clock) => clock.now(),
-            TargetClock::Replay(clock) => clock.now(),
+            Self::Live(clock) => clock.now(),
+            Self::Replay(clock) => clock.now(),
         }
     }
 
     fn sleep(&self, millis: u64) {
         match self {
-            TargetClock::Live(clock) => clock.sleep(millis),
+            Self::Live(clock) => clock.sleep(millis),
             // Nothing to wait for: the answers are already on disk.
-            TargetClock::Replay(clock) => clock.sleep(millis),
+            Self::Replay(clock) => clock.sleep(millis),
         }
     }
 }
@@ -83,7 +83,9 @@ pub struct LiveClock;
 
 impl Clock for LiveClock {
     fn now(&self) -> u64 {
-        SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0)
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_or(0, |elapsed| u64::try_from(elapsed.as_millis()).unwrap_or(u64::MAX))
     }
 
     fn sleep(&self, millis: u64) {
@@ -121,9 +123,11 @@ pub(crate) fn live_transport() -> HttpTransport {
     LIVE.get_or_init(|| HttpTransport::new(crate::settings::cookies_path())).clone()
 }
 
-/// The transport and clock a run sends with: HTTPS and the wall clock in a window, the
-/// recorded answers and the frozen recording time headless. The price data comes over
-/// the same [transport](Transport), so a scene replays poe.ninja too.
+/// The transport and clock a run sends with.
+///
+/// HTTPS and the wall clock in a window, the recorded answers and the frozen recording time
+/// headless. The price data comes over the same [transport](Transport), so a scene replays
+/// poe.ninja too.
 pub fn target(mode: Mode) -> (TargetTransport, TargetClock) {
     target_for(mode, Site::Poe1)
 }
@@ -176,7 +180,7 @@ pub fn now(mode: Mode) -> u64 {
 /// Locks a [`Shared`] client, ignoring a panic in another search (the state is plain
 /// data and stays consistent).
 pub fn lock(client: &Shared) -> std::sync::MutexGuard<'_, Client> {
-    client.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+    client.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
 #[cfg(test)]

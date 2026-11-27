@@ -30,9 +30,10 @@ use crate::poe2::price_check::PriceCheck;
 use crate::poe2::price_check::view::Project;
 use crate::trade::{self, Mode, Shared};
 
-/// What a search needs: the request, sent on the thread that runs it. The prices travel
-/// with it: the rows' normalised price column is computed from poe.ninja's database, which
-/// is small enough to copy per search and keeps the worker free of locks.
+/// What a search needs: the request, sent on the thread that runs it.
+///
+/// The prices travel with it: the rows' normalised price column is computed from poe.ninja's
+/// database, which is small enough to copy per search and keeps the worker free of locks.
 #[derive(Debug, Clone)]
 pub enum Query {
     /// `requestTradeResultList` + `requestResults`.
@@ -79,9 +80,9 @@ impl BulkCurrency {
     /// `Exalted Orb`, `Chaos Orb`, `Divine Orb`: the `have` currency each table asks for.
     pub const fn have(self) -> &'static str {
         match self {
-            BulkCurrency::Exalted => "exalted",
-            BulkCurrency::Chaos => "chaos",
-            BulkCurrency::Divine => "divine",
+            Self::Exalted => "exalted",
+            Self::Chaos => "chaos",
+            Self::Divine => "divine",
         }
     }
 
@@ -89,23 +90,23 @@ impl BulkCurrency {
     /// (`TradeBulk.vue`'s three `<img>`s; the exalted orb's art is not called `exalted`).
     pub const fn icon(self) -> &'static str {
         match self {
-            BulkCurrency::Exalted => "exa.png",
-            BulkCurrency::Chaos => "chaos.png",
-            BulkCurrency::Divine => "divine.png",
+            Self::Exalted => "exa.png",
+            Self::Chaos => "chaos.png",
+            Self::Divine => "divine.png",
         }
     }
 
     /// The `have` tag of an exchange group.
     fn of_tag(tag: &str) -> Self {
         match tag {
-            "exalted" => BulkCurrency::Exalted,
-            "divine" => BulkCurrency::Divine,
-            _ => BulkCurrency::Chaos,
+            "exalted" => Self::Exalted,
+            "divine" => Self::Divine,
+            _ => Self::Chaos,
         }
     }
 
     /// The three tables, in template order.
-    pub const ALL: [BulkCurrency; 3] = [BulkCurrency::Exalted, BulkCurrency::Chaos, BulkCurrency::Divine];
+    pub const ALL: [Self; 3] = [Self::Exalted, Self::Chaos, Self::Divine];
 }
 
 /// The price-check window's listings.
@@ -138,7 +139,7 @@ pub struct BulkResults {
 }
 
 impl BulkResults {
-    pub fn get(&self, which: BulkCurrency) -> Option<&bulk::BulkSearch> {
+    pub const fn get(&self, which: BulkCurrency) -> Option<&bulk::BulkSearch> {
         match which {
             BulkCurrency::Exalted => self.exalted.as_ref(),
             BulkCurrency::Chaos => self.chaos.as_ref(),
@@ -146,7 +147,7 @@ impl BulkResults {
         }
     }
 
-    fn get_mut(&mut self, which: BulkCurrency) -> Option<&mut bulk::BulkSearch> {
+    const fn get_mut(&mut self, which: BulkCurrency) -> Option<&mut bulk::BulkSearch> {
         match which {
             BulkCurrency::Exalted => self.exalted.as_mut(),
             BulkCurrency::Chaos => self.chaos.as_mut(),
@@ -173,7 +174,7 @@ impl std::fmt::Debug for Trade {
             .field("rows", &self.rows.len())
             .field("bulk", &self.bulk)
             .field("selected", &self.selected)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
@@ -207,7 +208,7 @@ impl Trade {
 
     /// Starts `query`, replacing whatever was shown (`useTradeApi`'s `search`).
     pub fn begin(&mut self, query: Query) {
-        self.generation += 1;
+        self.generation = self.generation.wrapping_add(1);
         let generation = self.generation;
         self.error = None;
         // A lazy load fills one currency of the table already on screen.
@@ -304,7 +305,7 @@ impl Trade {
             self.begin(Query::BulkLazy {
                 league: request.league.clone(),
                 request: request.for_currency(which),
-                prices: request.prices.clone(),
+                prices: request.prices,
             });
         }
     }
@@ -335,7 +336,7 @@ fn execute(mode: Mode, client: &Shared, generation: u64, query: &Query) -> Answe
 fn run(mode: Mode, client: &Shared, query: &Query) -> Result<Outcome, String> {
     let data = crate::poe2::price_check::data(mode);
     let mut client = trade::lock(client);
-    let now = client.clock.now() as EpochMillis;
+    let now = client.clock.now().cast_signed();
     match query {
         Query::Trade { league, request, prices } => {
             let request = request.clone()?;
@@ -351,6 +352,8 @@ fn run(mode: Mode, client: &Shared, query: &Query) -> Result<Outcome, String> {
         Query::BulkLazy { league, request, .. } => {
             let answer =
                 client.exchange::<bulk::ExchangeListing>(request, league).map_err(|error| error.to_string())?;
+            // The lock is not needed to group the answer; release it before building the rows.
+            drop(client);
             let search = bulk::searches(&answer, &request.query.have, "", now)
                 .into_iter()
                 .flatten()
@@ -358,7 +361,6 @@ fn run(mode: Mode, client: &Shared, query: &Query) -> Result<Outcome, String> {
                 .ok_or_else(|| "The exchange answer had no offers".to_owned())?;
             let other = match search.have_tag.as_str() {
                 "exalted" => BulkCurrency::Chaos,
-                "divine" => BulkCurrency::Exalted,
                 _ => BulkCurrency::Exalted,
             };
             Ok(Outcome::BulkLazy { search, other })
@@ -391,7 +393,9 @@ fn fetch_rows(
         if from >= to {
             return Ok(());
         }
-        let listings = client.fetch(&list.id, &ids[from..to]).map_err(|error| error.to_string())?;
+        let batch =
+            ids.get(from..to).ok_or_else(|| format!("result range {from}..{to} is outside {} ids", ids.len()))?;
+        let listings = client.fetch(&list.id, batch).map_err(|error| error.to_string())?;
         rows.extend(wraex_poe2::results::pricing_results(data, prices, &listings, "", now));
         Ok(())
     };
@@ -407,9 +411,9 @@ fn fetch_rows(
         if !short || fetched >= ids.len() || fetched >= API_FETCH_LIMIT {
             break;
         }
-        let end = ids.len().min(fetched + 10);
+        let end = ids.len().min(fetched.saturating_add(10));
         fetch(client, &mut prices, &mut rows, fetched, end)?;
-        fetched += 10;
+        fetched = fetched.saturating_add(10);
     }
     Ok(rows)
 }
@@ -425,8 +429,10 @@ pub(super) fn error_box<S: 'static>(error: &str, project: Project<S>) -> El {
         .min_w(crate::theme::rem(4.0))
         .focusable(true)
         .on_press_tx(move |s: &mut S, tx: &mut rune::Tx| {
-            if let Some(url) = project(s).trade_link() {
-                let _ = tx.open_url(&url);
+            if let Some(url) = project(s).trade_link()
+                && let Err(error) = tx.open_url(&url)
+            {
+                wraex_platform::log!("could not open {url}: {error}");
             }
             project(s).reset_search();
         });
@@ -436,9 +442,11 @@ pub(super) fn error_box<S: 'static>(error: &str, project: Project<S>) -> El {
     )
 }
 
-/// `CheckedItem.vue`'s `trade-listing`/`trade-bulk`: the table for the active API, in the
-/// listing's own scroll viewport (`TradeListing.vue`'s `layout-column overflow-y-auto`), so a
-/// long table scrolls inside the card instead of drawing past its background.
+/// `CheckedItem.vue`'s `trade-listing`/`trade-bulk`: the table for the active API.
+///
+/// It sits in the listing's own scroll viewport (`TradeListing.vue`'s `layout-column
+/// overflow-y-auto`), so a long table scrolls inside the card instead of drawing past its
+/// background.
 pub fn view<S: 'static>(check: &PriceCheck, project: Project<S>) -> El {
     let content = match check.trade.api(check) {
         Api::Trade => listing::view(check, project),
@@ -500,7 +508,7 @@ mod tests {
         .expect("a trade request");
         let client = crate::trade::shared_site(Mode::Replay, "www.pathofexile.com", crate::trade::Site::Poe2, 2.0);
         let mut trade = Trade::new(Mode::Live, client);
-        trade.begin(Query::Trade { league: "Standard".into(), request: Ok(request), prices: check.prices.clone() });
+        trade.begin(Query::Trade { league: "Standard".into(), request: Ok(request), prices: check.prices });
 
         let mut landed = false;
         for _ in 0..300 {

@@ -9,7 +9,7 @@ use crate::theme::{self, text as type_};
 use crate::ui::art;
 use crate::ui::icon;
 
-use super::{FieldStyle, LINE, number_field, number_width};
+use super::{FieldStyle, LINE, NumberField, number_field, number_width};
 
 /// `FilterBtnNumeric.vue`: the label toggles the filter, the min/max fields edit it.
 pub fn numeric<S: 'static>(check: &PriceCheck, which: NumericFilter, project: Project<S>) -> El {
@@ -47,34 +47,72 @@ pub fn numeric<S: 'static>(check: &PriceCheck, which: NumericFilter, project: Pr
                         .color(theme::gray(200)),
                 ),
         )
-        .child(number_field(check, min_field, min_width, "", corners, FieldStyle::Chip, project));
+        .child(number_field(
+            check,
+            NumberField { field: min_field, width: min_width, placeholder: "", corners, style: FieldStyle::Chip },
+            project,
+        ));
     if has_max {
         let max_field = InputField::Numeric(which, NumericPart::Max);
         let max_width = number_width(check.input(&max_field.key()).map_or("", |edit| edit.text.as_str()));
         chip = chip.child(text("–").font(type_::SM).color(theme::gray(400))).child(number_field(
             check,
-            max_field,
-            max_width,
-            "…",
-            [0.0, theme::ROUNDED, theme::ROUNDED, 0.0],
-            FieldStyle::Chip,
+            NumberField {
+                field: max_field,
+                width: max_width,
+                placeholder: "…",
+                corners: [0.0, theme::ROUNDED, theme::ROUNDED, 0.0],
+                style: FieldStyle::Chip,
+            },
             project,
         ));
     }
     chip
 }
 
-/// `FilterBtnLogical.vue`: one boolean chip. `collapse` is the stats chip's chevron: the
-/// reference passes `statsVisibility.disabled`, so the chevron is drawn only while the
-/// block is collapsed, pointing down. `image` is the chip's `img` prop (an influence badge).
-pub fn logical<S: 'static>(
-    key: &str,
-    label: &str,
-    active: bool,
-    collapse: Option<bool>,
-    image: Option<art::Picture>,
-    on_press: impl Fn(&mut S) + 'static,
-) -> El {
+/// `FilterBtnLogical.vue`'s props: the chip's key, its label and whether it is on.
+#[derive(Debug)]
+pub struct Logical<'a> {
+    /// The chip's element key (`btn-<key>`) and label.
+    pub key: &'a str,
+    pub label: &'a str,
+    /// `filter.disabled` inverted: the chip's border is gray-500 while on.
+    pub active: bool,
+    /// `statsVisibility.disabled` for the stats chip: its chevron is drawn only while the
+    /// block is collapsed.
+    pub collapse: Option<bool>,
+    /// The chip's `img` prop (an influence badge).
+    pub image: Option<art::Picture>,
+}
+
+impl<'a> Logical<'a> {
+    /// A chip with no chevron and no image.
+    pub const fn new(key: &'a str, label: &'a str, active: bool) -> Self {
+        Self { key, label, active, collapse: None, image: None }
+    }
+
+    /// `:collapse="statsVisibility.disabled"`.
+    #[must_use]
+    pub const fn collapse(mut self, collapse: Option<bool>) -> Self {
+        self.collapse = collapse;
+        self
+    }
+
+    /// The chip's `img` prop.
+    #[must_use]
+    pub fn image(mut self, image: art::Picture) -> Self {
+        self.image = Some(image);
+        self
+    }
+}
+
+/// `FilterBtnLogical.vue`: one boolean chip.
+///
+/// `collapse` is the stats chip's chevron: the reference passes `statsVisibility.disabled`,
+/// so the chevron is drawn only while the block is collapsed, pointing down. `image` is the
+/// chip's `img` prop (an influence badge).
+pub fn logical<S: 'static>(chip: Logical<'_>, on_press: impl Fn(&mut S) + 'static) -> El {
+    let Logical { key, label, active, collapse, image } = chip;
     let mut chip = row()
         .key(format!("btn-{key}"))
         .h(LINE)
@@ -90,7 +128,7 @@ pub fn logical<S: 'static>(
         .label(label)
         .on_press(on_press);
     if let Some(image) = image {
-        chip = chip.child(super::image(image, theme::rem(1.25)));
+        chip = chip.child(super::image(&image, theme::rem(1.25)));
     }
     chip = chip.child(
         text(label).key(format!("btn-{key}-label")).font(type_::SM).color(theme::gray(200)).pl(theme::rem(0.25)),

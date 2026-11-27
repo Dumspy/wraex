@@ -1,7 +1,9 @@
-//! `web/price-check/settings-price-check.vue` for both games. APT's page is the leagues,
-//! account and seller settings, the stat-range and stock/cursor/prediction boxes, the default
-//! online filter and the rate-limit block; EE2's replaces the online filter with its core
-//! currency, volume, tooltip and tier settings and adds an advanced-delay box.
+//! `web/price-check/settings-price-check.vue` for both games.
+//!
+//! APT's page is the leagues, account and seller settings, the stat-range and
+//! stock/cursor/prediction boxes, the default online filter and the rate-limit block; EE2's
+//! replaces the online filter with its core currency, volume, tooltip and tier settings and
+//! adds an advanced-delay box.
 //!
 //! Not ported: the league list itself (`useLeagues` is not wired into the app yet: the
 //! `leagueId` config field is edited as the private-league box), the core currency icons
@@ -12,7 +14,7 @@ use rune::{El, col, row, text};
 use serde_json::Value;
 use wraex_core::GameId;
 
-use crate::settings::pages::{Limit, checkbox, label, number_field, page, text_field, tr};
+use crate::settings::pages::{Limit, NumberField, TextField, checkbox, label, number_field, page, text_field, tr};
 use crate::settings::{Field, Project, Settings};
 use crate::theme::{self, text as type_};
 use crate::ui;
@@ -58,11 +60,8 @@ fn league<S: 'static>(settings: &Settings, project: Project<S>) -> El {
                 )
                 .child(text_field(
                     settings,
-                    "price-check-league-custom",
-                    Field::Root("leagueId"),
-                    Kind::Grow,
-                    None,
-                    "My League (PL12345)",
+                    TextField::new("price-check-league-custom", Field::Root("leagueId"), Kind::Grow)
+                        .placeholder("My League (PL12345)"),
                     project,
                 )),
         )
@@ -75,7 +74,11 @@ fn account<S: 'static>(settings: &Settings, project: Project<S>) -> El {
         .w_full()
         .mb(theme::rem(0.5))
         .child(label("price-check-account-label", &tr(settings, "settings.account_name")))
-        .child(text_field(settings, "price-check-account", Field::Root("accountName"), Kind::Text, None, "", project))
+        .child(text_field(
+            settings,
+            TextField::new("price-check-account", Field::Root("accountName"), Kind::Text),
+            project,
+        ))
 }
 
 /// `showSeller`: No / Account name / Last character name, and the highlight hint.
@@ -120,18 +123,19 @@ fn show_seller<S: 'static>(settings: &Settings, project: Project<S>) -> El {
 
 fn seller_radio<S: 'static>(key: &str, value: &'static str, label: &str, current: &str, project: Project<S>) -> El {
     let checked = current == value;
-    ui::radio(key, label, checked, false, move |s: &mut S| {
-        match value {
-            "off" => project(s).set(Field::Widget(PRICE_CHECK, "showSeller"), Value::Bool(false)),
-            other => project(s).set_string(Field::Widget(PRICE_CHECK, "showSeller"), other),
-        };
+    ui::radio(ui::RadioProps::new(key, label).checked(checked), move |s: &mut S| {
+        if value == "off" {
+            project(s).set(Field::Widget(PRICE_CHECK, "showSeller"), Value::Bool(false));
+        } else {
+            project(s).set_string(Field::Widget(PRICE_CHECK, "showSeller"), value);
+        }
     })
 }
 
 /// `fill_rolls`: the range number field and the exact-value radio.
 fn fill_rolls<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     let range = Field::Widget(PRICE_CHECK, "searchStatRange");
-    let exact = range.read(&settings.config).as_f64() == Some(0.0);
+    let exact = matches!(range.read(&settings.config), Value::Number(number) if number.as_f64() == Some(0.0));
     col()
         .key("price-check-fill-rolls")
         .w_full()
@@ -151,19 +155,14 @@ fn fill_rolls<S: 'static>(settings: &Settings, project: Project<S>) -> El {
                         .child(text("+-").key("price-check-stat-range-sign").font(type_::SM))
                         .child(number_field(
                             settings,
-                            "price-check-stat-range-input",
-                            range,
-                            theme::rem(4.0),
-                            Limit::Within(0.0, 50.0),
+                            NumberField::new("price-check-stat-range-input", range, Limit::Within(0.0, 50.0)),
                             project,
                         ))
                         .child(text("%").key("price-check-stat-range-unit").font(type_::SM)),
                 )
                 .child(ui::radio(
-                    "price-check-stat-range-exact",
-                    &tr(settings, "price_check.fill_roll_exact"),
-                    exact,
-                    false,
+                    ui::RadioProps::new("price-check-stat-range-exact", &tr(settings, "price_check.fill_roll_exact"))
+                        .checked(exact),
                     move |s: &mut S| project(s).set_f64(Field::Widget(PRICE_CHECK, "searchStatRange"), 0.0),
                 )),
         )
@@ -203,10 +202,9 @@ fn poe1_body<S: 'static>(mut page: El, settings: &Settings, project: Project<S>)
     let mut left = col().key("price-check-default-left").gap(theme::rem(0.25));
     left = left.child(disabled_toggle("price-check-default-offline", &tr(settings, "online_filter.offline_toggle")));
     left = left.child(ui::radio(
-        "price-check-default-listed-any",
-        &tr(settings, "online_filter.listed_any_time"),
-        true,
-        true,
+        ui::RadioProps::new("price-check-default-listed-any", &tr(settings, "online_filter.listed_any_time"))
+            .checked(true)
+            .disabled(true),
         |_s: &mut S| {},
     ));
     let mut right = col().key("price-check-default-right").gap(theme::rem(0.25));
@@ -227,13 +225,16 @@ fn poe1_body<S: 'static>(mut page: El, settings: &Settings, project: Project<S>)
         ("price-check-default-currency-chaos-divine", "chaos_divine", "online_filter.currency_chaos_div"),
     ] {
         let checked = currency == value;
-        right = right.child(ui::radio(key, &tr(settings, label_key), checked, false, move |s: &mut S| {
-            if value.is_empty() {
-                project(s).set(Field::Widget(PRICE_CHECK, "defaultCurrency"), Value::Null);
-            } else {
-                project(s).set_string(Field::Widget(PRICE_CHECK, "defaultCurrency"), value);
-            }
-        }));
+        right = right.child(ui::radio(
+            ui::RadioProps::new(key, &tr(settings, label_key)).checked(checked),
+            move |s: &mut S| {
+                if value.is_empty() {
+                    project(s).set(Field::Widget(PRICE_CHECK, "defaultCurrency"), Value::Null);
+                } else {
+                    project(s).set_string(Field::Widget(PRICE_CHECK, "defaultCurrency"), value);
+                }
+            },
+        ));
     }
     filters = filters.child(left).child(right);
     box_ = box_.child(filters);
@@ -246,25 +247,7 @@ fn poe1_body<S: 'static>(mut page: El, settings: &Settings, project: Project<S>)
 /// EE2's boxes: core currency, remembered currency/listing type, volume, tooltip, tier
 /// settings, the browser, and its two rate-limit boxes.
 fn poe2_body<S: 'static>(mut page: El, settings: &Settings, project: Project<S>) -> El {
-    // Primary base currency: `coreCurrency`, shown without poe.ninja's item icons.
-    let core = settings.string(Field::Widget(PRICE_CHECK, "coreCurrency"));
-    let mut radios = row().key("price-check-core-currency-radios").gap(theme::rem(1.0)).items_center();
-    for (key, value, name) in
-        [("price-check-core-exalted", "exalted", "Exalted Orb"), ("price-check-core-chaos", "chaos", "Chaos Orb")]
-    {
-        let checked = core == value;
-        radios = radios.child(ui::radio(key, name, checked, false, move |s: &mut S| {
-            project(s).set_string(Field::Widget(PRICE_CHECK, "coreCurrency"), value);
-        }));
-    }
-    // `mb-1 flex`: the radios sit side by side, each `mr-4`.
-    let currency = col()
-        .key("price-check-core-currency")
-        .w_full()
-        .mb(theme::rem(1.0))
-        .child(label("price-check-core-currency-label", &tr(settings, "price_check.core_currency")))
-        .child(radios);
-    page = page.child(currency);
+    page = page.child(core_currency(settings, project));
 
     page = page.child(row().key("price-check-remember-currency-row").mb(theme::rem(1.0)).child(checkbox(
         settings,
@@ -300,27 +283,7 @@ fn poe2_body<S: 'static>(mut page: El, settings: &Settings, project: Project<S>)
         project,
     )));
 
-    // Currency exchange volume.
-    let volume = settings.string(Field::Widget(PRICE_CHECK, "currencyVolume"));
-    let mut volume_radios = row().key("price-check-volume-radios").gap(theme::rem(1.0)).items_center();
-    for (key, value, name) in [
-        ("price-check-volume-none", "none", "None"),
-        ("price-check-volume-value", "value", "Currency / Hour"),
-        ("price-check-volume-item", "item", "Items / Hour"),
-        ("price-check-volume-both", "both", "Both"),
-    ] {
-        let checked = volume == value;
-        volume_radios = volume_radios.child(ui::radio(key, name, checked, false, move |s: &mut S| {
-            project(s).set_string(Field::Widget(PRICE_CHECK, "currencyVolume"), value);
-        }));
-    }
-    let volume_col = col()
-        .key("price-check-volume")
-        .w_full()
-        .mb(theme::rem(1.0))
-        .child(label("price-check-volume-label", &tr(settings, "price_check.show_volume")))
-        .child(volume_radios);
-    page = page.child(volume_col);
+    page = page.child(volume(settings, project));
 
     page = page.child(row().key("price-check-prediction-row").mb(theme::rem(1.0)).child(prediction(settings, project)));
     page = page.child(row().key("price-check-cursor-row").mb(theme::rem(1.0)).child(checkbox(
@@ -331,26 +294,7 @@ fn poe2_body<S: 'static>(mut page: El, settings: &Settings, project: Project<S>)
         project,
     )));
 
-    let tooltip = settings.string(Field::Widget(PRICE_CHECK, "itemHoverTooltip"));
-    let mut tooltip_radios = row().key("price-check-tooltip-radios").gap(theme::rem(1.0)).items_center();
-    for (key, value, name_key) in [
-        ("price-check-tooltip-off", "off", "price_check.use_tooltip_off"),
-        ("price-check-tooltip-keybind", "keybind", "price_check.use_tooltip_keybind"),
-        ("price-check-tooltip-always", "always", "price_check.use_tooltip_always"),
-    ] {
-        let checked = tooltip == value;
-        let name = tr(settings, name_key);
-        tooltip_radios = tooltip_radios.child(ui::radio(key, &name, checked, false, move |s: &mut S| {
-            project(s).set_string(Field::Widget(PRICE_CHECK, "itemHoverTooltip"), value);
-        }));
-    }
-    let tooltip_col = col()
-        .key("price-check-tooltip")
-        .w_full()
-        .mb(theme::rem(1.0))
-        .child(label("price-check-tooltip-label", &tr(settings, "price_check.use_tooltip_hover")))
-        .child(tooltip_radios);
-    page = page.child(tooltip_col);
+    page = page.child(tooltip(settings, project));
 
     page = page.child(row().key("price-check-all-selected-row").mb(theme::rem(1.0)).child(checkbox(
         settings,
@@ -371,6 +315,80 @@ fn poe2_body<S: 'static>(mut page: El, settings: &Settings, project: Project<S>)
 
     // The rate-limit compromise box, and EE2's advanced-delay box.
     page = page.child(rate_limit(settings, project));
+    page.child(advanced_delay(settings, project))
+}
+
+/// Primary base currency: `coreCurrency`, shown without poe.ninja's item icons.
+fn core_currency<S: 'static>(settings: &Settings, project: Project<S>) -> El {
+    let core = settings.string(Field::Widget(PRICE_CHECK, "coreCurrency"));
+    let mut radios = row().key("price-check-core-currency-radios").gap(theme::rem(1.0)).items_center();
+    for (key, value, name) in
+        [("price-check-core-exalted", "exalted", "Exalted Orb"), ("price-check-core-chaos", "chaos", "Chaos Orb")]
+    {
+        let checked = core == value;
+        radios = radios.child(ui::radio(ui::RadioProps::new(key, name).checked(checked), move |s: &mut S| {
+            project(s).set_string(Field::Widget(PRICE_CHECK, "coreCurrency"), value);
+        }));
+    }
+    // `mb-1 flex`: the radios sit side by side, each `mr-4`.
+    col()
+        .key("price-check-core-currency")
+        .w_full()
+        .mb(theme::rem(1.0))
+        .child(label("price-check-core-currency-label", &tr(settings, "price_check.core_currency")))
+        .child(radios)
+}
+
+/// Currency exchange volume.
+fn volume<S: 'static>(settings: &Settings, project: Project<S>) -> El {
+    let volume = settings.string(Field::Widget(PRICE_CHECK, "currencyVolume"));
+    let mut volume_radios = row().key("price-check-volume-radios").gap(theme::rem(1.0)).items_center();
+    for (key, value, name) in [
+        ("price-check-volume-none", "none", "None"),
+        ("price-check-volume-value", "value", "Currency / Hour"),
+        ("price-check-volume-item", "item", "Items / Hour"),
+        ("price-check-volume-both", "both", "Both"),
+    ] {
+        let checked = volume == value;
+        volume_radios =
+            volume_radios.child(ui::radio(ui::RadioProps::new(key, name).checked(checked), move |s: &mut S| {
+                project(s).set_string(Field::Widget(PRICE_CHECK, "currencyVolume"), value);
+            }));
+    }
+    col()
+        .key("price-check-volume")
+        .w_full()
+        .mb(theme::rem(1.0))
+        .child(label("price-check-volume-label", &tr(settings, "price_check.show_volume")))
+        .child(volume_radios)
+}
+
+/// `itemHoverTooltip`: off, the keybind or always.
+fn tooltip<S: 'static>(settings: &Settings, project: Project<S>) -> El {
+    let tooltip = settings.string(Field::Widget(PRICE_CHECK, "itemHoverTooltip"));
+    let mut tooltip_radios = row().key("price-check-tooltip-radios").gap(theme::rem(1.0)).items_center();
+    for (key, value, name_key) in [
+        ("price-check-tooltip-off", "off", "price_check.use_tooltip_off"),
+        ("price-check-tooltip-keybind", "keybind", "price_check.use_tooltip_keybind"),
+        ("price-check-tooltip-always", "always", "price_check.use_tooltip_always"),
+    ] {
+        let checked = tooltip == value;
+        let name = tr(settings, name_key);
+        tooltip_radios =
+            tooltip_radios.child(ui::radio(ui::RadioProps::new(key, &name).checked(checked), move |s: &mut S| {
+                project(s).set_string(Field::Widget(PRICE_CHECK, "itemHoverTooltip"), value);
+            }));
+    }
+    col()
+        .key("price-check-tooltip")
+        .w_full()
+        .mb(theme::rem(1.0))
+        .child(label("price-check-tooltip-label", &tr(settings, "price_check.use_tooltip_hover")))
+        .child(tooltip_radios)
+}
+
+/// EE2's advanced-delay box.
+fn advanced_delay<S: 'static>(settings: &Settings, project: Project<S>) -> El {
     let mut advanced = col()
         .key("price-check-warn-advanced")
         .w_full()
@@ -390,39 +408,38 @@ fn poe2_body<S: 'static>(mut page: El, settings: &Settings, project: Project<S>)
                         .items_center()
                         .child(number_field(
                             settings,
-                            "price-check-initial-delay-input",
-                            Field::Widget(PRICE_CHECK, "initialDelay"),
-                            theme::rem(4.0),
-                            Limit::Clamp(5.0, 400.0),
+                            NumberField::new(
+                                "price-check-initial-delay-input",
+                                Field::Widget(PRICE_CHECK, "initialDelay"),
+                                Limit::Clamp(5.0, 400.0),
+                            ),
                             project,
                         ))
                         .child(text("milliseconds").key("price-check-initial-delay-unit").font(type_::SM)),
                 ),
         );
     advanced = advanced.child(rune::el().h(theme::rem(0.5)));
-    page.child(advanced)
+    advanced
 }
 
 /// `requestPricePrediction`, with the `www.poeprices.info` badge beside it.
 fn prediction<S: 'static>(settings: &Settings, project: Project<S>) -> El {
-    ui::checkbox_with(
-        "price-check-prediction-toggle",
-        &tr(settings, "price_check.show_prediction"),
-        settings.bool(Field::Widget(PRICE_CHECK, "requestPricePrediction")),
-        false,
-        Some(
-            row()
-                .key("price-check-prediction-site")
-                .px(theme::rem(0.25))
-                .radius(theme::ROUNDED)
-                .fill(theme::gray(700))
-                .child(
-                    text("www.poeprices.info")
-                        .key("price-check-prediction-site-label")
-                        .font(type_::SM)
-                        .color(theme::gray(400)),
-                ),
-        ),
+    ui::checkbox(
+        ui::CheckboxProps::new("price-check-prediction-toggle", &tr(settings, "price_check.show_prediction"))
+            .checked(settings.bool(Field::Widget(PRICE_CHECK, "requestPricePrediction")))
+            .trailing(
+                row()
+                    .key("price-check-prediction-site")
+                    .px(theme::rem(0.25))
+                    .radius(theme::ROUNDED)
+                    .fill(theme::gray(700))
+                    .child(
+                        text("www.poeprices.info")
+                            .key("price-check-prediction-site-label")
+                            .font(type_::SM)
+                            .color(theme::gray(400)),
+                    ),
+            ),
         move |s: &mut S| {
             let checked = project(s).bool(Field::Widget(PRICE_CHECK, "requestPricePrediction"));
             project(s).set_bool(Field::Widget(PRICE_CHECK, "requestPricePrediction"), !checked);
@@ -468,18 +485,17 @@ fn rate_limit<S: 'static>(settings: &Settings, project: Project<S>) -> El {
         .border_layout()
         .radius(theme::ROUNDED)
         .child(section_label("price-check-rate-limit-header", &tr(settings, "price_check.warn_expensive")));
-    box_ =
-        box_.child(row().key("price-check-collapse-row").mx(theme::rem(0.5)).mb(theme::rem(1.0)).child(ui::checkbox(
-            "price-check-collapse",
-            &tr(settings, "price_check.accurate_collapsed"),
-            collapse == "app",
-            false,
+    box_ = box_.child(
+        row().key("price-check-collapse-row").mx(theme::rem(0.5)).mb(theme::rem(1.0)).child(ui::checkbox(
+            ui::CheckboxProps::new("price-check-collapse", &tr(settings, "price_check.accurate_collapsed"))
+                .checked(collapse == "app"),
             move |s: &mut S| {
                 let current = project(s).string(Field::Widget(PRICE_CHECK, "collapseListings"));
                 let next = if current == "app" { "api" } else { "app" };
                 project(s).set_string(Field::Widget(PRICE_CHECK, "collapseListings"), next);
             },
-        )));
+        )),
+    );
 
     let quick = quick_hotkey(settings);
     let locked = settings.string(Field::Widget(PRICE_CHECK, "hotkeyLocked"));
@@ -515,10 +531,11 @@ fn rate_limit<S: 'static>(settings: &Settings, project: Project<S>) -> El {
                     .items_center()
                     .child(number_field(
                         settings,
-                        "price-check-api-latency-input",
-                        Field::Widget(PRICE_CHECK, "apiLatencySeconds"),
-                        theme::rem(4.0),
-                        Limit::Clamp(0.5, 10.0),
+                        NumberField::new(
+                            "price-check-api-latency-input",
+                            Field::Widget(PRICE_CHECK, "apiLatencySeconds"),
+                            Limit::Clamp(0.5, 10.0),
+                        ),
                         project,
                     ))
                     .child(text(tr(settings, "seconds")).key("price-check-extra-delay-unit").font(type_::SM)),

@@ -28,6 +28,9 @@ pub mod trade;
 pub mod ui;
 pub mod widgets;
 
+use std::io::Write as _;
+use std::sync::Arc;
+
 use rune::{AppSpec, Cx, El, Waker};
 use wraex_core::GameId;
 
@@ -91,6 +94,7 @@ impl std::fmt::Debug for App {
             .field("client_log", &self.client_log)
             .field("widgets", &self.widgets)
             .field("mode", &self.mode)
+            .field("waker", &self.waker.is_some())
             .field("live", &self.live)
             .finish()
     }
@@ -190,7 +194,7 @@ impl App {
     pub fn settings_scene(game: GameId, page: Page) -> Self {
         let mut app = match game {
             GameId::Poe2 => Self::with_mode_poe2(&corpus_poe2("currency-djinn-barya"), Mode::Replay),
-            _ => Self::with_mode(&corpus(SCENES[0].0), Mode::Replay),
+            GameId::Poe1 => Self::with_mode(&corpus(FIRST_SCENE), Mode::Replay),
         };
         app.game = game;
         app.settings = Some(Settings::scene(game, page));
@@ -260,14 +264,14 @@ impl App {
     pub fn item_check_scene(game: GameId, slug: &str) -> Self {
         let mut app = match game {
             GameId::Poe2 => Self::with_mode_poe2(&corpus_poe2(slug), Mode::Replay),
-            _ => Self::with_mode(&corpus(slug), Mode::Replay),
+            GameId::Poe1 => Self::with_mode(&corpus(slug), Mode::Replay),
         };
         app.game = game;
         match game {
             GameId::Poe2 => {
-                app.item_check_poe2 = Some(poe2::item_check::ItemCheck::from_text(&corpus_poe2(slug), Mode::Replay))
+                app.item_check_poe2 = Some(poe2::item_check::ItemCheck::from_text(&corpus_poe2(slug), Mode::Replay));
             }
-            _ => app.item_check = Some(poe1::item_check::ItemCheck::from_text(&corpus(slug))),
+            GameId::Poe1 => app.item_check = Some(poe1::item_check::ItemCheck::from_text(&corpus(slug))),
         }
         app
     }
@@ -281,7 +285,7 @@ impl App {
     pub fn widgets_scene(game: GameId, kind: widgets::Kind) -> Self {
         let mut app = match game {
             GameId::Poe2 => Self::with_mode_poe2(&corpus_poe2("currency-djinn-barya"), Mode::Replay),
-            _ => Self::with_mode(&corpus(SCENES[0].0), Mode::Replay),
+            GameId::Poe1 => Self::with_mode(&corpus(FIRST_SCENE), Mode::Replay),
         };
         app.game = game;
         app.price_check.open = false;
@@ -304,17 +308,17 @@ impl App {
 
     /// The waker the window's trade and price answers use to run `poll`.
     pub fn set_waker(&mut self, waker: Waker) {
-        self.price_check.set_waker(waker.clone());
+        self.price_check.set_waker(Arc::clone(&waker));
         // The live shell's startup price fetch lands on the same waker.
         if let Some(prices) = self.shell().and_then(|live| live.prices.as_ref()) {
-            prices.set_waker(waker.clone());
+            prices.set_waker(Arc::clone(&waker));
         }
         // The about page's update check lands on the same waker.
         if let Some(settings) = &self.settings {
-            settings.set_waker(waker.clone());
+            settings.set_waker(Arc::clone(&waker));
         }
         // The image cache wakes the same window when a picture finishes decoding.
-        ui::art::install_waker(waker.clone());
+        ui::art::install_waker(Arc::clone(&waker));
         self.waker = Some(waker);
         self.attach_waker();
     }
@@ -322,7 +326,7 @@ impl App {
     /// Hand the stored waker to the PoE2 window, when one exists.
     fn attach_waker(&self) {
         if let (Some(waker), Some(check)) = (&self.waker, &self.poe2) {
-            check.set_waker(waker.clone());
+            check.set_waker(Arc::clone(waker));
         }
     }
 
@@ -350,7 +354,7 @@ impl App {
     /// Runs `f` with the shell taken out of `App::live`, as Rune calls every shell entry point
     /// (`AppSpec::poll`, a registered hotkey, `AppSpec::on_key`). Inside, an `App` method that
     /// read the live state would answer as a scene does, so [`App::shell`] asserts instead.
-    pub(crate) fn with_live<T>(&mut self, f: impl FnOnce(&mut App, &mut shell::Live) -> T) -> Option<T> {
+    pub(crate) fn with_live<T>(&mut self, f: impl FnOnce(&mut Self, &mut shell::Live) -> T) -> Option<T> {
         let mut live = self.live.take()?;
         let taken = ShellTaken::take();
         let result = f(self, &mut live);
@@ -364,8 +368,8 @@ impl App {
     /// changed.
     pub fn poll(&mut self, clock: f64) -> bool {
         let poe1 = self.price_check.poll();
-        let poe2 = self.poe2.as_mut().is_some_and(|check| check.poll());
-        let settings = self.settings.as_mut().is_some_and(|settings| settings.poll());
+        let poe2 = self.poe2.as_mut().is_some_and(poe2::price_check::PriceCheck::poll);
+        let settings = self.settings.as_mut().is_some_and(Settings::poll);
         let widgets = self.widgets.as_mut().is_some_and(|overlay| overlay.poll(clock));
         // The overlay draws every widget whose `wmWants` is `show` at once: a timer it starts
         // and the item search's prices have to exist for each of them, not just the focused one.
@@ -384,16 +388,13 @@ impl App {
             .widgets
             .as_mut()
             .and_then(|overlay| overlay.item_search.as_mut())
-            .is_some_and(|state| state.sync_field());
+            .is_some_and(widgets::item_search::State::sync_field);
         // `MAIN->CLIENT::item-text` from the item search's strip: the widget records the
         // dispatch, and the shell reopens the price check on the item.
-        let opened = match self.widgets.as_mut().and_then(widgets::item_search::take_picked) {
-            Some(picked) => {
-                self.open_picked_item(picked);
-                true
-            }
-            None => false,
-        };
+        let opened = self.widgets.as_mut().and_then(widgets::item_search::take_picked).is_some_and(|picked| {
+            self.open_picked_item(picked);
+            true
+        });
         poe1 || poe2 || settings || widgets || opened || repaired || prepared || market_updated
     }
 
@@ -413,9 +414,9 @@ impl App {
         match picked {
             widgets::item_search::Picked::Poe1(item) => {
                 self.game = GameId::Poe1;
-                self.price_check = PriceCheck::with_item(*item, self.mode, self.price_check.trade.client.clone());
+                self.price_check = PriceCheck::with_item(*item, self.mode, Arc::clone(&self.price_check.trade.client));
                 if let Some(waker) = &self.waker {
-                    self.price_check.set_waker(waker.clone());
+                    self.price_check.set_waker(Arc::clone(waker));
                 }
             }
             widgets::item_search::Picked::Poe2(item) => {
@@ -430,8 +431,7 @@ impl App {
     fn poe2_client(&self, mode: Mode) -> trade::Shared {
         self.poe2
             .as_ref()
-            .map(|check| check.trade.client.clone())
-            .unwrap_or_else(|| poe2::price_check::PriceCheck::new_client(mode))
+            .map_or_else(|| poe2::price_check::PriceCheck::new_client(mode), |check| Arc::clone(&check.trade.client))
     }
 
     /// Run `f` on the item search's state, when the item-search widget built one. The scenes use
@@ -445,44 +445,50 @@ impl App {
 
 impl Default for App {
     fn default() -> Self {
-        Self::with_mode(&corpus(SCENES[0].0), Mode::for_run())
+        Self::with_mode(&corpus(FIRST_SCENE), Mode::for_run())
     }
 }
 
 /// `App` → the PoE1 price check, for the window's handlers.
-fn project(app: &mut App) -> &mut PriceCheck {
+const fn project(app: &mut App) -> &mut PriceCheck {
     &mut app.price_check
 }
 
 /// `App` → the PoE2 price check, for the window's handlers.
-fn project_poe2(app: &mut App) -> &mut poe2::price_check::PriceCheck {
+#[expect(clippy::expect_used, reason = "the scene that draws this window built its PoE2 state")]
+const fn project_poe2(app: &mut App) -> &mut poe2::price_check::PriceCheck {
     app.poe2.as_mut().expect("a PoE2 scene built the window")
 }
 
 /// `App` → the settings window, for its handlers.
-fn project_settings(app: &mut App) -> &mut Settings {
+#[expect(clippy::expect_used, reason = "the scene that draws this window built its settings state")]
+const fn project_settings(app: &mut App) -> &mut Settings {
     app.settings.as_mut().expect("a settings scene built the window")
 }
 
 /// `App` → the overlay widget's state, for its handlers.
-fn project_widgets(app: &mut App) -> &mut widgets::Overlay {
+#[expect(clippy::expect_used, reason = "the scene that draws this window built its overlay state")]
+const fn project_widgets(app: &mut App) -> &mut widgets::Overlay {
     app.widgets.as_mut().expect("a widget scene built the window")
 }
 
 /// `App` → the PoE1 item check, for its handlers.
-fn project_item_check(app: &mut App) -> &mut poe1::item_check::ItemCheck {
+#[expect(clippy::expect_used, reason = "the scene that draws this window built its item-check state")]
+const fn project_item_check(app: &mut App) -> &mut poe1::item_check::ItemCheck {
     app.item_check.as_mut().expect("an item-check scene built the window")
 }
 
 /// `App` → the PoE2 item check, for its handlers.
-fn project_item_check_poe2(app: &mut App) -> &mut poe2::item_check::ItemCheck {
+#[expect(clippy::expect_used, reason = "the scene that draws this window built its PoE2 item-check state")]
+const fn project_item_check_poe2(app: &mut App) -> &mut poe2::item_check::ItemCheck {
     app.item_check_poe2.as_mut().expect("an item-check scene built the window")
 }
 
 /// The app's window: the exclusive widget while one is open — the settings window, the item
-/// check, or whichever game's price check — else the overlay's cards: over the game, every
-/// widget [`shell::App::cards_for`] shows, each at its own anchor (`OverlayWindow.vue`'s
-/// `visibilityState`); in a scene, the scene's one widget.
+/// check, or whichever game's price check — else the overlay's cards.
+///
+/// Over the game that is every widget [`shell::App::cards_for`] shows, each at its own anchor
+/// (`OverlayWindow.vue`'s `visibilityState`); in a scene, the scene's one widget.
 pub fn view(app: &App, cx: &mut Cx<App>) -> El {
     // A live window with nothing to draw is hidden by the shell (`shell::Live::sync_window`);
     // this only keeps the frame it was hidden in from drawing a widget. `is_peeked` is
@@ -511,20 +517,19 @@ fn card_at(app: &App, cx: &mut Cx<App>, card: &shell::Card) -> El {
     // `OverlayWindow.vue`'s `visibilityState` order: an exclusive widget wins — the settings
     // window and the item check first, then the price check — else the overlay's own widgets.
     match &card.shown {
-        shell::Shown::Settings => match &app.settings {
-            Some(settings) => settings::window::view(settings, cx, project_settings),
-            None => rune::el(),
-        },
+        shell::Shown::Settings => app
+            .settings
+            .as_ref()
+            .map_or_else(rune::el, |settings| settings::window::view(settings, cx, project_settings)),
         shell::Shown::ItemCheck => match (&app.item_check, &app.item_check_poe2) {
             (Some(check), _) => poe1::item_check::view(check, cx, project_item_check),
             (None, Some(check)) => poe2::item_check::view(check, cx, project_item_check_poe2),
             (None, None) => rune::el(),
         },
         shell::Shown::PriceCheck => poe1::price_check::view::view(&app.price_check, cx, project),
-        shell::Shown::Poe2 => match &app.poe2 {
-            Some(check) => poe2::price_check::view::view(check, cx, project_poe2),
-            None => rune::el(),
-        },
+        shell::Shown::Poe2 => {
+            app.poe2.as_ref().map_or_else(rune::el, |check| poe2::price_check::view::view(check, cx, project_poe2))
+        }
         // The card `wm_id` names: several widgets share a type (two stash searches).
         shell::Shown::Widget(_) => match (&app.widgets, card.wm_id) {
             (Some(overlay), Some(wm_id)) => widgets::view_card(overlay, wm_id, cx, project_widgets),
@@ -556,12 +561,8 @@ fn card(app: &App, cx: &mut Cx<App>) -> El {
         return poe2::item_check::view(check, cx, project_item_check_poe2);
     }
     if app.price_check.open || app.poe2.as_ref().is_some_and(|check| check.open) {
-        return match app.game {
-            GameId::Poe2 => poe2::price_check::view::view(
-                app.poe2.as_ref().expect("a PoE2 scene built the window"),
-                cx,
-                project_poe2,
-            ),
+        return match (&app.poe2, app.game) {
+            (Some(check), GameId::Poe2) => poe2::price_check::view::view(check, cx, project_poe2),
             _ => poe1::price_check::view::view(&app.price_check, cx, project),
         };
     }
@@ -569,22 +570,22 @@ fn card(app: &App, cx: &mut Cx<App>) -> El {
     // under it (the item search hands the window to the price check its pick opened). The
     // shell builds the overlay's state before it asks for the menu, so this is never `None` in
     // a live window; a scene without one draws nothing rather than panicking.
-    match app.widgets.as_ref() {
-        Some(overlay) => widgets::view(overlay, cx, project_widgets),
-        None => rune::el(),
-    }
+    app.widgets.as_ref().map_or_else(rune::el, |overlay| widgets::view(overlay, cx, project_widgets))
 }
 
 /// A named state for `--scene` (`AppSpec::scenes`).
 pub type Scene = (&'static str, fn(&mut App));
 
-/// The PoE1 corpus cases the reference screenshots render
-/// (`tools/golden/screens/cases.mjs`), plus a text that isn't an item and three cases that
-/// exercise the other kinds of filter row: a magic flask (explicit stats), a cluster jewel
-/// (enchant and hidden stats, two presets) and an anointed amulet (pseudo stats and the oil
-/// row).
+/// The corpus case a window with no `--scene` opens, which is [`SCENES`]'s first entry.
+const FIRST_SCENE: &str = "currency-divine-orb";
+
+/// The PoE1 corpus cases the reference screenshots render (`tools/golden/screens/cases.mjs`).
+///
+/// Plus a text that isn't an item and three cases that exercise the other kinds of filter row: a
+/// magic flask (explicit stats), a cluster jewel (enchant and hidden stats, two presets) and an
+/// anointed amulet (pseudo stats and the oil row).
 pub const SCENES: &[Scene] = &[
-    ("currency-divine-orb", |app| app.load("currency-divine-orb")),
+    (FIRST_SCENE, |app| app.load(FIRST_SCENE)),
     // `tools/golden/screens/cases.mjs` marks these two `search: true`.
     ("adv-rare-ring-mirrored-catalyst", |app| app.load_and_search("adv-rare-ring-mirrored-catalyst")),
     ("adv-unique-timeless-jewel", |app| app.load("adv-unique-timeless-jewel")),
@@ -673,17 +674,25 @@ pub const SCENES: &[Scene] = &[
 ];
 
 /// The fixture corpus a scene loads (`tools/golden/corpus/poe1/<slug>.txt`).
+#[expect(
+    clippy::expect_used,
+    reason = "a corpus case is a checked-in fixture; a scene without one is a development error"
+)]
 pub fn corpus(slug: &str) -> String {
     let path = format!("{CORPUS}/{slug}.txt");
-    std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {path}: {e}"))
+    std::fs::read_to_string(&path).expect("read the scene's corpus case")
 }
 
 const CORPUS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../tools/golden/corpus/poe1");
 
 /// The PoE2 fixture corpus (`tools/golden/corpus/poe2/<slug>.txt`).
+#[expect(
+    clippy::expect_used,
+    reason = "a corpus case is a checked-in fixture; a scene without one is a development error"
+)]
 pub fn corpus_poe2(slug: &str) -> String {
     let path = format!("{CORPUS_POE2}/{slug}.txt");
-    std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {path}: {e}"))
+    std::fs::read_to_string(&path).expect("read the scene's corpus case")
 }
 
 const CORPUS_POE2: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../tools/golden/corpus/poe2");
@@ -700,10 +709,11 @@ pub fn settings_scene(slug: &str) -> Option<(GameId, Page)> {
     Some((game, Page::from_slug(page)?))
 }
 
-/// The window size a `--scene` renders at. A settings scene is the settings window: upstream's
-/// `.window` is at most 50 rem wide and 38 rem tall (`settings::WIDTH`/`HEIGHT`), so it renders
-/// at that size and needs no `--size`. A price check keeps the price-check window's size, and
-/// an explicit `--size` still wins.
+/// The window size a `--scene` renders at.
+///
+/// A settings scene is the settings window: upstream's `.window` is at most 50 rem wide and
+/// 38 rem tall (`settings::WIDTH`/`HEIGHT`), so it renders at that size and needs no `--size`.
+/// A price check keeps the price-check window's size, and an explicit `--size` still wins.
 pub fn scene_size(scene: Option<&str>) -> (f32, f32) {
     if let Some((game, kind)) = scene.and_then(widgets::scene) {
         return widgets::scene_size(game, kind);
@@ -720,8 +730,8 @@ pub fn main() {
     // data, and a settings scene is a window of its own size. Rune parses the same flags again
     // when it builds the window.
     let args = rune::tooling::Args::parse();
-    let argv: Vec<String> = std::env::args().skip(1).collect();
-    let game = shell::game_from_args(&argv);
+    let arguments: Vec<String> = std::env::args().skip(1).collect();
+    let game = shell::game_from_args(&arguments);
     let live = !rune::is_headless() && args.scene.is_none();
     // Rune's Win32 windows present only the rectangles a frame changed (`Present1` dirty
     // rectangles). On the transparent overlay that left earlier frames on screen: the previous
@@ -731,7 +741,10 @@ pub fn main() {
     if live && cfg!(target_os = "windows") && std::env::var_os("RUNE_WHOLE_FRAMES").is_none() {
         // SAFETY: `main` runs this before Rune, the log or any worker starts a thread, so no
         // other thread can read the environment while it changes.
-        unsafe { std::env::set_var("RUNE_WHOLE_FRAMES", "1") };
+        #[expect(unsafe_code, reason = "`std::env::set_var` is unsafe before any thread starts; see SAFETY")]
+        unsafe {
+            std::env::set_var("RUNE_WHOLE_FRAMES", "1");
+        };
     }
     // Acquire before log rotation, settings import or any global shortcut registration.
     let _owner = if live {
@@ -739,11 +752,15 @@ pub fn main() {
         match instance::acquire(&config) {
             Ok(Some(owner)) => Some(owner),
             Ok(None) => {
-                eprintln!("wraex: {game:?} already has a live instance");
+                #[expect(clippy::use_debug, reason = "the startup message names the game variant, as its `Debug` does")]
+                let result = writeln!(std::io::stderr(), "wraex: {game:?} already has a live instance");
+                drop(result);
                 return;
             }
             Err(error) => {
-                eprintln!("wraex: cannot lock the {game:?} instance: {error}");
+                #[expect(clippy::use_debug, reason = "the startup message names the game variant, as its `Debug` does")]
+                let result = writeln!(std::io::stderr(), "wraex: cannot lock the {game:?} instance: {error}");
+                drop(result);
                 return;
             }
         }
@@ -775,8 +792,8 @@ pub fn main() {
         families: theme::FAMILIES,
         // A live search's answer lands from a worker thread; the waker runs `poll`, which
         // applies it and redraws. Replay answers land in the handler, so `poll` is idle.
-        setup: Some(|app, waker| app.set_waker(waker)),
-        poll: Some(|app, clock, tx| app.poll_with(clock, tx)),
+        setup: Some(App::set_waker),
+        poll: Some(App::poll_with),
         // The window is exactly the widget: the price check is a fixed 28.75 rem wide, so the
         // window must not shrink past it. (As an overlay it won't be resizable at all.)
         min_size: Some(size),
@@ -862,10 +879,10 @@ mod tests {
         if let Some(case) = slug.strip_prefix("map-check-").or_else(|| slug.strip_prefix("item-check-")) {
             return runtime_app(App::item_check_scene(GameId::Poe1, case), size);
         }
-        match slug.strip_prefix("poe2-") {
-            Some(case) => runtime_app(App::with_mode_poe2(&corpus_poe2(case), Mode::Replay), size),
-            None => runtime_app(App::replay(slug), size),
-        }
+        slug.strip_prefix("poe2-").map_or_else(
+            || runtime_app(App::replay(slug), size),
+            |case| runtime_app(App::with_mode_poe2(&corpus_poe2(case), Mode::Replay), size),
+        )
     }
 
     /// A `map-check-<case>` / `item-check-<case>` scene (with either game's prefix).
@@ -893,7 +910,29 @@ mod tests {
     }
 
     /// `fixtures/<game>/<case>/item-check.json`: what the reference's item check opens and sends.
-    fn item_check_fixture(game: &str, case: &str) -> serde_json::Value {
+    #[derive(serde::Deserialize)]
+    struct ItemCheckFixture {
+        similar: SimilarAction,
+        wiki: String,
+        poedb: String,
+        #[serde(rename = "craftOfExile")]
+        craft_of_exile: String,
+    }
+
+    /// `similar`: the stash search the item check sends.
+    #[derive(serde::Deserialize)]
+    struct SimilarAction {
+        name: String,
+        payload: StashPayload,
+    }
+
+    /// The `user-action` [`SimilarAction`] payload.
+    #[derive(serde::Deserialize)]
+    struct StashPayload {
+        text: String,
+    }
+
+    fn item_check_fixture(game: &str, case: &str) -> ItemCheckFixture {
         let path = format!("{}/../../../fixtures/{game}/{case}/item-check.json", env!("CARGO_MANIFEST_DIR"));
         let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {path}: {e}"));
         serde_json::from_str(&text).unwrap_or_else(|e| panic!("parse {path}: {e}"))
@@ -956,8 +995,8 @@ mod tests {
     /// settings-…` needs no `--size`; a price-check scene keeps the price-check window's.
     #[test]
     fn a_settings_scene_is_as_large_as_the_settings_window() {
-        assert_eq!(settings::WIDTH, 800.0, "`max-width: 50rem`");
-        assert_eq!(settings::HEIGHT, 608.0, "`max-height: 38rem`");
+        assert_eq!(settings::WIDTH.to_bits(), 800.0_f32.to_bits(), "`max-width: 50rem`");
+        assert_eq!(settings::HEIGHT.to_bits(), 608.0_f32.to_bits(), "`max-height: 38rem`");
         assert_eq!(scene_size(Some("settings-poe1-hotkeys")), (settings::WIDTH, settings::HEIGHT));
         assert_eq!(scene_size(Some("settings-poe2-about")), (settings::WIDTH, settings::HEIGHT));
         assert_eq!(scene_size(Some("currency-divine-orb")), (WIDTH, HEIGHT));
@@ -969,7 +1008,10 @@ mod tests {
         let elements = runtime.elements();
         let window = element(&elements, "settings-window").expect("the settings window");
         assert_eq!([window.rect[0], window.rect[1]], [0.0, 0.0]);
-        assert_eq!([window.rect[2], window.rect[3]], [settings::WIDTH, settings::HEIGHT]);
+        assert_eq!(
+            [window.rect[2].to_bits(), window.rect[3].to_bits()],
+            [settings::WIDTH.to_bits(), settings::HEIGHT.to_bits()]
+        );
     }
 
     /// A stackable currency: it searches straight away (`filters.preset_bulk`), so the
@@ -1165,7 +1207,7 @@ mod tests {
         assert!(check.do_search, "the trade option change re-searched");
         // The replay has no answer for the new request: the listings were cleared for the new
         // search, which is the proof it went out.
-        assert!(check.trade.rows.is_empty());
+        assert_eq!(check.trade.rows, Vec::new());
         assert!(
             check.trade.error.as_deref().is_some_and(|error| error.contains("no recorded answer")),
             "{:?}",
@@ -1579,13 +1621,16 @@ mod tests {
     fn an_unrecorded_cdn_image_is_a_placeholder() {
         use rune::{Cx, El};
 
-        // A test process never fetches: the scene's recordings are what it reads.
-        ui::art::set_mode(Mode::Replay);
-
+        // The runtime calls a view with a reference to its state, `()` here.
+        #[expect(clippy::trivially_copy_pass_by_ref, reason = "a view is called as `fn(&S, &mut Cx<S>)`")]
         fn view(_state: &(), _cx: &mut Cx<()>) -> El {
             let url = "https://web.poecdn.com/gen/image/WzI1LDE0/nothing/NoSuchPicture.png";
             rune::el().size(32.0, 32.0).child(ui::art::cdn(GameId::Poe1, url, (32.0, 32.0)).key("missing-image"))
         }
+
+        // A test process never fetches: the scene's recordings are what it reads.
+        ui::art::set_mode(Mode::Replay);
+
         let text = TextSystem::new(theme::FONTS, theme::FAMILIES);
         let mut runtime = Runtime::with_text((), view, (32.0, 32.0), Env::new(true, 1.0), text);
         runtime.frame(0.0);
@@ -1740,15 +1785,15 @@ mod tests {
         // `fixtures/poe1/adv-rare-ring-mirrored-catalyst/item-check.json`, the reference's own
         // answer for this item.
         let fixture = item_check_fixture("poe1", "adv-rare-ring-mirrored-catalyst");
-        assert_eq!(fixture["similar"]["name"].as_str(), Some("CLIENT->MAIN::user-action"));
+        assert_eq!(fixture.similar.name, "CLIENT->MAIN::user-action");
         let expected = vec![
-            poe1::item_check::Action::Open(fixture["wiki"].as_str().expect("the wiki URL").to_owned()),
-            poe1::item_check::Action::Open(fixture["poedb"].as_str().expect("the poedb URL").to_owned()),
+            poe1::item_check::Action::Open(fixture.wiki),
+            poe1::item_check::Action::Open(fixture.poedb),
             poe1::item_check::Action::Send(wraex_poe1::item_check::UserAction {
                 name: "CLIENT->MAIN::user-action",
                 payload: wraex_poe1::item_check::StashSearch {
                     action: "stash-search",
-                    text: fixture["similar"]["payload"]["text"].as_str().expect("the stash search").to_owned(),
+                    text: fixture.similar.payload.text,
                 },
             }),
         ];
@@ -1771,9 +1816,7 @@ mod tests {
         let fixture = item_check_fixture("poe1", "adv-rare-sword-cannot-use");
         assert_eq!(
             runtime.state.item_check.as_ref().unwrap().actions,
-            vec![poe1::item_check::Action::Open(
-                fixture["craftOfExile"].as_str().expect("the Craft of Exile URL").to_owned()
-            )]
+            vec![poe1::item_check::Action::Open(fixture.craft_of_exile)]
         );
     }
 
@@ -2120,11 +2163,11 @@ mod tests {
                 let text = action.payload.text.as_deref().expect("the note and the name");
                 assert_eq!(text, "\"~price 5 exalted\"\"Rider Bow\"");
             }
-            other => panic!("{other:?}"),
+            other @ poe2::item_check::Action::Open(_) => panic!("{other:?}"),
         }
         match &actions[3] {
             poe2::item_check::Action::Send(action) => assert_eq!(action.payload.text.as_deref(), Some("\"Rider Bow\"")),
-            other => panic!("{other:?}"),
+            other @ poe2::item_check::Action::Open(_) => panic!("{other:?}"),
         }
     }
 

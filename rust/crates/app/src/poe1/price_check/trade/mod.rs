@@ -103,14 +103,14 @@ pub struct BulkResults {
 }
 
 impl BulkResults {
-    fn get(&self, which: BulkCurrency) -> Option<&BulkSearch> {
+    const fn get(&self, which: BulkCurrency) -> Option<&BulkSearch> {
         match which {
             BulkCurrency::Chaos => self.chaos.as_ref(),
             BulkCurrency::Stable => self.stable.as_ref(),
         }
     }
 
-    fn get_mut(&mut self, which: BulkCurrency) -> Option<&mut BulkSearch> {
+    const fn get_mut(&mut self, which: BulkCurrency) -> Option<&mut BulkSearch> {
         match which {
             BulkCurrency::Chaos => self.chaos.as_mut(),
             BulkCurrency::Stable => self.stable.as_mut(),
@@ -135,7 +135,7 @@ impl std::fmt::Debug for Trade {
             .field("rows", &self.rows.len())
             .field("bulk", &self.bulk)
             .field("selected", &self.selected)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
@@ -170,7 +170,7 @@ impl Trade {
 
     /// Starts `query`, replacing whatever was shown (`useTradeApi`'s `search`).
     pub fn begin(&mut self, query: Query) {
-        self.generation += 1;
+        self.generation = self.generation.wrapping_add(1);
         let generation = self.generation;
         self.error = None;
         // A lazy load fills one currency of the table already on screen.
@@ -295,8 +295,8 @@ fn execute(client: &Shared, generation: u64, query: &Query) -> Answer {
 
 fn run(client: &Shared, query: &Query) -> Result<Outcome, String> {
     let mut client = trade::lock(client);
-    let now = client.clock.now() as EpochMillis;
-    match query {
+    let now = client.clock.now().cast_signed();
+    let outcome = match query {
         Query::Trade { league, request, collapse_merchant } => {
             let request = request.clone()?;
             let list = client.search(&request, league).map_err(|error| error.to_string())?;
@@ -323,7 +323,9 @@ fn run(client: &Shared, query: &Query) -> Result<Outcome, String> {
             };
             Ok(Outcome::BulkLazy { search, other })
         }
-    }
+    };
+    drop(client);
+    outcome
 }
 
 /// `requestResults`, first ten and next ten, then `fetchMore` in tens until the table
@@ -345,7 +347,8 @@ fn fetch_rows(
             if from >= to {
                 return Ok(());
             }
-            let listings = client.fetch(&list.id, &ids[from..to]).map_err(|error| error.to_string())?;
+            let listings =
+                client.fetch(&list.id, ids.get(from..to).unwrap_or_default()).map_err(|error| error.to_string())?;
             rows.extend(pricing_results(&listings, "", now));
             Ok(())
         };
@@ -361,9 +364,9 @@ fn fetch_rows(
         if !short || fetched >= ids.len() || fetched >= API_FETCH_LIMIT {
             break;
         }
-        let end = ids.len().min(fetched + 10);
+        let end = ids.len().min(fetched.saturating_add(10));
         fetch(client, &mut rows, fetched, end)?;
-        fetched += 10;
+        fetched = fetched.saturating_add(10);
     }
     Ok(rows)
 }
@@ -381,8 +384,10 @@ pub(super) fn error_box<S: 'static>(error: &str, project: Project<S>) -> El {
         .on_press(move |s: &mut S| project(s).start_search());
     let browser = crate::ui::button("trade-browser", &crate::poe1::i18n::t("Browser")).focusable(true).on_press_tx(
         move |s: &mut S, tx: &mut rune::Tx| {
-            if let Some(url) = project(s).trade_link() {
-                let _ = tx.open_url(&url);
+            if let Some(url) = project(s).trade_link()
+                && let Err(error) = tx.open_url(&url)
+            {
+                wraex_platform::log!("could not open {url}: {error}");
             }
             project(s).reset_search();
         },

@@ -50,7 +50,7 @@ pub enum ItemAction {
 
 /// The tray's menu entries. "Settings/League" is a message box upstream; here it is the
 /// settings window, whose price-check page is where the league lives.
-pub fn tray_request(action: TrayAction) -> Request {
+pub const fn tray_request(action: TrayAction) -> Request {
     match action {
         TrayAction::ShowSettingsHint => Request::Settings,
         TrayAction::OpenConfigFolder => Request::ConfigFolder,
@@ -73,10 +73,11 @@ pub fn poe2_item_request(action: &crate::poe2::item_check::Action) -> Request {
     match action {
         Action::Open(url) => Request::OpenUrl(url.clone()),
         // `undefined` for a nameless item: the widget sends nothing, so neither does the shell.
-        Action::Send(user) => match user.payload.text.clone() {
-            Some(text) => Request::StashSearch(text),
-            None => Request::Unsupported("stash search without an item name".to_owned()),
-        },
+        Action::Send(user) => user
+            .payload
+            .text
+            .clone()
+            .map_or_else(|| Request::Unsupported("stash search without an item name".to_owned()), Request::StashSearch),
     }
 }
 

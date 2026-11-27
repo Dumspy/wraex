@@ -59,7 +59,7 @@
 //!
 //! Still missing from the reference's widget frame: the fade-in of its panel (`Widget.vue`'s
 //! `:hover` with no transition upstream either), the `delete` countdown's 1 s progress gradient
-//! (the port deletes on release), the DnD library's reorder animation, and the floating
+//! (the port deletes on release), the `DnD` library's reorder animation, and the floating
 //! `mover.active` handle: upstream hides the in-card handle for the current `anchor.pos` and
 //! draws that one fixed on the overlay instead, while the port draws every declared handle
 //! inside the card.
@@ -76,8 +76,11 @@ pub mod xp_tracker;
 use std::collections::BTreeMap;
 
 use rune::{Color, Cx, Drag, El, Phase, TextEdit, col, el, row, text};
-use serde_json::{Value, json};
+use serde::Deserialize;
+use serde_json::{Map, Value};
 use wraex_core::GameId;
+use wraex_core::num::f64_to_f32;
+use wraex_core::widget::{Exclusive, Wants as CoreWants, Zorder};
 
 use crate::theme;
 use crate::ui::art;
@@ -101,50 +104,50 @@ pub enum Kind {
 
 impl Kind {
     /// Every ported widget.
-    pub const ALL: [Kind; 7] = [
-        Kind::Menu,
-        Kind::Stopwatch,
-        Kind::ImageStrip,
-        Kind::DelveGrid,
-        Kind::ItemSearch,
-        Kind::StashSearch,
-        Kind::XpTracker,
+    pub const ALL: [Self; 7] = [
+        Self::Menu,
+        Self::Stopwatch,
+        Self::ImageStrip,
+        Self::DelveGrid,
+        Self::ItemSearch,
+        Self::StashSearch,
+        Self::XpTracker,
     ];
 
     /// The `--scene` suffix (`widget-<name>`) and the enum's name.
-    pub fn name(self) -> &'static str {
+    pub const fn name(self) -> &'static str {
         match self {
-            Kind::Menu => "menu",
-            Kind::Stopwatch => "stopwatch",
-            Kind::ImageStrip => "image-strip",
-            Kind::DelveGrid => "delve-grid",
-            Kind::ItemSearch => "item-search",
-            Kind::StashSearch => "stash-search",
-            Kind::XpTracker => "xp-tracker",
+            Self::Menu => "menu",
+            Self::Stopwatch => "stopwatch",
+            Self::ImageStrip => "image-strip",
+            Self::DelveGrid => "delve-grid",
+            Self::ItemSearch => "item-search",
+            Self::StashSearch => "stash-search",
+            Self::XpTracker => "xp-tracker",
         }
     }
 
     /// The `wmType` the config lists it under (`WidgetSpec.type`).
-    pub fn wm_type(self) -> &'static str {
+    pub const fn wm_type(self) -> &'static str {
         match self {
-            Kind::Menu => menu::WM_TYPE,
-            Kind::Stopwatch => stopwatch::WM_TYPE,
-            Kind::ImageStrip => image_strip::WM_TYPE,
-            Kind::DelveGrid => delve_grid::WM_TYPE,
-            Kind::ItemSearch => item_search::WM_TYPE,
-            Kind::StashSearch => stash_search::WM_TYPE,
-            Kind::XpTracker => xp_tracker::WM_TYPE,
+            Self::Menu => menu::WM_TYPE,
+            Self::Stopwatch => stopwatch::WM_TYPE,
+            Self::ImageStrip => image_strip::WM_TYPE,
+            Self::DelveGrid => delve_grid::WM_TYPE,
+            Self::ItemSearch => item_search::WM_TYPE,
+            Self::StashSearch => stash_search::WM_TYPE,
+            Self::XpTracker => xp_tracker::WM_TYPE,
         }
     }
 
     pub fn from_name(name: &str) -> Option<Self> {
-        Kind::ALL.into_iter().find(|kind| kind.name() == name)
+        Self::ALL.into_iter().find(|kind| kind.name() == name)
     }
 
     /// The kind a config's `wmType` names. It differs from [`Kind::name`] for the stopwatch
     /// (the config says `timer`, the scene `stopwatch`).
     pub fn from_wm_type(wm_type: &str) -> Option<Self> {
-        Kind::ALL.into_iter().find(|kind| kind.wm_type() == wm_type)
+        Self::ALL.into_iter().find(|kind| kind.wm_type() == wm_type)
     }
 }
 
@@ -156,18 +159,18 @@ pub enum Wants {
 }
 
 impl Wants {
-    pub fn as_str(self) -> &'static str {
+    pub const fn as_str(self) -> &'static str {
         match self {
-            Wants::Show => "show",
-            Wants::Hide => "hide",
+            Self::Show => "show",
+            Self::Hide => "hide",
         }
     }
 
     /// `wmWants` as the config writes it; anything else is `hide`, as upstream's `=== 'show'`.
     pub fn parse(text: Option<&str>) -> Self {
         match text {
-            Some("show") => Wants::Show,
-            _ => Wants::Hide,
+            Some("show") => Self::Show,
+            _ => Self::Hide,
         }
     }
 }
@@ -177,7 +180,7 @@ impl Wants {
 /// Only the fields the ported widgets read are lifted out; each widget's own settings
 /// (`anchor`, `images`, `alwaysShow`, `toggleKey`, ...) stay in [`Widget::config`], the JSON the
 /// config has, so a new widget type needs no change here.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Widget {
     pub wm_id: u32,
     /// `wmType`: `menu`, `settings`, `timer`, `image-strip`, `delve-grid`, ...
@@ -194,14 +197,13 @@ pub struct Widget {
 impl Widget {
     /// A widget from its config object; `None` when it has no `wmId`/`wmType`.
     pub fn from_config(config: &Value) -> Option<Self> {
-        Some(Self {
-            wm_id: u32::try_from(config.get("wmId")?.as_u64()?).ok()?,
-            wm_type: config.get("wmType")?.as_str()?.to_owned(),
-            wm_title: config.get("wmTitle").and_then(Value::as_str).unwrap_or_default().to_owned(),
-            wm_wants: Wants::parse(config.get("wmWants").and_then(Value::as_str)),
-            wm_flags: flags(config),
-            config: config.clone(),
-        })
+        let view = WidgetView::deserialize(config).ok()?;
+        let wm_id = u32::try_from(view.wm_id.as_ref()?.as_u64()?).ok()?;
+        let wm_wants = Wants::parse(view.wm_wants.as_deref());
+        let wm_flags = view.flags();
+        let wm_title = view.wm_title.unwrap_or_default();
+        let wm_type = view.wm_type?;
+        Some(Self { wm_id, wm_type, wm_title, wm_wants, wm_flags, config: config.clone() })
     }
 
     pub fn has_flag(&self, flag: &str) -> bool {
@@ -211,13 +213,21 @@ impl Widget {
     /// `wmZorder: 'exclusive'`: `OverlayWindow.vue` draws this widget alone while it is shown
     /// (settings, the price check and the item check in the reference's registry).
     pub fn is_exclusive(&self) -> bool {
-        self.config.get("wmZorder") == Some(&Value::String("exclusive".to_owned()))
+        matches!(self.zorder_entry(), Some(Zorder::Exclusive(Exclusive::Exclusive)))
     }
 
     /// `wmZorder` as the number `Widget.vue` sets as the card's `z-index`, if it has one. The
     /// overlay paints the cards in this order; `None` is CSS' `auto` (the config's order).
     pub fn zorder(&self) -> Option<f64> {
-        self.config.get("wmZorder").and_then(Value::as_f64)
+        match self.zorder_entry() {
+            Some(Zorder::Order(order)) => Some(order),
+            _ => None,
+        }
+    }
+
+    /// `wmZorder` as the config holds it: `'exclusive'`, a number, or absent.
+    fn zorder_entry(&self) -> Option<Zorder> {
+        ZorderField::deserialize(&self.config).ok().and_then(|field| field.wm_zorder)
     }
 
     /// `wm.setFlag`: adds or removes one flag; returns whether the widget changed.
@@ -231,7 +241,9 @@ impl Widget {
         } else {
             self.wm_flags.retain(|it| it != flag);
         }
-        if let Some(flags) = self.config.get_mut("wmFlags").and_then(Value::as_array_mut) {
+        if let Value::Object(object) = &mut self.config
+            && let Some(Value::Array(flags)) = object.get_mut("wmFlags")
+        {
             *flags = self.wm_flags.iter().cloned().map(Value::String).collect();
         }
         true
@@ -243,7 +255,7 @@ impl Widget {
             return false;
         }
         self.wm_wants = wants;
-        if let Some(object) = self.config.as_object_mut() {
+        if let Value::Object(object) = &mut self.config {
             object.insert("wmWants".to_owned(), Value::String(wants.as_str().to_owned()));
         }
         true
@@ -271,21 +283,20 @@ impl Widget {
     /// `anchor.x`, `anchor.y`: the percentages `Widget.vue` positions the card at, and which
     /// side its actions panel hangs on.
     pub fn anchor(&self) -> (f32, f32) {
-        let anchor = self.config.get("anchor");
-        let axis = |name: &str| anchor.and_then(|a| a.get(name)).and_then(Value::as_f64).unwrap_or(0.0) as f32;
-        (axis("x"), axis("y"))
+        let anchor = self.anchor_view();
+        (f64_to_f32(anchor.x.unwrap_or(0.0)), f64_to_f32(anchor.y.unwrap_or(0.0)))
     }
 
     /// `anchor.pos` (`tl`, `tc`, `cc`, ...): which corner of the card `anchor.x`/`anchor.y`
     /// name. `Widget.vue` picks the `translate` with it; a widget without an anchor (the
     /// settings window, which is not drawn as a card) is top-left.
     pub fn anchor_pos(&self) -> String {
-        self.config
-            .get("anchor")
-            .and_then(|anchor| anchor.get("pos"))
-            .and_then(Value::as_str)
-            .unwrap_or("tl")
-            .to_owned()
+        self.anchor_view().pos.unwrap_or_else(|| "tl".to_owned())
+    }
+
+    /// `anchor` as the config holds it, field by field: a missing or odd field is its default.
+    fn anchor_view(&self) -> AnchorView {
+        AnchorField::deserialize(&self.config).ok().and_then(|field| field.anchor).unwrap_or_default()
     }
 
     /// `props.config.anchor.pos = pos` and `updatePosition`'s x/y write, as one edit. Returns
@@ -294,12 +305,10 @@ impl Widget {
         if self.anchor_pos() == pos && self.anchor() == (x, y) {
             return false;
         }
-        let anchor = json!({ "pos": pos, "x": x, "y": y });
-        match self.config.as_object_mut() {
-            Some(object) => {
-                object.insert("anchor".to_owned(), anchor);
-            }
-            None => return false,
+        if let Value::Object(object) = &mut self.config {
+            object.insert("anchor".to_owned(), anchor_value(pos, x, y));
+        } else {
+            return false;
         }
         true
     }
@@ -310,15 +319,119 @@ impl Widget {
         if self.zorder() == Some(zorder) {
             return false;
         }
-        let Some(object) = self.config.as_object_mut() else { return false };
-        object.insert("wmZorder".to_owned(), json!(zorder));
+        let Value::Object(object) = &mut self.config else { return false };
+        object.insert("wmZorder".to_owned(), Value::from(zorder));
         true
     }
 }
 
-/// `Widget.vue`'s `startMove`: the anchor a move-handle press began from. A cancelled gesture
-/// puts the widget back there; a released one keeps the new anchor and asks the shell to save
-/// it.
+/// The base fields of one widget object (`widgets.ts`'s `Widget`), read as leniently as the
+/// config may hold them: a field of the wrong type is the fallback the reader has always used,
+/// not a reason to drop the widget.
+#[expect(
+    clippy::struct_field_names,
+    reason = "the fields mirror upstream's `Widget` interface, whose names all start with `wm`"
+)]
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WidgetView {
+    #[serde(default, deserialize_with = "lenient")]
+    wm_id: Option<serde_json::Number>,
+    #[serde(default, deserialize_with = "lenient")]
+    wm_type: Option<String>,
+    #[serde(default, deserialize_with = "lenient")]
+    wm_title: Option<String>,
+    #[serde(default, deserialize_with = "lenient")]
+    wm_wants: Option<String>,
+    #[serde(default, deserialize_with = "lenient")]
+    wm_flags: Option<Vec<Value>>,
+}
+
+impl WidgetView {
+    /// `wmFlags` as strings, keeping the string entries of a mixed array (`flag.as_str()`).
+    fn flags(&self) -> Vec<String> {
+        self.wm_flags
+            .iter()
+            .flatten()
+            .filter_map(|flag| match flag {
+                Value::String(flag) => Some(flag.clone()),
+                _ => None,
+            })
+            .collect()
+    }
+}
+
+/// `wmZorder`: `'exclusive'` or a number; anything else reads as `None`.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ZorderField {
+    #[serde(default, deserialize_with = "lenient")]
+    wm_zorder: Option<Zorder>,
+}
+
+/// `anchor`'s object, field by field (`Widget.vue`'s `anchor`).
+#[derive(Debug, Default, Deserialize)]
+struct AnchorView {
+    #[serde(default, deserialize_with = "lenient")]
+    pos: Option<String>,
+    #[serde(default, deserialize_with = "lenient")]
+    x: Option<f64>,
+    #[serde(default, deserialize_with = "lenient")]
+    y: Option<f64>,
+}
+
+/// The `anchor` field of a widget object.
+#[derive(Debug, Deserialize)]
+struct AnchorField {
+    #[serde(default, deserialize_with = "lenient")]
+    anchor: Option<AnchorView>,
+}
+
+/// `AppConfig().widgets` as the config lists them.
+#[derive(Debug, Deserialize)]
+struct WidgetsField {
+    #[serde(default, deserialize_with = "lenient")]
+    widgets: Option<Vec<Value>>,
+}
+
+/// The overlay's widgets from a whole config document: an entry without a usable `wmId`/`wmType`
+/// is left out, as [`Widget::from_config`] says.
+fn overlay_widgets(config: &Value) -> Vec<Widget> {
+    WidgetsField::deserialize(config)
+        .ok()
+        .and_then(|field| field.widgets)
+        .unwrap_or_default()
+        .iter()
+        .filter_map(Widget::from_config)
+        .collect()
+}
+
+/// `{ pos, x, y }` as `Widget.vue` writes an anchor: the percentages keep the JSON numbers the
+/// app has always stored for them (`json!` of an `f32` writes `50.0`), not `wraex_core::js`'s
+/// integral form.
+fn anchor_value(pos: &str, x: f32, y: f32) -> Value {
+    let mut anchor = Map::new();
+    anchor.insert("pos".to_owned(), Value::String(pos.to_owned()));
+    anchor.insert("x".to_owned(), Value::from(f64::from(x)));
+    anchor.insert("y".to_owned(), Value::from(f64::from(y)));
+    Value::Object(anchor)
+}
+
+/// A field read as `T` when it has that type, and as `None` when it does not: upstream reads
+/// each of these through `?.`/`as*`, so one odd field must not drop the rest of the object.
+fn lenient<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    let value = Value::deserialize(deserializer)?;
+    Ok(T::deserialize(value).ok())
+}
+
+/// `Widget.vue`'s `startMove`: the anchor a move-handle press began from.
+///
+/// A cancelled gesture puts the widget back there; a released one keeps the new anchor and asks
+/// the shell to save it.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MoveStart {
     pub wm_id: u32,
@@ -328,23 +441,15 @@ pub struct MoveStart {
 }
 
 /// `Widget.vue`'s `updatePosition`: a pointer's place in the overlay as `anchor.x`/`anchor.y`
-/// percentages, clamped to the overlay's edges
-/// (`Math.min(Math.max(p / size, 0), 1) * 100`). A zero-sized overlay (a scene before its size
-/// is known) puts the anchor at the top-left, as upstream's `0 / 0` would be `NaN` there.
+/// percentages, clamped to the overlay's edges (`Math.min(Math.max(p / size, 0), 1) * 100`).
+///
+/// A zero-sized overlay (a scene before its size is known) puts the anchor at the top-left, as
+/// upstream's `0 / 0` would be `NaN` there.
 pub fn pointer_percent(point: [f32; 2], size: (f32, f32)) -> (f32, f32) {
     let axis = |value: f32, limit: f32| {
         if limit.is_finite() && limit > 0.0 { (value / limit).clamp(0.0, 1.0) * 100.0 } else { 0.0 }
     };
     (axis(point[0], size.0), axis(point[1], size.1))
-}
-
-/// `wmFlags` as strings (`widgets.ts` lists the well-known ones, the edge cases are free-form).
-fn flags(config: &Value) -> Vec<String> {
-    config
-        .get("wmFlags")
-        .and_then(Value::as_array)
-        .map(|flags| flags.iter().filter_map(|flag| flag.as_str().map(str::to_owned)).collect())
-        .unwrap_or_default()
 }
 
 /// What a widget's chrome asked the app to do, instead of doing it.
@@ -354,7 +459,6 @@ fn flags(config: &Value) -> Vec<String> {
 /// call so the shell can do exactly that, and a scene or a test can read it.
 // The variants that carry text are wider than the ids; boxing them would make every producer
 // allocate and every test unwrap.
-#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Action {
     /// `wm.show(wmId)`.
@@ -386,17 +490,17 @@ pub enum Action {
 
 impl Action {
     /// The event the app shell sends for this action, for the log and the tests.
-    pub fn kind(&self) -> &'static str {
+    pub const fn kind(&self) -> &'static str {
         match self {
-            Action::Show(_) => "show",
-            Action::Hide(_) => "hide",
-            Action::Create(_) => "create",
-            Action::Remove(_) => "remove",
-            Action::EditInSettings(_) => "edit-in-settings",
-            Action::PriceCheck(_) => "price-check",
-            Action::ImportImage(_) => "import-image",
-            Action::StashSearch(_) => "stash-search",
-            Action::PriceCheckItem(_) => "price-check-item",
+            Self::Show(_) => "show",
+            Self::Hide(_) => "hide",
+            Self::Create(_) => "create",
+            Self::Remove(_) => "remove",
+            Self::EditInSettings(_) => "edit-in-settings",
+            Self::PriceCheck(_) => "price-check",
+            Self::ImportImage(_) => "import-image",
+            Self::StashSearch(_) => "stash-search",
+            Self::PriceCheckItem(_) => "price-check-item",
         }
     }
 }
@@ -461,14 +565,12 @@ impl Overlay {
     /// which is what the widget menu's button, or `wm.show`, does before a screenshot.
     pub fn scene(game: GameId, kind: Kind) -> Self {
         let config = crate::settings::default_config(game);
-        let mut widgets: Vec<Widget> = config
-            .get("widgets")
-            .and_then(Value::as_array)
-            .map(|widgets| widgets.iter().filter_map(Widget::from_config).collect())
-            .unwrap_or_default();
+        let mut widgets = overlay_widgets(&config);
         if !widgets.iter().any(|widget| widget.wm_type == kind.wm_type()) {
-            let id = widgets.iter().map(|widget| widget.wm_id).max().unwrap_or(0) + 1;
-            widgets.push(Widget::from_config(&initialised(kind.wm_type(), id)).expect("a widget object"));
+            let id = widgets.iter().map(|widget| widget.wm_id).max().map_or(1, |id| id.saturating_add(1));
+            if let Some(widget) = Widget::from_config(&initialised(kind.wm_type(), id)) {
+                widgets.push(widget);
+            }
         }
         let shown = widgets.iter().find(|widget| widget.wm_type == kind.wm_type()).map(|widget| widget.wm_id);
         let mut overlay = Self::new(game, widgets);
@@ -491,12 +593,7 @@ impl Overlay {
     /// active (then the menu, `OverlayWindow.vue`'s `visibilityState`) or a hotkey or a
     /// widget's own button asks for one (`wm.show`).
     pub fn live(game: GameId, config: &Value) -> Self {
-        let widgets: Vec<Widget> = config
-            .get("widgets")
-            .and_then(Value::as_array)
-            .map(|widgets| widgets.iter().filter_map(Widget::from_config).collect())
-            .unwrap_or_default();
-        Self::new(game, widgets)
+        Self::new(game, overlay_widgets(config))
     }
 
     fn new(game: GameId, widgets: Vec<Widget>) -> Self {
@@ -546,19 +643,20 @@ impl Overlay {
     /// when it built one.
     pub fn ensure_state(&mut self, wm_id: u32, mode: crate::trade::Mode) -> bool {
         let wm_type = self.widget(wm_id).map(|widget| widget.wm_type.clone());
-        let mut added = false;
-        if wm_type.as_deref() == Some(stopwatch::WM_TYPE)
+        let timer_added = if wm_type.as_deref() == Some(stopwatch::WM_TYPE)
             && let std::collections::btree_map::Entry::Vacant(entry) = self.timers.entry(wm_id)
         {
             entry.insert(stopwatch::Timer::default());
-            added = true;
-        }
+            true
+        } else {
+            false
+        };
         if wm_type.as_deref() == Some(item_search::WM_TYPE) && self.item_search.is_none() {
             // A scene reads the prices the screenshots recorded; a live window fetches them.
             self.item_search = Some(item_search::State::new(self.game, mode));
-            added = true;
+            return true;
         }
-        added
+        timer_added
     }
 
     /// [`Overlay::ensure_state`] for every widget whose `wmWants` is `show`: the cards the
@@ -646,7 +744,7 @@ impl Overlay {
 
     /// Whether a widget's `anchor` or `wmZorder` changed since the shell last saved: upstream's
     /// `saveConfig()` has work to do. Emptied by [`Overlay::take_config_dirty`].
-    pub fn config_dirty(&self) -> bool {
+    pub const fn config_dirty(&self) -> bool {
         self.config_dirty
     }
 
@@ -655,7 +753,7 @@ impl Overlay {
     }
 
     /// [`Overlay::config_dirty`] after a save that failed, so the next poll tries again.
-    pub fn mark_config_dirty(&mut self) {
+    pub const fn mark_config_dirty(&mut self) {
         self.config_dirty = true;
     }
 
@@ -709,8 +807,10 @@ impl Overlay {
     /// `wm.create(wmType)`: a new widget of a `multi` type, which shows itself (its component's
     /// `uninitialized` branch runs on mount).
     pub fn create(&mut self, wm_type: &str) -> u32 {
-        let id = self.widgets.iter().map(|widget| widget.wm_id).max().unwrap_or(0) + 1;
-        self.widgets.push(Widget::from_config(&initialised(wm_type, id)).expect("a widget object"));
+        let id = self.widgets.iter().map(|widget| widget.wm_id).max().map_or(1, |id| id.saturating_add(1));
+        if let Some(widget) = Widget::from_config(&initialised(wm_type, id)) {
+            self.widgets.push(widget);
+        }
         self.actions.push(Action::Create(wm_type.to_owned()));
         if wm_type == stopwatch::WM_TYPE {
             self.timers.insert(id, stopwatch::Timer::default());
@@ -808,7 +908,7 @@ impl Overlay {
     /// `v-model="config.alwaysShow"` (`WidgetMenu.vue`'s edit mode).
     pub fn set_always_show(&mut self, wm_id: u32, on: bool) {
         if let Some(widget) = self.widget_mut(wm_id)
-            && let Some(object) = widget.config.as_object_mut()
+            && let Value::Object(object) = &mut widget.config
         {
             object.insert("alwaysShow".to_owned(), Value::Bool(on));
         }
@@ -817,8 +917,8 @@ impl Overlay {
     /// `v-model="config.wmTitle"` (`WidgetImageStrip.vue`'s title input).
     pub fn set_title(&mut self, wm_id: u32, title: &str) {
         if let Some(widget) = self.widget_mut(wm_id) {
-            widget.wm_title = title.to_owned();
-            if let Some(object) = widget.config.as_object_mut() {
+            title.clone_into(&mut widget.wm_title);
+            if let Value::Object(object) = &mut widget.config {
                 object.insert("wmTitle".to_owned(), Value::String(title.to_owned()));
             }
         }
@@ -826,11 +926,16 @@ impl Overlay {
 
     /// `config.images = config.images.filter(_ => _.id !== id)`.
     pub fn remove_image(&mut self, wm_id: u32, image_id: i64) {
-        if let Some(widget) = self.widget_mut(wm_id)
-            && let Some(images) = widget.config.get_mut("images").and_then(Value::as_array_mut)
-        {
-            images.retain(|image| image.get("id").and_then(Value::as_i64) != Some(image_id));
-        }
+        let Some(widget) = self.widget_mut(wm_id) else { return };
+        let Value::Object(object) = &mut widget.config else { return };
+        let Some(Value::Array(images)) = object.get_mut("images") else { return };
+        images.retain(|image| match image {
+            Value::Object(image) => match image.get("id") {
+                Some(Value::Number(id)) => id.as_i64() != Some(image_id),
+                _ => true,
+            },
+            _ => true,
+        });
     }
 
     /// The buttons' actions since the last call, emptied.
@@ -857,7 +962,7 @@ impl Overlay {
         if harness.hideable {
             actions.push(("hide", "widget.hide"));
         }
-        if harness.editable {
+        if harness.edit != Edit::None {
             actions.push(("edit", "widget.edit"));
         }
         if harness.has_handles() {
@@ -871,21 +976,26 @@ impl Overlay {
 }
 
 /// `invisible-on-blur` (`widgets.ts`): `OverlayWindow.vue` hides it while the overlay is not
-/// active (the widget menu has it, so the menu goes when the game takes the focus). The
-/// stopwatch clears it while it runs, which is what keeps a running timer on screen.
+/// active (the widget menu has it, so the menu goes when the game takes the focus).
+///
+/// The stopwatch clears it while it runs, which is what keeps a running timer on screen.
 pub const INVISIBLE_ON_BLUR: &str = "invisible-on-blur";
 
-/// `hide-on-blur` (`widgets.ts`): `OverlayWindow.vue` hides it when the overlay loses the focus —
-/// a widget that stays `show` until the user closes it, like a pinned stash search.
+/// `hide-on-blur` (`widgets.ts`): `OverlayWindow.vue` hides it when the overlay loses the focus.
+///
+/// The widget stays `show` until the user closes it, like a pinned stash search.
 pub const HIDE_ON_BLUR: &str = "hide-on-blur";
 
-/// `hide-on-focus` (`widgets.ts`): `OverlayWindow.vue` hides it when the overlay gains the focus,
-/// so the delve grid never covers the interactive overlay.
+/// `hide-on-focus` (`widgets.ts`): `OverlayWindow.vue` hides it when the overlay gains the focus.
+///
+/// So the delve grid never covers the interactive overlay.
 pub const HIDE_ON_FOCUS: &str = "hide-on-focus";
 
 /// `WidgetSpec.type` of the settings window, which the menu's cog shows and a widget's `edit`
-/// opens when it does not edit inline. `wmZorder: 'exclusive'` upstream: it wins over the other
-/// widgets, and `invisible-on-blur` closes it when the game takes the focus.
+/// opens when it does not edit inline.
+///
+/// `wmZorder: 'exclusive'` upstream: it wins over the other widgets, and `invisible-on-blur`
+/// closes it when the game takes the focus.
 pub const SETTINGS: &str = "settings";
 
 /// `WidgetSpec.type` of the price check. `wmZorder: 'exclusive'` upstream, `hide-on-blur`: the
@@ -895,9 +1005,11 @@ pub const PRICE_CHECK: &str = "price-check";
 /// `WidgetSpec.type` of the item check, exclusive and `hide-on-blur` like the price check.
 pub const ITEM_CHECK: &str = "item-check";
 
-/// Whether the app draws this widget's card itself (`settings`, the price check and the item
-/// check are exclusive widgets in the config, but their state lives in the app, not in
-/// [`Overlay`]). The rest of the config is the overlay's own widgets.
+/// Whether the app draws this widget's card itself.
+///
+/// `settings`, the price check and the item check are exclusive widgets in the config, but
+/// their state lives in the app, not in [`Overlay`]. The rest of the config is the overlay's own
+/// widgets.
 pub fn app_drawn(wm_type: &str) -> bool {
     matches!(wm_type, SETTINGS | PRICE_CHECK | ITEM_CHECK)
 }
@@ -911,25 +1023,25 @@ pub fn app_drawn(wm_type: &str) -> bool {
 /// cheat sheet.
 fn initialised(wm_type: &str, wm_id: u32) -> Value {
     let mut config = instance(wm_type, wm_id);
-    let Some(object) = config.as_object_mut() else { return config };
+    let Value::Object(object) = &mut config else { return config };
     match wm_type {
         stopwatch::WM_TYPE => {
-            object.insert("wmFlags".to_owned(), json!(["invisible-on-blur"]));
-            object.insert("anchor".to_owned(), json!({ "pos": "cc", "x": 50.0, "y": 50.0 }));
+            object.insert("wmFlags".to_owned(), flags_value(&[INVISIBLE_ON_BLUR]));
+            object.insert("anchor".to_owned(), anchor_value("cc", 50.0, 50.0));
             object.insert("toggleKey".to_owned(), Value::Null);
             object.insert("resetKey".to_owned(), Value::Null);
         }
         image_strip::WM_TYPE => {
-            object.insert("wmFlags".to_owned(), json!(["invisible-on-blur"]));
-            object.insert("anchor".to_owned(), json!({ "pos": "tc", "x": 50.0, "y": 10.0 }));
-            object.insert("images".to_owned(), json!([{ "id": 1, "url": "syndicate.jpg" }]));
+            object.insert("wmFlags".to_owned(), flags_value(&[INVISIBLE_ON_BLUR]));
+            object.insert("anchor".to_owned(), anchor_value("tc", 50.0, 10.0));
+            object.insert("images".to_owned(), image_strip::default_images());
         }
         // `WidgetXpTracker.vue`'s `initInstance`: bottom centre, `showExp` on. It is a
         // `single` widget, so this only runs for a config that lost its instance.
         xp_tracker::WM_TYPE => {
-            object.insert("wmTitle".to_owned(), json!(xp_tracker::TITLE));
-            object.insert("anchor".to_owned(), json!({ "pos": "bc", "x": 68.0, "y": 98.0 }));
-            object.insert("showExp".to_owned(), json!(true));
+            object.insert("wmTitle".to_owned(), Value::String(xp_tracker::TITLE.to_owned()));
+            object.insert("anchor".to_owned(), anchor_value("bc", 68.0, 98.0));
+            object.insert("showExp".to_owned(), Value::Bool(true));
         }
         _ => {}
     }
@@ -938,14 +1050,19 @@ fn initialised(wm_type: &str, wm_id: u32) -> Value {
 
 /// A widget object as `wm.create` (and `WidgetSpec.initInstance`) writes it.
 fn instance(wm_type: &str, wm_id: u32) -> Value {
-    json!({
-        "wmId": wm_id,
-        "wmType": wm_type,
-        "wmTitle": "",
-        "wmWants": "hide",
-        "wmZorder": null,
-        "wmFlags": ["uninitialized"],
-    })
+    let mut object = Map::new();
+    object.insert("wmId".to_owned(), Value::from(wm_id));
+    object.insert("wmType".to_owned(), Value::String(wm_type.to_owned()));
+    object.insert("wmTitle".to_owned(), Value::String(String::new()));
+    object.insert("wmWants".to_owned(), wraex_core::js::json_value(&CoreWants::Hide));
+    object.insert("wmZorder".to_owned(), Value::Null);
+    object.insert("wmFlags".to_owned(), flags_value(&["uninitialized"]));
+    Value::Object(object)
+}
+
+/// A `wmFlags` array, as the config holds it.
+fn flags_value(flags: &[&str]) -> Value {
+    Value::Array(flags.iter().map(|flag| Value::String((*flag).to_owned())).collect())
 }
 
 /// What `Widget.vue`'s props let a widget's card do.
@@ -953,18 +1070,28 @@ fn instance(wm_type: &str, wm_id: u32) -> Value {
 pub struct Chrome {
     /// `hideable`: the panel's `hide` button (not for the menu or the timer).
     pub hideable: bool,
-    /// `readonly`: no `edit` button (the delve grid).
-    pub editable: bool,
-    /// `inline-edit`: the panel's `edit` toggles the card's editor; otherwise it opens settings.
-    pub inline_edit: bool,
     /// `removable`: the panel's `delete` button.
     pub removable: bool,
+    /// `readonly` and `inline-edit`, as the panel's `edit` button behaves.
+    pub edit: Edit,
     /// `move-handles`: `Some("center"|"corners"|"top-bottom"|"all")`, or `None` for no `move`.
     pub handles: Option<&'static str>,
 }
 
+/// Whether `Widget.vue`'s panel has an `edit` button, and what it does (`readonly` and
+/// `inline-edit`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Edit {
+    /// `readonly`: the delve grid has no `edit` button.
+    None,
+    /// The panel's `edit` toggles the card's own editor (`inline-edit: true`).
+    Inline,
+    /// The panel's `edit` opens the settings window on the widget.
+    Settings,
+}
+
 impl Chrome {
-    fn has_handles(self) -> bool {
+    const fn has_handles(self) -> bool {
         self.handles.is_some()
     }
 }
@@ -972,32 +1099,28 @@ impl Chrome {
 /// The widget's `wmId` as a `Chrome` for the scene's one widget.
 pub fn chrome_for(widget: &Widget) -> Chrome {
     match widget.wm_type.as_str() {
-        menu::WM_TYPE => {
-            Chrome { hideable: false, editable: true, inline_edit: true, removable: false, handles: Some("corners") }
-        }
+        menu::WM_TYPE => Chrome { hideable: false, removable: false, edit: Edit::Inline, handles: Some("corners") },
         stopwatch::WM_TYPE => {
-            Chrome { hideable: false, editable: true, inline_edit: false, removable: true, handles: Some("center") }
+            Chrome { hideable: false, removable: true, edit: Edit::Settings, handles: Some("center") }
         }
         image_strip::WM_TYPE => {
-            Chrome { hideable: true, editable: true, inline_edit: true, removable: true, handles: Some("top-bottom") }
+            Chrome { hideable: true, removable: true, edit: Edit::Inline, handles: Some("top-bottom") }
         }
-        delve_grid::WM_TYPE => {
-            Chrome { hideable: true, editable: false, inline_edit: true, removable: false, handles: None }
-        }
+        delve_grid::WM_TYPE => Chrome { hideable: true, removable: false, edit: Edit::None, handles: None },
         // `WidgetItemSearch.vue`: `move-handles="['tl', 'bl']"`, not removable, no inline edit.
         item_search::WM_TYPE => {
-            Chrome { hideable: true, editable: true, inline_edit: false, removable: false, handles: Some("tl-bl") }
+            Chrome { hideable: true, removable: false, edit: Edit::Settings, handles: Some("tl-bl") }
         }
         // `WidgetStashSearch.vue`: `move-handles="corners"`, no inline edit.
         stash_search::WM_TYPE => {
-            Chrome { hideable: true, editable: true, inline_edit: false, removable: true, handles: Some("corners") }
+            Chrome { hideable: true, removable: true, edit: Edit::Settings, handles: Some("corners") }
         }
         // `WidgetXpTracker.vue`: `removable="false"`, `inline-edit="false"`,
         // `move-handles="top-bottom"`.
         xp_tracker::WM_TYPE => {
-            Chrome { hideable: true, editable: true, inline_edit: false, removable: false, handles: Some("top-bottom") }
+            Chrome { hideable: true, removable: false, edit: Edit::Settings, handles: Some("top-bottom") }
         }
-        _ => Chrome { hideable: true, editable: true, inline_edit: true, removable: true, handles: Some("all") },
+        _ => Chrome { hideable: true, removable: true, edit: Edit::Inline, handles: Some("all") },
     }
 }
 
@@ -1094,7 +1217,7 @@ fn panel_press(overlay: &mut Overlay, id: u32, action: &'static str) {
         "delete" => overlay.remove(id),
         "edit" => {
             let Some(widget) = overlay.widget(id) else { return };
-            let inline = chrome_for(widget).inline_edit;
+            let inline = chrome_for(widget).edit == Edit::Inline;
             overlay.moving = None;
             if inline {
                 overlay.editing = (overlay.editing != Some(id)).then_some(id);
@@ -1208,10 +1331,7 @@ fn scene_root(card: El) -> El {
 
 /// A `widget-<name>` / `poe2-widget-<name>` scene: the game and the widget.
 pub fn scene(slug: &str) -> Option<(GameId, Kind)> {
-    let (game, rest) = match slug.strip_prefix("poe2-") {
-        Some(rest) => (GameId::Poe2, rest),
-        None => (GameId::Poe1, slug),
-    };
+    let (game, rest) = slug.strip_prefix("poe2-").map_or((GameId::Poe1, slug), |rest| (GameId::Poe2, rest));
     let name = rest.strip_prefix("widget-")?;
     // Only EE2 has the experience tracker: APT's client log feeds chat and trades, not levels
     // (`ref/apt/renderer/src/web/client-log/client-log.ts`).
@@ -1233,7 +1353,7 @@ pub fn scene_size(game: GameId, kind: Kind) -> (f32, f32) {
     match kind {
         Kind::Menu => match game {
             GameId::Poe2 => (509.0, 78.0),
-            _ => (470.0, 78.0),
+            GameId::Poe1 => (470.0, 78.0),
         },
         Kind::Stopwatch => (170.0, 40.0),
         Kind::ImageStrip => (200.0, 136.0),
@@ -1247,7 +1367,7 @@ pub fn scene_size(game: GameId, kind: Kind) -> (f32, f32) {
         Kind::ItemSearch => (384.0, 125.0),
         Kind::StashSearch => match game {
             GameId::Poe2 => (160.0, 176.0),
-            _ => (166.0, 176.0),
+            GameId::Poe1 => (166.0, 176.0),
         },
         // `.xpContainer`: `min-w-48` (12 rem) with its border, `min-h-10` (2.5 rem); measured
         // from `target/screens/poe2/xp-tracker.png`.
